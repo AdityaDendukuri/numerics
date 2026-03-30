@@ -56,7 +56,7 @@ report directly on the Actions run page.
 1. Go to the repo on GitHub -> **Actions** tab
 2. Open the latest run on `main`
 3. Click the **Report** job
-4. The rendered `REPORT.md` appears under **Summary** -- no download needed
+4. The rendered `REPORT.md` appears under **Summary**.
 
 The report covers: build environment (compiler, detected backends), test pass/fail counts
 per suite, benchmark throughput tables for every module, and throughput-vs-size plots.
