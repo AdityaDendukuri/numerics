@@ -1,0 +1,15 @@
+{
+  "date":         "@BUILD_DATE@",
+  "compiler":     "@CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@",
+  "build_type":   "@CMAKE_BUILD_TYPE@",
+  "has_blas":     @REPORT_HAS_BLAS@,
+  "has_fftw":     @REPORT_HAS_FFTW@,
+  "has_omp":      @REPORT_HAS_OMP@,
+  "has_cuda":     @REPORT_HAS_CUDA@,
+  "has_mpi":      @REPORT_HAS_MPI@,
+  "has_lapack":   @REPORT_HAS_LAPACK@,
+  "system_name":  "@REPORT_SYSTEM_NAME@",
+  "cpu":          "@REPORT_CPU@",
+  "ram_mb":       "@REPORT_RAM_MB@",
+  "gpu":          "@REPORT_GPU@"
+}

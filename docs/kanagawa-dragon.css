@@ -1,0 +1,104 @@
+/*
+ * Kanagawa Dragon color theme for doxygen-awesome
+ * https://github.com/rebelot/kanagawa.nvim
+ *
+ * Palette:
+ *   bg          #181616   dragonBlack3
+ *   bg_dim      #12120f   dragonBlack1
+ *   bg_dark     #1D1C19   dragonBlack2
+ *   bg_p1       #282727   dragonBlack4
+ *   bg_p2       #393836   dragonBlack5
+ *   borders     #625e5a   dragonBlack6
+ *   fg          #c5c9c5   dragonWhite
+ *   fg2         #9e9b93   dragonGray2
+ *   comment     #737c73   dragonAsh
+ *   red         #c4746e   dragonRed
+ *   green       #87a987   dragonGreen
+ *   green2      #8a9a7b   dragonGreen2
+ *   blue        #8ba4b0   dragonBlue2
+ *   aqua        #8ea4a2   dragonAqua
+ *   orange      #b6927b   dragonOrange
+ *   yellow      #c4b28a   dragonYellow
+ *   violet      #8992a7   dragonViolet
+ *   teal        #949fb5   dragonTeal
+ *   pink        #a292a3   dragonPink
+ */
+
+:root,
+html.dark-mode {
+    /* Primary accent */
+    --primary-color: #8ea4a2;
+    --primary-dark-color: #6b8c8a;
+    --primary-light-color: #223249;
+    --on-primary-color: #181616;
+
+    --link-color: #949fb5;
+
+    /* Page */
+    --page-background-color: #181616;
+    --page-foreground-color: #c5c9c5;
+    --page-secondary-foreground-color: #9e9b93;
+
+    --separator-color: #393836;
+    --box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.5);
+    --odd-color: rgba(255, 255, 255, 0.03);
+
+    /* Sidebar / nav */
+    --side-nav-background: #12120f;
+    --menu-selected-background: rgba(0, 0, 0, 0.35);
+    --menu-focus-background: #8ea4a2;
+    --menu-focus-foreground: #181616;
+
+    /* Header / search */
+    --header-background: #181616;
+    --header-foreground: #c5c9c5;
+    --searchbar-background: #1D1C19;
+
+    /* Code & tables */
+    --code-background: #1D1C19;
+    --section-code-background: rgba(255, 255, 255, 0.05);
+    --section-code-border: rgba(255, 255, 255, 0.10);
+    --tablehead-background: #1D1C19;
+    --tablehead-foreground: #c5c9c5;
+    --blockquote-background: #1D1C19;
+    --blockquote-foreground: #9e9b93;
+
+    /* Admonition boxes */
+    --warning-color: #2a1e00;
+    --warning-color-dark: #c4b28a;
+    --warning-color-darker: #e8d5a0;
+
+    --note-color: #152030;
+    --note-color-dark: #8ba4b0;
+    --note-color-darker: #b8d0de;
+
+    --todo-color: #1e1a2a;
+    --todo-color-dark: #8992a7;
+    --todo-color-darker: #b4bad0;
+
+    --deprecated-color: #222120;
+    --deprecated-color-dark: #9e9b93;
+    --deprecated-color-darker: #c5c9c5;
+
+    --bug-color: #2a1614;
+    --bug-color-dark: #c4746e;
+    --bug-color-darker: #dba8a4;
+
+    --invariant-color: #1a2420;
+    --invariant-color-dark: #87a987;
+    --invariant-color-darker: #b0c8b0;
+
+    /* Syntax highlighting in code fragments */
+    --fragment-background: #1D1C19;
+    --fragment-foreground: #c5c9c5;
+    --fragment-keyword: #8992a7;
+    --fragment-keywordtype: #8ba4b0;
+    --fragment-keywordflow: #b6927b;
+    --fragment-token: #8a9a7b;
+    --fragment-comment: #737c73;
+    --fragment-link: #949fb5;
+    --fragment-preprocessor: #8ea4a2;
+    --fragment-linenumber-color: #625e5a;
+    --fragment-linenumber-background: #12120f;
+    --fragment-linenumber-border: #0d0c0c;
+}

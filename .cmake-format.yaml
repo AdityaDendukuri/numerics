@@ -1,0 +1,37 @@
+# cmake-format configuration
+# Run:  cmake-format -i CMakeLists.txt
+# Check: cmake-format --check CMakeLists.txt
+# Install: pip install cmake-format
+
+# ── Formatting ──────────────────────────────────────────────────────────────
+line_width: 80
+tab_size: 4
+use_tabchars: false
+
+# Commands lowercase, keywords (PUBLIC/PRIVATE/ON/OFF/BOOL) uppercase
+command_case: lower
+keyword_case: upper
+
+# Wrap argument lists when they exceed this many positional args inline
+max_pargs_hwrap: 3
+# Wrap nested groups (e.g. generator expressions) when > 2 inline
+max_subgroups_hwrap: 2
+
+# Closing paren stays on the last argument line (not dangling alone)
+dangle_parens: false
+
+# ── Sorting ──────────────────────────────────────────────────────────────────
+# Never reorder source file lists — order is intentional
+enable_sort: false
+autosort: false
+
+# ── Extra command signatures ─────────────────────────────────────────────────
+# Teach cmake-format about FetchContent_Declare so it wraps correctly
+additional_commands:
+  FetchContent_Declare:
+    kwargs:
+      GIT_REPOSITORY: 1
+      GIT_TAG: 1
+      GIT_SHALLOW: 1
+      URL: 1
+      URL_HASH: 1

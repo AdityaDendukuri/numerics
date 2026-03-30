@@ -1,0 +1,302 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 20, "patch": 0 },
+
+  "configurePresets": [
+
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "NUMERICS_ENABLE_CUDA": "OFF",
+        "NUMERICS_ENABLE_MPI":  "OFF",
+        "CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+      }
+    },
+
+    {
+      "name": "linalg",
+      "displayName": "Linear algebra only",
+      "description": "numerics lib — no physics, no apps, no CUDA/MPI. Fastest to build.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":        "Release",
+        "NUMERICS_BUILD_APPS":     "OFF",
+        "NUMERICS_BUILD_TESTS":    "OFF",
+        "NUMERICS_BUILD_BENCHMARKS": "OFF"
+      }
+    },
+
+    {
+      "name": "linalg-test",
+      "displayName": "Linear algebra + tests",
+      "description": "numerics lib with GTest suite. No physics, no CUDA/MPI.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":        "Release",
+        "NUMERICS_BUILD_APPS":     "OFF",
+        "NUMERICS_BUILD_TESTS":    "ON",
+        "NUMERICS_BUILD_BENCHMARKS": "ON"
+      }
+    },
+
+    {
+      "name": "physics",
+      "displayName": "Physics library (no apps)",
+      "description": "numerics + numerics_physics. No raylib, no apps. Use this when integrating the physics solver into your own renderer.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":        "Release",
+        "NUMERICS_BUILD_APPS":     "OFF",
+        "NUMERICS_BUILD_TESTS":    "OFF",
+        "NUMERICS_BUILD_BENCHMARKS": "OFF"
+      }
+    },
+
+    {
+      "name": "apps",
+      "displayName": "Full build with raylib apps",
+      "description": "Everything: linalg + physics + fluid_sim + fluid_sim_3d + em_demo. Requires system X11/wayland headers for raylib.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":        "Release",
+        "NUMERICS_BUILD_APPS":     "ON",
+        "NUMERICS_BUILD_TESTS":    "OFF",
+        "NUMERICS_BUILD_BENCHMARKS": "OFF"
+      }
+    },
+
+    {
+      "name": "hpc",
+      "displayName": "HPC (linalg + CUDA + MPI)",
+      "description": "Linear algebra library with GPU and distributed-memory support. No physics, no apps. Intended for cluster/supercomputer use.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":        "Release",
+        "NUMERICS_BUILD_APPS":     "OFF",
+        "NUMERICS_BUILD_TESTS":    "OFF",
+        "NUMERICS_BUILD_BENCHMARKS": "OFF",
+        "NUMERICS_ENABLE_CUDA":    "ON",
+        "NUMERICS_ENABLE_MPI":     "ON"
+      }
+    },
+
+    {
+      "name": "debug",
+      "displayName": "Debug (everything, no CUDA/MPI)",
+      "description": "Debug build with all targets. Use for development and debugging.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":        "Debug",
+        "NUMERICS_BUILD_APPS":     "ON",
+        "NUMERICS_BUILD_TESTS":    "ON",
+        "NUMERICS_BUILD_BENCHMARKS": "ON"
+      }
+    },
+
+    {
+      "name": "release",
+      "displayName": "Release (everything except apps)",
+      "description": "Default development build: linalg + physics + tests + benchmarks + docs. No CUDA/MPI/apps.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":          "Release",
+        "NUMERICS_BUILD_APPS":       "OFF",
+        "NUMERICS_BUILD_TESTS":      "ON",
+        "NUMERICS_BUILD_BENCHMARKS": "ON",
+        "NUMERICS_BUILD_DOCS":       "ON"
+      }
+    },
+
+    {
+      "name": "report",
+      "displayName": "Report (Release + tests + benchmarks + report)",
+      "description": "Release build that enables the report target. Run: cmake --build --preset report --target report",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":          "Release",
+        "NUMERICS_BUILD_APPS":       "OFF",
+        "NUMERICS_BUILD_TESTS":      "ON",
+        "NUMERICS_BUILD_BENCHMARKS": "ON",
+        "NUMERICS_BUILD_REPORT":     "ON",
+        "NUMERICS_ENABLE_CUDA":      "ON",
+        "NUMERICS_BUILD_DOCS":       "OFF"
+      }
+    },
+
+    {
+      "name": "ci",
+      "displayName": "CI (linalg + physics + tests, no CUDA/MPI/apps)",
+      "description": "Release build for continuous integration. Builds and tests everything that does not require GPU, MPI, or a display server.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":        "Release",
+        "NUMERICS_BUILD_APPS":     "OFF",
+        "NUMERICS_BUILD_TESTS":    "ON",
+        "NUMERICS_BUILD_BENCHMARKS": "ON"
+      }
+    },
+
+    {
+      "name": "app-fluid",
+      "displayName": "2D fluid simulation only",
+      "description": "Builds numerics + numerics_physics + fluid_sim. Requires X11/wayland headers.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":             "Release",
+        "NUMERICS_BUILD_FLUID_SIM":     "ON",
+        "NUMERICS_BUILD_FLUID_SIM_3D":  "OFF",
+        "NUMERICS_BUILD_EM_DEMO":       "OFF",
+        "NUMERICS_BUILD_ISING":         "OFF",
+        "NUMERICS_BUILD_TESTS":         "OFF",
+        "NUMERICS_BUILD_BENCHMARKS":    "OFF"
+      }
+    },
+
+    {
+      "name": "app-fluid3d",
+      "displayName": "3D fluid simulation only",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":             "Release",
+        "NUMERICS_BUILD_FLUID_SIM":     "OFF",
+        "NUMERICS_BUILD_FLUID_SIM_3D":  "ON",
+        "NUMERICS_BUILD_EM_DEMO":       "OFF",
+        "NUMERICS_BUILD_ISING":         "OFF",
+        "NUMERICS_BUILD_TESTS":         "OFF",
+        "NUMERICS_BUILD_BENCHMARKS":    "OFF"
+      }
+    },
+
+    {
+      "name": "app-em",
+      "displayName": "Electromagnetic field demo only",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":             "Release",
+        "NUMERICS_BUILD_FLUID_SIM":     "OFF",
+        "NUMERICS_BUILD_FLUID_SIM_3D":  "OFF",
+        "NUMERICS_BUILD_EM_DEMO":       "ON",
+        "NUMERICS_BUILD_ISING":         "OFF",
+        "NUMERICS_BUILD_TESTS":         "OFF",
+        "NUMERICS_BUILD_BENCHMARKS":    "OFF"
+      }
+    },
+
+    {
+      "name": "app-ising",
+      "displayName": "Ising model simulation only",
+      "description": "Builds numerics + ising_sim. Does not require the physics library.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":             "Release",
+        "NUMERICS_BUILD_FLUID_SIM":     "OFF",
+        "NUMERICS_BUILD_FLUID_SIM_3D":  "OFF",
+        "NUMERICS_BUILD_EM_DEMO":       "OFF",
+        "NUMERICS_BUILD_ISING":         "ON",
+        "NUMERICS_BUILD_TESTS":         "OFF",
+        "NUMERICS_BUILD_BENCHMARKS":    "OFF"
+      }
+    },
+
+    {
+      "name": "app-ns",
+      "displayName": "2D Navier-Stokes stress test",
+      "description": "Builds numerics + ns_demo. No physics library needed. Run: ./build/apps/ns_demo/ns_demo [N]",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":             "Release",
+        "NUMERICS_BUILD_NS_DEMO":       "ON",
+        "NUMERICS_BUILD_FLUID_SIM":     "OFF",
+        "NUMERICS_BUILD_FLUID_SIM_3D":  "OFF",
+        "NUMERICS_BUILD_EM_DEMO":       "OFF",
+        "NUMERICS_BUILD_ISING":         "OFF",
+        "NUMERICS_BUILD_TESTS":         "OFF",
+        "NUMERICS_BUILD_BENCHMARKS":    "OFF"
+      }
+    },
+
+    {
+      "name": "app-tdse",
+      "displayName": "2D TDSE quantum simulation",
+      "description": "Builds numerics + tdse. No physics library needed. Run: ./build/apps/tdse/tdse [N]",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":             "Release",
+        "NUMERICS_BUILD_TDSE":          "ON",
+        "NUMERICS_BUILD_NS_DEMO":       "OFF",
+        "NUMERICS_BUILD_FLUID_SIM":     "OFF",
+        "NUMERICS_BUILD_FLUID_SIM_3D":  "OFF",
+        "NUMERICS_BUILD_EM_DEMO":       "OFF",
+        "NUMERICS_BUILD_ISING":         "OFF",
+        "NUMERICS_BUILD_TESTS":         "OFF",
+        "NUMERICS_BUILD_BENCHMARKS":    "OFF"
+      }
+    },
+
+    {
+      "name": "app-quantum",
+      "displayName": "Quantum circuit simulator",
+      "description": "Builds numerics + quantum_demo (raylib). Interactive statevector simulator with Bell, GHZ, Grover, Teleportation, and QFT presets. Run: ./build/apps/quantum_demo/quantum_demo",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":             "Release",
+        "NUMERICS_BUILD_QUANTUM_DEMO":  "ON",
+        "NUMERICS_BUILD_TDSE":          "OFF",
+        "NUMERICS_BUILD_NS_DEMO":       "OFF",
+        "NUMERICS_BUILD_FLUID_SIM":     "OFF",
+        "NUMERICS_BUILD_FLUID_SIM_3D":  "OFF",
+        "NUMERICS_BUILD_EM_DEMO":       "OFF",
+        "NUMERICS_BUILD_ISING":         "OFF",
+        "NUMERICS_BUILD_TESTS":         "OFF",
+        "NUMERICS_BUILD_BENCHMARKS":    "OFF"
+      }
+    }
+
+  ],
+
+  "buildPresets": [
+    { "name": "release",     "configurePreset": "release",     "jobs": 0 },
+    { "name": "report",      "configurePreset": "report",      "jobs": 0, "targets": ["report"] },
+    { "name": "linalg",      "configurePreset": "linalg",      "jobs": 0 },
+    { "name": "linalg-test", "configurePreset": "linalg-test", "jobs": 0 },
+    { "name": "physics",     "configurePreset": "physics",     "jobs": 0 },
+    { "name": "apps",        "configurePreset": "apps",        "jobs": 0 },
+    { "name": "hpc",         "configurePreset": "hpc",         "jobs": 0 },
+    { "name": "debug",       "configurePreset": "debug",       "jobs": 0 },
+    { "name": "ci",          "configurePreset": "ci",          "jobs": 0 },
+    { "name": "app-fluid",   "configurePreset": "app-fluid",   "jobs": 0 },
+    { "name": "app-fluid3d", "configurePreset": "app-fluid3d", "jobs": 0 },
+    { "name": "app-em",      "configurePreset": "app-em",      "jobs": 0 },
+    { "name": "app-ising",   "configurePreset": "app-ising",   "jobs": 0 },
+    { "name": "app-ns",      "configurePreset": "app-ns",      "jobs": 0 },
+    { "name": "app-tdse",    "configurePreset": "app-tdse",    "jobs": 0 },
+    { "name": "app-quantum", "configurePreset": "app-quantum", "jobs": 0 }
+  ],
+
+  "testPresets": [
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "linalg-test",
+      "configurePreset": "linalg-test",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

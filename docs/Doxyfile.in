@@ -1,0 +1,50 @@
+PROJECT_NAME           = "numerics"
+PROJECT_BRIEF          = "Parallel Numerical Methods Library"
+OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
+
+# ── Sources ──────────────────────────────────────────────────────────────────
+# Include the library headers, the pages directory, and each app's README.md.
+INPUT                  = @CMAKE_SOURCE_DIR@/include        \
+                         @CMAKE_SOURCE_DIR@/docs/pages     \
+                         @CMAKE_SOURCE_DIR@/apps/ising     \
+                         @CMAKE_SOURCE_DIR@/apps/fluid_sim  \
+                         @CMAKE_SOURCE_DIR@/apps/fluid_sim_3d \
+                         @CMAKE_SOURCE_DIR@/apps/ns_demo   \
+                         @CMAKE_SOURCE_DIR@/apps/tdse      \
+                         @CMAKE_SOURCE_DIR@/apps/em_demo
+FILE_PATTERNS          = *.hpp *.h *.md
+IMAGE_PATH             = @CMAKE_SOURCE_DIR@/docs/pages
+RECURSIVE              = YES
+# Exclude build artefacts and test/benchmark source files
+EXCLUDE_PATTERNS       = */build/* */_deps/* */tests/* */benchmarks/*
+
+# ── Extraction ────────────────────────────────────────────────────────────────
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+
+# ── Output ────────────────────────────────────────────────────────────────────
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+QUIET                  = YES
+
+# ── Markdown ─────────────────────────────────────────────────────────────────
+MARKDOWN_SUPPORT       = YES
+# Allow $...$ and $$...$$ math in Markdown files (Doxygen ≥ 1.9.4)
+MARKDOWN_ID_STYLE      = GITHUB
+
+# ── Math rendering ────────────────────────────────────────────────────────────
+# Render \f[...\f] and $$...$$ with MathJax (no local LaTeX required).
+USE_MATHJAX            = YES
+MATHJAX_VERSION        = MathJax_3
+MATHJAX_FORMAT         = HTML-CSS
+MATHJAX_EXTENSIONS     = TeX/AMSmath TeX/AMSsymbols
+
+# ── Navigation ────────────────────────────────────────────────────────────────
+# Make index.md the Doxygen start page.
+USE_MDFILE_AS_MAINPAGE = @CMAKE_SOURCE_DIR@/docs/pages/index.md
+
+# ── HTML theme (doxygen-awesome) ──────────────────────────────────────────────
+HTML_EXTRA_STYLESHEET  = @CMAKE_SOURCE_DIR@/docs/doxygen-awesome.css \
+                         @CMAKE_SOURCE_DIR@/docs/ucsb.css

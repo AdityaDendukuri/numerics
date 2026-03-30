@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # ── Job 1: tests ─────────────────────────────────────────────────────────────
+  # Runs on every push and every pull request.
+  # Installs BLAS + FFTW so all backends are exercised.
+  tests:
+    name: Tests
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends \
+            libopenblas-dev \
+            libfftw3-dev
+
+      - name: Configure
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DNUMERICS_BUILD_TESTS=ON \
+            -DNUMERICS_BUILD_BENCHMARKS=OFF \
+            -DNUMERICS_BUILD_REPORT=OFF \
+            -DNUMERICS_BUILD_DOCS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Run tests
+        run: ./build/tests/numerics_tests --gtest_output=xml:test_results.xml
+
+      - name: Upload test results
+        if: always()   # upload even on failure so failures are inspectable
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.sha }}
+          path: test_results.xml
+          retention-days: 14
+
+  # ── Job 2: report ─────────────────────────────────────────────────────────────
+  # Runs only on pushes to main (not on PRs).
+  # Builds the full report: tests + benchmarks + plots + REPORT.md.
+  # The output/ directory is uploaded as a downloadable artifact.
+  #
+  # Note: benchmark numbers on shared CI runners reflect correctness and
+  # approximate scaling, not wall-clock performance. Use local runs for
+  # performance measurement.
+  report:
+    name: Report
+    runs-on: ubuntu-22.04
+    needs: tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends \
+            libopenblas-dev \
+            libfftw3-dev \
+            gnuplot \
+            fonts-liberation
+
+      - name: Configure
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DNUMERICS_BUILD_TESTS=ON \
+            -DNUMERICS_BUILD_BENCHMARKS=ON \
+            -DNUMERICS_BUILD_REPORT=ON \
+            -DNUMERICS_BUILD_DOCS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Generate report
+        continue-on-error: true
+        run: cmake --build build --target report
+
+      - name: Post report to job summary
+        if: always()
+        run: |
+          if [ -f output/REPORT.md ]; then
+            echo "*Plots are available in the **numerics-report** artifact below.*" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            grep -v '^!\[' output/REPORT.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Report generation failed" >> $GITHUB_STEP_SUMMARY
+            echo "The report target did not produce output/REPORT.md." >> $GITHUB_STEP_SUMMARY
+            echo "Check the **Generate report** step above for details." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: numerics-report-${{ github.sha }}
+          path: output/
+          retention-days: 90

@@ -1,0 +1,21 @@
+# SIMD — compile-time backend selection
+#   x86-64:  AVX-256 + FMA  (-mavx2 -mfma)
+#   AArch64: ARM NEON       (mandatory, no extra flags needed)
+include(CheckCXXCompilerFlag)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|i686")
+    check_cxx_compiler_flag("-mavx2 -mfma" COMPILER_SUPPORTS_AVX2)
+    if(COMPILER_SUPPORTS_AVX2)
+        target_compile_options(numerics PUBLIC -mavx2 -mfma)
+        target_compile_definitions(numerics PUBLIC NUMERICS_HAS_AVX2 NUMERICS_HAS_SIMD)
+        message(STATUS "SIMD:  AVX-256 + FMA")
+    else()
+        message(STATUS "SIMD:  none (compiler lacks -mavx2)")
+    endif()
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64|ARM64|AARCH64")
+    # NEON is mandatory on AArch64 — no flags needed, just set the guard
+    target_compile_definitions(numerics PUBLIC NUMERICS_HAS_NEON NUMERICS_HAS_SIMD)
+    message(STATUS "SIMD:  ARM NEON")
+else()
+    message(STATUS "SIMD:  none (unknown arch: ${CMAKE_SYSTEM_PROCESSOR})")
+endif()
