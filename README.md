@@ -13,7 +13,7 @@ structured numerical analysis library.
 ## Why numerics?
 
 - **Unified API.** Solver, grid, integrator, and spatial structure compose without glue code.
-- **Backend dispatch.** seq, blocked, SIMD, BLAS, OpenMP, CUDA — selectable per call, zero API change.
+- **Backend dispatch.** seq, blocked, SIMD, BLAS, OpenMP, CUDA (selectable per call).
 - **Several demos.** Every module runs inside a real app: SPH, Navier-Stokes, TDSE, EM, Ising, N-body.
 - **Readable implementation.** Each module has a documented derivation. Implementation follows the math directly.
 - **Extensive testing and benchmarking.** GTest suite per module, Google Benchmark throughput suite, and a CI-generated report with plots.
