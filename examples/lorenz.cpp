@@ -1,5 +1,5 @@
 /// @file examples/lorenz.cpp
-/// @brief Lorenz attractor integrated with num::ode_rk45, plotted with num::plt.
+/// @brief Lorenz attractor integrated with num::rk45, plotted with num::plt.
 ///
 /// The Lorenz system (1963):
 ///   dx/dt = sigma*(y - x)
@@ -7,7 +7,7 @@
 ///   dz/dt = x*y - beta*z
 ///
 /// With classical parameters (sigma=10, rho=28, beta=8/3) the system is chaotic.
-/// num::ode_rk45 adapts the step size automatically throughout the integration.
+/// num::rk45 adapts the step size automatically throughout the integration.
 
 #include "numerics.hpp"
 #include <cstdio>
@@ -25,13 +25,13 @@ int main() {
     xz.reserve(200000);
 
     num::Vector y0 = {1.0, 0.0, 0.0};
-    auto result = num::ode_rk45(lorenz, y0, 0.0, 50.0,
-                                 1e-8, 1e-10, 1e-3, 2000000,
-                                 [&](double, const num::Vector& s) {
-                                     xz.emplace_back(s[0], s[2]);
-                                 });
 
-    printf("%zu steps,  final t = %.4f\n", (size_t)result.steps, result.t);
+    // rk45 returns a lazy range; each iteration yields one Step {t, y} for that accepted step.
+    for (auto [t, y] : num::rk45(lorenz, y0, 0.0, 50.0,
+                                  1e-8, 1e-10, 1e-3, 2000000))
+        xz.emplace_back(y[0], y[2]);
+
+    printf("%zu steps\n", xz.size());
 
     num::plt::plot(xz);
     num::plt::title("Lorenz attractor  (sigma=10, rho=28, beta=8/3)");

@@ -1,5 +1,5 @@
 /// @file test_ode.cpp
-/// @brief Tests for ODE integrators: convergence, energy conservation, callbacks.
+/// @brief Tests for ODE integrators: convergence, energy conservation, stepper ranges.
 #include <gtest/gtest.h>
 #include "ode/ode.hpp"
 #include <cmath>
@@ -96,27 +96,27 @@ TEST(ODE_RK45, ExponentialDecay) {
     EXPECT_NEAR(res.y[0], std::exp(-5.0), 1e-9);
 }
 
-// ── StepCallback ──────────────────────────────────────────────────────────────
+// ── Stepper ranges ────────────────────────────────────────────────────────────
 
-TEST(ODE_Callback, RecordsTrajectory) {
+TEST(ODE_Stepper, RK4RecordsTrajectory) {
     std::vector<real> times;
     std::vector<real> vals;
 
-    ode_rk4(harmonic_osc(), {1.0, 0.0}, 0.0, 1.0, 0.1,
-            [&](real t, const Vector& y) {
-                times.push_back(t);
-                vals.push_back(y[0]);
-            });
+    for (auto [t, y] : rk4(harmonic_osc(), {1.0, 0.0}, 0.0, 1.0, 0.1)) {
+        times.push_back(t);
+        vals.push_back(y[0]);
+    }
 
     EXPECT_EQ(static_cast<int>(times.size()), 10);
     EXPECT_NEAR(times.back(), 1.0, 1e-12);
-    EXPECT_NEAR(vals.back(), std::cos(1.0), 1e-6);  // h=0.1 RK4 gives ~1e-7 error
+    EXPECT_NEAR(vals.back(), std::cos(1.0), 1e-6);
 }
 
-TEST(ODE_Callback, RK45CallbackCount) {
+TEST(ODE_Stepper, RK45StepCount) {
     int count = 0;
-    ode_rk45(harmonic_osc(), {1.0, 0.0}, 0.0, 1.0, 1e-6, 1e-9, 1e-3, 100000,
-             [&](real, const Vector&) { ++count; });
+    for (auto s : rk45(harmonic_osc(), {1.0, 0.0}, 0.0, 1.0,
+                       1e-6, 1e-9, 1e-3, 100000))
+        (void)s, ++count;
     EXPECT_GT(count, 0);
 }
 
@@ -135,15 +135,14 @@ TEST(ODE_Verlet, CircularOrbit) {
 TEST(ODE_Verlet, EnergyBounded) {
     // Verlet energy error stays bounded (oscillates, does not grow)
     real E0 = kepler_energy(kepler_q0(), kepler_v0());
-
     real max_drift = 0.0;
-    ode_verlet(kepler_accel(), kepler_q0(), kepler_v0(), 0.0, 100.0, 0.01,
-               [&](real, const Vector& q, const Vector& v) {
-                   real E = kepler_energy(q, v);
-                   max_drift = std::max(max_drift, std::abs(E - E0));
-               });
 
-    // Energy error must stay small — not growing secularly
+    for (auto [t, q, v] : verlet(kepler_accel(), kepler_q0(), kepler_v0(),
+                                        0.0, 100.0, 0.01)) {
+        (void)t;
+        max_drift = std::max(max_drift, std::abs(kepler_energy(q, v) - E0));
+    }
+
     EXPECT_LT(max_drift, 1e-4);
 }
 
@@ -159,21 +158,19 @@ TEST(ODE_Verlet, EnergyBetterThanRK4Long) {
         dy[0] =  y[2];  dy[1] =  y[3];
         dy[2] = -y[0]/r3; dy[3] = -y[1]/r3;
     };
-    Vector y0{1.0, 0.0, 0.0, 1.0};
     real rk4_max_drift = 0.0;
-    ode_rk4(rhs, y0, 0.0, 200.0, h,
-            [&](real, const Vector& y) {
-                Vector q{y[0],y[1]}, v{y[2],y[3]};
-                rk4_max_drift = std::max(rk4_max_drift,
-                                         std::abs(kepler_energy(q,v) - E0));
-            });
+    for (auto [t, y] : rk4(rhs, Vector{1.0, 0.0, 0.0, 1.0}, 0.0, 200.0, h)) {
+        (void)t;
+        Vector q{y[0], y[1]}, v{y[2], y[3]};
+        rk4_max_drift = std::max(rk4_max_drift, std::abs(kepler_energy(q, v) - E0));
+    }
 
     real verlet_max_drift = 0.0;
-    ode_verlet(kepler_accel(), kepler_q0(), kepler_v0(), 0.0, 200.0, h,
-               [&](real, const Vector& q, const Vector& v) {
-                   verlet_max_drift = std::max(verlet_max_drift,
-                                               std::abs(kepler_energy(q,v) - E0));
-               });
+    for (auto [t, q, v] : verlet(kepler_accel(), kepler_q0(), kepler_v0(),
+                                        0.0, 200.0, h)) {
+        (void)t;
+        verlet_max_drift = std::max(verlet_max_drift, std::abs(kepler_energy(q, v) - E0));
+    }
 
     EXPECT_LT(verlet_max_drift, rk4_max_drift);
 }
@@ -204,19 +201,19 @@ TEST(ODE_Yoshida4, HigherOrderThanVerlet) {
 TEST(ODE_Yoshida4, EnergyBounded) {
     real E0 = kepler_energy(kepler_q0(), kepler_v0());
     real max_drift = 0.0;
-    ode_yoshida4(kepler_accel(), kepler_q0(), kepler_v0(), 0.0, 100.0, 0.05,
-                 [&](real, const Vector& q, const Vector& v) {
-                     max_drift = std::max(max_drift,
-                                          std::abs(kepler_energy(q,v) - E0));
-                 });
+
+    for (auto [t, q, v] : yoshida4(kepler_accel(), kepler_q0(), kepler_v0(),
+                                          0.0, 100.0, 0.05)) {
+        (void)t;
+        max_drift = std::max(max_drift, std::abs(kepler_energy(q, v) - E0));
+    }
+
     EXPECT_LT(max_drift, 1e-8);
 }
 
-// ── SymplecticCallback ────────────────────────────────────────────────────────
-
-TEST(ODE_Verlet, SymplecticCallbackFired) {
+TEST(ODE_Verlet, StepCount) {
     int count = 0;
-    ode_verlet(kepler_accel(), kepler_q0(), kepler_v0(), 0.0, 1.0, 0.1,
-               [&](real, const Vector&, const Vector&) { ++count; });
+    for (auto s : verlet(kepler_accel(), kepler_q0(), kepler_v0(), 0.0, 1.0, 0.1))
+        (void)s, ++count;
     EXPECT_EQ(count, 10);
 }

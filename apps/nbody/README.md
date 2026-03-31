@@ -27,7 +27,7 @@ $$E = \underbrace{\frac{1}{2}\sum_i m_i |\mathbf{v}_i|^2}_{T} - G\sum_{i < j} \f
 | `num::ode_verlet` (`ode/ode.hpp`) | Default integrator: 2nd-order velocity Verlet (symplectic). FSAL -- only 1 force eval per step after initialization |
 | `num::ode_rk4` (`ode/ode.hpp`) | Optional integrator: classic 4th-order Runge-Kutta. 4 force evals per step; energy drifts secularly |
 | `num::AccelFn` | Callback type `void(const Vector& q, Vector& acc)` used for the gravitational acceleration function |
-| `num::SymplecticCallback` | Callback type `void(real t, const Vector& q, const Vector& v)` -- the app uses this for the energy drift history |
+| `num::verlet` / `num::SymplecticStep` | Stepper range -- the app iterates over steps to track the energy drift history |
 | `num::Vector` | Flat arrays storing all positions and velocities: `q = [x0,y0, x1,y1, ...]`, `v = [vx0,vy0, ...]` |
 
 ### Verlet integration (symplectic)
