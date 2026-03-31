@@ -186,15 +186,20 @@ target_link_libraries(my_app PRIVATE numerics)</code></pre>
 int main() {
     const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
 
-    // ODE right-hand side: ds/dt = f(t, s)
+    // ODE right-hand side (lambda function syntax): ds/dt = f(t, s)
     auto lorenz = [&](double, const num::Vector&amp; s, num::Vector&amp; ds) {
         ds[0] = sigma * (s[1] - s[0]);
         ds[1] = s[0] * (rho - s[2]) - s[1];
         ds[2] = s[0] * s[1] - beta * s[2];
     };
 
-    num::Series xz;               // list of (x, y) pairs for plotting
-    num::Vector y0 = {1.0, 0.0, 0.0};  // initial state [x, y, z]
+    // list of (x, y) pairs for plotting
+    num::Series xz;  
+
+    // initial state [x, y, z]
+    num::Vector y0 = {1.0, 0.0, 0.0};  
+
+    // runge-kutta RK4(5)
     num::ode_rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, 2000000,
                   [&](double, const num::Vector&amp; s) {
                       xz.emplace_back(s[0], s[2]);  // record (x, z) for phase portrait
