@@ -74,14 +74,15 @@ void NBodySim::step(double dt) {
     auto accel = [this](const num::Vector& pos, num::Vector& acc) {
         make_accel(pos, acc);
     };
+    num::ODEParams p = {.t0 = t, .tf = t + dt, .h = dt};
     num::SymplecticResult res;
     switch (integrator) {
         case Integrator::Verlet:
-            res = num::ode_verlet  (accel, q, v, t, t + dt, dt); break;
+            res = num::verlet  (accel, q, v, p).run(); break;
         case Integrator::Yoshida4:
-            res = num::ode_yoshida4(accel, q, v, t, t + dt, dt); break;
+            res = num::yoshida4(accel, q, v, p).run(); break;
         case Integrator::RK4:
-            res = num::ode_rk4_2nd (accel, q, v, t, t + dt, dt); break;
+            res = num::rk4_2nd (accel, q, v, p).run(); break;
     }
     q = std::move(res.q);
     v = std::move(res.v);

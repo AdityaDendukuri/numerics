@@ -28,8 +28,10 @@
 
 namespace num {
 
-using ODERhsFn = std::function<void(real t, const Vector& y, Vector& dydt)>;
-using AccelFn  = std::function<void(const Vector& q, Vector& acc)>;
+using ODERhsFn      = std::function<void(real t, const Vector& y, Vector& dydt)>;
+using AccelFn       = std::function<void(const Vector& q, Vector& acc)>;
+using ObserverFn    = std::function<void(real t, const Vector& y)>;
+using SympObserverFn = std::function<void(real t, const Vector& q, const Vector& v)>;
 
 struct Step {
     real   t;
@@ -231,22 +233,22 @@ RK4_2ndSteps  rk4_2nd (AccelFn accel, Vector q0, Vector v0, ODEParams p = {});
 // High-level integrators — return final state only
 
 /// @brief Forward Euler, 1st-order, fixed step.
-ODEResult ode_euler(ODERhsFn f, Vector y0, ODEParams p = {});
+ODEResult ode_euler(ODERhsFn f, Vector y0, ODEParams p = {}, ObserverFn obs = nullptr);
 
 /// @brief Classic 4th-order Runge-Kutta, fixed step.
-ODEResult ode_rk4(ODERhsFn f, Vector y0, ODEParams p = {});
+ODEResult ode_rk4(ODERhsFn f, Vector y0, ODEParams p = {}, ObserverFn obs = nullptr);
 
 /// @brief Adaptive Dormand-Prince RK45 with FSAL and PI step-size control.
-ODEResult ode_rk45(ODERhsFn f, Vector y0, ODEParams p = {});
+ODEResult ode_rk45(ODERhsFn f, Vector y0, ODEParams p = {}, ObserverFn obs = nullptr);
 
 /// @brief Velocity Verlet, 2nd-order symplectic, 1 force evaluation per step.
-SymplecticResult ode_verlet(AccelFn accel, Vector q0, Vector v0, ODEParams p = {});
+SymplecticResult ode_verlet(AccelFn accel, Vector q0, Vector v0, ODEParams p = {}, SympObserverFn obs = nullptr);
 
 /// @brief Yoshida 4th-order symplectic, 3 force evaluations per step.
-SymplecticResult ode_yoshida4(AccelFn accel, Vector q0, Vector v0, ODEParams p = {});
+SymplecticResult ode_yoshida4(AccelFn accel, Vector q0, Vector v0, ODEParams p = {}, SympObserverFn obs = nullptr);
 
 /// @brief RK4 for second-order systems q'' = accel(q), Nystrom form.
 /// @note Not symplectic. Prefer ode_verlet or ode_yoshida4 for long Hamiltonian runs.
-SymplecticResult ode_rk4_2nd(AccelFn accel, Vector q0, Vector v0, ODEParams p = {});
+SymplecticResult ode_rk4_2nd(AccelFn accel, Vector q0, Vector v0, ODEParams p = {}, SympObserverFn obs = nullptr);
 
 } // namespace num

@@ -272,13 +272,13 @@ VerletSteps   verlet  (AccelFn a, Vector q0, Vector v0, ODEParams p) { return Ve
 Yoshida4Steps yoshida4(AccelFn a, Vector q0, Vector v0, ODEParams p) { return Yoshida4Steps(std::move(a), std::move(q0), std::move(v0), p); }
 RK4_2ndSteps  rk4_2nd (AccelFn a, Vector q0, Vector v0, ODEParams p){ return RK4_2ndSteps(std::move(a), std::move(q0), std::move(v0), p); }
 
-// High-level wrappers
+// High-level wrappers — run to completion, call obs at each accepted step if provided.
 
-ODEResult ode_euler  (ODERhsFn f, Vector y0, ODEParams p) { return euler(std::move(f), std::move(y0), p).run(); }
-ODEResult ode_rk4    (ODERhsFn f, Vector y0, ODEParams p) { return rk4(std::move(f), std::move(y0), p).run(); }
-ODEResult ode_rk45   (ODERhsFn f, Vector y0, ODEParams p) { return rk45(std::move(f), std::move(y0), p).run(); }
-SymplecticResult ode_verlet  (AccelFn a, Vector q0, Vector v0, ODEParams p)  { return verlet(std::move(a), std::move(q0), std::move(v0), p).run(); }
-SymplecticResult ode_yoshida4(AccelFn a, Vector q0, Vector v0, ODEParams p)  { return yoshida4(std::move(a), std::move(q0), std::move(v0), p).run(); }
-SymplecticResult ode_rk4_2nd (AccelFn a, Vector q0, Vector v0, ODEParams p)  { return rk4_2nd(std::move(a), std::move(q0), std::move(v0), p).run(); }
+ODEResult        ode_euler  (ODERhsFn f, Vector y0, ODEParams p, ObserverFn obs)     { auto s = euler(std::move(f), std::move(y0), p);    if (obs) for (auto step : s) obs(step.t, step.y); return s.run(); }
+ODEResult        ode_rk4    (ODERhsFn f, Vector y0, ODEParams p, ObserverFn obs)     { auto s = rk4(std::move(f), std::move(y0), p);      if (obs) for (auto step : s) obs(step.t, step.y); return s.run(); }
+ODEResult        ode_rk45   (ODERhsFn f, Vector y0, ODEParams p, ObserverFn obs)     { auto s = rk45(std::move(f), std::move(y0), p);     if (obs) for (auto step : s) obs(step.t, step.y); return s.run(); }
+SymplecticResult ode_verlet  (AccelFn a, Vector q0, Vector v0, ODEParams p, SympObserverFn obs) { auto s = verlet(std::move(a), std::move(q0), std::move(v0), p);   if (obs) for (auto step : s) obs(step.t, step.q, step.v); return s.run(); }
+SymplecticResult ode_yoshida4(AccelFn a, Vector q0, Vector v0, ODEParams p, SympObserverFn obs) { auto s = yoshida4(std::move(a), std::move(q0), std::move(v0), p); if (obs) for (auto step : s) obs(step.t, step.q, step.v); return s.run(); }
+SymplecticResult ode_rk4_2nd (AccelFn a, Vector q0, Vector v0, ODEParams p, SympObserverFn obs) { auto s = rk4_2nd(std::move(a), std::move(q0), std::move(v0), p);  if (obs) for (auto step : s) obs(step.t, step.q, step.v); return s.run(); }
 
 } // namespace num

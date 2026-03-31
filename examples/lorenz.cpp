@@ -28,9 +28,13 @@ int main() {
 
     num::ODEParams params = {.tf = 50.0, .rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000};
 
-    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 -- each iteration is one accepted Step {t, y}.
-    for (auto [t, y] : num::rk45(lorenz, y0, params))
+    // observer: stores the (x, z) output at each accepted step
+    auto observer = [&](double /*t*/, const num::Vector& y) {
         xz.emplace_back(y[0], y[2]);
+    };
+
+    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10
+    num::ode_rk45(lorenz, y0, params, observer);
 
     printf("%zu steps\n", xz.size());
 
