@@ -185,35 +185,35 @@ target_link_libraries(my_app PRIVATE numerics)</code></pre>
 
 int main() {
     const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
+    const int MAXITER = 2000000;
 
-    // ODE right-hand side (lambda function syntax): ds/dt = f(t, s)
-    auto lorenz = [&](double, const num::Vector&amp; s, num::Vector&amp; ds) {
+    // ODE right-hand side: ds/dt = f(t, s)
+    auto lorenz = [&](double, const num::Vector& s, num::Vector& ds) {
         ds[0] = sigma * (s[1] - s[0]);
         ds[1] = s[0] * (rho - s[2]) - s[1];
         ds[2] = s[0] * s[1] - beta * s[2];
     };
 
-    // list of (x, y) pairs for plotting
-    num::Series xz;  
-
     // initial state [x, y, z]
-    num::Vector y0 = {1.0, 0.0, 0.0};  
+    num::Vector y0 = {1.0, 0.0, 0.0};
+    num::Series xz;
 
-    // runge-kutta RK4(5)
-    num::ode_rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, 2000000,
-                  [&](double, const num::Vector&amp; s) {
-                      xz.emplace_back(s[0], s[2]);  // record (x, z) for phase portrait
-                  });
+    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 
+    // each iteration is one accepted Step {t, y}.
+    for (auto [t, y] : num::rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, MAXITER))
+        xz.emplace_back(y[0], y[2]); // store step output in xz
 
     num::plt::plot(xz);
-    num::plt::title("Lorenz attractor  (sigma=10, rho=28, beta=8/3)");
-    num::plt::xlabel("x");  num::plt::ylabel("z");
+    num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");
+    num::plt::xlabel("x");
+    num::plt::ylabel("z");
     num::plt::savefig("lorenz.png");
+}
 }</code></pre>
     </div>
     <div class="example-fig">
       <img src="lorenz.png" alt="Lorenz attractor phase portrait (x vs z)">
-      <div class="cap"><strong>Lorenz attractor</strong> — adaptive RK45 via <code>num::ode_rk45</code></div>
+      <div class="cap"><strong>Lorenz attractor</strong> — adaptive RK45 via <code>num::rk45</code></div>
     </div>
   </div>
 

@@ -26,7 +26,7 @@ int main() {
 
     num::Vector y0 = {1.0, 0.0, 0.0};
 
-    // rk45 returns a lazy range; each iteration yields one Step {t, y} for that accepted step.
+    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 — each iteration is one accepted Step {t, y}.
     for (auto [t, y] : num::rk45(lorenz, y0, 0.0, 50.0,
                                   1e-8, 1e-10, 1e-3, 2000000))
         xz.emplace_back(y[0], y[2]);

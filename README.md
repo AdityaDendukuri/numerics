@@ -16,6 +16,7 @@ For example, here is a simple program for simulating the Lorenz attractor:
 
 int main() {
     const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
+    const int MAXITER = 2000000;
 
     // ODE right-hand side: ds/dt = f(t, s)
     auto lorenz = [&](double, const num::Vector& s, num::Vector& ds) {
@@ -26,17 +27,12 @@ int main() {
 
     // initial state [x, y, z]
     num::Vector y0 = {1.0, 0.0, 0.0};
-
-    // container for plotting data
     num::Series xz;
 
-    // tell the solver to store (x, z) after each accepted step
-    auto record_state = [&](double, const num::Vector& s) {
-        xz.emplace_back(s[0], s[2]);
-    };
-
-    // Runge-Kutta RK4(5)
-    num::ode_rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, 2000000, record_state);
+    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 
+    // each iteration is one accepted Step {t, y}.
+    for (auto [t, y] : num::rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, MAXITER))
+        xz.emplace_back(y[0], y[2]); // store step output in xz
 
     num::plt::plot(xz);
     num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");
