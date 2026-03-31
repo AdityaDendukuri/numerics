@@ -278,7 +278,7 @@ int main() {
     for (double T = 0.5; T &lt;= 4.0; T += 0.1) {
         double beta = 1.0 / T;
         auto acc = [&](int i) {
-            // ΔE = 2·s_i·(sum of 4 neighbors); accept via Boltzmann weight
+            //  2 * s_i * (sum of 4 neighbors); accept via Boltzmann weight
             double ns = spins[nbr.up[i]] + spins[nbr.dn[i]]
                       + spins[nbr.lt[i]] + spins[nbr.rt[i]];
             return num::markov::boltzmann_accept(2.0*spins[i]*ns, beta);
