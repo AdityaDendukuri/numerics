@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>numerics — Scientific Computing Library</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -95,6 +96,8 @@
     /* ── Code block ── */
     pre { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.55; }
     code { font-family: "SFMono-Regular", Consolas, monospace; }
+    /* prevent hljs theme from overriding our pre layout */
+    pre code.hljs { background: transparent; padding: 0; border-radius: 0; font-size: inherit; line-height: inherit; }
 
     footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: var(--dim); border-top: 1px solid var(--border); }
   </style>
@@ -178,22 +181,23 @@ target_link_libraries(my_app PRIVATE numerics)</code></pre>
   <!-- Panel 0: Lorenz -->
   <div class="ex-panel active" id="ex-0">
     <div class="example-code">
-      <pre><code>#include "numerics.hpp"
+      <pre><code class="language-cpp">#include "numerics.hpp"
 
 int main() {
     const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
 
+    // ODE right-hand side: ds/dt = f(t, s)
     auto lorenz = [&](double, const num::Vector&amp; s, num::Vector&amp; ds) {
         ds[0] = sigma * (s[1] - s[0]);
         ds[1] = s[0] * (rho - s[2]) - s[1];
         ds[2] = s[0] * s[1] - beta * s[2];
     };
 
-    num::Series xz;
-    num::Vector y0 = {1.0, 0.0, 0.0};
+    num::Series xz;               // list of (x, y) pairs for plotting
+    num::Vector y0 = {1.0, 0.0, 0.0};  // initial state [x, y, z]
     num::ode_rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, 2000000,
                   [&](double, const num::Vector&amp; s) {
-                      xz.emplace_back(s[0], s[2]);
+                      xz.emplace_back(s[0], s[2]);  // record (x, z) for phase portrait
                   });
 
     num::plt::plot(xz);
@@ -211,25 +215,27 @@ int main() {
   <!-- Panel 1: FFT -->
   <div class="ex-panel" id="ex-1">
     <div class="example-code">
-      <pre><code>#include "plot/plot.hpp"
+      <pre><code class="language-cpp">#include "plot/plot.hpp"
 #include "spectral/fft.hpp"
 
 int main() {
-    const int N = 1024; const double fs = 1000.0;
+    const int N = 1024; const double fs = 1000.0;  // N samples at fs Hz
 
-    num::Vector x(N);
+    num::Vector x(N);  // real-valued time-domain signal
     for (int i = 0; i &lt; N; ++i)
         x[i] = std::sin(2*M_PI*50.0*i/fs)
              + 0.5*std::sin(2*M_PI*120.0*i/fs);
 
-    num::CVector X(N/2 + 1);
+    // rfft output has N/2+1 bins: real input has conjugate symmetry,
+    // so only the non-redundant half [0 .. N/2] is stored
+    num::CVector X(N/2 + 1);  // complex frequency-domain coefficients
     num::spectral::rfft(x, X);
 
-    num::Series signal, spectrum;
+    num::Series signal, spectrum;  // lists of (x, y) pairs for plotting
     for (int i = 0; i &lt; 100; ++i)
         signal.emplace_back(i/fs*1000.0, x[i]);  // first 100 ms
     for (int k = 0; k &lt; (int)X.size(); ++k)
-        spectrum.emplace_back(k*fs/N, std::abs(X[k]));
+        spectrum.emplace_back(k*fs/N, std::abs(X[k]));  // bin k maps to freq k*fs/N Hz
 
     num::plt::subplot(2, 1);
     num::plt::plot(signal);
@@ -253,26 +259,27 @@ int main() {
   <!-- Panel 2: Ising -->
   <div class="ex-panel" id="ex-2">
     <div class="example-code">
-      <pre><code>#include "numerics.hpp"
+      <pre><code class="language-cpp">#include "numerics.hpp"
 #include "spatial/pbc_lattice.hpp"
 #include "stochastic/boltzmann_table.hpp"
 
 int main() {
     const int N = 64, NN = N*N;
-    num::PBCLattice2D nbr(N);
+    num::PBCLattice2D nbr(N);   // precomputed up/dn/lt/rt neighbor indices (periodic boundaries)
     std::vector&lt;double&gt; spins(NN);
     std::mt19937 rng(42);
 
-    num::Series curve;
+    num::Series curve;  // (T, |m|) points for the magnetization curve
     for (double T = 0.5; T &lt;= 4.0; T += 0.1) {
         double beta = 1.0 / T;
         auto acc = [&](int i) {
+            // ΔE = 2·s_i·(sum of 4 neighbors); accept via Boltzmann weight
             double ns = spins[nbr.up[i]] + spins[nbr.dn[i]]
                       + spins[nbr.lt[i]] + spins[nbr.rt[i]];
             return num::markov::boltzmann_accept(2.0*spins[i]*ns, beta);
         };
         auto flip = [&](int i) { spins[i] = -spins[i]; };
-        for (int s = 0; s &lt; 500; ++s)
+        for (int s = 0; s &lt; 500; ++s)  // 500 sweeps to equilibrate at each T
             num::markov::metropolis_sweep_prob(NN, acc, flip, rng);
         // measure |&lt;m&gt;| ...
         curve.emplace_back(T, /* |m| */ 0.0);
@@ -541,6 +548,10 @@ function showEx(idx) {
   document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
 })();
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+<script>hljs.highlightAll();</script>
 
 <footer>
   <p>numerics · <a href="https://github.com/AdityaDendukuri/numerics">github.com/AdityaDendukuri/numerics</a> · built by <a href="https://adityadendukuri.github.io">Aditya Dendukuri</a></p>
