@@ -16,22 +16,20 @@ For example, here is a simple program for simulating the Lorenz attractor:
 
 int main() {
     const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
-    const int MAXITER = 2000000;
 
-    // ODE right-hand side: ds/dt = f(t, s)
     auto lorenz = [&](double, const num::Vector& s, num::Vector& ds) {
         ds[0] = sigma * (s[1] - s[0]);
         ds[1] = s[0] * (rho - s[2]) - s[1];
         ds[2] = s[0] * s[1] - beta * s[2];
     };
 
-    // initial state [x, y, z]
     num::Vector y0 = {1.0, 0.0, 0.0};
     num::Series xz;
 
-    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 
-    // each iteration is one accepted Step {t, y}.
-    for (auto [t, y] : num::rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, MAXITER))
+    num::ODEParams params = {.tf = 50.0, .rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000};
+
+    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 -- each iteration is one accepted Step {t, y}.
+    for (auto [t, y] : num::rk45(lorenz, y0, params))
         xz.store(y[0], y[2]);
 
     num::plt::plot(xz);

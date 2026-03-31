@@ -21,30 +21,27 @@ int main() {
         ds[2] = s[0] * s[1] - beta * s[2];
     };
 
-    num::Series xz;
-    xz.reserve(200000);
-
     num::Vector y0 = {1.0, 0.0, 0.0};
+    num::Series xz;
 
-    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 
-    // each iteration is one accepted Step {t, y}.
-    for (auto [t, y] : num::rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, 2000000))
+    num::ODEParams params = {.tf = 50.0, .rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000};
+
+    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 -- each iteration is one accepted Step {t, y}.
+    for (auto [t, y] : num::rk45(lorenz, y0, params))
         xz.store(y[0], y[2]);
 
-    printf("%zu steps\n", xz.size());
-
     num::plt::plot(xz);
-    num::plt::title("Lorenz attractor  (sigma=10, rho=28, beta=8/3)");
+    num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");
     num::plt::xlabel("x");
     num::plt::ylabel("z");
-    num::plt::show();
+    num::plt::savefig("lorenz.png");
 }
 ```
 
 Build and run (requires gnuplot in PATH):
 
 ```
-g++ -std=c++17 -O2 -Iinclude examples/lorenz.cpp src/ode/ode.cpp -o lorenz
+g++ -std=c++20 -O2 -Iinclude examples/lorenz.cpp src/ode/ode.cpp -o lorenz
 ./lorenz
 ```
 

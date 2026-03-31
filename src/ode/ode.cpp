@@ -12,9 +12,9 @@ static void axpy_vec(real alpha, const Vector& x, Vector& y) {
 static real eps_guard(real t1) { return 1e-14 * std::abs(t1); }
 
 
-EulerSteps::EulerSteps(ODERhsFn f, Vector y0, real t0, real t1, real h)
+EulerSteps::EulerSteps(ODERhsFn f, Vector y0, ODEParams p)
     : f_(std::move(f)), y_(std::move(y0)), dydt_(y_.size()),
-      t_(t0), t1_(t1), h_(h) {}
+      t_(p.t0), t1_(p.tf), h_(p.h) {}
 
 void EulerSteps::advance() {
     if (t_ >= t1_ - eps_guard(t1_)) { done_ = true; return; }
@@ -31,11 +31,11 @@ ODEResult EulerSteps::run() {
 }
 
 
-RK4Steps::RK4Steps(ODERhsFn f, Vector y0, real t0, real t1, real h)
+RK4Steps::RK4Steps(ODERhsFn f, Vector y0, ODEParams p)
     : f_(std::move(f)), y_(std::move(y0)),
       k1_(y_.size()), k2_(y_.size()), k3_(y_.size()),
       k4_(y_.size()), ytmp_(y_.size()),
-      t_(t0), t1_(t1), h_(h) {}
+      t_(p.t0), t1_(p.tf), h_(p.h) {}
 
 void RK4Steps::advance() {
     if (t_ >= t1_ - eps_guard(t1_)) { done_ = true; return; }
@@ -81,14 +81,13 @@ static constexpr real rk45_e1 =  71.0/57600.0,  rk45_e3 = -71.0/16695.0,
                       rk45_e4 =  71.0/1920.0,   rk45_e5 = -17253.0/339200.0,
                       rk45_e6 =  22.0/525.0,    rk45_e7 = -1.0/40.0;
 
-RK45Steps::RK45Steps(ODERhsFn f, Vector y0, real t0, real t1,
-                     real rtol, real atol, real h0, idx max_steps)
+RK45Steps::RK45Steps(ODERhsFn f, Vector y0, ODEParams p)
     : f_(std::move(f)), y_(std::move(y0)),
       k1_(y_.size()), k2_(y_.size()), k3_(y_.size()), k4_(y_.size()),
       k5_(y_.size()), k6_(y_.size()), k7_(y_.size()),
       ytmp_(y_.size()), err_(y_.size()),
-      t_(t0), t1_(t1), h_(std::min(h0, t1 - t0)),
-      rtol_(rtol), atol_(atol), max_steps_(max_steps)
+      t_(p.t0), t1_(p.tf), h_(std::min(p.h, p.tf - p.t0)),
+      rtol_(p.rtol), atol_(p.atol), max_steps_(p.max_steps)
 {
     f_(t_, y_, k1_);  // prime k1 for FSAL
 }
@@ -159,12 +158,11 @@ ODEResult RK45Steps::run() {
 }
 
 
-VerletSteps::VerletSteps(AccelFn accel, Vector q0, Vector v0,
-                          real t0, real t1, real h)
+VerletSteps::VerletSteps(AccelFn accel, Vector q0, Vector v0, ODEParams p)
     : accel_(std::move(accel)),
       q_(std::move(q0)), v_(std::move(v0)),
       a_cur_(q_.size()), a_next_(q_.size()),
-      t_(t0), t1_(t1), h_(h)
+      t_(p.t0), t1_(p.tf), h_(p.h)
 {
     accel_(q_, a_cur_);  // prime initial acceleration
 }
@@ -193,11 +191,10 @@ SymplecticResult VerletSteps::run() {
 }
 
 
-Yoshida4Steps::Yoshida4Steps(AccelFn accel, Vector q0, Vector v0,
-                              real t0, real t1, real h)
+Yoshida4Steps::Yoshida4Steps(AccelFn accel, Vector q0, Vector v0, ODEParams p)
     : accel_(std::move(accel)),
       q_(std::move(q0)), v_(std::move(v0)), acc_(q_.size()),
-      t_(t0), t1_(t1), h_(h) {}
+      t_(p.t0), t1_(p.tf), h_(p.h) {}
 
 void Yoshida4Steps::advance() {
     if (t_ >= t1_ - eps_guard(t1_)) { done_ = true; return; }
@@ -232,13 +229,12 @@ SymplecticResult Yoshida4Steps::run() {
 }
 
 
-RK4_2ndSteps::RK4_2ndSteps(AccelFn accel, Vector q0, Vector v0,
-                            real t0, real t1, real h)
+RK4_2ndSteps::RK4_2ndSteps(AccelFn accel, Vector q0, Vector v0, ODEParams p)
     : accel_(std::move(accel)),
       q_(std::move(q0)), v_(std::move(v0)),
       a1_(q_.size()), a2_(q_.size()), a3_(q_.size()), a4_(q_.size()),
       qtmp_(q_.size()),
-      t_(t0), t1_(t1), h_(h) {}
+      t_(p.t0), t1_(p.tf), h_(p.h) {}
 
 void RK4_2ndSteps::advance() {
     if (t_ >= t1_ - eps_guard(t1_)) { done_ = true; return; }
@@ -268,59 +264,21 @@ SymplecticResult RK4_2ndSteps::run() {
 
 // Factory functions
 
-EulerSteps euler(ODERhsFn f, Vector y0, real t0, real t1, real h) {
-    return EulerSteps(std::move(f), std::move(y0), t0, t1, h);
-}
+EulerSteps    euler   (ODERhsFn f, Vector y0, ODEParams p) { return EulerSteps(std::move(f), std::move(y0), p); }
+RK4Steps      rk4     (ODERhsFn f, Vector y0, ODEParams p) { return RK4Steps(std::move(f), std::move(y0), p); }
+RK45Steps     rk45    (ODERhsFn f, Vector y0, ODEParams p) { return RK45Steps(std::move(f), std::move(y0), p); }
 
-RK4Steps rk4(ODERhsFn f, Vector y0, real t0, real t1, real h) {
-    return RK4Steps(std::move(f), std::move(y0), t0, t1, h);
-}
-
-RK45Steps rk45(ODERhsFn f, Vector y0, real t0, real t1,
-               real rtol, real atol, real h0, idx max_steps) {
-    return RK45Steps(std::move(f), std::move(y0), t0, t1, rtol, atol, h0, max_steps);
-}
-
-VerletSteps verlet(AccelFn accel, Vector q0, Vector v0, real t0, real t1, real h) {
-    return VerletSteps(std::move(accel), std::move(q0), std::move(v0), t0, t1, h);
-}
-
-Yoshida4Steps yoshida4(AccelFn accel, Vector q0, Vector v0, real t0, real t1, real h) {
-    return Yoshida4Steps(std::move(accel), std::move(q0), std::move(v0), t0, t1, h);
-}
-
-RK4_2ndSteps rk4_2nd(AccelFn accel, Vector q0, Vector v0, real t0, real t1, real h) {
-    return RK4_2ndSteps(std::move(accel), std::move(q0), std::move(v0), t0, t1, h);
-}
+VerletSteps   verlet  (AccelFn a, Vector q0, Vector v0, ODEParams p) { return VerletSteps(std::move(a), std::move(q0), std::move(v0), p); }
+Yoshida4Steps yoshida4(AccelFn a, Vector q0, Vector v0, ODEParams p) { return Yoshida4Steps(std::move(a), std::move(q0), std::move(v0), p); }
+RK4_2ndSteps  rk4_2nd (AccelFn a, Vector q0, Vector v0, ODEParams p){ return RK4_2ndSteps(std::move(a), std::move(q0), std::move(v0), p); }
 
 // High-level wrappers
 
-ODEResult ode_euler(ODERhsFn f, Vector y0, real t0, real t1, real h) {
-    return euler(std::move(f), std::move(y0), t0, t1, h).run();
-}
-
-ODEResult ode_rk4(ODERhsFn f, Vector y0, real t0, real t1, real h) {
-    return rk4(std::move(f), std::move(y0), t0, t1, h).run();
-}
-
-ODEResult ode_rk45(ODERhsFn f, Vector y0, real t0, real t1,
-                   real rtol, real atol, real h0, idx max_steps) {
-    return rk45(std::move(f), std::move(y0), t0, t1, rtol, atol, h0, max_steps).run();
-}
-
-SymplecticResult ode_verlet(AccelFn accel, Vector q0, Vector v0,
-                             real t0, real t1, real h) {
-    return verlet(std::move(accel), std::move(q0), std::move(v0), t0, t1, h).run();
-}
-
-SymplecticResult ode_yoshida4(AccelFn accel, Vector q0, Vector v0,
-                               real t0, real t1, real h) {
-    return yoshida4(std::move(accel), std::move(q0), std::move(v0), t0, t1, h).run();
-}
-
-SymplecticResult ode_rk4_2nd(AccelFn accel, Vector q0, Vector v0,
-                              real t0, real t1, real h) {
-    return rk4_2nd(std::move(accel), std::move(q0), std::move(v0), t0, t1, h).run();
-}
+ODEResult ode_euler  (ODERhsFn f, Vector y0, ODEParams p) { return euler(std::move(f), std::move(y0), p).run(); }
+ODEResult ode_rk4    (ODERhsFn f, Vector y0, ODEParams p) { return rk4(std::move(f), std::move(y0), p).run(); }
+ODEResult ode_rk45   (ODERhsFn f, Vector y0, ODEParams p) { return rk45(std::move(f), std::move(y0), p).run(); }
+SymplecticResult ode_verlet  (AccelFn a, Vector q0, Vector v0, ODEParams p)  { return verlet(std::move(a), std::move(q0), std::move(v0), p).run(); }
+SymplecticResult ode_yoshida4(AccelFn a, Vector q0, Vector v0, ODEParams p)  { return yoshida4(std::move(a), std::move(q0), std::move(v0), p).run(); }
+SymplecticResult ode_rk4_2nd (AccelFn a, Vector q0, Vector v0, ODEParams p)  { return rk4_2nd(std::move(a), std::move(q0), std::move(v0), p).run(); }
 
 } // namespace num
