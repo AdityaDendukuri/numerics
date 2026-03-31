@@ -5,15 +5,50 @@ Unified API across linear algebra, iterative solvers, FFT, MCMC, PDE/ODE, and sp
 structures. Backend dispatch (BLAS, SIMD, OpenMP, CUDA) selects the fastest available path
 without changing the call site.
 
----
-
 ## Why numerics?
 
-- **Unified API.** Solver, grid, integrator, and spatial structure compose without glue code.
-- **Backend dispatch.** seq, blocked, SIMD, BLAS, OpenMP, CUDA (selectable per call).
-- **Several demos.** Every module runs inside a real app: SPH, Navier-Stokes, TDSE, EM, Ising, N-body.
-- **Documented.** Each module has an algorithm guide with the math and API.
-- **Extensive testing and benchmarking.** GTest suite per module, Google Benchmark throughput suite, and a CI-generated report with plots.
+`numerics` started off as my attempt to standardize all of the code I had written throughout my research projects and courses. Over time, that snowballed into a much more structured package that, in many ways, functions like a C++ analogue of NumPy and SciPy.
+
+For example, here is a simple program for simulating the Lorenz attractor:
+
+```cpp
+#include "numerics.hpp"
+
+int main() {
+    const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
+
+    // ODE right-hand side: ds/dt = f(t, s)
+    auto lorenz = [&](double, const num::Vector& s, num::Vector& ds) {
+        ds[0] = sigma * (s[1] - s[0]);
+        ds[1] = s[0] * (rho - s[2]) - s[1];
+        ds[2] = s[0] * s[1] - beta * s[2];
+    };
+
+    // initial state [x, y, z]
+    num::Vector y0 = {1.0, 0.0, 0.0};
+
+    // container for plotting data
+    num::Series xz;
+
+    // tell the solver to store (x, z) after each accepted step
+    auto record_state = [&](double, const num::Vector& s) {
+        xz.emplace_back(s[0], s[2]);
+    };
+
+    // Runge-Kutta RK4(5)
+    num::ode_rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, 2000000, record_state);
+
+    num::plt::plot(xz);
+    num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");
+    num::plt::xlabel("x");
+    num::plt::ylabel("z");
+    num::plt::savefig("lorenz.png");
+}
+```
+
+Another major feature of the library is backend dispatch. Many of the core linear algebra and numerical kernels can automatically route to the fastest available implementation depending on what is installed on your system. That includes support for sequential, SIMD, BLAS, OpenMP, and CUDA backends, while keeping the user-facing call site unchanged.
+
+`numerics` also has a fairly extensive testing and benchmarking framework. Benchmark output can be fed directly into a gnuplot-based workflow to automatically generate plots, which makes it much easier to compare implementations and see where the performance differences actually come from.
 
 ---
 
