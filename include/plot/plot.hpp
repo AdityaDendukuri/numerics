@@ -36,9 +36,14 @@
 namespace num {
 
 /// (x, y) data point.
-using Point  = std::pair<double, double>;
+using Point = std::pair<double, double>;
+
 /// Ordered (x, y) series.
-using Series = std::vector<Point>;
+struct Series : std::vector<Point> {
+    using std::vector<Point>::vector;
+    /// Append a point to the series.
+    void store(double x, double y) { emplace_back(x, y); }
+};
 
 // Low-level gnuplot pipe (used by bench_plot and plt:: internally)
 

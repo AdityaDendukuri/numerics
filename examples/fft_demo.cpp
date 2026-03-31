@@ -23,9 +23,9 @@ int main() {
 
     num::Series signal, spectrum;
     for (int i = 0; i < 100; ++i)
-        signal.emplace_back(i / fs * 1000.0, x[i]);   // first 100 ms
+        signal.store(i / fs * 1000.0, x[i]);   // first 100 ms
     for (int k = 0; k < (int)X.size(); ++k)
-        spectrum.emplace_back(k * fs / N, std::abs(X[k]));
+        spectrum.store(k * fs / N, std::abs(X[k]));
 
     num::plt::subplot(2, 1);
     num::plt::plot(signal);

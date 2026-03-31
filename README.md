@@ -32,7 +32,7 @@ int main() {
     // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10 
     // each iteration is one accepted Step {t, y}.
     for (auto [t, y] : num::rk45(lorenz, y0, 0.0, 50.0, 1e-8, 1e-10, 1e-3, MAXITER))
-        xz.emplace_back(y[0], y[2]); // store step output in xz
+        xz.store(y[0], y[2]);
 
     num::plt::plot(xz);
     num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");

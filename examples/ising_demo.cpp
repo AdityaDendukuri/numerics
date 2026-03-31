@@ -49,7 +49,7 @@ int main() {
             num::markov::metropolis_sweep_prob(NN, acc_prob, flip, rng);
             m += std::abs(std::accumulate(spins.begin(), spins.end(), 0.0) / NN);
         }
-        curve.emplace_back(T, m / measurement_sweeps);
+        curve.store(T, m / measurement_sweeps);
     }
 
     num::plt::plot(curve);
