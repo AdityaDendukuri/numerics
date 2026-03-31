@@ -8,7 +8,7 @@
 #include <vector>
 
 #if defined(NUMERICS_HAS_LAPACK)
-#  include <lapacke.h>
+    #include <lapacke.h>
 #endif
 
 namespace num::backends::lapack {
@@ -18,17 +18,19 @@ QRResult qr(const Matrix& A) {
     const idx m = A.rows(), n = A.cols();
     const idx k = std::min(m, n);
 
-    Matrix R = A;
+    Matrix              R = A;
     std::vector<double> tau(k);
 
-    int info = LAPACKE_dgeqrf(LAPACK_ROW_MAJOR,
-                              static_cast<lapack_int>(m),
-                              static_cast<lapack_int>(n),
-                              R.data(),
-                              static_cast<lapack_int>(n),   // lda = cols (row-major)
-                              tau.data());
+    int info =
+        LAPACKE_dgeqrf(LAPACK_ROW_MAJOR,
+                       static_cast<lapack_int>(m),
+                       static_cast<lapack_int>(n),
+                       R.data(),
+                       static_cast<lapack_int>(n), // lda = cols (row-major)
+                       tau.data());
     if (info != 0)
-        throw std::runtime_error("qr (lapack): dgeqrf failed, info=" + std::to_string(info));
+        throw std::runtime_error("qr (lapack): dgeqrf failed, info="
+                                 + std::to_string(info));
 
     // Extract upper triangle as R
     Matrix Rmat = R;
@@ -47,10 +49,11 @@ QRResult qr(const Matrix& A) {
                           static_cast<lapack_int>(m),
                           static_cast<lapack_int>(k),
                           Q.data(),
-                          static_cast<lapack_int>(m),   // lda = cols = m (square)
+                          static_cast<lapack_int>(m), // lda = cols = m (square)
                           tau.data());
     if (info != 0)
-        throw std::runtime_error("qr (lapack): dorgqr failed, info=" + std::to_string(info));
+        throw std::runtime_error("qr (lapack): dorgqr failed, info="
+                                 + std::to_string(info));
 
     return {std::move(Q), std::move(Rmat)};
 #else

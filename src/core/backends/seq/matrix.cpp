@@ -1,8 +1,8 @@
 /// @file core/backends/seq/matrix.cpp
 /// @brief Sequential and blocked C++ matrix operations
 ///
-/// seq:     textbook reference implementations (correct, readable, always available).
-/// blocked: cache-blocked loops that compiler can auto-vectorize.
+/// seq:     textbook reference implementations (correct, readable, always
+/// available). blocked: cache-blocked loops that compiler can auto-vectorize.
 ///   matmul_blocked and matmul_register_blocked live here -- they are pure
 ///   optimization algorithms, not class implementation.
 
@@ -29,7 +29,11 @@ void matvec(const Matrix& A, const Vector& x, Vector& y) {
     }
 }
 
-void matadd(real alpha, const Matrix& A, real beta, const Matrix& B, Matrix& C) {
+void matadd(real          alpha,
+            const Matrix& A,
+            real          beta,
+            const Matrix& B,
+            Matrix&       C) {
     for (idx i = 0; i < A.size(); ++i)
         C.data()[i] = alpha * A.data()[i] + beta * B.data()[i];
 }
@@ -70,7 +74,10 @@ void matadd(real alpha, const Matrix& A, real beta, const Matrix& B, Matrix& C) 
 //     C[i][j] += scalar * B[k][j]   <- AXPY on contiguous memory
 // Trivially auto-vectorisable.
 
-void matmul_blocked(const Matrix& A, const Matrix& B, Matrix& C, idx block_size) {
+void matmul_blocked(const Matrix& A,
+                    const Matrix& B,
+                    Matrix&       C,
+                    idx           block_size) {
     const idx M = A.rows(), K = A.cols(), N = B.cols();
     std::fill_n(C.data(), M * N, real(0));
 
@@ -104,8 +111,11 @@ void matmul_blocked(const Matrix& A, const Matrix& B, Matrix& C, idx block_size)
 // bridge: the loop structure here is exactly what matmul_avx implements, with
 // scalar loads replaced by vector intrinsics.
 
-void matmul_register_blocked(const Matrix& A, const Matrix& B, Matrix& C,
-                              idx block_size, idx reg_size) {
+void matmul_register_blocked(const Matrix& A,
+                             const Matrix& B,
+                             Matrix&       C,
+                             idx           block_size,
+                             idx           reg_size) {
     const idx M = A.rows(), K = A.cols(), N = B.cols();
     std::fill_n(C.data(), M * N, real(0));
 
@@ -118,8 +128,8 @@ void matmul_register_blocked(const Matrix& A, const Matrix& B, Matrix& C,
                 for (idx ir = ii; ir < i_lim; ir += reg_size) {
                     const idx ri = std::min(ir + reg_size, i_lim);
                     for (idx jr = jj; jr < j_lim; jr += reg_size) {
-                        const idx rj = std::min(jr + reg_size, j_lim);
-                        real c[4][4] = {};
+                        const idx rj      = std::min(jr + reg_size, j_lim);
+                        real      c[4][4] = {};
                         for (idx i = ir; i < ri; ++i)
                             for (idx j = jr; j < rj; ++j)
                                 c[i - ir][j - jr] = C(i, j);

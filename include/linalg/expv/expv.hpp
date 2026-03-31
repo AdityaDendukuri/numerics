@@ -7,8 +7,8 @@
 
 #include "core/types.hpp"
 #include "core/vector.hpp"
-#include "linalg/sparse/sparse.hpp"
 #include "linalg/solvers/cg.hpp"
+#include "linalg/sparse/sparse.hpp"
 #include <functional>
 
 namespace num {
@@ -22,8 +22,12 @@ namespace num {
 /// @param m_max   Maximum Krylov dimension (default 30)
 /// @param tol     Breakdown tolerance for Arnoldi (default 1e-8)
 /// @return        Approximation of exp(t*A)*v
-Vector expv(real t, const MatVecFn& matvec, idx n, const Vector& v,
-            int m_max = 30, real tol = 1e-8);
+Vector expv(real            t,
+            const MatVecFn& matvec,
+            idx             n,
+            const Vector&   v,
+            int             m_max = 30,
+            real            tol   = 1e-8);
 
 /// @brief Compute exp(t*A)*v via Krylov-Pade approximation (sparse matrix)
 ///
@@ -33,7 +37,10 @@ Vector expv(real t, const MatVecFn& matvec, idx n, const Vector& v,
 /// @param m_max   Maximum Krylov dimension (default 30)
 /// @param tol     Breakdown tolerance for Arnoldi (default 1e-8)
 /// @return        Approximation of exp(t*A)*v
-Vector expv(real t, const SparseMatrix& A, const Vector& v,
-            int m_max = 30, real tol = 1e-8);
+Vector expv(real                t,
+            const SparseMatrix& A,
+            const Vector&       v,
+            int                 m_max = 30,
+            real                tol   = 1e-8);
 
 } // namespace num

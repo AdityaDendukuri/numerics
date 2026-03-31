@@ -6,9 +6,9 @@
 #include "core/matrix.hpp"
 
 #ifdef NUMERICS_HAS_MPI
-#include <mpi.h>
+    #include <mpi.h>
 #else
-using MPI_Comm = int;
+using MPI_Comm                    = int;
 constexpr MPI_Comm MPI_COMM_WORLD = 0;
 #endif
 

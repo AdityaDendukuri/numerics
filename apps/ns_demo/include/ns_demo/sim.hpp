@@ -4,7 +4,8 @@
 /// Algorithm: Chorin projection method
 ///   1. Semi-Lagrangian advection  -> u*, v*
 ///   2. Build RHS: rhs = -div(u*)/dt
-///   3. CG pressure solve: (-Lap)p = rhs   (positive-definite, Backend::omp inner products)
+///   3. CG pressure solve: (-Lap)p = rhs   (positive-definite, Backend::omp
+///   inner products)
 ///   4. Project: u = u* - dt*gradp
 ///
 /// Grid (NxN cells, domain [0,1]^2):
@@ -23,22 +24,22 @@
 
 namespace ns {
 
-using num::real;
 using num::idx;
-using num::Vector;
+using num::real;
 using num::SolverResult;
+using num::Vector;
 
 struct Stats {
-    idx    cg_iters     = 0;
-    real   cg_residual  = 0.0;
-    double advect_ms    = 0.0;
-    double pressure_ms  = 0.0;
-    double project_ms   = 0.0;
-    double total_ms     = 0.0;
+    idx    cg_iters    = 0;
+    real   cg_residual = 0.0;
+    double advect_ms   = 0.0;
+    double pressure_ms = 0.0;
+    double project_ms  = 0.0;
+    double total_ms    = 0.0;
 };
 
 class NSSolver {
-public:
+  public:
     /// @param N_   Grid resolution (NxN cells)
     /// @param dt_  Time step
     /// @param nu_  Kinematic viscosity (0 = inviscid Euler)
@@ -75,17 +76,23 @@ public:
     const real h, dt, nu;
 
     // State
-    Vector u, v, p;   ///< velocity faces + cell-centre pressure, N*N each
+    Vector u, v, p; ///< velocity faces + cell-centre pressure, N*N each
 
     Stats stats;
 
-private:
+  private:
     Vector u_star, v_star, rhs;
 
     // Index helpers
-    inline idx at (idx i, idx j)  const noexcept { return i * N + j; }
-    inline idx wp1(idx i)         const noexcept { return (i + 1) % N; }
-    inline idx wm1(idx i)         const noexcept { return (i + N - 1) % N; }
+    inline idx at(idx i, idx j) const noexcept {
+        return i * N + j;
+    }
+    inline idx wp1(idx i) const noexcept {
+        return (i + 1) % N;
+    }
+    inline idx wm1(idx i) const noexcept {
+        return (i + N - 1) % N;
+    }
 
     // Physics sub-steps
     void advect();
@@ -93,7 +100,6 @@ private:
     void build_rhs();
     void solve_pressure();
     void project();
-
 };
 
 } // namespace ns

@@ -1,5 +1,6 @@
 /// @file src/sim.cpp
-/// @brief 2-D incompressible Navier-Stokes -- Chorin projection, periodic MAC grid
+/// @brief 2-D incompressible Navier-Stokes -- Chorin projection, periodic MAC
+/// grid
 
 #include "ns_demo/sim.hpp"
 
@@ -13,10 +14,16 @@ namespace ns {
 //  Construction
 
 NSSolver::NSSolver(idx N_, real dt_, real nu_)
-    : N(N_), h(1.0 / N_), dt(dt_), nu(nu_),
-      u(N_ * N_, 0.0), v(N_ * N_, 0.0), p(N_ * N_, 0.0),
-      u_star(N_ * N_, 0.0), v_star(N_ * N_, 0.0), rhs(N_ * N_, 0.0)
-{}
+    : N(N_)
+    , h(1.0 / N_)
+    , dt(dt_)
+    , nu(nu_)
+    , u(N_ * N_, 0.0)
+    , v(N_ * N_, 0.0)
+    , p(N_ * N_, 0.0)
+    , u_star(N_ * N_, 0.0)
+    , v_star(N_ * N_, 0.0)
+    , rhs(N_ * N_, 0.0) {}
 
 //  Initial condition  -- double shear layer
 //
@@ -30,19 +37,19 @@ void NSSolver::init_shear_layer(real rho, real delta) {
     for (idx i = 0; i < N; ++i) {
         for (idx j = 0; j < N; ++j) {
             // u[i,j] lives at (i*h, (j+1/2)*h)
-            real y = (j + 0.5) * h;
-            u[at(i, j)] = (y <= 0.5)
-                ? std::tanh((y - 0.25) / rho)
-                : std::tanh((0.75 - y) / rho);
+            real y      = (j + 0.5) * h;
+            u[at(i, j)] = (y <= 0.5) ? std::tanh((y - 0.25) / rho)
+                                     : std::tanh((0.75 - y) / rho);
 
             // v[i,j] lives at ((i+1/2)*h, j*h)
-            real x = (i + 0.5) * h;
+            real x      = (i + 0.5) * h;
             v[at(i, j)] = delta * std::sin(two_pi * x);
         }
     }
 
     // Zero pressure (correct for divergence-free initial data)
-    for (idx k = 0; k < N * N; ++k) p[k] = 0.0;
+    for (idx k = 0; k < N * N; ++k)
+        p[k] = 0.0;
 }
 
 //  Top-level step
@@ -51,12 +58,13 @@ void NSSolver::step() {
     auto t0 = std::chrono::steady_clock::now();
 
     advect();
-    if (nu > 0.0) apply_diffusion();
+    if (nu > 0.0)
+        apply_diffusion();
     build_rhs();
     solve_pressure();
     project();
 
-    auto t1 = std::chrono::steady_clock::now();
+    auto t1        = std::chrono::steady_clock::now();
     stats.total_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 }
 
@@ -75,11 +83,12 @@ void NSSolver::advect() {
     for (idx i = 0; i < N; ++i) {
         for (idx j = 0; j < N; ++j) {
             real uu = u[at(i, j)];
-            real vu = 0.25 * (v[at(wm1(i), j     )] + v[at(i, j     )] +
-                              v[at(wm1(i), wp1(j))] + v[at(i, wp1(j))]);
+            real vu = 0.25
+                      * (v[at(wm1(i), j)] + v[at(i, j)] + v[at(wm1(i), wp1(j))]
+                         + v[at(i, wp1(j))]);
 
-            real xb = i * h - dt * uu;
-            real yb = (j + 0.5) * h - dt * vu;
+            real xb          = i * h - dt * uu;
+            real yb          = (j + 0.5) * h - dt * vu;
             u_star[at(i, j)] = interp_u(xb, yb);
         }
     }
@@ -91,17 +100,19 @@ void NSSolver::advect() {
     for (idx i = 0; i < N; ++i) {
         for (idx j = 0; j < N; ++j) {
             real vv = v[at(i, j)];
-            real uv = 0.25 * (u[at(i,     wm1(j))] + u[at(wp1(i), wm1(j))] +
-                              u[at(i,     j      )] + u[at(wp1(i), j      )]);
+            real uv = 0.25
+                      * (u[at(i, wm1(j))] + u[at(wp1(i), wm1(j))] + u[at(i, j)]
+                         + u[at(wp1(i), j)]);
 
-            real xb = (i + 0.5) * h - dt * uv;
-            real yb = j * h - dt * vv;
+            real xb          = (i + 0.5) * h - dt * uv;
+            real yb          = j * h - dt * vv;
             v_star[at(i, j)] = interp_v(xb, yb);
         }
     }
 
     auto t1 = std::chrono::steady_clock::now();
-    stats.advect_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    stats.advect_ms =
+        std::chrono::duration<double, std::milli>(t1 - t0).count();
 }
 
 //  Explicit viscosity (forward Euler, stable only when dt <= h^2/(4nu))
@@ -118,26 +129,30 @@ void NSSolver::apply_diffusion() {
 //  Discrete divergence on the MAC grid:
 //    div(u*)[i,j] = (u*[i+1,j] - u*[i,j]) / h  +  (v*[i,j+1] - v*[i,j]) / h
 //
-//  We form the positive-definite system (-Delta)p = -div(u*)/dt so that CG works.
+//  We form the positive-definite system (-Delta)p = -div(u*)/dt so that CG
+//  works.
 
 void NSSolver::build_rhs() {
-    const real scale = -1.0 / (h * dt);   // -1/(h*dt) so rhs = -div/dt
+    const real scale = -1.0 / (h * dt); // -1/(h*dt) so rhs = -div/dt
 
 #pragma omp parallel for schedule(static) collapse(2)
     for (idx i = 0; i < N; ++i) {
         for (idx j = 0; j < N; ++j) {
             real div_ij = u_star[at(wp1(i), j)] - u_star[at(i, j)]
-                        + v_star[at(i, wp1(j))] - v_star[at(i, j)];
+                          + v_star[at(i, wp1(j))] - v_star[at(i, j)];
             rhs[at(i, j)] = scale * div_ij;
         }
     }
 
     // Remove mean (periodic Poisson is singular; mean(div) = 0 analytically,
-    // but floating-point errors accumulate  -- subtracting keeps CG well-posed).
+    // but floating-point errors accumulate  -- subtracting keeps CG
+    // well-posed).
     real sum = 0.0;
-    for (idx k = 0; k < N * N; ++k) sum += rhs[k];
+    for (idx k = 0; k < N * N; ++k)
+        sum += rhs[k];
     real mean = sum / static_cast<real>(N * N);
-    for (idx k = 0; k < N * N; ++k) rhs[k] -= mean;
+    for (idx k = 0; k < N * N; ++k)
+        rhs[k] -= mean;
 }
 
 //  Pressure solve: (-Delta)p = rhs   via CG
@@ -153,25 +168,29 @@ void NSSolver::solve_pressure() {
     const real inv_h2 = 1.0 / (h * h);
     const int  n      = static_cast<int>(N);
 
-    // Matrix-free negative Laplacian via laplacian_stencil_2d_periodic (boundary-peeled,
-    // auto-vectorisable inner loop) then negate and scale.
+    // Matrix-free negative Laplacian via laplacian_stencil_2d_periodic
+    // (boundary-peeled, auto-vectorisable inner loop) then negate and scale.
     auto neg_lap = [&](const Vector& pin, Vector& out) {
         laplacian_stencil_2d_periodic(pin, out, n);
         scale(out, -inv_h2);
     };
 
-    auto result = num::cg_matfree(neg_lap, rhs, p, /*tol=*/1e-3, /*max_iter=*/100);
+    auto result =
+        num::cg_matfree(neg_lap, rhs, p, /*tol=*/1e-3, /*max_iter=*/100);
     stats.cg_iters    = result.iterations;
     stats.cg_residual = result.residual;
 
     // Remove mean from pressure (physics is unchanged; improves stability)
     real sum = 0.0;
-    for (idx k = 0; k < N * N; ++k) sum += p[k];
+    for (idx k = 0; k < N * N; ++k)
+        sum += p[k];
     real mean = sum / static_cast<real>(N * N);
-    for (idx k = 0; k < N * N; ++k) p[k] -= mean;
+    for (idx k = 0; k < N * N; ++k)
+        p[k] -= mean;
 
     auto t1 = std::chrono::steady_clock::now();
-    stats.pressure_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    stats.pressure_ms =
+        std::chrono::duration<double, std::milli>(t1 - t0).count();
 }
 
 //  Projection: u = u* - dt*gradp
@@ -188,13 +207,16 @@ void NSSolver::project() {
 #pragma omp parallel for schedule(static) collapse(2)
     for (idx i = 0; i < N; ++i) {
         for (idx j = 0; j < N; ++j) {
-            u[at(i, j)] = u_star[at(i, j)] - c * (p[at(i, j)] - p[at(wm1(i), j)]);
-            v[at(i, j)] = v_star[at(i, j)] - c * (p[at(i, j)] - p[at(i, wm1(j))]);
+            u[at(i, j)] = u_star[at(i, j)]
+                          - c * (p[at(i, j)] - p[at(wm1(i), j)]);
+            v[at(i, j)] = v_star[at(i, j)]
+                          - c * (p[at(i, j)] - p[at(i, wm1(j))]);
         }
     }
 
     auto t1 = std::chrono::steady_clock::now();
-    stats.project_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    stats.project_ms =
+        std::chrono::duration<double, std::milli>(t1 - t0).count();
 }
 
 //  Diagnostics

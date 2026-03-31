@@ -1,5 +1,6 @@
 /// @file core/matrix.cpp
-/// @brief Matrix constructors, GPU lifecycle, and backend dispatch for matrix ops.
+/// @brief Matrix constructors, GPU lifecycle, and backend dispatch for matrix
+/// ops.
 ///
 /// Adding a new backend:
 ///   1. Add the enumerator to enum class Backend in include/core/policy.hpp
@@ -20,26 +21,36 @@
 namespace num {
 
 Matrix::Matrix(idx rows, idx cols)
-    : rows_(rows), cols_(cols), data_(new real[rows * cols]()) {}
+    : rows_(rows)
+    , cols_(cols)
+    , data_(new real[rows * cols]()) {}
 
 Matrix::Matrix(idx rows, idx cols, real val)
-    : rows_(rows), cols_(cols), data_(new real[rows * cols]) {
+    : rows_(rows)
+    , cols_(cols)
+    , data_(new real[rows * cols]) {
     std::fill_n(data_.get(), size(), val);
 }
 
 Matrix::~Matrix() {
-    if (d_data_) cuda::free(d_data_);
+    if (d_data_)
+        cuda::free(d_data_);
 }
 
 Matrix::Matrix(const Matrix& o)
-    : rows_(o.rows_), cols_(o.cols_), data_(new real[o.size()]) {
+    : rows_(o.rows_)
+    , cols_(o.cols_)
+    , data_(new real[o.size()]) {
     std::copy_n(o.data_.get(), size(), data_.get());
 }
 
 Matrix::Matrix(Matrix&& o) noexcept
-    : rows_(o.rows_), cols_(o.cols_), data_(std::move(o.data_)), d_data_(o.d_data_) {
+    : rows_(o.rows_)
+    , cols_(o.cols_)
+    , data_(std::move(o.data_))
+    , d_data_(o.d_data_) {
     o.rows_ = o.cols_ = 0;
-    o.d_data_ = nullptr;
+    o.d_data_         = nullptr;
 }
 
 Matrix& Matrix::operator=(const Matrix& o) {
@@ -54,13 +65,14 @@ Matrix& Matrix::operator=(const Matrix& o) {
 
 Matrix& Matrix::operator=(Matrix&& o) noexcept {
     if (this != &o) {
-        if (d_data_) cuda::free(d_data_);
-        rows_ = o.rows_;
-        cols_ = o.cols_;
-        data_ = std::move(o.data_);
+        if (d_data_)
+            cuda::free(d_data_);
+        rows_   = o.rows_;
+        cols_   = o.cols_;
+        data_   = std::move(o.data_);
         d_data_ = o.d_data_;
         o.rows_ = o.cols_ = 0;
-        o.d_data_ = nullptr;
+        o.d_data_         = nullptr;
     }
     return *this;
 }
@@ -82,47 +94,92 @@ void Matrix::to_cpu() {
 
 void matmul(const Matrix& A, const Matrix& B, Matrix& C, Backend b) {
     switch (b) {
-    case Backend::seq:      backends::seq::matmul(A, B, C);              break;
-    case Backend::blocked:  backends::seq::matmul_blocked(A, B, C, 64);  break;
-    case Backend::simd:     backends::simd::matmul(A, B, C, 64);         break;
-    case Backend::lapack:   [[fallthrough]];  // no LAPACK matmul; use BLAS
-    case Backend::blas:     backends::blas::matmul(A, B, C);             break;
-    case Backend::omp:      backends::omp::matmul(A, B, C);              break;
-    case Backend::gpu:      backends::gpu::matmul(A, B, C);              break;
+        case Backend::seq:
+            backends::seq::matmul(A, B, C);
+            break;
+        case Backend::blocked:
+            backends::seq::matmul_blocked(A, B, C, 64);
+            break;
+        case Backend::simd:
+            backends::simd::matmul(A, B, C, 64);
+            break;
+        case Backend::lapack:
+            [[fallthrough]]; // no LAPACK matmul; use BLAS
+        case Backend::blas:
+            backends::blas::matmul(A, B, C);
+            break;
+        case Backend::omp:
+            backends::omp::matmul(A, B, C);
+            break;
+        case Backend::gpu:
+            backends::gpu::matmul(A, B, C);
+            break;
     }
 }
 
 void matvec(const Matrix& A, const Vector& x, Vector& y, Backend b) {
     switch (b) {
-    case Backend::seq:      backends::seq::matvec(A, x, y);    break;
-    case Backend::blocked:  backends::seq::matvec(A, x, y);    break;
-    case Backend::simd:     backends::simd::matvec(A, x, y);   break;
-    case Backend::lapack:   [[fallthrough]];  // no LAPACK matvec; use BLAS
-    case Backend::blas:     backends::blas::matvec(A, x, y);   break;
-    case Backend::omp:      backends::omp::matvec(A, x, y);    break;
-    case Backend::gpu:      backends::gpu::matvec(A, x, y);    break;
+        case Backend::seq:
+            backends::seq::matvec(A, x, y);
+            break;
+        case Backend::blocked:
+            backends::seq::matvec(A, x, y);
+            break;
+        case Backend::simd:
+            backends::simd::matvec(A, x, y);
+            break;
+        case Backend::lapack:
+            [[fallthrough]]; // no LAPACK matvec; use BLAS
+        case Backend::blas:
+            backends::blas::matvec(A, x, y);
+            break;
+        case Backend::omp:
+            backends::omp::matvec(A, x, y);
+            break;
+        case Backend::gpu:
+            backends::gpu::matvec(A, x, y);
+            break;
     }
 }
 
-void matadd(real alpha, const Matrix& A, real beta, const Matrix& B, Matrix& C,
-            Backend b) {
+void matadd(real          alpha,
+            const Matrix& A,
+            real          beta,
+            const Matrix& B,
+            Matrix&       C,
+            Backend       b) {
     switch (b) {
-    case Backend::seq:
-    case Backend::blocked:
-    case Backend::simd:     backends::seq::matadd(alpha, A, beta, B, C);  break;
-    case Backend::lapack:   [[fallthrough]];  // no LAPACK matadd; use BLAS
-    case Backend::blas:     backends::blas::matadd(alpha, A, beta, B, C); break;
-    case Backend::omp:      backends::omp::matadd(alpha, A, beta, B, C);  break;
-    case Backend::gpu:      backends::seq::matadd(alpha, A, beta, B, C);  break;
+        case Backend::seq:
+        case Backend::blocked:
+        case Backend::simd:
+            backends::seq::matadd(alpha, A, beta, B, C);
+            break;
+        case Backend::lapack:
+            [[fallthrough]]; // no LAPACK matadd; use BLAS
+        case Backend::blas:
+            backends::blas::matadd(alpha, A, beta, B, C);
+            break;
+        case Backend::omp:
+            backends::omp::matadd(alpha, A, beta, B, C);
+            break;
+        case Backend::gpu:
+            backends::seq::matadd(alpha, A, beta, B, C);
+            break;
     }
 }
 
-void matmul_blocked(const Matrix& A, const Matrix& B, Matrix& C, idx block_size) {
+void matmul_blocked(const Matrix& A,
+                    const Matrix& B,
+                    Matrix&       C,
+                    idx           block_size) {
     backends::seq::matmul_blocked(A, B, C, block_size);
 }
 
-void matmul_register_blocked(const Matrix& A, const Matrix& B, Matrix& C,
-                              idx block_size, idx reg_size) {
+void matmul_register_blocked(const Matrix& A,
+                             const Matrix& B,
+                             Matrix&       C,
+                             idx           block_size,
+                             idx           reg_size) {
     backends::seq::matmul_register_blocked(A, B, C, block_size, reg_size);
 }
 

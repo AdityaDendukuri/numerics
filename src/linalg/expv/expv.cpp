@@ -19,21 +19,20 @@ static Matrix dense_expm(const Matrix& A) {
     const idx m = A.rows();
 
     // Pade [6/6] coefficients
-    static constexpr double c[7] = {
-        1.0,
-        0.5,
-        5.0 / 44.0,
-        1.0 / 66.0,
-        1.0 / 792.0,
-        1.0 / 15840.0,
-        1.0 / 665280.0
-    };
+    static constexpr double c[7] = {1.0,
+                                    0.5,
+                                    5.0 / 44.0,
+                                    1.0 / 66.0,
+                                    1.0 / 792.0,
+                                    1.0 / 15840.0,
+                                    1.0 / 665280.0};
 
     // 1. Compute inf-norm (max absolute row sum)
     double norm_inf = 0.0;
     for (idx i = 0; i < m; i++) {
         double row_sum = 0.0;
-        for (idx j = 0; j < m; j++) row_sum += std::abs(A(i, j));
+        for (idx j = 0; j < m; j++)
+            row_sum += std::abs(A(i, j));
         norm_inf = std::max(norm_inf, row_sum);
     }
 
@@ -44,7 +43,7 @@ static Matrix dense_expm(const Matrix& A) {
     }
 
     // 3. As = A / 2^s
-    double scale = std::ldexp(1.0, -s);  // 1/2^s
+    double scale = std::ldexp(1.0, -s); // 1/2^s
     Matrix As(m, m, 0.0);
     for (idx i = 0; i < m; i++)
         for (idx j = 0; j < m; j++)
@@ -52,13 +51,13 @@ static Matrix dense_expm(const Matrix& A) {
 
     // 4. Build powers: B = As^2, B2 = As^4, B3 = As^6
     Matrix B(m, m, 0.0);
-    matmul(As, As, B);          // B = As^2
+    matmul(As, As, B); // B = As^2
 
     Matrix B2(m, m, 0.0);
-    matmul(B, B, B2);           // B2 = As^4
+    matmul(B, B, B2); // B2 = As^4
 
     Matrix B3(m, m, 0.0);
-    matmul(B2, B, B3);          // B3 = As^6
+    matmul(B2, B, B3); // B3 = As^6
 
     // 5. V_mat = c[6]*B3 + c[4]*B2 + c[2]*B + c[0]*I  (even terms)
     Matrix V_mat(m, m, 0.0);
@@ -94,7 +93,7 @@ static Matrix dense_expm(const Matrix& A) {
 
     // 9. Solve VmU * E = VpU  (Pade approximant: E = (V-U)^{-1}*(V+U))
     LUResult fac = lu(VmU);
-    Matrix E(m, m, 0.0);
+    Matrix   E(m, m, 0.0);
     lu_solve(fac, VpU, E);
 
     // 10. Squaring: E = E^(2^s)
@@ -107,9 +106,12 @@ static Matrix dense_expm(const Matrix& A) {
     return E;
 }
 
-Vector expv(real t, const MatVecFn& matvec, idx n, const Vector& v,
-            int m_max, real tol)
-{
+Vector expv(real            t,
+            const MatVecFn& matvec,
+            idx             n,
+            const Vector&   v,
+            int             m_max,
+            real            tol) {
     // Handle zero vector
     real beta = norm(v);
     if (beta < 1e-300) {
@@ -122,7 +124,8 @@ Vector expv(real t, const MatVecFn& matvec, idx n, const Vector& v,
 
     // V[0] = v / beta
     Vector v0(n);
-    for (idx i = 0; i < n; i++) v0[i] = v[i] / beta;
+    for (idx i = 0; i < n; i++)
+        v0[i] = v[i] / beta;
     V.push_back(std::move(v0));
 
     // Upper Hessenberg matrix H: (m_max+1) x m_max
@@ -138,9 +141,9 @@ Vector expv(real t, const MatVecFn& matvec, idx n, const Vector& v,
 
         // Modified Gram-Schmidt orthogonalization
         for (int i = 0; i <= j; i++) {
-            real h = dot(V[i], w);
+            real h  = dot(V[i], w);
             H(i, j) = h;
-            axpy(-h, V[i], w);  // w -= h * V[i]
+            axpy(-h, V[i], w); // w -= h * V[i]
         }
 
         real h_next = norm(w);
@@ -154,7 +157,8 @@ Vector expv(real t, const MatVecFn& matvec, idx n, const Vector& v,
 
         // Normalize and store next Krylov vector
         Vector vj1(n);
-        for (idx i = 0; i < n; i++) vj1[i] = w[i] / h_next;
+        for (idx i = 0; i < n; i++)
+            vj1[i] = w[i] / h_next;
         V.push_back(std::move(vj1));
     }
 
@@ -177,9 +181,11 @@ Vector expv(real t, const MatVecFn& matvec, idx n, const Vector& v,
     return result;
 }
 
-Vector expv(real t, const SparseMatrix& A, const Vector& v,
-            int m_max, real tol)
-{
+Vector expv(real                t,
+            const SparseMatrix& A,
+            const Vector&       v,
+            int                 m_max,
+            real                tol) {
     MatVecFn fn = [&A](const Vector& x, Vector& y) {
         sparse_matvec(A, x, y);
     };

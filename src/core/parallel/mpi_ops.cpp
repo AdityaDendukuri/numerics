@@ -3,15 +3,23 @@
 
 namespace num::mpi {
 
-void init(int* argc, char*** argv) { MPI_Init(argc, argv); }
-void finalize() { MPI_Finalize(); }
+void init(int* argc, char*** argv) {
+    MPI_Init(argc, argv);
+}
+void finalize() {
+    MPI_Finalize();
+}
 
 int rank(MPI_Comm comm) {
-    int r; MPI_Comm_rank(comm, &r); return r;
+    int r;
+    MPI_Comm_rank(comm, &r);
+    return r;
 }
 
 int size(MPI_Comm comm) {
-    int s; MPI_Comm_size(comm, &s); return s;
+    int s;
+    MPI_Comm_size(comm, &s);
+    return s;
 }
 
 real dot(const Vector& x, const Vector& y, MPI_Comm comm) {
@@ -27,7 +35,12 @@ real norm(const Vector& x, MPI_Comm comm) {
 }
 
 void allreduce_sum(real* data, idx n, MPI_Comm comm) {
-    MPI_Allreduce(MPI_IN_PLACE, data, static_cast<int>(n), MPI_DOUBLE, MPI_SUM, comm);
+    MPI_Allreduce(MPI_IN_PLACE,
+                  data,
+                  static_cast<int>(n),
+                  MPI_DOUBLE,
+                  MPI_SUM,
+                  comm);
 }
 
 void broadcast(real* data, idx n, int root, MPI_Comm comm) {

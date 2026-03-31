@@ -16,17 +16,17 @@ namespace num {
 /// Online mean and variance via Welford's algorithm.
 /// One-pass, numerically stable, O(1) memory.
 struct RunningStats {
-    real  mean  = 0.0;
-    real  M2    = 0.0;
-    idx   count = 0;
+    real mean  = 0.0;
+    real M2    = 0.0;
+    idx  count = 0;
 
     /// Incorporate one new sample.
     void update(real x) {
         ++count;
-        real delta  = x - mean;
-        mean       += delta / static_cast<real>(count);
+        real delta = x - mean;
+        mean += delta / static_cast<real>(count);
         real delta2 = x - mean;
-        M2         += delta * delta2;
+        M2 += delta * delta2;
     }
 
     /// Unbiased sample variance (n-1 denominator). Returns 0 for n < 2.
@@ -34,14 +34,20 @@ struct RunningStats {
         return (count < 2) ? 0.0 : M2 / static_cast<real>(count - 1);
     }
 
-    real std_dev()     const { return std::sqrt(variance()); }
+    real std_dev() const {
+        return std::sqrt(variance());
+    }
 
     /// Standard error of the mean (uncorrelated samples).
     real stderr_mean() const {
-        return (count < 2) ? 0.0 : std_dev() / std::sqrt(static_cast<real>(count));
+        return (count < 2) ? 0.0
+                           : std_dev() / std::sqrt(static_cast<real>(count));
     }
 
-    void reset() { mean = M2 = 0.0; count = 0; }
+    void reset() {
+        mean = M2 = 0.0;
+        count     = 0;
+    }
 };
 
 // Histogram
@@ -50,45 +56,61 @@ struct RunningStats {
 /// reaction coordinate (e.g. nucleus size), then WHAM stitches them together.
 struct Histogram {
     std::vector<real> counts;
-    real lo, hi;
-    idx  nbins;
+    real              lo    = 0.0;
+    real              hi    = 0.0;
+    idx               nbins = 0;
 
     /// @param nbins  Number of bins
     /// @param lo,hi  Range of the histogram [lo, hi)
     Histogram(idx nbins, real lo, real hi)
-        : counts(nbins, 0.0), lo(lo), hi(hi), nbins(nbins) {}
+        : counts(nbins, 0.0)
+        , lo(lo)
+        , hi(hi)
+        , nbins(nbins) {}
 
-    /// Map value to bin index. Returns nbins (out of range sentinel) if outside.
+    /// Map value to bin index. Returns nbins (out of range sentinel) if
+    /// outside.
     idx bin(real x) const {
-        if (x < lo || x >= hi) return nbins;
-        return static_cast<idx>((x - lo) / (hi - lo) * static_cast<real>(nbins));
+        if (x < lo || x >= hi)
+            return nbins;
+        return static_cast<idx>((x - lo) / (hi - lo)
+                                * static_cast<real>(nbins));
     }
 
     real bin_centre(idx b) const {
-        return lo + (static_cast<real>(b) + 0.5) * (hi - lo) / static_cast<real>(nbins);
+        return lo
+               + (static_cast<real>(b) + 0.5) * (hi - lo)
+                     / static_cast<real>(nbins);
     }
 
-    real bin_width() const { return (hi - lo) / static_cast<real>(nbins); }
+    real bin_width() const {
+        return (hi - lo) / static_cast<real>(nbins);
+    }
 
     void fill(real x, real weight = 1.0) {
         idx b = bin(x);
-        if (b < nbins) counts[b] += weight;
+        if (b < nbins)
+            counts[b] += weight;
     }
 
-    void reset() { std::fill(counts.begin(), counts.end(), 0.0); }
+    void reset() {
+        std::fill(counts.begin(), counts.end(), 0.0);
+    }
 
     real total() const {
         real s = 0.0;
-        for (real c : counts) s += c;
+        for (real c : counts)
+            s += c;
         return s;
     }
 
     /// Normalise so that the histogram integrates to 1 (probability density).
     std::vector<real> pdf() const {
-        real norm = total() * bin_width();
+        real              norm = total() * bin_width();
         std::vector<real> p(nbins);
         if (norm > 0.0)
-            for (idx b = 0; b < nbins; ++b) p[b] = counts[b] / norm;
+            for (idx b = 0; b < nbins; ++b)
+                p[b] = counts[b] / norm;
         return p;
     }
 };

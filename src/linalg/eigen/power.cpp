@@ -7,18 +7,19 @@
 
 namespace num {
 
-
 PowerResult power_iteration(const Matrix& A,
-                             real tol, idx max_iter, Backend backend) {
+                            real          tol,
+                            idx           max_iter,
+                            Backend       backend) {
     constexpr real tiny = 1e-300;
-    const idx n = A.rows();
+    const idx      n    = A.rows();
     if (A.cols() != n)
         throw std::invalid_argument("power_iteration: matrix must be square");
 
     Vector v(n, 0.0);
     v[0] = 1.0;
 
-    real lambda = 0.0;
+    real        lambda = 0.0;
     PowerResult result{0.0, v, 0, false};
 
     for (idx iter = 0; iter < max_iter; ++iter) {
@@ -31,8 +32,8 @@ PowerResult power_iteration(const Matrix& A,
         detail::normalise(w);
 
         real delta = std::abs(new_lambda - lambda);
-        lambda = new_lambda;
-        v = w;
+        lambda     = new_lambda;
+        v          = w;
 
         if (delta < tol * (std::abs(lambda) + tiny)) {
             result.converged = true;
@@ -45,22 +46,26 @@ PowerResult power_iteration(const Matrix& A,
     return result;
 }
 
-PowerResult inverse_iteration(const Matrix& A, real sigma,
-                               real tol, idx max_iter, Backend backend) {
+PowerResult inverse_iteration(const Matrix& A,
+                              real          sigma,
+                              real          tol,
+                              idx           max_iter,
+                              Backend       backend) {
     constexpr real tiny = 1e-300;
-    const idx n = A.rows();
+    const idx      n    = A.rows();
     if (A.cols() != n)
         throw std::invalid_argument("inverse_iteration: matrix must be square");
 
     // Factorize (A - sigma*I) once
     Matrix M = A;
-    for (idx i = 0; i < n; ++i) M(i,i) -= sigma;
+    for (idx i = 0; i < n; ++i)
+        M(i, i) -= sigma;
     LUResult f = lu(M);
 
     Vector v(n, 0.0);
     v[0] = 1.0;
 
-    real lambda = 0.0;
+    real        lambda = 0.0;
     PowerResult result{0.0, v, 0, false};
 
     for (idx iter = 0; iter < max_iter; ++iter) {
@@ -76,8 +81,8 @@ PowerResult inverse_iteration(const Matrix& A, real sigma,
         real new_lambda = dot(w, Av, backend);
 
         real delta = std::abs(new_lambda - lambda);
-        lambda = new_lambda;
-        v = w;
+        lambda     = new_lambda;
+        v          = w;
 
         if (delta < tol * (std::abs(lambda) + tiny)) {
             result.converged = true;
@@ -90,11 +95,15 @@ PowerResult inverse_iteration(const Matrix& A, real sigma,
     return result;
 }
 
-PowerResult rayleigh_iteration(const Matrix& A, const Vector& x0,
-                                real tol, idx max_iter, Backend backend) {
+PowerResult rayleigh_iteration(const Matrix& A,
+                               const Vector& x0,
+                               real          tol,
+                               idx           max_iter,
+                               Backend       backend) {
     const idx n = A.rows();
     if (A.cols() != n)
-        throw std::invalid_argument("rayleigh_iteration: matrix must be square");
+        throw std::invalid_argument(
+            "rayleigh_iteration: matrix must be square");
     if (x0.size() != n)
         throw std::invalid_argument("rayleigh_iteration: x0 size mismatch");
 
@@ -113,10 +122,12 @@ PowerResult rayleigh_iteration(const Matrix& A, const Vector& x0,
 
         // Factorize (A - sigma*I); fresh each iteration (cubic convergence)
         Matrix M = A;
-        for (idx i = 0; i < n; ++i) M(i,i) -= sigma;
+        for (idx i = 0; i < n; ++i)
+            M(i, i) -= sigma;
         LUResult f = lu(M);
 
-        if (f.singular) break;
+        if (f.singular)
+            break;
 
         Vector w(n);
         lu_solve(f, v, w);
@@ -129,12 +140,12 @@ PowerResult rayleigh_iteration(const Matrix& A, const Vector& x0,
         real res = 0;
         for (idx i = 0; i < n; ++i) {
             real d = Av[i] - new_sigma * w[i];
-            res += d*d;
+            res += d * d;
         }
         res = std::sqrt(res);
 
         sigma = new_sigma;
-        v = w;
+        v     = w;
 
         if (res < tol) {
             result.converged = true;

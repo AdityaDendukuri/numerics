@@ -32,25 +32,28 @@
 // PixelCanvas
 
 struct PixelCanvas {
-    int cols;  ///< Grid width  (number of columns = x cells)
-    int rows;  ///< Grid height (number of rows    = y cells)
+    int cols; ///< Grid width  (number of columns = x cells)
+    int rows; ///< Grid height (number of rows    = y cells)
 
     /// @param cols_   Grid width in cells
     /// @param rows_   Grid height in cells
     /// @param dst     On-screen destination rectangle (pixels)
     PixelCanvas(int cols_, int rows_, Rectangle dst)
-        : cols(cols_), rows(rows_),
-          pixels_(cols_ * rows_, {0, 0, 0, 255}),
-          dst_(dst)
-    {
-        Image img = {
-            pixels_.data(), cols_, rows_, 1,
-            PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
-        };
-        tex_ = LoadTextureFromImage(img);
+        : cols(cols_)
+        , rows(rows_)
+        , pixels_(cols_ * rows_, {0, 0, 0, 255})
+        , dst_(dst) {
+        Image img = {pixels_.data(),
+                     cols_,
+                     rows_,
+                     1,
+                     PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
+        tex_      = LoadTextureFromImage(img);
     }
 
-    ~PixelCanvas() { UnloadTexture(tex_); }
+    ~PixelCanvas() {
+        UnloadTexture(tex_);
+    }
 
     PixelCanvas(const PixelCanvas&)            = delete;
     PixelCanvas& operator=(const PixelCanvas&) = delete;
@@ -61,7 +64,8 @@ struct PixelCanvas {
     template<typename Fn>
     void fill(Fn fn) {
         for (int row = 0; row < rows; ++row) {
-            int tex_row = rows - 1 - row;  // flip: row 0 (bottom) -> last texture row
+            int tex_row = rows - 1
+                          - row; // flip: row 0 (bottom) -> last texture row
             for (int col = 0; col < cols; ++col)
                 pixels_[tex_row * cols + col] = fn(col, row);
         }
@@ -80,11 +84,14 @@ struct PixelCanvas {
 
     /// Upload pixels to GPU and draw to the destination rectangle.
     void draw(Color tint = WHITE) {
-        Rectangle src = {0, 0, static_cast<float>(cols), static_cast<float>(rows)};
+        Rectangle src = {0,
+                         0,
+                         static_cast<float>(cols),
+                         static_cast<float>(rows)};
         DrawTexturePro(tex_, src, dst_, {0, 0}, 0.0f, tint);
     }
 
-private:
+  private:
     std::vector<Color> pixels_;
     Texture2D          tex_;
     Rectangle          dst_;

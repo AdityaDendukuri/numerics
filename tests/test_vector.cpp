@@ -8,7 +8,8 @@ TEST(Vector, Construction) {
     EXPECT_EQ(v.size(), 10);
 
     Vector v2(5, 3.0);
-    for (idx i = 0; i < 5; ++i) EXPECT_DOUBLE_EQ(v2[i], 3.0);
+    for (idx i = 0; i < 5; ++i)
+        EXPECT_DOUBLE_EQ(v2[i], 3.0);
 
     Vector v3{1.0, 2.0, 3.0};
     EXPECT_EQ(v3.size(), 3);

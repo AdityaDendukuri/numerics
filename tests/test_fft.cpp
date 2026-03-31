@@ -29,13 +29,15 @@ static constexpr double TWO_PI = 6.283185307179586476925286766559;
 
 static CVector make_cvec(int n, cplx val = cplx{}) {
     CVector v(static_cast<idx>(n));
-    for (idx i = 0; i < static_cast<idx>(n); ++i) v[i] = val;
+    for (idx i = 0; i < static_cast<idx>(n); ++i)
+        v[i] = val;
     return v;
 }
 
 static Vector make_vec(int n, real val = 0.0) {
     Vector v(static_cast<idx>(n));
-    for (idx i = 0; i < static_cast<idx>(n); ++i) v[i] = val;
+    for (idx i = 0; i < static_cast<idx>(n); ++i)
+        v[i] = val;
     return v;
 }
 
@@ -57,7 +59,7 @@ static double max_err_real(const Vector& a, const Vector& b) {
 // Run a single test body against every available backend.
 static void for_each_backend(std::function<void(FFTBackend)> body) {
     body(FFTBackend::seq);
-    body(FFTBackend::simd);      // falls back to seq on non-SIMD platforms
+    body(FFTBackend::simd); // falls back to seq on non-SIMD platforms
 #ifdef NUMERICS_HAS_STD_SIMD
     body(FFTBackend::stdsimd);
 #endif
@@ -68,10 +70,14 @@ static void for_each_backend(std::function<void(FFTBackend)> body) {
 
 static std::string backend_name(FFTBackend b) {
     switch (b) {
-        case FFTBackend::seq:     return "seq";
-        case FFTBackend::simd:    return "simd";
-        case FFTBackend::stdsimd: return "stdsimd";
-        case FFTBackend::fftw:    return "fftw";
+        case FFTBackend::seq:
+            return "seq";
+        case FFTBackend::simd:
+            return "simd";
+        case FFTBackend::stdsimd:
+            return "stdsimd";
+        case FFTBackend::fftw:
+            return "fftw";
     }
     return "unknown";
 }
@@ -81,16 +87,15 @@ static std::string backend_name(FFTBackend b) {
 TEST(FFT, DCComponent) {
     // x[j] = 1  =>  X[0] = n,  X[k>0] = 0
     for_each_backend([](FFTBackend b) {
-        const int n = 64;
-        CVector in = make_cvec(n, {1.0, 0.0});
-        CVector out = make_cvec(n);
+        const int n   = 64;
+        CVector   in  = make_cvec(n, {1.0, 0.0});
+        CVector   out = make_cvec(n);
         fft(in, out, b);
         EXPECT_NEAR(out[0].real(), static_cast<double>(n), 1e-10)
             << "backend=" << backend_name(b);
         EXPECT_NEAR(out[0].imag(), 0.0, 1e-10);
         for (int k = 1; k < n; ++k)
-            EXPECT_NEAR(std::abs(out[k]), 0.0, 1e-9)
-                << "k=" << k;
+            EXPECT_NEAR(std::abs(out[k]), 0.0, 1e-9) << "k=" << k;
     });
 }
 
@@ -100,7 +105,7 @@ TEST(FFT, SingleFrequencySpike) {
     // x[j] = exp(2*pi*i * k0*j / n)  =>  X[k0] = n,  all other bins ~0
     for_each_backend([](FFTBackend b) {
         const int n = 64, k0 = 7;
-        CVector in = make_cvec(n);
+        CVector   in = make_cvec(n);
         for (int j = 0; j < n; ++j)
             in[j] = std::exp(cplx{0, TWO_PI * k0 * j / n});
         CVector out = make_cvec(n);
@@ -119,10 +124,10 @@ TEST(FFT, SingleFrequencySpike) {
 TEST(FFT, RoundTrip) {
     for_each_backend([](FFTBackend b) {
         const int n = 128;
-        CVector x = make_cvec(n);
+        CVector   x = make_cvec(n);
         for (int j = 0; j < n; ++j)
             x[j] = cplx{std::sin(TWO_PI * 3 * j / n) + 0.5,
-                         std::cos(TWO_PI * 5 * j / n)};
+                        std::cos(TWO_PI * 5 * j / n)};
         CVector X = make_cvec(n);
         fft(x, X, b);
         CVector y = make_cvec(n);
@@ -131,8 +136,7 @@ TEST(FFT, RoundTrip) {
         for (int j = 0; j < n; ++j)
             y[j] /= static_cast<double>(n);
 
-        EXPECT_LT(max_err(x, y), 1e-11)
-            << "backend=" << backend_name(b);
+        EXPECT_LT(max_err(x, y), 1e-11) << "backend=" << backend_name(b);
     });
 }
 
@@ -141,12 +145,12 @@ TEST(FFT, RoundTrip) {
 TEST(FFT, Parseval) {
     // sum_k |X[k]|^2 == n * sum_j |x[j]|^2
     for_each_backend([](FFTBackend b) {
-        const int n = 256;
-        CVector x = make_cvec(n);
-        double energy_x = 0;
+        const int n        = 256;
+        CVector   x        = make_cvec(n);
+        double    energy_x = 0;
         for (int j = 0; j < n; ++j) {
             x[j] = cplx{std::sin(TWO_PI * 11 * j / n),
-                         std::cos(TWO_PI * 17 * j / n)};
+                        std::cos(TWO_PI * 17 * j / n)};
             energy_x += std::norm(x[j]);
         }
         CVector X = make_cvec(n);
@@ -165,16 +169,17 @@ TEST(FFT, Parseval) {
 TEST(FFT, Linearity) {
     // fft(a*x + b*y) == a*fft(x) + b*fft(y)
     for_each_backend([](FFTBackend bk) {
-        const int n = 64;
+        const int  n = 64;
         const cplx a{2.0, -1.0}, b{-0.5, 3.0};
-        CVector x = make_cvec(n), y = make_cvec(n);
+        CVector    x = make_cvec(n), y = make_cvec(n);
         for (int j = 0; j < n; ++j) {
             x[j] = cplx{std::cos(TWO_PI * 3 * j / n), 0};
             y[j] = cplx{0, std::sin(TWO_PI * 7 * j / n)};
         }
         // Compute a*x + b*y
         CVector xy = make_cvec(n);
-        for (int j = 0; j < n; ++j) xy[j] = a * x[j] + b * y[j];
+        for (int j = 0; j < n; ++j)
+            xy[j] = a * x[j] + b * y[j];
 
         CVector Fx = make_cvec(n), Fy = make_cvec(n), Fxy = make_cvec(n);
         fft(x, Fx, bk);
@@ -182,7 +187,8 @@ TEST(FFT, Linearity) {
         fft(xy, Fxy, bk);
 
         CVector combined = make_cvec(n);
-        for (int k = 0; k < n; ++k) combined[k] = a * Fx[k] + b * Fy[k];
+        for (int k = 0; k < n; ++k)
+            combined[k] = a * Fx[k] + b * Fy[k];
 
         EXPECT_LT(max_err(Fxy, combined), 1e-10)
             << "backend=" << (bk == FFTBackend::seq ? "seq" : "fftw");
@@ -195,8 +201,8 @@ TEST(FFT, RfftDC) {
     // x[j] = 1  =>  X[0] = n,  X[k>0] = 0
     for_each_backend([](FFTBackend b) {
         const int n = 64;
-        Vector x = make_vec(n, 1.0);
-        CVector X(static_cast<idx>(n / 2 + 1));
+        Vector    x = make_vec(n, 1.0);
+        CVector   X(static_cast<idx>(n / 2 + 1));
         rfft(x, X, b);
         EXPECT_NEAR(X[0].real(), static_cast<double>(n), 1e-10);
         EXPECT_NEAR(X[0].imag(), 0.0, 1e-10);
@@ -209,7 +215,7 @@ TEST(FFT, RfftFrequencySpike) {
     // x[j] = cos(2*pi*k0*j/n)  =>  X[k0].real() = n/2, X[0] = 0
     for_each_backend([](FFTBackend b) {
         const int n = 128, k0 = 5;
-        Vector x = make_vec(n);
+        Vector    x = make_vec(n);
         for (int j = 0; j < n; ++j)
             x[j] = std::cos(TWO_PI * k0 * j / n);
         CVector X(static_cast<idx>(n / 2 + 1));
@@ -225,18 +231,19 @@ TEST(FFT, RfftFrequencySpike) {
 TEST(FFT, IrfftRoundTrip) {
     for_each_backend([](FFTBackend b) {
         const int n = 128;
-        Vector x = make_vec(n);
+        Vector    x = make_vec(n);
         for (int j = 0; j < n; ++j)
-            x[j] = std::sin(TWO_PI * 5 * j / n) + 0.3 * std::cos(TWO_PI * 13 * j / n);
+            x[j] = std::sin(TWO_PI * 5 * j / n)
+                   + 0.3 * std::cos(TWO_PI * 13 * j / n);
         CVector X(static_cast<idx>(n / 2 + 1));
         rfft(x, X, b);
         Vector y = make_vec(n);
         irfft(X, n, y, b);
         // unnormalised: divide by n
-        for (int j = 0; j < n; ++j) y[j] /= static_cast<double>(n);
+        for (int j = 0; j < n; ++j)
+            y[j] /= static_cast<double>(n);
 
-        EXPECT_LT(max_err_real(x, y), 1e-11)
-            << "backend=" << backend_name(b);
+        EXPECT_LT(max_err_real(x, y), 1e-11) << "backend=" << backend_name(b);
     });
 }
 
@@ -245,10 +252,10 @@ TEST(FFT, IrfftRoundTrip) {
 TEST(FFTPlan, MatchesOneShot) {
     for_each_backend([](FFTBackend b) {
         const int n = 256;
-        CVector x = make_cvec(n);
+        CVector   x = make_cvec(n);
         for (int j = 0; j < n; ++j)
             x[j] = cplx{std::cos(TWO_PI * 9 * j / n),
-                         std::sin(TWO_PI * 3 * j / n)};
+                        std::sin(TWO_PI * 3 * j / n)};
         CVector ref = make_cvec(n);
         fft(x, ref, b);
 
@@ -256,28 +263,27 @@ TEST(FFTPlan, MatchesOneShot) {
         CVector out = make_cvec(n);
         plan.execute(x, out);
 
-        EXPECT_LT(max_err(ref, out), 1e-12)
-            << "backend=" << backend_name(b);
+        EXPECT_LT(max_err(ref, out), 1e-12) << "backend=" << backend_name(b);
     });
 }
 
 TEST(FFTPlan, InversePlanRoundTrip) {
     for_each_backend([](FFTBackend b) {
         const int n = 128;
-        CVector x = make_cvec(n);
+        CVector   x = make_cvec(n);
         for (int j = 0; j < n; ++j)
             x[j] = cplx{static_cast<double>(j % 7), static_cast<double>(j % 5)};
 
-        FFTPlan fwd(n, true,  b);
+        FFTPlan fwd(n, true, b);
         FFTPlan inv(n, false, b);
 
         CVector X = make_cvec(n), y = make_cvec(n);
         fwd.execute(x, X);
         inv.execute(X, y);
-        for (int j = 0; j < n; ++j) y[j] /= static_cast<double>(n);
+        for (int j = 0; j < n; ++j)
+            y[j] /= static_cast<double>(n);
 
-        EXPECT_LT(max_err(x, y), 1e-11)
-            << "backend=" << backend_name(b);
+        EXPECT_LT(max_err(x, y), 1e-11) << "backend=" << backend_name(b);
     });
 }
 
@@ -285,8 +291,9 @@ TEST(FFTPlan, RepeatedExecuteSameResult) {
     // Running the plan multiple times must give the same output each time.
     for_each_backend([](FFTBackend b) {
         const int n = 64;
-        CVector x = make_cvec(n);
-        for (int j = 0; j < n; ++j) x[j] = cplx{std::cos(j * 0.1), std::sin(j * 0.2)};
+        CVector   x = make_cvec(n);
+        for (int j = 0; j < n; ++j)
+            x[j] = cplx{std::cos(j * 0.1), std::sin(j * 0.2)};
 
         FFTPlan plan(n, true, b);
         CVector out1 = make_cvec(n), out2 = make_cvec(n);
@@ -302,9 +309,10 @@ TEST(FFTPlan, RepeatedExecuteSameResult) {
 TEST(FFT, AllBackendsAgree) {
     // Every backend must produce results within floating-point rounding of seq.
     const int n = 512;
-    CVector x = make_cvec(n);
+    CVector   x = make_cvec(n);
     for (int j = 0; j < n; ++j)
-        x[j] = cplx{std::sin(TWO_PI * 17 * j / n), std::cos(TWO_PI * 31 * j / n)};
+        x[j] = cplx{std::sin(TWO_PI * 17 * j / n),
+                    std::cos(TWO_PI * 31 * j / n)};
 
     CVector ref = make_cvec(n);
     fft(x, ref, FFTBackend::seq);
@@ -325,8 +333,9 @@ TEST(FFT, AllBackendsAgree) {
 
 TEST(FFT, AllBackendsIrfftAgree) {
     const int n = 256;
-    Vector x = make_vec(n);
-    for (int j = 0; j < n; ++j) x[j] = std::cos(TWO_PI * 7 * j / n);
+    Vector    x = make_vec(n);
+    for (int j = 0; j < n; ++j)
+        x[j] = std::cos(TWO_PI * 7 * j / n);
 
     CVector X_ref(static_cast<idx>(n / 2 + 1));
     rfft(x, X_ref, FFTBackend::seq);
@@ -338,7 +347,8 @@ TEST(FFT, AllBackendsIrfftAgree) {
         rfft(x, X, b);
         Vector y = make_vec(n);
         irfft(X, n, y, b);
-        EXPECT_LT(max_err_real(y_ref, y), 1e-9) << "backend=" << backend_name(b);
+        EXPECT_LT(max_err_real(y_ref, y), 1e-9)
+            << "backend=" << backend_name(b);
     };
     check(FFTBackend::simd);
 #ifdef NUMERICS_HAS_STD_SIMD
@@ -352,23 +362,23 @@ TEST(FFT, AllBackendsIrfftAgree) {
 // ---- Error handling ---------------------------------------------------------
 
 TEST(FFT, SizeMismatchThrows) {
-    CVector in = make_cvec(64);
-    CVector out = make_cvec(32);    // wrong size
+    CVector in  = make_cvec(64);
+    CVector out = make_cvec(32); // wrong size
     EXPECT_THROW(fft(in, out, FFTBackend::seq), std::invalid_argument);
     EXPECT_THROW(ifft(in, out, FFTBackend::seq), std::invalid_argument);
 }
 
 TEST(FFT, RfftSizeMismatchThrows) {
-    const int n = 64;
-    Vector in = make_vec(n);
-    CVector out = make_cvec(n);    // should be n/2+1 = 33
+    const int n   = 64;
+    Vector    in  = make_vec(n);
+    CVector   out = make_cvec(n); // should be n/2+1 = 33
     EXPECT_THROW(rfft(in, out, FFTBackend::seq), std::invalid_argument);
 }
 
 TEST(FFT, IrfftSizeMismatchThrows) {
-    const int n = 64;
-    CVector in = make_cvec(n / 2 + 1);
-    Vector out = make_vec(n - 1);  // wrong: should be n
+    const int n   = 64;
+    CVector   in  = make_cvec(n / 2 + 1);
+    Vector    out = make_vec(n - 1); // wrong: should be n
     EXPECT_THROW(irfft(in, n, out, FFTBackend::seq), std::invalid_argument);
 }
 

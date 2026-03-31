@@ -33,39 +33,39 @@ using num::Backend;
 
 struct FluidParams {
     // SPH kernel
-    float h           = 0.025f;   ///< Smoothing length [m]
+    float h = 0.025f; ///< Smoothing length [m]
 
     // Fluid properties
-    float rho0        = 1000.0f;  ///< Rest density [kg/m^3]
-    int   gamma       = 7;        ///< Tait EOS exponent
-    float c0          = 10.0f;    ///< Speed of sound [m/s]  -> B = rho_0c_0^2/gamma
-    float mu          = 0.01f;    ///< Dynamic viscosity [Pa*s]
-    float mass        = 0.4f;     ///< Particle mass [kg]  (~= rho_0*dx^2, dx=0.8h)
+    float rho0  = 1000.0f; ///< Rest density [kg/m^3]
+    int   gamma = 7;       ///< Tait EOS exponent
+    float c0    = 10.0f;   ///< Speed of sound [m/s]  -> B = rho_0c_0^2/gamma
+    float mu    = 0.01f;   ///< Dynamic viscosity [Pa*s]
+    float mass  = 0.4f;    ///< Particle mass [kg]  (~= rho_0*dx^2, dx=0.8h)
 
     // Body forces
-    float gx          = 0.0f;    ///< Gravity x [m/s^2]
-    float gy          = -9.81f;  ///< Gravity y [m/s^2]
+    float gx = 0.0f;   ///< Gravity x [m/s^2]
+    float gy = -9.81f; ///< Gravity y [m/s^2]
 
     // Time integration
-    float dt          = 0.001f;  ///< Timestep [s]  (must satisfy CFL: dt < h/c0)
+    float dt = 0.001f; ///< Timestep [s]  (must satisfy CFL: dt < h/c0)
 
     // Domain
     float xmin        = 0.0f;
     float xmax        = 1.0f;
     float ymin        = 0.0f;
     float ymax        = 0.7f;
-    float restitution = 0.3f;    ///< Velocity restitution at walls
+    float restitution = 0.3f; ///< Velocity restitution at walls
 
     // Thermal
-    float alpha_T     = 0.005f;  ///< Thermal diffusivity [m^2/s]
-    float h_conv      = 8.0f;    ///< Convective coefficient with rigid bodies [1/s]
+    float alpha_T = 0.005f; ///< Thermal diffusivity [m^2/s]
+    float h_conv  = 8.0f;   ///< Convective coefficient with rigid bodies [1/s]
 
     // Execution policy  -- dispatched in FluidSolver::step()
-    Backend policy = Backend::seq;  ///< seq = Newton pairs; omp = parallel
+    Backend policy = Backend::seq; ///< seq = Newton pairs; omp = parallel
 };
 
 class FluidSolver {
-public:
+  public:
     explicit FluidSolver(const FluidParams& params);
 
     void add_particle(float x, float y, float vx, float vy, float temperature);
@@ -76,19 +76,31 @@ public:
     /// Dispatches to backends::seq or backends::omp based on params_.policy.
     void step();
 
-    const std::vector<Particle>&  particles() const { return particles_; }
-    const std::vector<RigidBody>& bodies()    const { return bodies_; }
-    std::vector<RigidBody>&       bodies()          { return bodies_; }
-    const FluidParams&            params()    const { return params_; }
+    const std::vector<Particle>& particles() const {
+        return particles_;
+    }
+    const std::vector<RigidBody>& bodies() const {
+        return bodies_;
+    }
+    std::vector<RigidBody>& bodies() {
+        return bodies_;
+    }
+    const FluidParams& params() const {
+        return params_;
+    }
 
-    float min_temp() const { return T_min_; }
-    float max_temp() const { return T_max_; }
+    float min_temp() const {
+        return T_min_;
+    }
+    float max_temp() const {
+        return T_max_;
+    }
 
-private:
-    FluidParams           params_;
-    std::vector<Particle> particles_;
+  private:
+    FluidParams            params_;
+    std::vector<Particle>  particles_;
     std::vector<RigidBody> bodies_;
-    SpatialHash           grid_;   ///< CellList2D-backed, rebuilt each step
+    SpatialHash            grid_; ///< CellList2D-backed, rebuilt each step
 
     float T_min_ = 0.0f;
     float T_max_ = 100.0f;

@@ -30,7 +30,11 @@ namespace num {
 /// @param backend  Backend::lapack uses LAPACKE_dgtsv (default when available).
 ///                 Backend::seq    uses our 3-sweep O(n) implementation.
 ///                 Backend::gpu    uses CUDA batched tridiagonal (batch=1).
-void thomas(const Vector& a, const Vector& b, const Vector& c,
-            const Vector& d, Vector& x, Backend backend = lapack_backend);
+void thomas(const Vector& a,
+            const Vector& b,
+            const Vector& c,
+            const Vector& d,
+            Vector&       x,
+            Backend       backend = lapack_backend);
 
 } // namespace num

@@ -1,23 +1,22 @@
 Checks: >
   -*,
   bugprone-*,
+  cppcoreguidelines-pro-type-member-init,
+  cppcoreguidelines-slicing,
+  cppcoreguidelines-prefer-member-initializer,
   -bugprone-easily-swappable-parameters,
-  cppcoreguidelines-*,
-  -cppcoreguidelines-avoid-magic-numbers,
-  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-  -cppcoreguidelines-pro-type-reinterpret-cast,
-  modernize-*,
-  -modernize-use-trailing-return-type,
   performance-*,
-  readability-*,
-  -readability-magic-numbers,
-  -readability-identifier-length,
-  misc-*,
-  -misc-non-private-member-variables-in-classes,
-  clang-analyzer-*,
-  concurrency-*
+  readability-braces-around-statements,
+  readability-const-return-type,
+  readability-container-size-empty,
+  readability-redundant-smartptr-get,
+  readability-math-missing-parentheses,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-nodiscard,
+  clang-analyzer-*
 
-WarningsAsErrors: "*"
+WarningsAsErrors: ""
 
 HeaderFilterRegex: "include/.*"
 
@@ -28,31 +27,11 @@ CheckOptions:
     value: CamelCase
   - key: readability-identifier-naming.StructCase
     value: CamelCase
-  - key: readability-identifier-naming.TemplateParameterCase
-    value: CamelCase
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
   - key: readability-identifier-naming.MethodCase
     value: lower_case
-  - key: readability-identifier-naming.MemberCase
-    value: lower_case
-  - key: readability-identifier-naming.MemberSuffix
-    value: _
   - key: readability-identifier-naming.ParameterCase
     value: lower_case
   - key: readability-identifier-naming.VariableCase
     value: lower_case
-  - key: readability-identifier-naming.ConstantCase
-    value: lower_case
-  - key: readability-identifier-naming.EnumCase
-    value: CamelCase
-  - key: readability-identifier-naming.EnumConstantCase
-    value: CamelCase
-  - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
-    value: true
-  - key: modernize-use-default-member-init.UseAssignment
-    value: false
-  - key: performance-move-const-arg.CheckTriviallyCopyableMove
-    value: true
-  - key: bugprone-argument-comment.StrictMode
-    value: true

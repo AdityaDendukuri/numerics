@@ -27,8 +27,12 @@ TEST(Matrix, CopyMove) {
 
 TEST(Matrix, Matvec) {
     Matrix A(2, 3);
-    A(0, 0) = 1; A(0, 1) = 2; A(0, 2) = 3;
-    A(1, 0) = 4; A(1, 1) = 5; A(1, 2) = 6;
+    A(0, 0) = 1;
+    A(0, 1) = 2;
+    A(0, 2) = 3;
+    A(1, 0) = 4;
+    A(1, 1) = 5;
+    A(1, 2) = 6;
 
     Vector x{1.0, 1.0, 1.0};
     Vector y(2);
@@ -40,13 +44,20 @@ TEST(Matrix, Matvec) {
 
 TEST(Matrix, Matmul) {
     Matrix A(2, 3);
-    A(0, 0) = 1; A(0, 1) = 2; A(0, 2) = 3;
-    A(1, 0) = 4; A(1, 1) = 5; A(1, 2) = 6;
+    A(0, 0) = 1;
+    A(0, 1) = 2;
+    A(0, 2) = 3;
+    A(1, 0) = 4;
+    A(1, 1) = 5;
+    A(1, 2) = 6;
 
     Matrix B(3, 2);
-    B(0, 0) = 1; B(0, 1) = 2;
-    B(1, 0) = 3; B(1, 1) = 4;
-    B(2, 0) = 5; B(2, 1) = 6;
+    B(0, 0) = 1;
+    B(0, 1) = 2;
+    B(1, 0) = 3;
+    B(1, 1) = 4;
+    B(2, 0) = 5;
+    B(2, 1) = 6;
 
     Matrix C(2, 2);
     matmul(A, B, C);
@@ -66,7 +77,8 @@ TEST(Matrix, Matadd) {
     EXPECT_DOUBLE_EQ(C(0, 0), 8.0);
 }
 
-// Backend correctness: every backend must produce the same result as Backend::seq
+// Backend correctness: every backend must produce the same result as
+// Backend::seq
 
 static Matrix make_test_matrix(idx rows, idx cols) {
     Matrix A(rows, cols);

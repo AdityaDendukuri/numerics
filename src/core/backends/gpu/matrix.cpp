@@ -12,8 +12,12 @@ namespace num::backends::gpu {
 
 void matmul(const Matrix& A, const Matrix& B, Matrix& C) {
 #ifdef NUMERICS_HAS_CUDA
-    cuda::matmul(A.gpu_data(), B.gpu_data(), C.gpu_data(),
-                 A.rows(), A.cols(), B.cols());
+    cuda::matmul(A.gpu_data(),
+                 B.gpu_data(),
+                 C.gpu_data(),
+                 A.rows(),
+                 A.cols(),
+                 B.cols());
 #else
     num::backends::seq::matmul(A, B, C);
 #endif
@@ -21,8 +25,7 @@ void matmul(const Matrix& A, const Matrix& B, Matrix& C) {
 
 void matvec(const Matrix& A, const Vector& x, Vector& y) {
 #ifdef NUMERICS_HAS_CUDA
-    cuda::matvec(A.gpu_data(), x.gpu_data(), y.gpu_data(),
-                 A.rows(), A.cols());
+    cuda::matvec(A.gpu_data(), x.gpu_data(), y.gpu_data(), A.rows(), A.cols());
 #else
     num::backends::seq::matvec(A, x, y);
 #endif

@@ -1,11 +1,15 @@
 /// @file linalg/factorization/backends/seq/thomas.cpp
-/// @brief Sequential Thomas algorithm (forward elimination + back substitution).
+/// @brief Sequential Thomas algorithm (forward elimination + back
+/// substitution).
 #include "impl.hpp"
 
 namespace num::backends::seq {
 
-void thomas(const Vector& a, const Vector& b, const Vector& c,
-            const Vector& d, Vector& x) {
+void thomas(const Vector& a,
+            const Vector& b,
+            const Vector& c,
+            const Vector& d,
+            Vector&       x) {
     const idx n = b.size();
 
     Vector b_work = b;

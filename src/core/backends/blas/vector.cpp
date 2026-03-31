@@ -7,7 +7,7 @@
 #include <cstdio>
 
 #ifdef NUMERICS_HAS_BLAS
-#  include <cblas.h>
+    #include <cblas.h>
 #endif
 
 namespace {
@@ -17,11 +17,12 @@ void warn_blas_unavailable() {
     if (!warned) {
         warned = true;
         std::fprintf(stderr,
-            "[numerics] WARNING: Backend::blas requested but BLAS was not found at "
-            "configure time.\n"
-            "           Falling back to Backend::seq.\n"
-            "           Install OpenBLAS and reconfigure: "
-            "apt install libopenblas-dev\n");
+                     "[numerics] WARNING: Backend::blas requested but BLAS was "
+                     "not found at "
+                     "configure time.\n"
+                     "           Falling back to Backend::seq.\n"
+                     "           Install OpenBLAS and reconfigure: "
+                     "apt install libopenblas-dev\n");
     }
 #endif
 }

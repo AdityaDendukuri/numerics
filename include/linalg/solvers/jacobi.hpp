@@ -21,8 +21,11 @@ namespace num {
 /// @param max_iter Maximum iterations (default 1000)
 /// @param backend  Execution backend (default: default_backend)
 /// @return SolverResult with convergence info
-SolverResult jacobi(const Matrix& A, const Vector& b, Vector& x,
-                    real tol = 1e-10, idx max_iter = 1000,
-                    Backend backend = default_backend);
+SolverResult jacobi(const Matrix& A,
+                    const Vector& b,
+                    Vector&       x,
+                    real          tol      = 1e-10,
+                    idx           max_iter = 1000,
+                    Backend       backend  = default_backend);
 
 } // namespace num

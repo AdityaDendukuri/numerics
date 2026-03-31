@@ -14,10 +14,10 @@ namespace num::backends::omp {
 void matmul(const Matrix& A, const Matrix& B, Matrix& C) {
 #ifdef NUMERICS_HAS_OMP
     constexpr idx BS = 64;
-    const idx M = A.rows(), K = A.cols(), N = B.cols();
+    const idx     M = A.rows(), K = A.cols(), N = B.cols();
     std::fill_n(C.data(), M * N, real(0));
 
-#   pragma omp parallel for schedule(dynamic) collapse(2)
+    #pragma omp parallel for schedule(dynamic) collapse(2)
     for (idx ii = 0; ii < M; ii += BS) {
         for (idx jj = 0; jj < N; jj += BS) {
             const idx i_lim = std::min(ii + BS, M);
@@ -41,7 +41,7 @@ void matmul(const Matrix& A, const Matrix& B, Matrix& C) {
 
 void matvec(const Matrix& A, const Vector& x, Vector& y) {
 #ifdef NUMERICS_HAS_OMP
-#   pragma omp parallel for schedule(static)
+    #pragma omp parallel for schedule(static)
     for (idx i = 0; i < A.rows(); ++i) {
         real sum = 0;
         for (idx j = 0; j < A.cols(); ++j)
@@ -53,10 +53,14 @@ void matvec(const Matrix& A, const Vector& x, Vector& y) {
 #endif
 }
 
-void matadd(real alpha, const Matrix& A, real beta, const Matrix& B, Matrix& C) {
+void matadd(real          alpha,
+            const Matrix& A,
+            real          beta,
+            const Matrix& B,
+            Matrix&       C) {
 #ifdef NUMERICS_HAS_OMP
-    const idx n = A.size();
-#   pragma omp parallel for schedule(static)
+    const idx   n = A.size();
+    #pragma omp parallel for schedule(static)
     for (idx i = 0; i < n; ++i)
         C.data()[i] = alpha * A.data()[i] + beta * B.data()[i];
 #else

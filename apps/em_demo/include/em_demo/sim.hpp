@@ -22,21 +22,22 @@ using MagneticSolver = num::MagneticSolver;
 
 /// A grid node with a fixed voltage (Dirichlet BC for current flow).
 struct ElectrodeBC {
-    int   flat_idx;  ///< Flat grid index: k*ny*nx + j*nx + i
-    float voltage;   ///< Applied voltage [V]
+    int   flat_idx; ///< Flat grid index: k*ny*nx + j*nx + i
+    float voltage;  ///< Applied voltage [V]
 };
 
 class ElectricSolver {
-public:
+  public:
     /// Solve div(sigma*grad(phi)) = 0 with Dirichlet BCs at electrode nodes,
     /// Neumann (zero normal flux) on all remaining boundaries.
     ///
     /// Uses symmetric elimination so the system is SPD (CG converges).
-    static num::SolverResult solve_potential(ScalarField3D& phi,
-                                             const ScalarField3D& sigma,
-                                             const std::vector<ElectrodeBC>& bcs,
-                                             double tol      = 1e-6,
-                                             int    max_iter = 500);
+    static num::SolverResult solve_potential(
+        ScalarField3D&                  phi,
+        const ScalarField3D&            sigma,
+        const std::vector<ElectrodeBC>& bcs,
+        double                          tol      = 1e-6,
+        int                             max_iter = 500);
 
     /// Compute Joule heating power density Q = sigma*|grad(phi)|^2 [W/m^3].
     static ScalarField3D joule_heating(const ScalarField3D& sigma,

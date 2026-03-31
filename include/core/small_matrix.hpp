@@ -5,8 +5,9 @@
 /// kernels where heap traffic is undesirable:
 ///
 ///   SmallVec<N>         -- constexpr dense vector backed by std::array<real,N>
-///   SmallMatrix<M,N>    -- constexpr row-major matrix backed by std::array<real,M*N>
-///   GivensRotation      -- constexpr (c,s) pair; apply() / apply_t() are branchless
+///   SmallMatrix<M,N>    -- constexpr row-major matrix backed by
+///   std::array<real,M*N> GivensRotation      -- constexpr (c,s) pair; apply()
+///   / apply_t() are branchless
 ///
 /// Because these are literal types every operation can be evaluated at
 /// compile time (C++17: arithmetic only; C++20+: also sqrt/hypot via
@@ -34,30 +35,42 @@ template<idx N>
 struct SmallVec {
     std::array<real, N> data{};
 
-    constexpr real& operator[](idx i) noexcept { return data[i]; }
-    constexpr const real& operator[](idx i) const noexcept { return data[i]; }
-    static constexpr idx size() noexcept { return N; }
+    constexpr real& operator[](idx i) noexcept {
+        return data[i];
+    }
+    constexpr const real& operator[](idx i) const noexcept {
+        return data[i];
+    }
+    static constexpr idx size() noexcept {
+        return N;
+    }
 
     constexpr SmallVec& operator+=(const SmallVec& o) noexcept {
-        for (idx i = 0; i < N; ++i) data[i] += o.data[i];
+        for (idx i = 0; i < N; ++i)
+            data[i] += o.data[i];
         return *this;
     }
     constexpr SmallVec& operator-=(const SmallVec& o) noexcept {
-        for (idx i = 0; i < N; ++i) data[i] -= o.data[i];
+        for (idx i = 0; i < N; ++i)
+            data[i] -= o.data[i];
         return *this;
     }
     constexpr SmallVec& operator*=(real s) noexcept {
-        for (idx i = 0; i < N; ++i) data[i] *= s;
+        for (idx i = 0; i < N; ++i)
+            data[i] *= s;
         return *this;
     }
 
     constexpr real dot(const SmallVec& o) const noexcept {
         real s = 0;
-        for (idx i = 0; i < N; ++i) s += data[i] * o.data[i];
+        for (idx i = 0; i < N; ++i)
+            s += data[i] * o.data[i];
         return s;
     }
     /// @brief Sum of squares (avoid sqrt to stay constexpr in C++17).
-    constexpr real norm_sq() const noexcept { return dot(*this); }
+    constexpr real norm_sq() const noexcept {
+        return dot(*this);
+    }
 };
 
 template<idx N>
@@ -76,20 +89,33 @@ template<idx M, idx N>
 struct SmallMatrix {
     std::array<real, M * N> data{};
 
-    constexpr real& operator()(idx i, idx j) noexcept { return data[i * N + j]; }
-    constexpr const real& operator()(idx i, idx j) const noexcept { return data[i * N + j]; }
+    constexpr real& operator()(idx i, idx j) noexcept {
+        return data[i * N + j];
+    }
+    constexpr const real& operator()(idx i, idx j) const noexcept {
+        return data[i * N + j];
+    }
 
-    static constexpr idx rows() noexcept { return M; }
-    static constexpr idx cols() noexcept { return N; }
+    static constexpr idx rows() noexcept {
+        return M;
+    }
+    static constexpr idx cols() noexcept {
+        return N;
+    }
 
-    constexpr void fill(real v) noexcept { data.fill(v); }
+    constexpr void fill(real v) noexcept {
+        data.fill(v);
+    }
 
-    static constexpr SmallMatrix zeros() noexcept { return SmallMatrix{}; }
+    static constexpr SmallMatrix zeros() noexcept {
+        return SmallMatrix{};
+    }
 
     static constexpr SmallMatrix identity() noexcept {
         static_assert(M == N, "identity() requires a square matrix");
         SmallMatrix m{};
-        for (idx i = 0; i < M; ++i) m(i, i) = real(1);
+        for (idx i = 0; i < M; ++i)
+            m(i, i) = real(1);
         return m;
     }
 
@@ -103,7 +129,8 @@ struct SmallMatrix {
 
     /// @brief Matrix multiplication: (M x N) * (N x K) -> (M x K).
     template<idx K>
-    constexpr SmallMatrix<M, K> operator*(const SmallMatrix<N, K>& B) const noexcept {
+    constexpr SmallMatrix<M, K> operator*(
+        const SmallMatrix<N, K>& B) const noexcept {
         SmallMatrix<M, K> C{};
         for (idx i = 0; i < M; ++i)
             for (idx k = 0; k < N; ++k)
@@ -122,11 +149,13 @@ struct SmallMatrix {
     }
 
     constexpr SmallMatrix& operator+=(const SmallMatrix& o) noexcept {
-        for (idx k = 0; k < M * N; ++k) data[k] += o.data[k];
+        for (idx k = 0; k < M * N; ++k)
+            data[k] += o.data[k];
         return *this;
     }
     constexpr SmallMatrix& operator*=(real s) noexcept {
-        for (idx k = 0; k < M * N; ++k) data[k] *= s;
+        for (idx k = 0; k < M * N; ++k)
+            data[k] *= s;
         return *this;
     }
 };
@@ -147,7 +176,8 @@ struct GivensRotation {
     /// Compute (c,s) such that G*[a;b] = [r;0], r = hypot(a,b).
     /// Stable for any (a,b) including b==0.
     static constexpr GivensRotation from(real a, real b) noexcept {
-        if (b == real(0)) return {real(1), real(0)};
+        if (b == real(0))
+            return {real(1), real(0)};
         // Use the standard stable form.  std::hypot is constexpr in GCC/Clang
         // as a built-in extension even in C++17; becomes standard in C++23.
         real r = std::sqrt(a * a + b * b);
@@ -170,7 +200,7 @@ struct GivensRotation {
 
     /// Return the 2x2 rotation matrix.
     constexpr SmallMatrix<2, 2> as_matrix() const noexcept {
-        return SmallMatrix<2, 2>{{ c, s, -s, c }};
+        return SmallMatrix<2, 2>{{c, s, -s, c}};
     }
 };
 

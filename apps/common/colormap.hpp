@@ -48,30 +48,56 @@ inline Color diverging_color(float t) {
 /// @param phase     arg(psi) in [-pi, pi]
 /// @param max_prob  maximum |psi|^2 in the domain (for normalisation)
 inline Color phase_hsv_color(double prob, double phase, double max_prob) {
-    if (max_prob < 1e-20) return {0, 0, 0, 255};
+    if (max_prob < 1e-20)
+        return {0, 0, 0, 255};
     float amp = std::min(1.0f, static_cast<float>(std::sqrt(prob / max_prob)));
     float hue = static_cast<float>((phase + M_PI) / (2.0 * M_PI)) * 360.0f;
 
     // Manual HSV -> RGB (avoids calling ColorFromHSV twice for the same math)
     float h6 = hue / 60.0f;
-    int   hi  = static_cast<int>(h6) % 6;
-    float f   = h6 - static_cast<int>(h6);
-    float s   = 0.95f;
-    float p   = amp * (1.0f - s);
-    float q   = amp * (1.0f - s * f);
-    float t_  = amp * (1.0f - s * (1.0f - f));
+    int   hi = static_cast<int>(h6) % 6;
+    float f  = h6 - static_cast<int>(h6);
+    float s  = 0.95f;
+    float p  = amp * (1.0f - s);
+    float q  = amp * (1.0f - s * f);
+    float t_ = amp * (1.0f - s * (1.0f - f));
     float r, g, b;
     switch (hi) {
-        case 0: r=amp; g=t_;  b=p;   break;
-        case 1: r=q;   g=amp; b=p;   break;
-        case 2: r=p;   g=amp; b=t_;  break;
-        case 3: r=p;   g=q;   b=amp; break;
-        case 4: r=t_;  g=p;   b=amp; break;
-        default:r=amp; g=p;   b=q;   break;
+        case 0:
+            r = amp;
+            g = t_;
+            b = p;
+            break;
+        case 1:
+            r = q;
+            g = amp;
+            b = p;
+            break;
+        case 2:
+            r = p;
+            g = amp;
+            b = t_;
+            break;
+        case 3:
+            r = p;
+            g = q;
+            b = amp;
+            break;
+        case 4:
+            r = t_;
+            g = p;
+            b = amp;
+            break;
+        default:
+            r = amp;
+            g = p;
+            b = q;
+            break;
     }
     return {static_cast<unsigned char>(r * 255),
             static_cast<unsigned char>(g * 255),
-            static_cast<unsigned char>(b * 255), 255};
+            static_cast<unsigned char>(b * 255),
+            255};
 }
 
 // Probability density
@@ -79,8 +105,10 @@ inline Color phase_hsv_color(double prob, double phase, double max_prob) {
 /// t = prob / max_prob in [0,1]: black -> teal -> white.
 /// Gamma-corrected for better perceptual range on low-amplitude tails.
 inline Color density_color(double prob, double max_prob) {
-    if (max_prob < 1e-20) return {0, 0, 0, 255};
-    float t = std::min(1.0f, std::pow(static_cast<float>(prob / max_prob), 0.45f));
+    if (max_prob < 1e-20)
+        return {0, 0, 0, 255};
+    float t = std::min(1.0f,
+                       std::pow(static_cast<float>(prob / max_prob), 0.45f));
     if (t < 0.5f) {
         auto v = static_cast<unsigned char>(t * 2.0f * 255);
         return {0, v, v, 255};

@@ -21,17 +21,17 @@
 #pragma once
 
 #include "core/matrix.hpp"
-#include "core/vector.hpp"
 #include "core/policy.hpp"
+#include "core/vector.hpp"
 
 namespace num {
 
 /// @brief Full eigendecomposition result: A = V * diag(values) * V^T
 struct EigenResult {
-    Vector values;    ///< Eigenvalues in ascending order
-    Matrix vectors;   ///< Eigenvectors as columns of an nxn orthogonal matrix
-    idx    sweeps;    ///< Number of Jacobi sweeps performed
-    bool   converged; ///< Whether off-diagonal norm fell below tol
+    Vector values;  ///< Eigenvalues in ascending order
+    Matrix vectors; ///< Eigenvectors as columns of an nxn orthogonal matrix
+    idx    sweeps    = 0;     ///< Number of Jacobi sweeps performed
+    bool   converged = false; ///< Whether off-diagonal norm fell below tol
 };
 
 /// @brief Full eigendecomposition of a real symmetric matrix.
@@ -41,13 +41,15 @@ struct EigenResult {
 /// @param A          Real symmetric nxn matrix (upper/lower triangle used)
 /// @param tol        Jacobi convergence tolerance (ignored for Backend::lapack)
 /// @param max_sweeps Jacobi sweep cap (ignored for Backend::lapack)
-/// @param backend    Backend::lapack uses LAPACKE_dsyevd (default when available).
+/// @param backend    Backend::lapack uses LAPACKE_dsyevd (default when
+/// available).
 ///                   Backend::omp    parallelises the Jacobi rotation loop.
 ///                   Backend::seq    uses our cyclic Jacobi implementation.
 /// @return EigenResult with eigenvalues in ascending order and corresponding
 ///         eigenvectors as columns of the V matrix (A = V diag(lambda) V^T)
 EigenResult eig_sym(const Matrix& A,
-                    real tol = 1e-12, idx max_sweeps = 100,
-                    Backend backend = lapack_backend);
+                    real          tol        = 1e-12,
+                    idx           max_sweeps = 100,
+                    Backend       backend    = lapack_backend);
 
 } // namespace num

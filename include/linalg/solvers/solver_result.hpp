@@ -6,9 +6,9 @@
 namespace num {
 
 struct SolverResult {
-    idx  iterations;   ///< Number of iterations performed
-    real residual;     ///< Final residual norm ||b - Ax||
-    bool converged;    ///< Whether tolerance was met
+    idx  iterations = 0;     ///< Number of iterations performed
+    real residual   = 0.0;   ///< Final residual norm ||b - Ax||
+    bool converged  = false; ///< Whether tolerance was met
 };
 
 } // namespace num

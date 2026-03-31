@@ -1,5 +1,6 @@
 /// @file markov/mcmc.hpp
-/// @brief Metropolis-Hastings MCMC -- template-based, zero-overhead callable dispatch.
+/// @brief Metropolis-Hastings MCMC -- template-based, zero-overhead callable
+/// dispatch.
 ///
 /// The sweep functions accept any callable for delta_energy / acceptance_prob
 /// and apply_flip, so the compiler inlines them at the call site with zero
@@ -36,8 +37,8 @@ namespace num::markov {
 
 /// @brief Statistics returned by a single Metropolis sweep.
 struct MetropolisStats {
-    idx  accepted = 0;  ///< Number of accepted proposals
-    idx  total    = 0;  ///< Total proposals (= n_sites)
+    idx accepted = 0; ///< Number of accepted proposals
+    idx total    = 0; ///< Total proposals (= n_sites)
     real acceptance_rate() const {
         return total > 0 ? static_cast<real>(accepted) / total : 0.0;
     }
@@ -45,16 +46,18 @@ struct MetropolisStats {
 
 /// @brief Statistics returned by an umbrella sampling sweep.
 struct UmbrellaStats {
-    MetropolisStats mc;           ///< Metropolis sweep statistics
-    bool reverted     = false;    ///< true if state was restored
-    idx  order_param  = 0;        ///< Order parameter value after sweep
+    MetropolisStats mc;                  ///< Metropolis sweep statistics
+    bool            reverted    = false; ///< true if state was restored
+    idx             order_param = 0;     ///< Order parameter value after sweep
 };
 
 /// @brief Window constraint for umbrella sampling.
 struct UmbrellaWindow {
-    idx lo;  ///< Lower bound (inclusive)
-    idx hi;  ///< Upper bound (inclusive)
-    bool contains(idx v) const { return v >= lo && v <= hi; }
+    idx lo = 0; ///< Lower bound (inclusive)
+    idx hi = 0; ///< Upper bound (inclusive)
+    bool contains(idx v) const {
+        return v >= lo && v <= hi;
+    }
 };
 
 } // namespace num::markov

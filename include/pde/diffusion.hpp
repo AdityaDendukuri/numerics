@@ -25,10 +25,13 @@ namespace num::pde {
 ///
 /// @param u      NxN field vector (row-major)
 /// @param N      Grid side length
-/// @param coeff  Diffusion coefficient * dt / h^2 (e.g. nu*dt/h^2 for viscosity)
+/// @param coeff  Diffusion coefficient * dt / h^2 (e.g. nu*dt/h^2 for
+/// viscosity)
 /// @param b      Backend for the axpy accumulation
-inline void diffusion_step_2d(Vector& u, int N, double coeff,
-                               Backend b = best_backend) {
+inline void diffusion_step_2d(Vector& u,
+                              int     N,
+                              double  coeff,
+                              Backend b = best_backend) {
     Vector lap(u.size());
     laplacian_stencil_2d_periodic(u, lap, N);
     axpy(coeff, lap, u, b);
@@ -36,8 +39,10 @@ inline void diffusion_step_2d(Vector& u, int N, double coeff,
 
 /// Explicit Euler diffusion step with Dirichlet (zero) BCs:
 ///   u += coeff * Lap_dirichlet(u)
-inline void diffusion_step_2d_dirichlet(Vector& u, int N, double coeff,
-                                         Backend b = best_backend) {
+inline void diffusion_step_2d_dirichlet(Vector& u,
+                                        int     N,
+                                        double  coeff,
+                                        Backend b = best_backend) {
     Vector lap(u.size());
     laplacian_stencil_2d(u, lap, N);
     axpy(coeff, lap, u, b);

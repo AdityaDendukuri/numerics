@@ -1,9 +1,11 @@
 /// @file math.hpp
-/// @brief Thin wrappers around C++17 `<cmath>` and `<numeric>` with readable names.
+/// @brief Thin wrappers around C++17 `<cmath>` and `<numeric>` with readable
+/// names.
 ///
-/// The standard library names for special functions (cyl_bessel_j, comp_ellint_1,
-/// cyl_neumann, etc.) are accurate but opaque. This header re-exports them under
-/// the names used in textbooks and mathematical literature.
+/// The standard library names for special functions (cyl_bessel_j,
+/// comp_ellint_1, cyl_neumann, etc.) are accurate but opaque. This header
+/// re-exports them under the names used in textbooks and mathematical
+/// literature.
 ///
 /// Random number generation wraps the mt19937 boilerplate into a plain struct.
 ///
@@ -20,17 +22,17 @@
 // Apple libc++ does not implement C++17 special math functions.
 // Use Boost.Math as a drop-in replacement when building on macOS.
 #ifdef NUMERICS_USE_BOOST_MATH
-#  include <boost/math/special_functions/bessel.hpp>
-#  include <boost/math/special_functions/legendre.hpp>
-#  include <boost/math/special_functions/hermite.hpp>
-#  include <boost/math/special_functions/laguerre.hpp>
-#  include <boost/math/special_functions/ellint_1.hpp>
-#  include <boost/math/special_functions/ellint_2.hpp>
-#  include <boost/math/special_functions/ellint_3.hpp>
-#  include <boost/math/special_functions/expint.hpp>
-#  include <boost/math/special_functions/zeta.hpp>
-#  include <boost/math/special_functions/beta.hpp>
-#  include <boost/math/special_functions/spherical_harmonic.hpp>
+    #include <boost/math/special_functions/bessel.hpp>
+    #include <boost/math/special_functions/legendre.hpp>
+    #include <boost/math/special_functions/hermite.hpp>
+    #include <boost/math/special_functions/laguerre.hpp>
+    #include <boost/math/special_functions/ellint_1.hpp>
+    #include <boost/math/special_functions/ellint_2.hpp>
+    #include <boost/math/special_functions/ellint_3.hpp>
+    #include <boost/math/special_functions/expint.hpp>
+    #include <boost/math/special_functions/zeta.hpp>
+    #include <boost/math/special_functions/beta.hpp>
+    #include <boost/math/special_functions/spherical_harmonic.hpp>
 #endif
 
 namespace num {
@@ -39,13 +41,13 @@ namespace num {
 
 constexpr real pi      = 3.14159265358979323846;
 constexpr real e       = 2.71828182845904523536;
-constexpr real phi     = 1.61803398874989484820;  ///< Golden ratio
+constexpr real phi     = 1.61803398874989484820; ///< Golden ratio
 constexpr real sqrt2   = 1.41421356237309504880;
 constexpr real sqrt3   = 1.73205080756887729353;
 constexpr real ln2     = 0.69314718055994530942;
-constexpr real inv_pi  = 0.31830988618379067154;  ///< 1/pi
-constexpr real two_pi  = 6.28318530717958647692;  ///< 2pi
-constexpr real half_pi = 1.57079632679489661923;  ///< pi/2
+constexpr real inv_pi  = 0.31830988618379067154; ///< 1/pi
+constexpr real two_pi  = 6.28318530717958647692; ///< 2pi
+constexpr real half_pi = 1.57079632679489661923; ///< pi/2
 
 // Cylindrical Bessel functions  (C++17, <cmath>)
 
@@ -96,7 +98,8 @@ inline real sph_bessel_j(unsigned int n, real x) {
 #endif
 }
 
-/// @brief y_n(x)  -- spherical Neumann function (spherical Bessel of the second kind)
+/// @brief y_n(x)  -- spherical Neumann function (spherical Bessel of the second
+/// kind)
 inline real sph_bessel_y(unsigned int n, real x) {
 #ifdef NUMERICS_USE_BOOST_MATH
     return boost::math::sph_neumann(n, x);
@@ -128,7 +131,10 @@ inline real assoc_legendre(unsigned int n, unsigned int m, real x) {
 /// @brief Y_l^m(theta)  -- spherical harmonic (real part, theta in radians)
 inline real sph_legendre(unsigned int l, unsigned int m, real theta) {
 #ifdef NUMERICS_USE_BOOST_MATH
-    return boost::math::spherical_harmonic_r(l, static_cast<int>(m), theta, real(0));
+    return boost::math::spherical_harmonic_r(l,
+                                             static_cast<int>(m),
+                                             theta,
+                                             real(0));
 #else
     return std::sph_legendre(l, m, theta);
 #endif
@@ -162,7 +168,8 @@ inline real assoc_laguerre(unsigned int n, unsigned int m, real x) {
 }
 
 // Elliptic integrals  (C++17, <cmath>)
-// Names: K(k), E(k), Pi(n,k) for complete; F(k,phi), E(k,phi), Pi(n,k,phi) for incomplete
+// Names: K(k), E(k), Pi(n,k) for complete; F(k,phi), E(k,phi), Pi(n,k,phi) for
+// incomplete
 
 /// @brief K(k)  -- complete elliptic integral of the first kind
 inline real ellint_K(real k) {
@@ -185,7 +192,7 @@ inline real ellint_E(real k) {
 /// @brief Pi(n, k)  -- complete elliptic integral of the third kind
 inline real ellint_Pi(real n, real k) {
 #ifdef NUMERICS_USE_BOOST_MATH
-    return boost::math::ellint_3(k, n);   // boost: (k, n); std: (n, k)
+    return boost::math::ellint_3(k, n); // boost: (k, n); std: (n, k)
 #else
     return std::comp_ellint_3(n, k);
 #endif
@@ -212,7 +219,9 @@ inline real ellint_Ei(real k, real phi) {
 /// @brief Pi(n, k, phi)  -- incomplete elliptic integral of the third kind
 inline real ellint_Pi_inc(real n, real k, real phi) {
 #ifdef NUMERICS_USE_BOOST_MATH
-    return boost::math::ellint_3(k, n, phi);  // boost: (k, n, phi); std: (n, k, phi)
+    return boost::math::ellint_3(k,
+                                 n,
+                                 phi); // boost: (k, n, phi); std: (n, k, phi)
 #else
     return std::ellint_3(n, k, phi);
 #endif
@@ -249,11 +258,12 @@ inline real beta(real a, real b) {
 
 // Sequence utilities  (wrapping <numeric>)
 
-/// @brief Evenly spaced values from start to stop, inclusive. MATLAB/NumPy linspace.
+/// @brief Evenly spaced values from start to stop, inclusive. MATLAB/NumPy
+/// linspace.
 inline std::vector<real> linspace(real start, real stop, idx n) {
     assert(n >= 2);
     std::vector<real> out(n);
-    real step = (stop - start) / static_cast<real>(n - 1);
+    real              step = (stop - start) / static_cast<real>(n - 1);
     for (idx i = 0; i < n; ++i)
         out[i] = start + static_cast<real>(i) * step;
     return out;
@@ -274,10 +284,12 @@ inline std::vector<int> int_range(int start, int n) {
 struct Rng {
     std::mt19937 engine;
 
-    explicit Rng(uint32_t seed) : engine(seed) {}
+    explicit Rng(uint32_t seed)
+        : engine(seed) {}
 
     /// Seed from hardware entropy.
-    Rng() : engine(std::random_device{}()) {}
+    Rng()
+        : engine(std::random_device{}()) {}
 };
 
 /// @brief Uniform real in [lo, hi).

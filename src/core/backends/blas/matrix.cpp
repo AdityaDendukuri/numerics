@@ -10,7 +10,7 @@
 #include <cstdio>
 
 #ifdef NUMERICS_HAS_BLAS
-#  include <cblas.h>
+    #include <cblas.h>
 #endif
 
 namespace {
@@ -19,8 +19,10 @@ void warn_blas_unavailable() {
     static bool warned = false;
     if (!warned) {
         warned = true;
-        std::fprintf(stderr,
-            "[numerics] WARNING: Backend::blas requested but BLAS was not found at "
+        std::fprintf(
+            stderr,
+            "[numerics] WARNING: Backend::blas requested but BLAS was not "
+            "found at "
             "configure time.\n"
             "           Falling back to Backend::blocked (cache-blocked).\n"
             "           Install OpenBLAS and reconfigure: "
@@ -35,13 +37,20 @@ namespace num::backends::blas {
 void matmul(const Matrix& A, const Matrix& B, Matrix& C) {
     warn_blas_unavailable();
 #ifdef NUMERICS_HAS_BLAS
-    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+    cblas_dgemm(CblasRowMajor,
+                CblasNoTrans,
+                CblasNoTrans,
                 static_cast<int>(A.rows()),
                 static_cast<int>(B.cols()),
                 static_cast<int>(A.cols()),
-                1.0, A.data(), static_cast<int>(A.cols()),
-                     B.data(), static_cast<int>(B.cols()),
-                0.0, C.data(), static_cast<int>(C.cols()));
+                1.0,
+                A.data(),
+                static_cast<int>(A.cols()),
+                B.data(),
+                static_cast<int>(B.cols()),
+                0.0,
+                C.data(),
+                static_cast<int>(C.cols()));
 #else
     num::backends::seq::matmul_blocked(A, B, C, 64);
 #endif
@@ -50,18 +59,28 @@ void matmul(const Matrix& A, const Matrix& B, Matrix& C) {
 void matvec(const Matrix& A, const Vector& x, Vector& y) {
     warn_blas_unavailable();
 #ifdef NUMERICS_HAS_BLAS
-    cblas_dgemv(CblasRowMajor, CblasNoTrans,
+    cblas_dgemv(CblasRowMajor,
+                CblasNoTrans,
                 static_cast<int>(A.rows()),
                 static_cast<int>(A.cols()),
-                1.0, A.data(), static_cast<int>(A.cols()),
-                     x.data(), 1,
-                0.0, y.data(), 1);
+                1.0,
+                A.data(),
+                static_cast<int>(A.cols()),
+                x.data(),
+                1,
+                0.0,
+                y.data(),
+                1);
 #else
     num::backends::seq::matvec(A, x, y);
 #endif
 }
 
-void matadd(real alpha, const Matrix& A, real beta, const Matrix& B, Matrix& C) {
+void matadd(real          alpha,
+            const Matrix& A,
+            real          beta,
+            const Matrix& B,
+            Matrix&       C) {
     warn_blas_unavailable();
 #ifdef NUMERICS_HAS_BLAS
     cblas_dcopy(static_cast<int>(A.size()), A.data(), 1, C.data(), 1);

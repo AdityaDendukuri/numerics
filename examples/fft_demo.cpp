@@ -11,19 +11,19 @@
 
 int main() {
     const int    N  = 1024;
-    const double fs = 1000.0;   // sample rate (Hz)
+    const double fs = 1000.0; // sample rate (Hz)
 
     num::Vector x(N);
     for (int i = 0; i < N; ++i)
-        x[i] = std::sin(2 * M_PI * 50.0  * i / fs)
-             + 0.5 * std::sin(2 * M_PI * 120.0 * i / fs);
+        x[i] = std::sin(2 * M_PI * 50.0 * i / fs)
+               + 0.5 * std::sin(2 * M_PI * 120.0 * i / fs);
 
     num::CVector X(N / 2 + 1);
     num::spectral::rfft(x, X);
 
     num::Series signal, spectrum;
     for (int i = 0; i < 100; ++i)
-        signal.store(i / fs * 1000.0, x[i]);   // first 100 ms
+        signal.store(i / fs * 1000.0, x[i]); // first 100 ms
     for (int k = 0; k < (int)X.size(); ++k)
         spectrum.store(k * fs / N, std::abs(X[k]));
 

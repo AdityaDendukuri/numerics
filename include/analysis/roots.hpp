@@ -9,7 +9,7 @@ namespace num {
 struct RootResult {
     real root;
     idx  iterations;
-    real residual;   ///< |f(root)|
+    real residual; ///< |f(root)|
     bool converged;
 };
 
@@ -18,8 +18,11 @@ struct RootResult {
 /// @param a,b Bracket: f(a) and f(b) must have opposite signs
 /// @param tol Convergence tolerance on |f(root)| and interval width
 /// @param max_iter Maximum iterations
-RootResult bisection(ScalarFn f, real a, real b,
-                     real tol = 1e-10, idx max_iter = 1000);
+RootResult bisection(ScalarFn f,
+                     real     a,
+                     real     b,
+                     real     tol      = 1e-10,
+                     idx      max_iter = 1000);
 
 /// @brief Newton-Raphson method
 /// @param f   Function
@@ -27,16 +30,22 @@ RootResult bisection(ScalarFn f, real a, real b,
 /// @param x0  Initial guess
 /// @param tol Convergence tolerance
 /// @param max_iter Maximum iterations
-RootResult newton(ScalarFn f, ScalarFn df, real x0,
-                  real tol = 1e-10, idx max_iter = 1000);
+RootResult newton(ScalarFn f,
+                  ScalarFn df,
+                  real     x0,
+                  real     tol      = 1e-10,
+                  idx      max_iter = 1000);
 
 /// @brief Secant method (Newton without derivative)
 /// @param f     Function
 /// @param x0,x1 Two distinct initial guesses
 /// @param tol   Convergence tolerance
 /// @param max_iter Maximum iterations
-RootResult secant(ScalarFn f, real x0, real x1,
-                  real tol = 1e-10, idx max_iter = 1000);
+RootResult secant(ScalarFn f,
+                  real     x0,
+                  real     x1,
+                  real     tol      = 1e-10,
+                  idx      max_iter = 1000);
 
 /// @brief Brent's method (bisection + secant + inverse quadratic interpolation)
 ///
@@ -48,7 +57,10 @@ RootResult secant(ScalarFn f, real x0, real x1,
 /// @param a,b   Bracket: f(a) and f(b) must have opposite signs
 /// @param tol   Convergence tolerance
 /// @param max_iter Maximum iterations
-RootResult brent(ScalarFn f, real a, real b,
-                 real tol = 1e-10, idx max_iter = 1000);
+RootResult brent(ScalarFn f,
+                 real     a,
+                 real     b,
+                 real     tol      = 1e-10,
+                 idx      max_iter = 1000);
 
 } // namespace num

@@ -29,7 +29,8 @@ struct LUResult {
 ///   L  = unit lower triangular  (diagonal = 1, stored below diag of LU)
 ///   U  = upper triangular       (stored on and above diag of LU)
 ///
-/// @param backend  Backend::lapack uses LAPACKE_dgetrf (default when available).
+/// @param backend  Backend::lapack uses LAPACKE_dgetrf (default when
+/// available).
 ///                 Backend::seq    uses our Doolittle implementation.
 LUResult lu(const Matrix& A, Backend backend = lapack_backend);
 

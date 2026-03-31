@@ -18,11 +18,15 @@ using MatVecFn = std::function<void(const Vector&, Vector&)>;
 /// @param x        Solution vector (initial guess on input, solution on output)
 /// @param tol      Convergence tolerance on residual norm (default 1e-10)
 /// @param max_iter Maximum iterations (default 1000)
-/// @param backend  Backend for internal matvec/dot/axpy/scale (default: default_backend)
+/// @param backend  Backend for internal matvec/dot/axpy/scale (default:
+/// default_backend)
 /// @return SolverResult with convergence info
-SolverResult cg(const Matrix& A, const Vector& b, Vector& x,
-                real tol = 1e-10, idx max_iter = 1000,
-                Backend backend = default_backend);
+SolverResult cg(const Matrix& A,
+                const Vector& b,
+                Vector&       x,
+                real          tol      = 1e-10,
+                idx           max_iter = 1000,
+                Backend       backend  = default_backend);
 
 /// @brief Matrix-free conjugate gradient for Ax = b where A is SPD
 /// @param matvec  Callable computing y = A*x
@@ -30,7 +34,10 @@ SolverResult cg(const Matrix& A, const Vector& b, Vector& x,
 /// @param x       Initial guess (modified in-place -> solution)
 /// @param tol     Convergence tolerance on residual norm
 /// @param max_iter Maximum CG iterations
-SolverResult cg_matfree(MatVecFn matvec, const Vector& b, Vector& x,
-                        real tol = 1e-6, idx max_iter = 1000);
+SolverResult cg_matfree(MatVecFn      matvec,
+                        const Vector& b,
+                        Vector&       x,
+                        real          tol      = 1e-6,
+                        idx           max_iter = 1000);
 
 } // namespace num

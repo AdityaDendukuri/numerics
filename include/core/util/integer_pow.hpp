@@ -4,7 +4,8 @@
 /// @par Algorithm (CS theory: exponentiation by squaring)
 ///
 /// Naive loop:   x^N needs N-1 multiplications.
-/// Squaring:     x^N needs ceil(log2(N)) squarings + popcount(N)-1 multiplications
+/// Squaring:     x^N needs ceil(log2(N)) squarings + popcount(N)-1
+/// multiplications
 ///               = O(log N) total  -- for N=7: 4 mults vs 6 naive.
 ///
 /// The recursion:
@@ -33,8 +34,10 @@ namespace num {
 template<int N, typename T>
 constexpr T ipow(T x) noexcept {
     static_assert(N >= 0, "ipow: exponent must be non-negative");
-    if constexpr (N == 0) return T(1);
-    if constexpr (N == 1) return x;
+    if constexpr (N == 0)
+        return T(1);
+    if constexpr (N == 1)
+        return x;
     if constexpr (N % 2 == 0) {
         const T half = ipow<N / 2>(x);
         return half * half;

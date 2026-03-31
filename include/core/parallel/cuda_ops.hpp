@@ -37,14 +37,21 @@ void matvec(const real* A, const real* x, real* y, idx rows, idx cols);
 void matmul(const real* A, const real* B, real* C, idx m, idx k, idx n);
 
 /// @brief Batched Thomas algorithm for tridiagonal systems
-/// @param a  Lower diagonals (batch_size arrays of size n-1, packed consecutively)
+/// @param a  Lower diagonals (batch_size arrays of size n-1, packed
+/// consecutively)
 /// @param b  Main diagonals (batch_size arrays of size n)
-/// @param c  Upper diagonals (batch_size arrays of size n-1, packed consecutively)
+/// @param c  Upper diagonals (batch_size arrays of size n-1, packed
+/// consecutively)
 /// @param d  Right-hand sides (batch_size arrays of size n)
 /// @param x  Solution vectors (batch_size arrays of size n)
 /// @param n  Size of each system
 /// @param batch_size  Number of independent systems to solve
-void thomas_batched(const real* a, const real* b, const real* c,
-                    const real* d, real* x, idx n, idx batch_size);
+void thomas_batched(const real* a,
+                    const real* b,
+                    const real* c,
+                    const real* d,
+                    real*       x,
+                    idx         n,
+                    idx         batch_size);
 
 } // namespace num::cuda

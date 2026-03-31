@@ -8,8 +8,8 @@
 ///   #include "viz.hpp"
 ///
 ///   num::viz::run("My Sim", 900, 900, [&](num::viz::Frame& f) {
-///       f.step([&]{ sim.step(dt); });          // SPACE pauses, +/- adjusts substeps
-///       for (int i = 0; i < n; ++i)
+///       f.step([&]{ sim.step(dt); });          // SPACE pauses, +/- adjusts
+///       substeps for (int i = 0; i < n; ++i)
 ///           f.dot(x[i], y[i], heat_color(T[i]));
 ///   });
 /// @endcode
@@ -40,22 +40,26 @@ struct Color {
 };
 
 // Common presets
-inline constexpr Color kBlack   = {  0,   0,   0, 255};
+inline constexpr Color kBlack   = {0, 0, 0, 255};
 inline constexpr Color kWhite   = {255, 255, 255, 255};
-inline constexpr Color kRed     = {220,  40,  40, 255};
-inline constexpr Color kGreen   = { 50, 200,  50, 255};
-inline constexpr Color kBlue    = { 50, 100, 230, 255};
-inline constexpr Color kYellow  = {240, 220,  30, 255};
+inline constexpr Color kRed     = {220, 40, 40, 255};
+inline constexpr Color kGreen   = {50, 200, 50, 255};
+inline constexpr Color kBlue    = {50, 100, 230, 255};
+inline constexpr Color kYellow  = {240, 220, 30, 255};
 inline constexpr Color kGray    = {120, 120, 120, 255};
 inline constexpr Color kSkyBlue = {100, 180, 240, 255};
 
 // Convert viz::Color <-> raylib ::Color
-inline ::Color  to_rl(Color c)  { return {c.r, c.g, c.b, c.a}; }
-inline Color  from_rl(::Color c){ return {c.r, c.g, c.b, c.a}; }
+inline ::Color to_rl(Color c) {
+    return {c.r, c.g, c.b, c.a};
+}
+inline Color from_rl(::Color c) {
+    return {c.r, c.g, c.b, c.a};
+}
 
 // Unpack a packed ARGB uint32 (e.g. nbody Body::color) into viz::Color
 inline Color unpack(uint32_t c) {
-    return { uint8_t(c >> 24), uint8_t(c >> 16), uint8_t(c >> 8), uint8_t(c) };
+    return {uint8_t(c >> 24), uint8_t(c >> 16), uint8_t(c >> 8), uint8_t(c)};
 }
 
 // Colormaps (all return viz::Color; inputs are normalized unless noted)
@@ -80,7 +84,8 @@ inline Color diverging_color(float t) {
 
 /// Quantum wavefunction: hue = phase, brightness = sqrt(|psi|^2 / max).
 inline Color phase_hsv_color(double prob, double phase, double max_prob) {
-    if (max_prob < 1e-20) return kBlack;
+    if (max_prob < 1e-20)
+        return kBlack;
     float amp = std::min(1.0f, float(std::sqrt(prob / max_prob)));
     float hue = float((phase + 3.14159265) / (2.0 * 3.14159265)) * 360.0f;
     float h6  = hue / 60.0f;
@@ -92,14 +97,38 @@ inline Color phase_hsv_color(double prob, double phase, double max_prob) {
     float u   = amp * (1.0f - s * (1.0f - f));
     float r, g, b;
     switch (hi) {
-        case 0: r=amp; g=u;   b=p;   break;
-        case 1: r=q;   g=amp; b=p;   break;
-        case 2: r=p;   g=amp; b=u;   break;
-        case 3: r=p;   g=q;   b=amp; break;
-        case 4: r=u;   g=p;   b=amp; break;
-        default:r=amp; g=p;   b=q;   break;
+        case 0:
+            r = amp;
+            g = u;
+            b = p;
+            break;
+        case 1:
+            r = q;
+            g = amp;
+            b = p;
+            break;
+        case 2:
+            r = p;
+            g = amp;
+            b = u;
+            break;
+        case 3:
+            r = p;
+            g = q;
+            b = amp;
+            break;
+        case 4:
+            r = u;
+            g = p;
+            b = amp;
+            break;
+        default:
+            r = amp;
+            g = p;
+            b = q;
+            break;
     }
-    return {uint8_t(r*255), uint8_t(g*255), uint8_t(b*255), 255};
+    return {uint8_t(r * 255), uint8_t(g * 255), uint8_t(b * 255), 255};
 }
 
 /// Linear blend between two colors.
@@ -116,37 +145,45 @@ inline Color lerp_color(Color a, Color b, float t) {
 // Internal state managed by run()
 namespace detail {
 struct FieldCanvas {
-    Texture2D           tex{};
+    Texture2D            tex{};
     std::vector<::Color> buf;
-    int N = 0;
-    bool valid = false;
+    int                  N     = 0;
+    bool                 valid = false;
 
     void ensure(int n) {
-        if (n == N && valid) return;
-        if (valid) UnloadTexture(tex);
+        if (n == N && valid)
+            return;
+        if (valid)
+            UnloadTexture(tex);
         N = n;
         buf.assign(n * n, ::BLACK);
         Image img = GenImageColor(n, n, ::BLACK);
-        tex = LoadTextureFromImage(img);
+        tex       = LoadTextureFromImage(img);
         UnloadImage(img);
         valid = true;
     }
-    void unload() { if (valid) { UnloadTexture(tex); valid = false; N = 0; } }
+    void unload() {
+        if (valid) {
+            UnloadTexture(tex);
+            valid = false;
+            N     = 0;
+        }
+    }
 };
 
 struct State {
     FieldCanvas canvas;
-    bool paused       = false;
-    int  substeps     = 1;
-    int  slider_count = 0;   // reset each frame
+    bool        paused       = false;
+    int         substeps     = 1;
+    int         slider_count = 0; // reset each frame
 };
 } // namespace detail
 
 // Frame -- passed to the draw callback on every tick.
 struct Frame {
-    int   width, height;
-    bool& paused;
-    int&  substeps;
+    int            width, height;
+    bool&          paused;
+    int&           substeps;
     detail::State& _s;
 
     // Advance the simulation fn() `substeps` times if not paused.
@@ -154,11 +191,14 @@ struct Frame {
     template<class Fn>
     void step(Fn fn) {
         if (!paused)
-            for (int i = 0; i < substeps; ++i) fn();
+            for (int i = 0; i < substeps; ++i)
+                fn();
     }
 
     // True on the frame R was pressed.
-    bool reset_pressed() const { return IsKeyPressed(KEY_R); }
+    bool reset_pressed() const {
+        return IsKeyPressed(KEY_R);
+    }
 
     // 2D primitives -- pixel coordinates, (0,0) = top-left.
     void dot(float x, float y, Color c, float r = 3.0f) {
@@ -167,21 +207,32 @@ struct Frame {
     void circle(float x, float y, float r, Color c) {
         DrawCircleLines(int(x), int(y), r, to_rl(c));
     }
-    void line(float x0, float y0, float x1, float y1, Color c, float thick = 1.0f) {
+    void line(float x0,
+              float y0,
+              float x1,
+              float y1,
+              Color c,
+              float thick = 1.0f) {
         DrawLineEx({x0, y0}, {x1, y1}, thick, to_rl(c));
     }
     void rect(float x, float y, float w, float h, Color c) {
         DrawRectangleV({x, y}, {w, h}, to_rl(c));
     }
-    void rect_outline(float x, float y, float w, float h, Color c, float thick = 1.0f) {
+    void rect_outline(float x,
+                      float y,
+                      float w,
+                      float h,
+                      Color c,
+                      float thick = 1.0f) {
         DrawRectangleLinesEx({x, y, w, h}, thick, to_rl(c));
     }
     void text(const char* s, float x, float y, int sz, Color c) {
         DrawText(s, int(x), int(y), sz, to_rl(c));
     }
-    // printf-style text -- uses a 256-byte internal buffer (safe for HUD strings)
+    // printf-style text -- uses a 256-byte internal buffer (safe for HUD
+    // strings)
     void textf(float x, float y, int sz, Color c, const char* fmt, ...) {
-        char buf[256];
+        char    buf[256];
         va_list args;
         va_start(args, fmt);
         vsnprintf(buf, sizeof(buf), fmt, args);
@@ -190,7 +241,8 @@ struct Frame {
     }
 
     // Pixel field -- fills the entire window with an N×N colored grid.
-    // color_fn(col, row) -> Color    (col = x-axis, row = y-axis, top-left origin)
+    // color_fn(col, row) -> Color    (col = x-axis, row = y-axis, top-left
+    // origin)
     template<class Fn>
     void field(int N, Fn color_fn) {
         auto& cv = _s.canvas;
@@ -200,9 +252,11 @@ struct Frame {
                 cv.buf[row * N + col] = to_rl(color_fn(col, row));
         UpdateTexture(cv.tex, cv.buf.data());
         DrawTexturePro(cv.tex,
-            {0, 0, float(N), float(N)},
-            {0, 0, float(width), float(height)},
-            {0, 0}, 0.0f, ::WHITE);
+                       {0, 0, float(N), float(N)},
+                       {0, 0, float(width), float(height)},
+                       {0, 0},
+                       0.0f,
+                       ::WHITE);
     }
 
     // GUI slider -- stacks vertically in the top-left corner.
@@ -212,8 +266,8 @@ struct Frame {
         constexpr int SLOT_H = 38;
         constexpr int BAR_W  = 220;
         constexpr int BAR_H  = 8;
-        const int X = PAD;
-        const int Y = PAD + _s.slider_count * SLOT_H;
+        const int     X      = PAD;
+        const int     Y      = PAD + _s.slider_count * SLOT_H;
         ++_s.slider_count;
 
         DrawRectangle(X - 4, Y - 2, BAR_W + 8, SLOT_H - 4, {0, 0, 0, 170});
@@ -222,27 +276,33 @@ struct Frame {
         float t  = std::clamp(float((val - lo) / (hi - lo)), 0.0f, 1.0f);
         int   tx = X + int(t * BAR_W);
 
-        Vector2 mp = GetMousePosition();
+        Vector2   mp  = GetMousePosition();
         Rectangle hit = {float(X), float(Y), float(BAR_W), float(SLOT_H)};
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(mp, hit)) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)
+            && CheckCollisionPointRec(mp, hit)) {
             t   = std::clamp((mp.x - X) / BAR_W, 0.0f, 1.0f);
             val = lo + t * (hi - lo);
             tx  = X + int(t * BAR_W);
         }
 
         DrawCircle(tx, Y + 18 + BAR_H / 2, 9, {200, 200, 200, 240});
-        DrawText(TextFormat("%s: %.3g", label, val), X, Y + 2, 13, {210, 210, 210, 230});
+        DrawText(TextFormat("%s: %.3g", label, val),
+                 X,
+                 Y + 2,
+                 13,
+                 {210, 210, 210, 230});
     }
 
     // 3D camera descriptor
     struct Cam3 {
-        float px, py, pz;     // camera position
-        float tx, ty, tz;     // look-at target
-        float ux = 0, uy = 1, uz = 0;  // up vector (default: world-Y)
+        float px = 0, py = 0, pz = 0; // camera position
+        float tx = 0, ty = 0, tz = 0; // look-at target
+        float ux = 0, uy = 1, uz = 0; // up vector (default: world-Y)
         float fovy = 45.0f;
     };
 
-    // Begin 3D rendering mode.  All 3D draw calls must sit between begin3d/end3d.
+    // Begin 3D rendering mode.  All 3D draw calls must sit between
+    // begin3d/end3d.
     void begin3d(Cam3 cam) {
         Camera3D c{};
         c.position   = {cam.px, cam.py, cam.pz};
@@ -252,7 +312,9 @@ struct Frame {
         c.projection = CAMERA_PERSPECTIVE;
         BeginMode3D(c);
     }
-    void end3d() { EndMode3D(); }
+    void end3d() {
+        EndMode3D();
+    }
 
     void sphere3d(float x, float y, float z, float r, Color c) {
         DrawSphere({x, y, z}, r, to_rl(c));
@@ -260,12 +322,18 @@ struct Frame {
     void sphere3d_wire(float x, float y, float z, float r, Color c) {
         DrawSphereWires({x, y, z}, r, 6, 6, to_rl(c));
     }
-    void line3d(float x0, float y0, float z0,
-                float x1, float y1, float z1, Color c) {
-        DrawLine3D({x0,y0,z0}, {x1,y1,z1}, to_rl(c));
+    void line3d(float x0,
+                float y0,
+                float z0,
+                float x1,
+                float y1,
+                float z1,
+                Color c) {
+        DrawLine3D({x0, y0, z0}, {x1, y1, z1}, to_rl(c));
     }
-    void cube3d(float x, float y, float z, float sx, float sy, float sz, Color c) {
-        DrawCube({x,y,z}, sx, sy, sz, to_rl(c));
+    void
+    cube3d(float x, float y, float z, float sx, float sy, float sz, Color c) {
+        DrawCube({x, y, z}, sx, sy, sz, to_rl(c));
     }
 };
 
@@ -277,18 +345,21 @@ struct Frame {
 //   +/-    increase / decrease substeps (capped at 16)
 //   ESC    quit
 template<class DrawFn>
-void run(const char* title, int w, int h, DrawFn draw,
-         Color bg = {15, 15, 15, 255})
-{
+void run(const char* title,
+         int         w,
+         int         h,
+         DrawFn      draw,
+         Color       bg = {15, 15, 15, 255}) {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     InitWindow(w, h, title);
     SetTargetFPS(60);
 
     detail::State state;
-    Frame frame{w, h, state.paused, state.substeps, state};
+    Frame         frame{w, h, state.paused, state.substeps, state};
 
     while (!WindowShouldClose()) {
-        if (IsKeyPressed(KEY_SPACE)) state.paused = !state.paused;
+        if (IsKeyPressed(KEY_SPACE))
+            state.paused = !state.paused;
         if (IsKeyPressed(KEY_EQUAL) || IsKeyPressed(KEY_KP_ADD))
             state.substeps = std::min(state.substeps + 1, 16);
         if (IsKeyPressed(KEY_MINUS) || IsKeyPressed(KEY_KP_SUBTRACT))
@@ -302,8 +373,8 @@ void run(const char* title, int w, int h, DrawFn draw,
         draw(frame);
 
         if (state.paused) {
-            DrawRectangle(w/2 - 70, h/2 - 18, 140, 36, {0, 0, 0, 160});
-            DrawText("PAUSED", w/2 - 46, h/2 - 10, 24, ::YELLOW);
+            DrawRectangle(w / 2 - 70, h / 2 - 18, 140, 36, {0, 0, 0, 160});
+            DrawText("PAUSED", w / 2 - 46, h / 2 - 10, 24, ::YELLOW);
         }
 
         EndDrawing();

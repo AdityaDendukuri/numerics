@@ -13,18 +13,25 @@
 namespace physics {
 
 class SpatialHash3D {
-public:
+  public:
     SpatialHash3D(float cell_size,
-                  float xmin, float xmax,
-                  float ymin, float ymax,
-                  float zmin, float zmax)
+                  float xmin,
+                  float xmax,
+                  float ymin,
+                  float ymax,
+                  float zmin,
+                  float zmax)
         : cl_(cell_size, xmin, xmax, ymin, ymax, zmin, zmax) {}
 
     void build(const std::vector<Particle3D>& particles) {
         const int n = static_cast<int>(particles.size());
-        cl_.build([&](int i) {
-            return std::make_tuple(particles[i].x, particles[i].y, particles[i].z);
-        }, n);
+        cl_.build(
+            [&](int i) {
+                return std::make_tuple(particles[i].x,
+                                       particles[i].y,
+                                       particles[i].z);
+            },
+            n);
     }
 
     template<typename F>
@@ -38,7 +45,7 @@ public:
         cl_.iterate_pairs(std::forward<F>(f));
     }
 
-private:
+  private:
     num::CellList3D<float> cl_;
 };
 

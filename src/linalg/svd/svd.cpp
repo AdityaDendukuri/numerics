@@ -17,8 +17,9 @@
 /// Halko, Martinsson, Tropp (2011) "Finding Structure with Randomness".
 ///
 /// Backend routing:
-///   Backend::lapack  -> backends::lapack::svd  (LAPACKE_dgesdd, divide-and-conquer)
-///   everything else  -> backends::seq::svd     (one-sided Jacobi)
+///   Backend::lapack  -> backends::lapack::svd  (LAPACKE_dgesdd,
+///   divide-and-conquer) everything else  -> backends::seq::svd     (one-sided
+///   Jacobi)
 
 #include "linalg/svd/svd.hpp"
 #include "linalg/factorization/qr.hpp"
@@ -29,10 +30,10 @@ namespace num {
 
 SVDResult svd(const Matrix& A_in, Backend backend, real tol, idx max_sweeps) {
     switch (backend) {
-    case Backend::lapack:
-        return backends::lapack::svd(A_in);
-    default:
-        return backends::seq::svd(A_in, tol, max_sweeps);
+        case Backend::lapack:
+            return backends::lapack::svd(A_in);
+        default:
+            return backends::seq::svd(A_in, tol, max_sweeps);
     }
 }
 
@@ -46,8 +47,11 @@ SVDResult svd(const Matrix& A_in, Backend backend, real tol, idx max_sweeps) {
 //   5. U~, Sigma, V^T = svd(B)      (cheap: B is (k+p)xn, small)
 //   6. U = Q * U~               (lift back to full dimension)
 
-SVDResult svd_truncated(const Matrix& A, idx k,
-                        Backend backend, idx oversampling, Rng* rng) {
+SVDResult svd_truncated(const Matrix& A,
+                        idx           k,
+                        Backend       backend,
+                        idx           oversampling,
+                        Rng*          rng) {
     const idx m = A.rows(), n = A.cols();
     if (k == 0 || k > std::min(m, n))
         throw std::invalid_argument("svd_truncated: k out of range");
@@ -55,21 +59,22 @@ SVDResult svd_truncated(const Matrix& A, idx k,
     const idx l = k + oversampling;
 
     Rng local_rng;
-    if (!rng) rng = &local_rng;
+    if (!rng)
+        rng = &local_rng;
 
     // 1. Gaussian sketch matrix Omega in R^{nxl}
     Matrix Omega(n, l);
     for (idx j = 0; j < l; ++j)
         for (idx i = 0; i < n; ++i)
-            Omega(i,j) = rng_normal(rng, 0.0, 1.0);
+            Omega(i, j) = rng_normal(rng, 0.0, 1.0);
 
     // 2. Y = A * Omega  (m x l)
     Matrix Y(m, l, 0.0);
     matmul(A, Omega, Y, backend);
 
     // 3. Q = QR(Y).Q  (m x m, orthonormal columns)
-    QRResult qr_res = qr(Y);
-    const Matrix& Q = qr_res.Q;
+    QRResult      qr_res = qr(Y);
+    const Matrix& Q      = qr_res.Q;
 
     // 4. B = Q^T * A  (l x n)
     Matrix B(l, n, 0.0);
@@ -77,7 +82,7 @@ SVDResult svd_truncated(const Matrix& A, idx k,
         for (idx kk = 0; kk < m; ++kk) {
             const real q_ki = Q(kk, i);
             for (idx j = 0; j < n; ++j)
-                B(i,j) += q_ki * A(kk,j);
+                B(i, j) += q_ki * A(kk, j);
         }
 
     // 5. SVD of B (small: l x n)
@@ -88,15 +93,16 @@ SVDResult svd_truncated(const Matrix& A, idx k,
     for (idx j = 0; j < k; ++j)
         for (idx i = 0; i < m; ++i)
             for (idx ii = 0; ii < l; ++ii)
-                U(i,j) += Q(i,ii) * small.U(ii,j);
+                U(i, j) += Q(i, ii) * small.U(ii, j);
 
     Vector S(k);
-    for (idx i = 0; i < k; ++i) S[i] = small.S[i];
+    for (idx i = 0; i < k; ++i)
+        S[i] = small.S[i];
 
     Matrix Vt(k, n, 0.0);
     for (idx i = 0; i < k; ++i)
         for (idx j = 0; j < n; ++j)
-            Vt(i,j) = small.Vt(i,j);
+            Vt(i, j) = small.Vt(i, j);
 
     return {U, S, Vt, 0, true};
 }

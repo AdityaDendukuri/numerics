@@ -1,5 +1,6 @@
 /// @file factorization/tridiag_complex.hpp
-/// @brief Precomputed LU Thomas solver for constant-coefficient complex tridiagonal systems.
+/// @brief Precomputed LU Thomas solver for constant-coefficient complex
+/// tridiagonal systems.
 ///
 /// Solves the n x n system:
 ///
@@ -36,10 +37,11 @@ namespace num {
 struct ComplexTriDiag {
     using cplx = std::complex<double>;
 
-    std::vector<cplx> c_mod;  ///< Modified super-diagonal (precomputed from LU)
-    std::vector<cplx> inv_b;  ///< Inverse of modified main diagonal (precomputed)
-    int  n = 0;
-    cplx a_coeff;             ///< Sub-diagonal value (constant across all rows)
+    std::vector<cplx> c_mod; ///< Modified super-diagonal (precomputed from LU)
+    std::vector<cplx>
+         inv_b;        ///< Inverse of modified main diagonal (precomputed)
+    int  n       = 0;
+    cplx a_coeff = {}; ///< Sub-diagonal value (constant across all rows)
 
     /// @brief Factor the tridiagonal matrix.
     ///

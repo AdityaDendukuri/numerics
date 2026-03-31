@@ -9,7 +9,8 @@
 /// eigenvalues of the projected kxk tridiagonal matrix T_k.
 ///
 /// Key properties:
-///   - Matrix-free: A is given as a MatVecFn callable (works with sparse, structured A)
+///   - Matrix-free: A is given as a MatVecFn callable (works with sparse,
+///   structured A)
 ///   - O(k*nnz) work for k steps (nnz = cost of one matvec)
 ///   - Finds the k LARGEST and k SMALLEST eigenvalues accurately
 ///
@@ -20,20 +21,21 @@
 /// @endcode
 #pragma once
 
-#include "core/vector.hpp"
 #include "core/matrix.hpp"
 #include "core/policy.hpp"
-#include "linalg/solvers/cg.hpp"   // MatVecFn
+#include "core/vector.hpp"
 #include "linalg/eigen/jacobi_eig.hpp"
+#include "linalg/solvers/cg.hpp" // MatVecFn
 
 namespace num {
 
 /// @brief Result of a Lanczos eigensolver
 struct LanczosResult {
-    Vector   ritz_values;   ///< k Ritz values (approximate eigenvalues), ascending
-    Matrix   ritz_vectors;  ///< nxk matrix  -- each column is a Ritz vector
-    idx      steps;         ///< Actual Lanczos steps taken
-    bool     converged;     ///< Whether all requested Ritz pairs met the tolerance
+    Vector ritz_values;  ///< k Ritz values (approximate eigenvalues), ascending
+    Matrix ritz_vectors; ///< nxk matrix  -- each column is a Ritz vector
+    idx    steps = 0;    ///< Actual Lanczos steps taken
+    bool   converged =
+        false;           ///< Whether all requested Ritz pairs met the tolerance
 };
 
 /// @brief Lanczos eigensolver for large sparse symmetric matrices.
@@ -43,9 +45,13 @@ struct LanczosResult {
 /// @param k         Number of eigenvalues requested (k << n)
 /// @param tol       Convergence on ||A*u - lambda*u|| for each Ritz pair
 /// @param max_steps Maximum Lanczos steps (default: min(3k, n))
-/// @param backend   Backend for reorthogonalisation inner products (default: seq)
-LanczosResult lanczos(MatVecFn matvec, idx n, idx k,
-                      real tol = 1e-10, idx max_steps = 0,
-                      Backend backend = Backend::seq);
+/// @param backend   Backend for reorthogonalisation inner products (default:
+/// seq)
+LanczosResult lanczos(MatVecFn matvec,
+                      idx      n,
+                      idx      k,
+                      real     tol       = 1e-10,
+                      idx      max_steps = 0,
+                      Backend  backend   = Backend::seq);
 
 } // namespace num

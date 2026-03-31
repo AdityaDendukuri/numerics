@@ -14,9 +14,15 @@ real dot(const Vector& x, const Vector& y);
 real norm(const Vector& x);
 
 void matmul(const Matrix& A, const Matrix& B, Matrix& C);
-void matmul_blocked(const Matrix& A, const Matrix& B, Matrix& C, idx block_size);
-void matmul_register_blocked(const Matrix& A, const Matrix& B, Matrix& C,
-                             idx block_size, idx reg_size);
+void matmul_blocked(const Matrix& A,
+                    const Matrix& B,
+                    Matrix&       C,
+                    idx           block_size);
+void matmul_register_blocked(const Matrix& A,
+                             const Matrix& B,
+                             Matrix&       C,
+                             idx           block_size,
+                             idx           reg_size);
 void matvec(const Matrix& A, const Vector& x, Vector& y);
 void matadd(real alpha, const Matrix& A, real beta, const Matrix& B, Matrix& C);
 

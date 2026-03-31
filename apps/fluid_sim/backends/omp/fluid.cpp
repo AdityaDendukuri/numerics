@@ -28,34 +28,37 @@ using K = num::SPHKernel<2>;
 #include <cfloat>
 
 #ifdef NUMERICS_HAS_OMP
-#  include <omp.h>
+    #include <omp.h>
 #endif
 
 namespace physics::backends::omp {
 
 void compute_density_pressure(std::vector<Particle>& particles,
-                               const FluidParams& params,
-                               const SpatialHash& grid) {
+                              const FluidParams&     params,
+                              const SpatialHash&     grid) {
 #ifdef NUMERICS_HAS_OMP
-    const float h       = params.h;
-    const float m       = params.mass;
-    const float rho0    = params.rho0;
-    const float B       = rho0 * params.c0 * params.c0 / static_cast<float>(params.gamma);
+    const float h    = params.h;
+    const float m    = params.mass;
+    const float rho0 = params.rho0;
+    const float B    = rho0 * params.c0 * params.c0
+                    / static_cast<float>(params.gamma);
     const float supp_sq = 4.0f * h * h;
     const int   n       = static_cast<int>(particles.size());
 
-#   pragma omp parallel for schedule(static)
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i) {
-        Particle& pi = particles[i];
-        float rho = 0.0f;
+        Particle& pi  = particles[i];
+        float     rho = 0.0f;
         grid.query(pi.x, pi.y, [&](int j) {
             const float rx = pi.x - particles[j].x;
             const float ry = pi.y - particles[j].y;
             const float r2 = rx * rx + ry * ry;
-            if (r2 < supp_sq) rho += m * K::W(std::sqrt(r2), h);
+            if (r2 < supp_sq)
+                rho += m * K::W(std::sqrt(r2), h);
         });
         pi.density  = std::max(rho, rho0 * 0.1f);
-        pi.pressure = std::max(0.0f, B * (num::ipow<7>(pi.density / rho0) - 1.0f));
+        pi.pressure = std::max(0.0f,
+                               B * (num::ipow<7>(pi.density / rho0) - 1.0f));
     }
 #else
     seq::compute_density_pressure(particles, params, grid);
@@ -63,8 +66,8 @@ void compute_density_pressure(std::vector<Particle>& particles,
 }
 
 void compute_forces(std::vector<Particle>& particles,
-                    const FluidParams& params,
-                    const SpatialHash& grid) {
+                    const FluidParams&     params,
+                    const SpatialHash&     grid) {
 #ifdef NUMERICS_HAS_OMP
     const float h       = params.h;
     const float m       = params.mass;
@@ -73,21 +76,23 @@ void compute_forces(std::vector<Particle>& particles,
     const float eps2    = 0.01f * h * h;
     const int   n       = static_cast<int>(particles.size());
 
-#   pragma omp parallel for schedule(static)
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i) {
         const Particle& pi = particles[i];
-        float ax = params.gx, ay = params.gy;
+        float           ax = params.gx, ay = params.gy;
         grid.query(pi.x, pi.y, [&](int j) {
-            if (j == i) return;
+            if (j == i)
+                return;
             const Particle& pj = particles[j];
-            const float rx = pi.x - pj.x, ry = pi.y - pj.y;
-            const float r2 = rx * rx + ry * ry;
-            if (r2 >= supp_sq || r2 < 1e-10f) return;
+            const float     rx = pi.x - pj.x, ry = pi.y - pj.y;
+            const float     r2 = rx * rx + ry * ry;
+            if (r2 >= supp_sq || r2 < 1e-10f)
+                return;
             const float r = std::sqrt(r2);
 
-            auto [gx, gy] = K::Spiky_gradW({rx, ry}, r, h);
+            auto [gx, gy]     = K::Spiky_gradW({rx, ry}, r, h);
             const float pterm = pi.pressure / (pi.density * pi.density)
-                              + pj.pressure / (pj.density * pj.density);
+                                + pj.pressure / (pj.density * pj.density);
             ax -= m * pterm * gx;
             ay -= m * pterm * gy;
 
@@ -104,21 +109,21 @@ void compute_forces(std::vector<Particle>& particles,
 #endif
 }
 
-void body_collisions(std::vector<Particle>& particles,
+void body_collisions(std::vector<Particle>&        particles,
                      const std::vector<RigidBody>& bodies,
-                     const FluidParams& params) {
+                     const FluidParams&            params) {
 #ifdef NUMERICS_HAS_OMP
-    const int n = static_cast<int>(particles.size());
-#   pragma omp parallel for schedule(static)
+    const int   n = static_cast<int>(particles.size());
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i) {
         Particle& p = particles[i];
         for (const RigidBody& body : bodies) {
             const float dx = p.x - body.x, dy = p.y - body.y;
-            const float d  = std::sqrt(dx * dx + dy * dy);
+            const float d = std::sqrt(dx * dx + dy * dy);
             if (d < body.radius && d > 1e-8f) {
                 const float nx = dx / d, ny = dy / d;
-                p.x = body.x + body.radius * nx;
-                p.y = body.y + body.radius * ny;
+                p.x            = body.x + body.radius * nx;
+                p.y            = body.y + body.radius * ny;
                 const float vn = p.vx * nx + p.vy * ny;
                 if (vn < 0.0f) {
                     p.vx -= (1.0f + params.restitution) * vn * nx;
@@ -136,51 +141,71 @@ void integrate(std::vector<Particle>& particles, const FluidParams& params) {
 #ifdef NUMERICS_HAS_OMP
     const float dt = params.dt;
     const int   n  = static_cast<int>(particles.size());
-#   pragma omp parallel for schedule(static)
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i) {
         Particle& p = particles[i];
-        p.vx += p.ax * dt;  p.vy += p.ay * dt;
-        p.x  += p.vx * dt;  p.y  += p.vy * dt;
+        p.vx += p.ax * dt;
+        p.vy += p.ay * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
         p.evx = 0.5f * (p.evx + p.vx);
         p.evy = 0.5f * (p.evy + p.vy);
-        p.temperature = std::clamp(p.temperature + p.dT_dt * dt, -100.0f, 300.0f);
+        p.temperature =
+            std::clamp(p.temperature + p.dT_dt * dt, -100.0f, 300.0f);
     }
 #else
     seq::integrate(particles, params);
 #endif
 }
 
-void enforce_boundaries(std::vector<Particle>& particles, const FluidParams& params) {
+void enforce_boundaries(std::vector<Particle>& particles,
+                        const FluidParams&     params) {
 #ifdef NUMERICS_HAS_OMP
     const float e = params.restitution;
     const int   n = static_cast<int>(particles.size());
-#   pragma omp parallel for schedule(static)
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i) {
         Particle& p = particles[i];
-        if (p.x < params.xmin) { p.x = params.xmin; p.vx =  std::abs(p.vx) * e; }
-        if (p.x > params.xmax) { p.x = params.xmax; p.vx = -std::abs(p.vx) * e; }
-        if (p.y < params.ymin) { p.y = params.ymin; p.vy =  std::abs(p.vy) * e; }
-        if (p.y > params.ymax) { p.y = params.ymax; p.vy = -std::abs(p.vy) * e; }
+        if (p.x < params.xmin) {
+            p.x  = params.xmin;
+            p.vx = std::abs(p.vx) * e;
+        }
+        if (p.x > params.xmax) {
+            p.x  = params.xmax;
+            p.vx = -std::abs(p.vx) * e;
+        }
+        if (p.y < params.ymin) {
+            p.y  = params.ymin;
+            p.vy = std::abs(p.vy) * e;
+        }
+        if (p.y > params.ymax) {
+            p.y  = params.ymax;
+            p.vy = -std::abs(p.vy) * e;
+        }
     }
 #else
     seq::enforce_boundaries(particles, params);
 #endif
 }
 
-void update_temp_range(const std::vector<Particle>& particles,
+void update_temp_range(const std::vector<Particle>&  particles,
                        const std::vector<RigidBody>& bodies,
-                       float& T_min, float& T_max) {
+                       float&                        T_min,
+                       float&                        T_max) {
 #ifdef NUMERICS_HAS_OMP
-    if (particles.empty()) return;
-    const int n = static_cast<int>(particles.size());
-    float lo = FLT_MAX, hi = -FLT_MAX;
-#   pragma omp parallel for reduction(min:lo) reduction(max:hi) schedule(static)
+    if (particles.empty())
+        return;
+    const int   n  = static_cast<int>(particles.size());
+    float       lo = FLT_MAX, hi = -FLT_MAX;
+    #pragma omp parallel for reduction(min : lo) reduction(max : hi) \
+        schedule(static)
     for (int i = 0; i < n; ++i) {
         lo = std::min(lo, particles[i].temperature);
         hi = std::max(hi, particles[i].temperature);
     }
-    T_min = lo;  T_max = hi;
-    for (const RigidBody& b : bodies) {  // M bodies  -- sequential, M is small
+    T_min = lo;
+    T_max = hi;
+    for (const RigidBody& b : bodies) { // M bodies  -- sequential, M is small
         T_min = std::min(T_min, b.temperature);
         T_max = std::max(T_max, b.temperature);
     }

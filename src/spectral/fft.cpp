@@ -3,7 +3,7 @@
 #include "backends/opt/impl.hpp"
 #include "backends/fftw/impl.hpp"
 #ifdef NUMERICS_HAS_STD_SIMD
-#  include "backends/stdsimd/impl.hpp"
+    #include "backends/stdsimd/impl.hpp"
 #endif
 #include <stdexcept>
 
@@ -16,13 +16,22 @@ void fft(const CVector& in, CVector& out, FFTBackend b) {
     if (out.size() != in.size())
         throw std::invalid_argument("fft: in and out must have the same size");
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw)    { backends::fftw::fft(in, out);    return; }
+    if (b == FFTBackend::fftw) {
+        backends::fftw::fft(in, out);
+        return;
+    }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd)    { backends::opt::fft(in, out);     return; }
+    if (b == FFTBackend::simd) {
+        backends::opt::fft(in, out);
+        return;
+    }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) { backends::stdsimd::fft(in, out); return; }
+    if (b == FFTBackend::stdsimd) {
+        backends::stdsimd::fft(in, out);
+        return;
+    }
 #endif
     // seq is the fallback for simd/stdsimd on unsupported platforms
     backends::seq::fft(in, out);
@@ -32,13 +41,22 @@ void ifft(const CVector& in, CVector& out, FFTBackend b) {
     if (out.size() != in.size())
         throw std::invalid_argument("ifft: in and out must have the same size");
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw)    { backends::fftw::ifft(in, out);    return; }
+    if (b == FFTBackend::fftw) {
+        backends::fftw::ifft(in, out);
+        return;
+    }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd)    { backends::opt::ifft(in, out);     return; }
+    if (b == FFTBackend::simd) {
+        backends::opt::ifft(in, out);
+        return;
+    }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) { backends::stdsimd::ifft(in, out); return; }
+    if (b == FFTBackend::stdsimd) {
+        backends::stdsimd::ifft(in, out);
+        return;
+    }
 #endif
     backends::seq::ifft(in, out);
 }
@@ -47,13 +65,22 @@ void rfft(const Vector& in, CVector& out, FFTBackend b) {
     if (static_cast<int>(out.size()) != static_cast<int>(in.size()) / 2 + 1)
         throw std::invalid_argument("rfft: out must have size n/2+1");
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw)    { backends::fftw::rfft(in, out);    return; }
+    if (b == FFTBackend::fftw) {
+        backends::fftw::rfft(in, out);
+        return;
+    }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd)    { backends::opt::rfft(in, out);     return; }
+    if (b == FFTBackend::simd) {
+        backends::opt::rfft(in, out);
+        return;
+    }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) { backends::stdsimd::rfft(in, out); return; }
+    if (b == FFTBackend::stdsimd) {
+        backends::stdsimd::rfft(in, out);
+        return;
+    }
 #endif
     backends::seq::rfft(in, out);
 }
@@ -64,20 +91,31 @@ void irfft(const CVector& in, int n, Vector& out, FFTBackend b) {
     if (static_cast<int>(out.size()) != n)
         throw std::invalid_argument("irfft: out must have size n");
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw)    { backends::fftw::irfft(in, n, out);    return; }
+    if (b == FFTBackend::fftw) {
+        backends::fftw::irfft(in, n, out);
+        return;
+    }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd)    { backends::opt::irfft(in, n, out);     return; }
+    if (b == FFTBackend::simd) {
+        backends::opt::irfft(in, n, out);
+        return;
+    }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) { backends::stdsimd::irfft(in, n, out); return; }
+    if (b == FFTBackend::stdsimd) {
+        backends::stdsimd::irfft(in, n, out);
+        return;
+    }
 #endif
     backends::seq::irfft(in, n, out);
 }
 
 // -- FFTPlan ------------------------------------------------------------------
 
-FFTPlan::FFTPlan(int n, bool forward, FFTBackend b) : n_(n), backend_(b) {
+FFTPlan::FFTPlan(int n, bool forward, FFTBackend b)
+    : n_(n)
+    , backend_(b) {
 #ifdef NUMERICS_HAS_FFTW
     if (b == FFTBackend::fftw) {
         impl_ = new backends::fftw::FFTPlanImpl(n, forward);
@@ -132,19 +170,22 @@ void FFTPlan::execute(const CVector& in, CVector& out) const {
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
     if (backend_ == FFTBackend::simd) {
-        for (idx i = 0; i < static_cast<idx>(n_); ++i) out[i] = in[i];
+        for (idx i = 0; i < static_cast<idx>(n_); ++i)
+            out[i] = in[i];
         static_cast<backends::opt::FFTPlanImpl*>(impl_)->execute(out);
         return;
     }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
     if (backend_ == FFTBackend::stdsimd) {
-        for (idx i = 0; i < static_cast<idx>(n_); ++i) out[i] = in[i];
+        for (idx i = 0; i < static_cast<idx>(n_); ++i)
+            out[i] = in[i];
         static_cast<backends::stdsimd::FFTPlanImpl*>(impl_)->execute(out);
         return;
     }
 #endif
-    for (idx i = 0; i < static_cast<idx>(n_); ++i) out[i] = in[i];
+    for (idx i = 0; i < static_cast<idx>(n_); ++i)
+        out[i] = in[i];
     static_cast<backends::seq::FFTPlanImpl*>(impl_)->execute(out);
 }
 

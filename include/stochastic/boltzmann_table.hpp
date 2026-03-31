@@ -1,8 +1,9 @@
 /// @file stochastic/boltzmann_table.hpp
 /// @brief Boltzmann acceptance probability helpers for Metropolis MCMC.
 ///
-/// boltzmann_accept(dE, beta)    -- min(1, exp(-beta*dE)) inline, branch-free exp
-/// make_boltzmann_table(dEs, beta) -- precompute table for a discrete dE set
+/// boltzmann_accept(dE, beta)    -- min(1, exp(-beta*dE)) inline, branch-free
+/// exp make_boltzmann_table(dEs, beta) -- precompute table for a discrete dE
+/// set
 ///
 /// Typical usage (Ising model):
 /// @code
@@ -21,9 +22,10 @@ inline double boltzmann_accept(double dE, double beta) noexcept {
     return (dE <= 0.0) ? 1.0 : std::exp(-beta * dE);
 }
 
-/// Precompute a table of acceptance probabilities for a discrete set of dE values.
+/// Precompute a table of acceptance probabilities for a discrete set of dE
+/// values.
 inline std::vector<double> make_boltzmann_table(const std::vector<double>& dEs,
-                                                 double beta) {
+                                                double beta) {
     std::vector<double> table(dEs.size());
     for (std::size_t i = 0; i < dEs.size(); ++i)
         table[i] = boltzmann_accept(dEs[i], beta);

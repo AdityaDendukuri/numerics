@@ -37,18 +37,22 @@ namespace num {
 
 template<typename Scalar>
 class CellList3D {
-public:
+  public:
     /// @param cell_size  Width of one cell (use 2h  -- kernel support radius).
     CellList3D(Scalar cell_size,
-               Scalar xmin, Scalar xmax,
-               Scalar ymin, Scalar ymax,
-               Scalar zmin, Scalar zmax)
+               Scalar xmin,
+               Scalar xmax,
+               Scalar ymin,
+               Scalar ymax,
+               Scalar zmin,
+               Scalar zmax)
         : cs_(cell_size)
-        , xmin_(xmin), ymin_(ymin), zmin_(zmin)
-    {
-        nx_ = static_cast<int>(std::ceil((xmax - xmin) / cs_)) + 2;
-        ny_ = static_cast<int>(std::ceil((ymax - ymin) / cs_)) + 2;
-        nz_ = static_cast<int>(std::ceil((zmax - zmin) / cs_)) + 2;
+        , xmin_(xmin)
+        , ymin_(ymin)
+        , zmin_(zmin) {
+        nx_             = static_cast<int>(std::ceil((xmax - xmin) / cs_)) + 2;
+        ny_             = static_cast<int>(std::ceil((ymax - ymin) / cs_)) + 2;
+        nz_             = static_cast<int>(std::ceil((zmax - zmin) / cs_)) + 2;
         const int total = nx_ * ny_ * nz_;
         start_.assign(total + 1, 0);
         count_.assign(total, 0);
@@ -71,7 +75,7 @@ public:
 
         std::fill(count_.begin(), count_.end(), 0);
         for (int i = 0; i < n; ++i) {
-            const int cid = cell_id_of(get_pos(i));
+            const int cid                      = cell_id_of(get_pos(i));
             sorted_[start_[cid] + count_[cid]] = i;
             ++count_[cid];
         }
@@ -85,13 +89,16 @@ public:
         const int cz = cell_z(pz);
         for (int dz = -1; dz <= 1; ++dz) {
             const int qz = cz + dz;
-            if (qz < 0 || qz >= nz_) continue;
+            if (qz < 0 || qz >= nz_)
+                continue;
             for (int dy = -1; dy <= 1; ++dy) {
                 const int qy = cy + dy;
-                if (qy < 0 || qy >= ny_) continue;
+                if (qy < 0 || qy >= ny_)
+                    continue;
                 for (int dx = -1; dx <= 1; ++dx) {
                     const int qx = cx + dx;
-                    if (qx < 0 || qx >= nx_) continue;
+                    if (qx < 0 || qx >= nx_)
+                        continue;
                     const int cid = (qz * ny_ + qy) * nx_ + qx;
                     for (int k = start_[cid]; k < start_[cid + 1]; ++k)
                         f(sorted_[k]);
@@ -105,9 +112,11 @@ public:
     template<typename F>
     void iterate_pairs(F&& f) const {
         // 13 forward offsets: (dz>0) | (dz==0,dy>0) | (dz==0,dy==0,dx>0)
-        static constexpr int FDX[13] = {-1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1,  1};
-        static constexpr int FDY[13] = {-1,-1,-1,  0, 0, 0,  1, 1, 1,  1, 1, 1,  0};
-        static constexpr int FDZ[13] = { 1, 1, 1,  1, 1, 1,  1, 1, 1,  0, 0, 0,  0};
+        static constexpr int FDX[13] =
+            {-1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, 1};
+        static constexpr int FDY[13] =
+            {-1, -1, -1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0};
+        static constexpr int FDZ[13] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
 
         for (int cz = 0; cz < nz_; ++cz) {
             for (int cy = 0; cy < ny_; ++cy) {
@@ -115,7 +124,8 @@ public:
                     const int cid = (cz * ny_ + cy) * nx_ + cx;
                     const int beg = start_[cid];
                     const int end = start_[cid + 1];
-                    if (beg == end) continue;
+                    if (beg == end)
+                        continue;
 
                     // Intra-cell pairs
                     for (int a = beg; a < end; ++a)
@@ -127,13 +137,14 @@ public:
                         const int ncx = cx + FDX[d];
                         const int ncy = cy + FDY[d];
                         const int ncz = cz + FDZ[d];
-                        if (ncx < 0 || ncx >= nx_ ||
-                            ncy < 0 || ncy >= ny_ ||
-                            ncz < 0 || ncz >= nz_) continue;
+                        if (ncx < 0 || ncx >= nx_ || ncy < 0 || ncy >= ny_
+                            || ncz < 0 || ncz >= nz_)
+                            continue;
                         const int ncid = (ncz * ny_ + ncy) * nx_ + ncx;
                         const int nbeg = start_[ncid];
                         const int nend = start_[ncid + 1];
-                        if (nbeg == nend) continue;
+                        if (nbeg == nend)
+                            continue;
                         for (int a = beg; a < end; ++a)
                             for (int b = nbeg; b < nend; ++b)
                                 f(sorted_[a], sorted_[b]);
@@ -143,14 +154,22 @@ public:
         }
     }
 
-    int nx() const noexcept { return nx_; }
-    int ny() const noexcept { return ny_; }
-    int nz() const noexcept { return nz_; }
-    int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
+    int nx() const noexcept {
+        return nx_;
+    }
+    int ny() const noexcept {
+        return ny_;
+    }
+    int nz() const noexcept {
+        return nz_;
+    }
+    int n_particles() const noexcept {
+        return static_cast<int>(sorted_.size());
+    }
 
-private:
-    Scalar cs_, xmin_, ymin_, zmin_;
-    int    nx_, ny_, nz_;
+  private:
+    Scalar cs_ = 0, xmin_ = 0, ymin_ = 0, zmin_ = 0;
+    int    nx_ = 0, ny_ = 0, nz_ = 0;
 
     std::vector<int> sorted_, start_, count_;
 

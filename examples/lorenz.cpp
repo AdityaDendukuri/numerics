@@ -6,8 +6,9 @@
 ///   dy/dt = x*(rho - z) - y
 ///   dz/dt = x*y - beta*z
 ///
-/// With classical parameters (sigma=10, rho=28, beta=8/3) the system is chaotic.
-/// num::rk45 adapts the step size automatically throughout the integration.
+/// With classical parameters (sigma=10, rho=28, beta=8/3) the system is
+/// chaotic. num::rk45 adapts the step size automatically throughout the
+/// integration.
 
 #include "numerics.hpp"
 #include <cstdio>
@@ -26,7 +27,10 @@ int main() {
 
     num::Vector y0 = {1.0, 0.0, 0.0};
 
-    num::ODEParams params = {.tf = 50.0, .rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000};
+    num::ODEParams params = {.tf        = 50.0,
+                             .rtol      = 1e-8,
+                             .atol      = 1e-10,
+                             .max_steps = 2000000};
 
     // observer: stores the (x, z) output at each accepted step
     auto observer = [&](double /*t*/, const num::Vector& y) {

@@ -27,51 +27,59 @@
 #pragma once
 
 #include "core/matrix.hpp"
-#include "core/vector.hpp"
 #include "core/policy.hpp"
-#include "linalg/factorization/qr.hpp"
 #include "core/util/math.hpp"
-#include <cmath>
+#include "core/vector.hpp"
+#include "linalg/factorization/qr.hpp"
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 namespace num {
 
 /// @brief Result of a Singular Value Decomposition: A = U * diag(S) * V^T
 struct SVDResult {
-    Matrix U;         ///< mxr left singular vectors (columns orthonormal)
-    Vector S;         ///< r singular values in descending order
-    Matrix Vt;        ///< rxn right singular vectors (rows orthonormal)
-    idx    sweeps;    ///< Jacobi sweeps (full SVD only; 0 for randomized)
-    bool   converged; ///< Whether Jacobi converged (always true for randomized)
+    Matrix U;          ///< mxr left singular vectors (columns orthonormal)
+    Vector S;          ///< r singular values in descending order
+    Matrix Vt;         ///< rxn right singular vectors (rows orthonormal)
+    idx    sweeps = 0; ///< Jacobi sweeps (full SVD only; 0 for randomized)
+    bool   converged =
+        false; ///< Whether Jacobi converged (always true for randomized)
 };
 
 /// @brief Full SVD of an mxn matrix.
 ///
-/// Returns the economy SVD: r = min(m,n), U is mxr, S has r elements, Vt is rxn.
+/// Returns the economy SVD: r = min(m,n), U is mxr, S has r elements, Vt is
+/// rxn.
 ///
 /// @param A          Input matrix (not modified)
-/// @param backend    Backend::lapack uses LAPACKE_dgesdd (default when available).
+/// @param backend    Backend::lapack uses LAPACKE_dgesdd (default when
+/// available).
 ///                   Backend::omp    parallelises Jacobi column-update loops.
 ///                   Backend::seq    uses our one-sided Jacobi implementation.
 /// @param tol        Jacobi convergence tolerance (ignored for Backend::lapack)
 /// @param max_sweeps Jacobi sweep cap (ignored for Backend::lapack)
 SVDResult svd(const Matrix& A,
-              Backend backend = lapack_backend,
-              real tol = 1e-12, idx max_sweeps = 100);
+              Backend       backend    = lapack_backend,
+              real          tol        = 1e-12,
+              idx           max_sweeps = 100);
 
 /// @brief Randomized truncated SVD  -- top-k singular triplets.
 ///
-/// Efficient when k << min(m,n).  The two dominant costs  -- Y = A*Omega and B = Q^T*A
+/// Efficient when k << min(m,n).  The two dominant costs  -- Y = A*Omega and B
+/// = Q^T*A
 ///  -- are dispatched via the given backend.
 ///
 /// @param A            Input matrix
 /// @param k            Number of singular values/vectors to compute
-/// @param backend      Backend for internal matmul calls (default: default_backend)
+/// @param backend      Backend for internal matmul calls (default:
+/// default_backend)
 /// @param oversampling Extra random vectors for accuracy (default 10)
 /// @param rng          Random number generator (default: seeded from hardware)
-SVDResult svd_truncated(const Matrix& A, idx k,
-                        Backend backend = default_backend,
-                        idx oversampling = 10, Rng* rng = nullptr);
+SVDResult svd_truncated(const Matrix& A,
+                        idx           k,
+                        Backend       backend      = default_backend,
+                        idx           oversampling = 10,
+                        Rng*          rng          = nullptr);
 
 } // namespace num

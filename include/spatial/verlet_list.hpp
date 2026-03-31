@@ -47,16 +47,16 @@ namespace num {
 
 template<typename Scalar>
 class VerletList2D {
-public:
+  public:
     /// @param cutoff      Interaction cutoff (e.g. 2h for SPH).
     /// @param skin        Skin thickness added to cutoff for the cached list.
     ///                    Larger skin -> fewer rebuilds but more cache entries.
     ///                    Typical: 0.3*cutoff (molecular dynamics) or
     ///                             0.5*cutoff (SPH, faster particle motion).
     VerletList2D(Scalar cutoff, Scalar skin)
-        : cutoff_(cutoff), skin_(skin)
-        , ext_sq_((cutoff + skin) * (cutoff + skin))
-    {}
+        : cutoff_(cutoff)
+        , skin_(skin)
+        , ext_sq_((cutoff + skin) * (cutoff + skin)) {}
 
     /// @brief Build the neighbour list using a pre-built CellList2D.
     ///
@@ -74,12 +74,13 @@ public:
         starts_[0] = 0;
         for (int i = 0; i < n; ++i) {
             auto [xi, yi] = get_pos(i);
-            ref_x_[i] = xi;
-            ref_y_[i] = yi;
+            ref_x_[i]     = xi;
+            ref_y_[i]     = yi;
 
             cl.query(xi, yi, [&](int j) {
-                if (j == i) return;
-                auto [xj, yj] = get_pos(j);
+                if (j == i)
+                    return;
+                auto [xj, yj]   = get_pos(j);
                 const Scalar dx = xi - xj, dy = yi - yj;
                 if (dx * dx + dy * dy < ext_sq_)
                     flat_.push_back(j);
@@ -97,13 +98,16 @@ public:
     /// the next force evaluation.
     template<typename PosAccessor>
     bool needs_rebuild(PosAccessor&& get_pos, int n) const {
-        if (ref_x_.empty()) return true;
-        const Scalar half_skin_sq = (skin_ * Scalar(0.5)) * (skin_ * Scalar(0.5));
+        if (ref_x_.empty())
+            return true;
+        const Scalar half_skin_sq = (skin_ * Scalar(0.5))
+                                    * (skin_ * Scalar(0.5));
         for (int i = 0; i < n; ++i) {
-            auto [xi, yi] = get_pos(i);
+            auto [xi, yi]   = get_pos(i);
             const Scalar dx = xi - ref_x_[i];
             const Scalar dy = yi - ref_y_[i];
-            if (dx * dx + dy * dy > half_skin_sq) return true;
+            if (dx * dx + dy * dy > half_skin_sq)
+                return true;
         }
         return false;
     }
@@ -112,22 +116,28 @@ public:
     ///
     /// Caller should still distance-filter to the true cutoff.
     IntRange neighbors(int i) const noexcept {
-        return { flat_.data() + starts_[i],
-                 flat_.data() + starts_[i + 1] };
+        return {flat_.data() + starts_[i], flat_.data() + starts_[i + 1]};
     }
 
-    Scalar cutoff()    const noexcept { return cutoff_; }
-    Scalar skin()      const noexcept { return skin_; }
-    Scalar ext_cutoff() const noexcept { return cutoff_ + skin_; }
-    int    n_particles() const noexcept {
+    Scalar cutoff() const noexcept {
+        return cutoff_;
+    }
+    Scalar skin() const noexcept {
+        return skin_;
+    }
+    Scalar ext_cutoff() const noexcept {
+        return cutoff_ + skin_;
+    }
+    int n_particles() const noexcept {
         return starts_.empty() ? 0 : static_cast<int>(starts_.size()) - 1;
     }
 
-private:
-    Scalar cutoff_, skin_, ext_sq_;
-    std::vector<int>    flat_;    ///< Flat neighbour storage (all particles)
-    std::vector<int>    starts_;  ///< starts_[i] = begin of particle i in flat_
-    std::vector<Scalar> ref_x_;   ///< Positions at last build (for displacement check)
+  private:
+    Scalar           cutoff_, skin_, ext_sq_;
+    std::vector<int> flat_;   ///< Flat neighbour storage (all particles)
+    std::vector<int> starts_; ///< starts_[i] = begin of particle i in flat_
+    std::vector<Scalar>
+        ref_x_; ///< Positions at last build (for displacement check)
     std::vector<Scalar> ref_y_;
 };
 

@@ -8,21 +8,23 @@ namespace num::backends::seq {
 
 LUResult lu(const Matrix& A) {
     constexpr real singular_tol = 1e-14;
-    const idx n = A.rows();
-    LUResult f;
-    f.LU  = A;
+    const idx      n            = A.rows();
+    LUResult       f;
+    f.LU = A;
     f.piv.resize(n);
     f.singular = false;
 
     Matrix& M = f.LU;
 
     for (idx k = 0; k < n; ++k) {
-
         idx  pivot_row = k;
         real pivot_val = std::abs(M(k, k));
         for (idx i = k + 1; i < n; ++i) {
             real v = std::abs(M(i, k));
-            if (v > pivot_val) { pivot_val = v; pivot_row = i; }
+            if (v > pivot_val) {
+                pivot_val = v;
+                pivot_row = i;
+            }
         }
         f.piv[k] = pivot_row;
 

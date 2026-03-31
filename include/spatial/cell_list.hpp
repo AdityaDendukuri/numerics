@@ -59,26 +59,38 @@ namespace num {
 struct IntRange {
     const int* first;
     const int* last;
-    const int* begin() const noexcept { return first; }
-    const int* end()   const noexcept { return last;  }
-    int size()         const noexcept { return static_cast<int>(last - first); }
-    bool empty()       const noexcept { return first == last; }
+    const int* begin() const noexcept {
+        return first;
+    }
+    const int* end() const noexcept {
+        return last;
+    }
+    int size() const noexcept {
+        return static_cast<int>(last - first);
+    }
+    bool empty() const noexcept {
+        return first == last;
+    }
 };
 
 template<typename Scalar>
 class CellList2D {
-public:
+  public:
     /// @param cell_size  Width of one cell (use kernel support radius 2h).
     /// @param xmin,xmax,ymin,ymax  Simulation domain. Particles outside
-    ///        are clamped to the boundary cell (safe, just no missed neighbours).
+    ///        are clamped to the boundary cell (safe, just no missed
+    ///        neighbours).
     CellList2D(Scalar cell_size,
-               Scalar xmin, Scalar xmax,
-               Scalar ymin, Scalar ymax)
-        : cs_(cell_size), xmin_(xmin), ymin_(ymin)
-    {
+               Scalar xmin,
+               Scalar xmax,
+               Scalar ymin,
+               Scalar ymax)
+        : cs_(cell_size)
+        , xmin_(xmin)
+        , ymin_(ymin) {
         // +2 padding cells on each axis prevents boundary checks in inner loops
-        nx_ = static_cast<int>(std::ceil((xmax - xmin) / cs_)) + 2;
-        ny_ = static_cast<int>(std::ceil((ymax - ymin) / cs_)) + 2;
+        nx_             = static_cast<int>(std::ceil((xmax - xmin) / cs_)) + 2;
+        ny_             = static_cast<int>(std::ceil((ymax - ymin) / cs_)) + 2;
         const int total = nx_ * ny_;
         start_.assign(total + 1, 0);
         count_.assign(total, 0);
@@ -107,7 +119,7 @@ public:
         // Pass 2: scatter into sorted[] (counting sort, stable)
         std::fill(count_.begin(), count_.end(), 0);
         for (int i = 0; i < n; ++i) {
-            const int cid = cell_id_of(get_pos(i));
+            const int cid                      = cell_id_of(get_pos(i));
             sorted_[start_[cid] + count_[cid]] = i;
             ++count_[cid];
         }
@@ -123,10 +135,12 @@ public:
         const int cy = cell_y(py);
         for (int dy = -1; dy <= 1; ++dy) {
             const int qy = cy + dy;
-            if (qy < 0 || qy >= ny_) continue;
+            if (qy < 0 || qy >= ny_)
+                continue;
             for (int dx = -1; dx <= 1; ++dx) {
                 const int qx = cx + dx;
-                if (qx < 0 || qx >= nx_) continue;
+                if (qx < 0 || qx >= nx_)
+                    continue;
                 const int cid = qy * nx_ + qx;
                 for (int k = start_[cid]; k < start_[cid + 1]; ++k)
                     f(sorted_[k]);
@@ -145,15 +159,16 @@ public:
     void iterate_pairs(F&& f) const {
         // 4 "forward" inter-cell offsets that, together with intra-cell
         // pairs, cover all unique pairs in the 3x3 neighbourhood exactly once.
-        static constexpr int FDX[4] = {+1,  0, +1, -1};
-        static constexpr int FDY[4] = { 0, +1, +1, +1};
+        static constexpr int FDX[4] = {+1, 0, +1, -1};
+        static constexpr int FDY[4] = {0, +1, +1, +1};
 
         for (int cy = 0; cy < ny_; ++cy) {
             for (int cx = 0; cx < nx_; ++cx) {
                 const int cid = cy * nx_ + cx;
                 const int beg = start_[cid];
                 const int end = start_[cid + 1];
-                if (beg == end) continue;
+                if (beg == end)
+                    continue;
 
                 // 1. Intra-cell: pairs where a comes before b in sorted[]
                 for (int a = beg; a < end; ++a) {
@@ -166,11 +181,13 @@ public:
                 for (int d = 0; d < 4; ++d) {
                     const int ncx = cx + FDX[d];
                     const int ncy = cy + FDY[d];
-                    if (ncx < 0 || ncx >= nx_ || ncy < 0 || ncy >= ny_) continue;
+                    if (ncx < 0 || ncx >= nx_ || ncy < 0 || ncy >= ny_)
+                        continue;
                     const int ncid = ncy * nx_ + ncx;
                     const int nbeg = start_[ncid];
                     const int nend = start_[ncid + 1];
-                    if (nbeg == nend) continue;
+                    if (nbeg == nend)
+                        continue;
                     for (int a = beg; a < end; ++a) {
                         for (int b = nbeg; b < nend; ++b) {
                             f(sorted_[a], sorted_[b]);
@@ -184,21 +201,27 @@ public:
     /// @brief Direct access to sorted particle indices for cell (cx, cy).
     IntRange cell_particles(int cx, int cy) const noexcept {
         const int cid = cy * nx_ + cx;
-        return { sorted_.data() + start_[cid],
-                 sorted_.data() + start_[cid + 1] };
+        return {sorted_.data() + start_[cid], sorted_.data() + start_[cid + 1]};
     }
 
-    int nx() const noexcept { return nx_; }
-    int ny() const noexcept { return ny_; }
-    int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
+    int nx() const noexcept {
+        return nx_;
+    }
+    int ny() const noexcept {
+        return ny_;
+    }
+    int n_particles() const noexcept {
+        return static_cast<int>(sorted_.size());
+    }
 
-private:
-    Scalar cs_, xmin_, ymin_;
-    int    nx_, ny_;
+  private:
+    Scalar cs_ = 0, xmin_ = 0, ymin_ = 0;
+    int    nx_ = 0, ny_ = 0;
 
     std::vector<int> sorted_; ///< Particle indices sorted by cell id
-    std::vector<int> start_;  ///< start_[c] = first position in sorted_ for cell c
-    std::vector<int> count_;  ///< Counting-sort scratch buffer
+    std::vector<int>
+        start_; ///< start_[c] = first position in sorted_ for cell c
+    std::vector<int> count_; ///< Counting-sort scratch buffer
 
     int cell_x(Scalar x) const noexcept {
         // +1 for padding offset; clamp to [0, nx_-1]

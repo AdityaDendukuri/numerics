@@ -8,7 +8,7 @@ namespace physics {
 struct Particle3D {
     float x, y, z;
     float vx, vy, vz;
-    float evx, evy, evz;   ///< smoothed velocity (ev = (ev+v)/2 each step)
+    float evx, evy, evz; ///< smoothed velocity (ev = (ev+v)/2 each step)
     float ax, ay, az;
     float density, pressure;
     float temperature, dT_dt;
