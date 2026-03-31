@@ -22,9 +22,9 @@ The column space of \f$A\f$ is approximated by a small random sketch. If \f$\Ome
 
 has range \f$\approx \operatorname{range}(A)\f$ with high probability. A QR factorization \f$Y = Q\hat{R}\f$ gives an orthonormal basis \f$Q\f$ for this approximate range.
 
-**Why does this work?** Expand in singular vectors: \f$Y = U\Sigma V^T \Omega\f$. The random \f$\Omega\f$ mixes all right singular vectors, but the mixing coefficients decay as \f$\sigma_i\f$ -- large singular values dominate. The probability that the random sketch misses the top-\f$k\f$ singular subspace decreases exponentially with oversampling \f$p\f$.
+The random sketch mixes right singular vectors with coefficients proportional to \f$\sigma_i\f$, so large singular values dominate and the range of \f$Y\f$ concentrates near the top-\f$k\f$ singular subspace with high probability.
 
-**Error bound** (Halko-Martinsson-Tropp Theorem 10.6): for Gaussian \f$\Omega\f$ with \f$\ell = k + p\f$, \f$p \geq 2\f$:
+**Error bound** (Halko-Martinsson-Tropp): for Gaussian \f$\Omega\f$ with \f$\ell = k + p\f$, \f$p \geq 2\f$:
 
 \f[\mathbb{E}\|A - QQ^TA\|_F \leq \left(1 + \frac{k}{p-1}\right)^{1/2} \left(\sum_{j > k} \sigma_j^2\right)^{1/2}\f]
 
@@ -94,13 +94,7 @@ Thin QR of \f$m \times \ell\f$ matrix: \f$O(m\ell^2)\f$ flops. For \f$\ell \ll m
 
 \f[Y \leftarrow A\Omega, \quad \text{then repeat } q \text{ times:} \quad Y \leftarrow A(A^T Y)\f]
 
-Each power iteration step re-orthogonalizes \f$Y\f$ via QR and costs \f$2 \times O(mn\ell)\f$ extra flops. The singular value decay is raised to the \f$q\f$-th power: \f$\sigma_j^{2q+1}\f$ vs \f$\sigma_j\f$ -- dramatically improves approximation quality for slowly decaying spectra (e.g., images, random matrices).
-
-**Error with \f$q\f$ power iterations** (Theorem 10.18):
-
-\f[\mathbb{E}\|A - QQ^TA\|_F \leq \left(1 + \frac{k}{p-1}\right)^{1/2} \left(\sum_{j>k} \sigma_j^{4q+2}\right)^{1/2} \cdot \left(\sum_{j>k} \sigma_j^{4q+2}\right)^{1/2}\f]
-
-Roughly: error decays as \f$(\sigma_{k+1}/\sigma_k)^{2q}\f$ -- exponentially with \f$q\f$.
+Each power step re-orthogonalizes \f$Y\f$ via QR and costs \f$2 \times O(mn\ell)\f$ extra flops. The effective singular value decay is raised to \f$\sigma_j^{2q+1}\f$, dramatically improving approximation quality for slowly decaying spectra. Use \f$q = 1\f$--\f$3\f$ for images or text data.
 
 ### Step 4: Projection \f$B = Q^TA\f$
 

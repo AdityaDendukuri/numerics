@@ -30,9 +30,9 @@ void num::laplacian_stencil_2d(const Vector& x, Vector& y, int N);
 void num::laplacian_stencil_2d_periodic(const Vector& x, Vector& y, int N);
 ```
 
-Both compute
+Both compute the 5-point discrete Laplacian:
 
-$$y_{i,j} = x_{i+1,j} + x_{i-1,j} + x_{i,j+1} + x_{i,j-1} - 4\,x_{i,j}$$
+\f[y_{i,j} = x_{i+1,j} + x_{i-1,j} + x_{i,j+1} + x_{i,j-1} - 4\,x_{i,j}\f]
 
 with Dirichlet or periodic treatment at the boundaries.
 
@@ -62,7 +62,7 @@ void num::curl_3d(const Grid3D& Ax, const Grid3D& Ay, const Grid3D& Az,
                   Grid3D& Bx, Grid3D& By, Grid3D& Bz);
 ```
 
-`neg_laplacian_3d` computes $(-\nabla^2 x)$ with Dirichlet BCs (boundary rows = identity), giving an SPD system suitable for CG.
+`neg_laplacian_3d` computes \f$(-\nabla^2 x)\f$ with Dirichlet BCs (boundary rows = identity), giving an SPD system suitable for CG.
 
 ---
 
@@ -86,9 +86,9 @@ Suitable for TDSE, heat equations with complex coefficients.
 num::CrankNicolsonADI adi(N, dt, h);
 ```
 
-Factorises two `ComplexTriDiag` systems on construction ($O(N)$):
-- `td_half_` -- for half-step sweeps ($\tau = dt/2$)
-- `td_full_` -- for full-step sweep ($\tau = dt$)
+Factorises two `ComplexTriDiag` systems on construction (\f$O(N)\f$):
+- `td_half_` -- for half-step sweeps (\f$\tau = dt/2\f$)
+- `td_full_` -- for full-step sweep (\f$\tau = dt\f$)
 
 ### Sweep
 
@@ -113,9 +113,9 @@ adi.sweep(psi, true,  dt * 0.5);  // x, half-step
 
 Each sweep solves the 1D tridiagonal system per fiber:
 
-$$\left(I - i\alpha\,\nabla^2_{1D}\right)\psi^{n+1} = \left(I + i\alpha\,\nabla^2_{1D}\right)\psi^n, \qquad \alpha = \frac{\tau}{4h^2}$$
+\f[\left(I - i\alpha\,\nabla^2_{1D}\right)\psi^{n+1} = \left(I + i\alpha\,\nabla^2_{1D}\right)\psi^n, \qquad \alpha = \frac{\tau}{4h^2}\f]
 
-The LHS tridiagonal has sub/super-diagonal $-i\alpha$ and main diagonal $1 + 2i\alpha$;
+The LHS tridiagonal has sub/super-diagonal \f$-i\alpha\f$ and main diagonal \f$1 + 2i\alpha\f$;
 it is factored once on construction and reused for every fiber.
 
 ---
@@ -133,11 +133,11 @@ num::pde::diffusion_step_2d(u, N, coeff, num::best_backend);
 num::pde::diffusion_step_2d_dirichlet(u, N, coeff);
 ```
 
-`coeff = alpha*dt/h^2` where $\alpha$ is the diffusion coefficient (e.g. kinematic viscosity $\nu$).
+`coeff = alpha*dt/h^2` where \f$\alpha\f$ is the diffusion coefficient (e.g. kinematic viscosity \f$\nu\f$).
 
 The explicit update is
 
-$$u^{n+1}_{i,j} = u^n_{i,j} + \text{coeff}\,\bigl(u^n_{i+1,j} + u^n_{i-1,j} + u^n_{i,j+1} + u^n_{i,j-1} - 4u^n_{i,j}\bigr)$$
+\f[u^{n+1}_{i,j} = u^n_{i,j} + \text{coeff}\,\bigl(u^n_{i+1,j} + u^n_{i-1,j} + u^n_{i,j+1} + u^n_{i,j-1} - 4u^n_{i,j}\bigr)\f]
 
 ### Typical usage (Navier-Stokes viscosity)
 

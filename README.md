@@ -5,9 +5,6 @@ Unified API across linear algebra, iterative solvers, FFT, MCMC, PDE/ODE, and sp
 structures. Backend dispatch (BLAS, SIMD, OpenMP, CUDA) selects the fastest available path
 without changing the call site.
 
-Started as a personal collection of research code written over the years, blossomed into a
-structured numerical analysis library.
-
 ---
 
 ## Why numerics?
@@ -15,7 +12,7 @@ structured numerical analysis library.
 - **Unified API.** Solver, grid, integrator, and spatial structure compose without glue code.
 - **Backend dispatch.** seq, blocked, SIMD, BLAS, OpenMP, CUDA (selectable per call).
 - **Several demos.** Every module runs inside a real app: SPH, Navier-Stokes, TDSE, EM, Ising, N-body.
-- **Readable implementation.** Each module has a documented derivation. Implementation follows the math directly.
+- **Documented.** Each module has an algorithm guide with the math and API.
 - **Extensive testing and benchmarking.** GTest suite per module, Google Benchmark throughput suite, and a CI-generated report with plots.
 
 ---

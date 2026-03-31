@@ -20,7 +20,8 @@ The Krylov basis is built via the **Arnoldi recurrence** using Modified Gram-Sch
 function Arnoldi(A, v_j, V, H, j):
     w <- A v_j
 
-    // Modified Gram-Schmidt against previous basis vectors
+    // Project out components along all previous basis vectors:
+    // \f$h_{ij} = v_i^T w,\quad w \leftarrow w - h_{ij}\, v_i\f$  (Modified Gram-Schmidt)
     for i = 0 to j:
         H[j,i] <- w^T V[i]
         w      <- w - H[j,i] * V[i]

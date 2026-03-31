@@ -44,9 +44,9 @@ ODEResult ode_euler(ODERhsFn f, Vector y0,
 
 Fixed-step forward Euler. One function evaluation per step.
 
-$$y_{n+1} = y_n + h\,f(t_n,\,y_n)$$
+\f[y_{n+1} = y_n + h\,f(t_n,\,y_n)\f]
 
-Global error $O(h)$. Useful as a baseline or for stiff systems where stability dominates.
+Global error \f$O(h)\f$. Useful as a baseline or for stiff systems where stability dominates.
 
 ### Classic RK4 -- O(h^4)
 
@@ -58,9 +58,9 @@ ODEResult ode_rk4(ODERhsFn f, Vector y0,
 
 Fixed-step 4th-order Runge-Kutta. Four evaluations of `f` per step.
 
-$$k_1 = f(t_n, y_n), \quad k_2 = f\!\left(t_n + \tfrac{h}{2},\, y_n + \tfrac{h}{2}k_1\right)$$
-$$k_3 = f\!\left(t_n + \tfrac{h}{2},\, y_n + \tfrac{h}{2}k_2\right), \quad k_4 = f(t_n + h,\, y_n + h k_3)$$
-$$y_{n+1} = y_n + \tfrac{h}{6}(k_1 + 2k_2 + 2k_3 + k_4)$$
+\f[k_1 = f(t_n, y_n), \quad k_2 = f\!\left(t_n + \tfrac{h}{2},\, y_n + \tfrac{h}{2}k_1\right)\f]
+\f[k_3 = f\!\left(t_n + \tfrac{h}{2},\, y_n + \tfrac{h}{2}k_2\right), \quad k_4 = f(t_n + h,\, y_n + h k_3)\f]
+\f[y_{n+1} = y_n + \tfrac{h}{6}(k_1 + 2k_2 + 2k_3 + k_4)\f]
 
 Good default for smooth, non-Hamiltonian problems.
 
@@ -76,11 +76,11 @@ ODEResult ode_rk45(ODERhsFn f, Vector y0,
 
 Dormand-Prince embedded 4(5) pair. Step accepted when the mixed error norm satisfies
 
-$$\left\|\frac{e_i}{\text{atol} + |y_i|\,\text{rtol}}\right\|_\infty \leq 1$$
+\f[\left\|\frac{e_i}{\text{atol} + |y_i|\,\text{rtol}}\right\|_\infty \leq 1\f]
 
 Step size updated via PI control:
 
-$$h_\text{new} = h \cdot \min\!\left(10,\, \max\!\left(0.1,\; 0.9\,\|\varepsilon\|^{-0.2}\right)\right)$$
+\f[h_\text{new} = h \cdot \min\!\left(10,\, \max\!\left(0.1,\; 0.9\,\|\varepsilon\|^{-0.2}\right)\right)\f]
 
 `res.converged` is `false` if `max_steps` was hit before reaching `t1`.
 
@@ -96,9 +96,9 @@ SymplecticResult ode_verlet(AccelFn accel,
 Kick-drift-kick velocity Verlet. FSAL: one force evaluation per step after initialisation.
 Preserves the symplectic structure of Hamilton's equations; energy error oscillates within a bounded band rather than growing secularly.
 
-$$q_{n+1} = q_n + h\,v_n + \tfrac{h^2}{2}\,a_n$$
-$$a_{n+1} = \text{accel}(q_{n+1})$$
-$$v_{n+1} = v_n + \tfrac{h}{2}(a_n + a_{n+1})$$
+\f[q_{n+1} = q_n + h\,v_n + \tfrac{h^2}{2}\,a_n\f]
+\f[a_{n+1} = \text{accel}(q_{n+1})\f]
+\f[v_{n+1} = v_n + \tfrac{h}{2}(a_n + a_{n+1})\f]
 
 ### Yoshida 4th-order -- O(h^4), symplectic
 
@@ -112,10 +112,10 @@ SymplecticResult ode_yoshida4(AccelFn accel,
 Yoshida (1990) 4th-order symplectic integrator. Three force evaluations per step.
 Built from a drift-kick sequence using coefficients
 
-$$w_1 = \frac{1}{2 - 2^{1/3}}, \quad w_0 = 1 - 2w_1$$
-$$c_1 = c_4 = \tfrac{w_1}{2}, \quad c_2 = c_3 = \tfrac{w_0 + w_1}{2}, \quad d_1 = d_3 = w_1, \quad d_2 = w_0$$
+\f[w_1 = \frac{1}{2 - 2^{1/3}}, \quad w_0 = 1 - 2w_1\f]
+\f[c_1 = c_4 = \tfrac{w_1}{2}, \quad c_2 = c_3 = \tfrac{w_0 + w_1}{2}, \quad d_1 = d_3 = w_1, \quad d_2 = w_0\f]
 
-One step executes: drift($c_1$) -- kick($d_1$) -- drift($c_2$) -- kick($d_2$) -- drift($c_2$) -- kick($d_1$) -- drift($c_1$).
+One step executes: drift(\f$c_1\f$) -- kick(\f$d_1\f$) -- drift(\f$c_2\f$) -- kick(\f$d_2\f$) -- drift(\f$c_2\f$) -- kick(\f$d_1\f$) -- drift(\f$c_1\f$).
 
 ### RK4 for second-order systems (Nystrom form)
 
@@ -126,12 +126,12 @@ SymplecticResult ode_rk4_2nd(AccelFn accel,
                               SymplecticCallback on_step = nullptr);
 ```
 
-Standard RK4 applied to $[q,v]' = [v,\, \text{accel}(q)]$, kept in Nystrom form to avoid packing/unpacking. Four force evaluations per step; global error $O(h^4)$ but **not symplectic** (energy drifts secularly).
+Standard RK4 applied to \f$[q,v]' = [v,\, \text{accel}(q)]\f$, kept in Nystrom form to avoid packing/unpacking. Four force evaluations per step; global error \f$O(h^4)\f$ but **not symplectic** (energy drifts secularly).
 
-$$a_1 = \text{accel}(q), \quad a_2 = \text{accel}\!\left(q + \tfrac{h}{2}v\right)$$
-$$a_3 = \text{accel}\!\left(q + \tfrac{h}{2}\!\left(v + \tfrac{h}{2}a_1\right)\right), \quad a_4 = \text{accel}\!\left(q + h\!\left(v + \tfrac{h}{2}a_2\right)\right)$$
-$$q_{n+1} = q_n + h\,v_n + \tfrac{h^2}{6}(a_1 + a_2 + a_3)$$
-$$v_{n+1} = v_n + \tfrac{h}{6}(a_1 + 2a_2 + 2a_3 + a_4)$$
+\f[a_1 = \text{accel}(q), \quad a_2 = \text{accel}\!\left(q + \tfrac{h}{2}v\right)\f]
+\f[a_3 = \text{accel}\!\left(q + \tfrac{h}{2}\!\left(v + \tfrac{h}{2}a_1\right)\right), \quad a_4 = \text{accel}\!\left(q + h\!\left(v + \tfrac{h}{2}a_2\right)\right)\f]
+\f[q_{n+1} = q_n + h\,v_n + \tfrac{h^2}{6}(a_1 + a_2 + a_3)\f]
+\f[v_{n+1} = v_n + \tfrac{h}{6}(a_1 + 2a_2 + 2a_3 + a_4)\f]
 
 ---
 
@@ -164,7 +164,7 @@ ode_verlet(accel, q0, v0, 0.0, 1000.0, 0.01,
 
 For Hamiltonian systems (orbital mechanics, molecular dynamics), symplectic integrators are strongly preferred:
 
-| Property | Verlet $O(h^2)$ | Yoshida4 $O(h^4)$ | RK4 $O(h^4)$ |
+| Property | Verlet \f$O(h^2)\f$ | Yoshida4 \f$O(h^4)\f$ | RK4 \f$O(h^4)\f$ |
 |----------|----------------|------------------|-------------|
 | Symplectic | Yes | Yes | No |
 | Energy error | Bounded oscillation | Bounded oscillation | Secular drift |

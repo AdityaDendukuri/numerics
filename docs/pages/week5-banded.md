@@ -98,7 +98,7 @@ For a banded matrix \f$A\f$ with bandwidths \f$(k_l, k_u)\f$, we compute \f$PA =
 
 With pivoting, row \f$j\f$ may come from row \f$j + k_l\f$ at worst, creating fill-in up to column \f$(j + k_l) + k_u\f$ for original row \f$j\f$. But this is stored in the extra \f$k_l\f$ rows we allocated. \f$\square\f$
 
-### 3.2 Algorithm Derivation
+### 3.2 Algorithm
 
 **Standard Gaussian elimination** adapted for band structure:
 
@@ -445,7 +445,7 @@ __global__ void banded_lu_batched(
 | 1000 small systems | 10 ms | 0.1 ms | **GPU** |
 | 1000 large systems | 1 s | 50 ms | **GPU** |
 
-The key insight: **GPU excels at batched solves**, which is exactly the pattern in radiative transfer (one system per spectral band or grid column).
+**GPU excels at batched solves**, which is exactly the pattern in radiative transfer (one system per spectral band or grid column).
 
 ---
 
@@ -560,7 +560,7 @@ Key flags:
 
 ---
 
-## Appendix A: Derivation of Fill-in Bound
+## Appendix A: Fill-in Bound
 
 **Claim**: With partial pivoting, \f$U\f$ has at most \f$k_l + k_u\f$ super-diagonals.
 

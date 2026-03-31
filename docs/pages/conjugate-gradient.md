@@ -10,13 +10,7 @@ Solve \f$Ax = b\f$ where \f$A \in \mathbb{R}^{n \times n}\f$ is **symmetric posi
 
 The iterate \f$x_k\f$ is the unique point in \f$x_0 + \mathcal{K}_k\f$ minimizing \f$\|x - x^*\|_A = \sqrt{(x-x^*)^T A (x-x^*)}\f$.
 
-### Derivation
-
-Minimizing \f$\|e\|_A\f$ is equivalent to minimizing the quadratic form
-
-\f[\varphi(x) = \tfrac{1}{2}x^TAx - b^Tx, \qquad \nabla\varphi = Ax - b = -r\f]
-
-At each step the new search direction \f$p_k\f$ is made **\f$A\f$-conjugate** to all previous directions: \f$p_k^T A p_j = 0\f$ for \f$j < k\f$. This allows minimization of \f$\varphi\f$ along \f$p_k\f$ without disturbing progress already made along \f$p_0, \ldots, p_{k-1}\f$.
+The search direction \f$p_k\f$ is made **\f$A\f$-conjugate** to all previous directions (\f$p_k^T A p_j = 0\f$ for \f$j < k\f$), so each step minimizes the error along \f$p_k\f$ without disturbing prior progress.
 
 ### Algorithm
 
@@ -110,12 +104,13 @@ function Thomas(a, b, c, d):
     // d: RHS (length n, modified in-place)
 
     // Forward sweep: eliminate sub-diagonal
+    // \f$w_i = a_i / b_{i-1},\quad b_i \leftarrow b_i - w_i c_{i-1},\quad d_i \leftarrow d_i - w_i d_{i-1}\f$
     for i = 1 to n-1:
         w    <- a[i] / b[i-1]
         b[i] <- b[i] - w * c[i-1]
         d[i] <- d[i] - w * d[i-1]
 
-    // Backward substitution
+    // Backward substitution: \f$x_i = \bigl(d_i - c_i\, x_{i+1}\bigr) / b_i\f$
     x[n-1] <- d[n-1] / b[n-1]
     for i = n-2 downto 0:
         x[i] <- (d[i] - c[i] * x[i+1]) / b[i]
@@ -134,14 +129,6 @@ Tridiagonal systems arise everywhere in numerical PDE:
 - Implicit time integration (Crank-Nicolson for the heat equation \f$u_t = u_{xx}\f$)
 - Cubic spline interpolation (natural and clamped boundary conditions)
 - ADI (alternating direction implicit) splitting for 2D/3D parabolic equations
-
-### Block Tridiagonal Systems
-
-In 2D finite differences, the system is block tridiagonal with \f$n\f$ blocks of size \f$n\f$:
-
-\f[\begin{pmatrix} B & C & & \\ A & B & C & \\ & \ddots & \ddots & \ddots \\ & & A & B \end{pmatrix} \begin{pmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{pmatrix} = \begin{pmatrix} d_1 \\ d_2 \\ \vdots \\ d_n \end{pmatrix}\f]
-
-The same Thomas algorithm applies with block BLAS operations: `DGEMM` replaces scalar multiply, `DTRSM` replaces divide. Full block Thomas costs \f$O(n^3) \times n = O(n^4)\f$ for an \f$n \times n\f$ 2D grid.
 
 ---
 
@@ -190,17 +177,3 @@ for (idx i = 1; i < n; ++i) {
 
 Peak Thomas throughput (bandwidth-limited): \f$\sim 100\,\text{GFLOP/s}\f$ on modern hardware with 100 GB/s DRAM.
 
-### Cyclic Reduction (CR) -- Parallel Alternative
-
-CR achieves \f$O(n \log n)\f$ work with \f$O(\log n)\f$ parallel depth:
-
-```
-for level = 0 to log2(n) - 1:
-    step <- 2^(level+1)
-    for i = step/2, 3*step/2, ...:  (in parallel)
-        eliminate rows i - step/2 and i + step/2 from row i
-// After log2(n) levels: one equation per processor
-// Back-substitute in reverse
-```
-
-CR is ideal for GPU (CUDA): all eliminations at each level are independent -> \f$O(n/\text{step})\f$ parallel threads. NVIDIA cuSPARSE uses a hybrid CR-PCR (parallel cyclic reduction) approach.

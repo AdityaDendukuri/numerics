@@ -1,14 +1,10 @@
 # QR Factorization via Householder Reflections {#page_qr_notes}
 
-## Mathematical Background
+## Overview
 
-Every matrix \f$A \in \mathbb{R}^{m \times n}\f$ with \f$m \geq n\f$ admits the decomposition
+Factors \f$A \in \mathbb{R}^{m \times n}\f$ (\f$m \geq n\f$) as \f$A = QR\f$ where \f$Q \in \mathbb{R}^{m \times m}\f$ is orthogonal and \f$R \in \mathbb{R}^{m \times n}\f$ is upper triangular. The economy (thin) form uses \f$\hat{Q} \in \mathbb{R}^{m \times n}\f$ and \f$\hat{R} \in \mathbb{R}^{n \times n}\f$.
 
-\f[A = QR\f]
-
-where \f$Q \in \mathbb{R}^{m \times m}\f$ is orthogonal (\f$Q^TQ = I\f$) and \f$R \in \mathbb{R}^{m \times n}\f$ is upper triangular. The *economy* (thin) QR uses \f$\hat{Q} \in \mathbb{R}^{m \times n}\f$ and \f$\hat{R} \in \mathbb{R}^{n \times n}\f$.
-
-QR is fundamental for:
+**When to use:**
 - **Least-squares**: \f$\min_x \|Ax - b\|_2\f$ with \f$m > n\f$ (overdetermined)
 - **Eigenvalue algorithms**: QR iteration for non-symmetric \f$A\f$
 - **Krylov orthogonalization**: Gram-Schmidt in GMRES and Lanczos
@@ -97,11 +93,7 @@ function QR_solve(Q, R, b):
 
 ## Stability
 
-QR via Householder is **backward stable**: the computed solution \f$\hat{x}\f$ satisfies
-
-\f[(A + \delta A)\hat{x} = b, \qquad \frac{\|\delta A\|_F}{\|A\|_F} \leq O(\varepsilon_{\text{mach}})\f]
-
-independent of \f$\kappa(A)\f$. The normal equations satisfy \f$\|\delta A\| / \|A\| \leq O(\varepsilon_{\text{mach}}\,\kappa(A)^2)\f$ -- for \f$\kappa(A) > 10^8\f$ in double precision, the normal equations lose all significant digits while QR still gives correct residuals.
+QR via Householder is **backward stable** independent of \f$\kappa(A)\f$, unlike the normal equations \f$A^TAx = A^Tb\f$ which square the condition number. For \f$\kappa(A) > 10^8\f$ in double precision, normal equations lose all significant digits while QR still gives correct residuals.
 
 ---
 

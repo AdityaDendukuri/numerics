@@ -46,7 +46,8 @@ function lanczos(matvec, n, k, tol, max_steps):
         w <- w - alpha[j]*vj
         if j > 0: w <- w - beta[j-1] * V[:,j-1]
 
-        // Full reorthogonalization (MGS against all previous vectors)
+        // Full reorthogonalization: project w onto orthogonal complement of span{v_0,...,v_j}
+        // \f$w \leftarrow w - \sum_{l=0}^{j} (v_l^T w)\, v_l\f$
         for l = 0 to j:
             proj <- V[:,l]^T w
             w    <- w - proj * V[:,l]
@@ -73,7 +74,7 @@ function lanczos(matvec, n, k, tol, max_steps):
 
 ---
 
-## Why Tridiagonal? The Projection Principle
+## The Projection Principle
 
 The tridiagonal \f$T_k\f$ is the **Galerkin projection** of \f$A\f$ onto \f$\mathcal{K}_k\f$:
 
@@ -89,51 +90,25 @@ The Ritz vectors \f$\tilde{u}_i = V_k s_i\f$ (columns of \f$V_k S\f$) satisfy:
 
 ---
 
-## Convergence Theory
+## Convergence
 
-The error in the leading Ritz value \f$\theta_1\f$ satisfies (Saad 1980):
-
-\f[\frac{|\lambda_1 - \theta_1|}{\lambda_1 - \lambda_n} \leq \tan^2\!\angle(v_1, u_1)\cdot \left(\frac{\lambda_1 - \lambda_3}{\lambda_1 - \lambda_2}\right)^{-2(k-1)} \cdot \text{(bounded polynomial factor)}\f]
-
-More practically, convergence is governed by the **spectral gap** \f$\delta = (\lambda_1 - \lambda_2)/(\lambda_1 - \lambda_n)\f$:
-- Large gap (\f$\delta \gg 0\f$): Ritz value converges in \f$O(1/\sqrt{\delta})\f$ steps
+Convergence is governed by the **spectral gap** \f$\delta = (\lambda_1 - \lambda_2)/(\lambda_1 - \lambda_n)\f$:
+- Large gap (\f$\delta \gg 0\f$): leading Ritz value converges in \f$O(1/\sqrt{\delta})\f$ steps
 - Clustered extreme eigenvalues: slow convergence, need large \f$k\f$
 
-The \f$\beta_k |S_{k,i}|\f$ residual estimate provides an **inexpensive stopping criterion** that avoids computing the full Ritz vector just to check convergence.
+The \f$\beta_k |S_{k,i}|\f$ residual estimate from the algorithm provides an **inexpensive stopping criterion** -- no need to compute the full Ritz vector to check convergence.
 
 ---
 
 ## Ghost Eigenvalues and Reorthogonalization
 
-**The problem**: in floating-point, the three-term recurrence loses orthogonality after \f$O(1/\varepsilon_{\text{mach}})\f$ steps. Once a Ritz value \f$\theta\f$ converges to eigenvalue \f$\lambda_j\f$, the corresponding Lanczos vector drifts back into the \f$u_j\f$ eigenspace, causing \f$\lambda_j\f$ to appear again as a spurious **ghost eigenvalue**.
+In floating-point, the three-term recurrence loses orthogonality after many steps. Once a Ritz value converges to \f$\lambda_j\f$, the Lanczos vector drifts back into the \f$u_j\f$ eigenspace, causing \f$\lambda_j\f$ to appear again as a spurious **ghost eigenvalue**.
 
 **Full reorthogonalization (FRO)** (our implementation):
-- Project \f$w\f$ against all \f$v_0, \ldots, v_j\f$ at each step
+- Project \f$w\f$ against all \f$v_0, \ldots, v_j\f$ at each step via \f$w \leftarrow w - \sum_{l=0}^{j} (v_l^T w)\, v_l\f$
 - Cost: \f$O(jn)\f$ per step, \f$O(k^2 n)\f$ total
 - Guarantees orthogonality to machine precision
 - Memory: must store all \f$k\f$ vectors simultaneously
-
-**Selective reorthogonalization** (Simon 1984):
-- Reorthogonalize only against converged Ritz vectors
-- Detect convergence via: \f$|\beta_j S_{j,i}| < \sqrt{\varepsilon_{\text{mach}}} \|T\|\f$
-- Reduces reorthogonalization work by 2-10x when few eigenvalues have converged
-
-**Partial reorthogonalization** (Parlett-Scott):
-- Track semi-orthogonality using recurrence estimates for the inner products \f$\langle v_j, v_i \rangle\f$
-- Reorthogonalize only when orthogonality drops below \f$\sqrt{\varepsilon_{\text{mach}}}\f$
-- Near-optimal: reorthogonalize only when necessary
-
----
-
-## Thick Restart and ARPACK
-
-**Thick restart** (Wu-Simon 2000): instead of discarding all vectors at restart, keep the \f$p\f$ best Ritz pairs:
-
-\f[V_{\text{new}} = [\tilde{u}_1, \ldots, \tilde{u}_p, v_{k+1}], \qquad p + 1 \text{ starting vectors}\f]
-
-Continue Lanczos from this improved starting basis. This is the basis of **ARPACK** (Implicitly Restarted Arnoldi/Lanczos) -- the de facto standard for large sparse eigenvalue problems (backend for MATLAB `eigs()`, SciPy `eigsh()`).
-
-**Implicitly restarted Lanczos** applies a polynomial filter to the starting vector: the \f$k - p\f$ unwanted Ritz values are used as shifts in an implicit QR step that filters the basis without forming the QR product explicitly (Sorensen 1992).
 
 ---
 

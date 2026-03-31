@@ -1,26 +1,12 @@
 # LU Factorization with Partial Pivoting {#page_lu_notes}
 
-## Mathematical Background
+## Overview
 
-Every non-singular matrix \f$A \in \mathbb{R}^{n \times n}\f$ admits a factorization
+Factors a non-singular \f$A \in \mathbb{R}^{n \times n}\f$ as
 
 \f[PA = LU\f]
 
-where \f$P\f$ is a permutation matrix, \f$L\f$ is unit lower triangular (\f$L_{ii} = 1\f$), and \f$U\f$ is upper triangular. The factorization is numerically stable when combined with *partial pivoting* -- choosing the pivot row to maximize \f$|U_{kk}|\f$ at each step.
-
-### Why Pivoting?
-
-Without pivoting, even a well-conditioned matrix can produce catastrophic cancellation. Consider:
-
-\f[A = \begin{pmatrix} \varepsilon & 1 \\ 1 & 1 \end{pmatrix}, \quad \varepsilon = 10^{-16}\f]
-
-Without pivoting: \f$\ell_{21} = \varepsilon^{-1} \approx 10^{16}\f$, and \f$U_{22} \approx -10^{16}\f$ -- enormous entries. With pivoting: \f$\ell_{21} = \varepsilon\f$, \f$U_{22} \approx 1\f$ -- perfectly fine.
-
-Partial pivoting bounds the growth factor: \f$|L_{ij}| \leq 1\f$ for all \f$i > j\f$, which guarantees
-
-\f[\|LU\|_\infty \leq 2^{n-1} \|A\|_\infty\f]
-
-in the worst case (Wilkinson bound). Random matrices grow as \f$O(n^{1/2})\f$ in practice.
+where \f$P\f$ is a permutation, \f$L\f$ is unit lower triangular, and \f$U\f$ is upper triangular. **Partial pivoting** selects the pivot row to maximize \f$|U_{kk}|\f$ at each step, keeping \f$|L_{ij}| \leq 1\f$ for all \f$i > j\f$ and preventing catastrophic cancellation.
 
 ---
 
@@ -102,15 +88,9 @@ where \f$\text{swaps}\f$ = number of non-trivial pivots (\f$\text{piv}[k] \neq k
 
 ---
 
-## Stability Analysis
+## Stability
 
-LU with partial pivoting is backward stable: the computed solution \f$\hat{x}\f$ satisfies
-
-\f[\bigl(A + \delta A\bigr)\hat{x} = b, \qquad \frac{\|\delta A\|}{\|A\|} \leq \varepsilon_{\text{mach}}\, \rho(n)\, \kappa(A)\f]
-
-where \f$\rho(n)\f$ is the growth factor (at most \f$2^{n-1}\f$ theoretically, observed \f$O(n^{1/2})\f$ in practice) and \f$\kappa(A) = \|A\|\,\|A^{-1}\|\f$ is the condition number.
-
-*Complete pivoting* (swap rows and columns) achieves \f$\rho(n) \leq n^{1/2}(n!)^{1/(2n)}\f$ but is rarely needed; partial pivoting suffices for nearly all practical matrices.
+LU with partial pivoting is backward stable. The growth factor \f$\rho(n)\f$ is bounded at \f$2^{n-1}\f$ in theory but observed as \f$O(n^{1/2})\f$ in practice. Complete pivoting (swapping rows and columns) has tighter theoretical bounds but is rarely needed; partial pivoting suffices for virtually all practical matrices.
 
 ---
 

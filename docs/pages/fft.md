@@ -47,8 +47,7 @@ Energy is conserved up to the factor \f$n\f$:
 ## Naive DFT: O(n^2) cost {#sec_naive}
 
 Evaluating all \f$n\f$ bins directly costs \f$O(n^2)\f$ multiplications -- impractical
-for large \f$n\f$. The key observation that breaks this barrier is the **periodicity and
-symmetry** of the twiddle factors \f$W_n^{jk} = e^{-2\pi i jk/n}\f$.
+for large \f$n\f$. The **periodicity and symmetry** of the twiddle factors \f$W_n^{jk} = e^{-2\pi i jk/n}\f$ allow recursive decomposition:
 
 Define the primitive \f$n\f$-th root of unity \f$\omega_n = e^{-2\pi i / n}\f$. Then
 \f$W_n^{jk} = \omega_n^{jk}\f$, and these factors satisfy:
@@ -67,8 +66,6 @@ These two identities are the engine of the Cooley-Tukey algorithm.
 The **Cooley-Tukey radix-2 decimation-in-time** (DIT) algorithm, published in 1965,
 reduces an \f$n\f$-point DFT to two \f$n/2\f$-point DFTs by splitting the input into
 even- and odd-indexed elements.
-
-### Derivation
 
 Split \f$x\f$ into even and odd halves:
 

@@ -53,7 +53,7 @@ After \f$k\f$ iterations, CG finds:
 
 where \f$\|\mathbf{v}\|_A = \sqrt{\mathbf{v}^T A \mathbf{v}}\f$ is the **A-norm** (energy norm).
 
-### 2.2 Algorithm Derivation
+### 2.2 Algorithm
 
 Starting from \f$\mathbf{x}_0\f$ with residual \f$\mathbf{r}_0 = \mathbf{b} - A\mathbf{x}_0\f$, set \f$\mathbf{p}_0 = \mathbf{r}_0\f$.
 
@@ -155,7 +155,7 @@ a_0 & b_1 & c_1 \\
 - \f$\mathbf{b}\f$: main diagonal, size \f$n\f$
 - \f$\mathbf{c}\f$: upper diagonal, size \f$n-1\f$ (elements \f$c_0, \ldots, c_{n-2}\f$)
 
-### 3.2 Derivation via LU Factorization
+### 3.2 Thomas Algorithm via LU Structure
 
 The Thomas algorithm is Gaussian elimination specialized for tridiagonal structure.
 
@@ -669,7 +669,7 @@ SolverResult hybrid_cg(const Matrix& A_local, const Vector& b_local,
 | Thomas Batched (GPU) | \f$O(n \cdot k/P_{GPU})\f$ | Thread per system | Many tridiagonals |
 | Thomas (MPI) | \f$O(n/P)\f$ + pipeline | Limited | Large single tridiag |
 
-**Key insights**:
+Summary:
 1. CG parallelizes naturally; matvec dominates cost
 2. Thomas is inherently sequential; parallelize across systems, not within
 3. GPU advantage requires sufficient problem size to amortize launch overhead
