@@ -321,11 +321,11 @@ int main() {
     const double dt    = 0.20 * h * h;   // explicit Euler stable for dt &lt; 0.25 h^2
     const int    nstep = static_cast&lt;int&gt;(T_end / dt) + 1;
 
-    // flat NxN field; fill_grid evaluates f(x,y) at each interior node
+    // NxN flat array; node (i,j) sits at x=(i+1)*h, y=(j+1)*h
     num::Vector u(static_cast&lt;std::size_t&gt;(N) * N);
-    num::fill_grid(u, N, h, [=](double x, double y) {
-        return num::gaussian2d(x, y, 0.5, 0.5, sigma);
-    });
+    for (int i = 0; i &lt; N; ++i)
+        for (int j = 0; j &lt; N; ++j)
+            u[i*N + j] = num::gaussian2d((i+1)*h, (j+1)*h, 0.5, 0.5, sigma);
 
     num::Vector u0 = u, u_mid;
     const double coeff = kappa * dt / (h * h);  // kappa*dt/h^2, passed to each step

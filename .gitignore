@@ -69,4 +69,5 @@ frames/
 *.png
 
 # Doc assets are tracked even though *.png is excluded above
+!docs/*.png
 !docs/pages/*.png
