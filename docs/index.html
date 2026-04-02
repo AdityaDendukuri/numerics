@@ -199,18 +199,15 @@ int main() {
         ds[2] = s[0] * s[1] - beta * s[2];
     };
 
-    num::Vector y0 = {1.0, 0.0, 0.0};
     num::Series xz;
-
-    num::ODEParams params = {.tf = 50.0, .rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000};
-
-    // observer: stores the (x, z) output at each accepted step
-    auto observer = [&](double /*t*/, const num::Vector& y) {
+    auto observer = [&](double, const num::Vector& y) {
         xz.emplace_back(y[0], y[2]);
     };
 
-    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10
-    num::ode_rk45(lorenz, y0, params, observer);
+    num::solve(
+        num::ODEProblem{lorenz, {1.0, 0.0, 0.0}, 0.0, 50.0},
+        num::RK45{.rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000},
+        observer);
 
     num::plt::plot(xz);
     num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");
@@ -221,7 +218,7 @@ int main() {
     </div>
     <div class="example-fig">
       <img src="lorenz.png" alt="Lorenz attractor phase portrait (x vs z)">
-      <div class="cap"><strong>Lorenz attractor</strong> — adaptive RK45 via <code>num::rk45</code></div>
+      <div class="cap"><strong>Lorenz attractor</strong> — adaptive RK45 via <code>num::solve</code> + <code>num::RK45</code></div>
     </div>
   </div>
 
@@ -278,24 +275,31 @@ int main() {
 
 int main() {
     const int N = 64, NN = N*N;
-    num::PBCLattice2D nbr(N);   // precomputed up/dn/lt/rt neighbor indices (periodic boundaries)
+    num::PBCLattice2D   nbr(N);
     std::vector&lt;double&gt; spins(NN);
-    std::mt19937 rng(42);
+    std::mt19937        rng(42);
 
-    num::Series curve;  // (T, |m|) points for the magnetization curve
-    for (double T = 0.5; T &lt;= 4.0; T += 0.1) {
+    num::Series curve;
+    for (double T = 0.5; T &lt;= 4.01; T += 0.1) {
+        std::fill(spins.begin(), spins.end(), 1.0);
         double beta = 1.0 / T;
-        auto acc = [&](int i) {
-            //  2 * s_i * (sum of 4 neighbors); accept via Boltzmann weight
+
+        auto accept = [&](int i) {
             double ns = spins[nbr.up[i]] + spins[nbr.dn[i]]
                       + spins[nbr.lt[i]] + spins[nbr.rt[i]];
             return num::markov::boltzmann_accept(2.0*spins[i]*ns, beta);
         };
-        auto flip = [&](int i) { spins[i] = -spins[i]; };
-        for (int s = 0; s &lt; 500; ++s)  // 500 sweeps to equilibrate at each T
-            num::markov::metropolis_sweep_prob(NN, acc, flip, rng);
-        // measure |&lt;m&gt;| ...
-        curve.emplace_back(T, /* |m| */ 0.0);
+        auto flip    = [&](int i) { spins[i] = -spins[i]; };
+        auto measure = [&]() {
+            return std::abs(std::accumulate(spins.begin(), spins.end(), 0.0) / NN);
+        };
+
+        double m = num::solve(
+            num::MCMCProblem{accept, flip, NN},
+            num::Metropolis{.equilibration=2000, .measurements=500},
+            measure, rng);
+
+        curve.store(T, m);
     }
     num::plt::plot(curve);
     num::plt::xlabel("T");  num::plt::ylabel("|&lt;m&gt;|");
@@ -304,7 +308,7 @@ int main() {
     </div>
     <div class="example-fig">
       <img src="ising_demo.png" alt="Ising magnetization vs temperature">
-      <div class="cap"><strong>Ising phase transition</strong> — <code>num::markov::metropolis_sweep_prob</code> + <code>num::PBCLattice2D</code>; |m| drops at T<sub>c</sub> ≈ 2.27</div>
+      <div class="cap"><strong>Ising phase transition</strong> — <code>num::solve</code> + <code>num::Metropolis</code>; |m| drops at T<sub>c</sub> ≈ 2.27</div>
     </div>
   </div>
 
@@ -312,59 +316,39 @@ int main() {
   <div class="ex-panel" id="ex-3">
     <div class="example-code">
       <pre><code class="language-cpp">#include "numerics.hpp"
-#include <string>
+#include &lt;string&gt;
+
+using namespace num;
 
 int main() {
   const int N = 64;
-  const double kappa = 1.0;
-  const double sigma = 0.06;
-  const double T_end = 0.012;
-  const double h = 1.0 / (N + 1); // N interior nodes; boundaries fixed at 0
-  const double dt = 4.0 * h * h;  // 16x larger than explicit limit (0.25 h^2)
-  const int nstep = static_cast<int>(T_end / dt) + 1;
-  const double coeff = kappa * dt / (h * h); // kappa*dt/h^2
+  const double kappa = 1.0, sigma = 0.06, T_end = 0.012;
+  const double h = 1.0 / (N + 1);
+  const double dt = 4.0 * h * h;   // 16x larger than explicit limit
+  const int nstep = static_cast&lt;int&gt;(T_end / dt) + 1;
+  const double coeff = kappa * dt / (h * h);
 
-  // Sparse backward Euler system matrix  A = I - coeff*L
-  num::ScalarField2D u(N, h);
-  num::SparseMatrix A = num::pde::backward_euler_matrix_2d(u, coeff);
-  num::SolveStep solver = num::pde::make_cg_solver(A);
+  // A = I - coeff*L  (sparse SPD -- CG converges in O(N) iterations)
+  Grid2D       grid{N, h};
+  SparseMatrix A      = pde::backward_euler_matrix(grid, coeff);
+  LinearSolver solver = make_cg_solver(A);
 
-  // Initial condition: 2D Gaussian centred at (0.5, 0.5)
-  auto initial_temperature = [=](double x, double y) {
-    return num::gaussian2d(x, y, 0.5, 0.5, sigma);
-  };
+  ScalarField2D u0(grid, [=](double x, double y) {
+    return gaussian2d(x, y, 0.5, 0.5, sigma);
+  });
+  ScalarField2D u = u0;
+  solve(u, BackwardEuler{.solver=solver, .dt=dt, .nstep=nstep});
 
-  // fill grid with the initial condition
-  num::fill_grid(u, initial_temperature);
-
-  // callback function should save snapshiots for plotting
-  num::ScalarField2D u0(N, h);
-  auto save_snapshots = [&](int step, double /*t*/,
-                            const num::ScalarField2D &state) {
-    if (step == 0) {
-      u0 = state;
-    }
-  };
-
-  num::pde::diffusion_2d(u, solver, {nstep, dt}, save_snapshots);
-
-  num::plt::subplot(2, 1);
-  num::plt::heatmap(u0);
-  num::plt::title("t = 0");
-  num::plt::xlabel("x");
-  num::plt::ylabel("y");
-  num::plt::next();
-
-  num::plt::heatmap(u);
-  num::plt::title("t = " + std::to_string(T_end).substr(0, 6));
-  num::plt::xlabel("x");
-
-  num::plt::savefig("heat_demo.png");
+  plt::subplot(1, 2);
+  plt::heatmap(u0);  plt::title("t = 0");
+  plt::next();
+  plt::heatmap(u);   plt::title("t = " + std::to_string(T_end).substr(0, 6));
+  plt::savefig("heat_demo.png");
 }</code></pre>
     </div>
     <div class="example-fig">
       <img src="heat_demo.png" alt="2D heat equation — Gaussian spreading">
-      <div class="cap"><strong>2D heat equation</strong> — Gaussian blob spreading on [0,1]² (t = 0 → T/4 → T); <code>num::pde::diffusion_step_2d_dirichlet</code> + <code>num::plt::heatmap</code></div>
+      <div class="cap"><strong>2D heat equation</strong> — implicit backward Euler via sparse CG; <code>num::solve</code> + <code>num::BackwardEuler</code></div>
     </div>
   </div>
 
@@ -455,12 +439,20 @@ function showEx(idx) {
       <p>Vector, Matrix, SparseMatrix, BandedMatrix. Backend dispatch: seq, SIMD, BLAS, OpenMP, CUDA.</p>
     </div>
     <div class="module-card">
+      <h3>fields</h3>
+      <p>Grid2D, Grid3D — geometry only. ScalarField2D/3D, VectorField3D — field storage over a grid.</p>
+    </div>
+    <div class="module-card">
+      <h3>solve</h3>
+      <p><code>num::solve(problem, algorithm)</code> dispatcher. ODEProblem, MCMCProblem, algorithm tags (RK45, BackwardEuler, Metropolis…).</p>
+    </div>
+    <div class="module-card">
       <h3>factorization</h3>
       <p>LU, QR, Thomas tridiagonal. Direct solvers for dense and structured systems.</p>
     </div>
     <div class="module-card">
       <h3>solvers</h3>
-      <p>Conjugate gradient, matrix-free CG, restarted GMRES, Jacobi, Gauss-Seidel.</p>
+      <p>Conjugate gradient, matrix-free CG, restarted GMRES, Jacobi, Gauss-Seidel. <code>LinearSolver</code> universal callable.</p>
     </div>
     <div class="module-card">
       <h3>eigen</h3>
@@ -487,16 +479,16 @@ function showEx(idx) {
       <p>Online Welford mean/variance, histogram with WHAM reweighting, autocorrelation time.</p>
     </div>
     <div class="module-card">
-      <h3>spatial</h3>
-      <p>CellList2D/3D, Verlet list, SPHKernel&lt;Dim&gt; (2D/3D), PBCLattice2D, connected_components.</p>
+      <h3>meshfree</h3>
+      <p>CellList2D/3D, Verlet list, SPHKernel&lt;Dim&gt; (2D/3D). Particle-based spatial structures for Lagrangian methods.</p>
     </div>
     <div class="module-card">
       <h3><a href="api/page_pde.html">pde</a></h3>
-      <p>Laplacians, gradient, divergence, curl. ScalarField3D/VectorField3D, FieldSolver, MagneticSolver. CrankNicolsonADI, diffusion_step_2d.</p>
+      <p>Stencils (2D/3D Laplacians, periodic/Dirichlet), backward-Euler matrix builder, CrankNicolsonADI, explicit diffusion steps.</p>
     </div>
     <div class="module-card">
       <h3><a href="api/page_ode.html">ode</a></h3>
-      <p>Euler, RK4, adaptive RK45. Velocity Verlet and Yoshida4 symplectic integrators. StepCallback and SymplecticCallback for trajectory recording.</p>
+      <p>Euler, RK4, adaptive RK45. Velocity Verlet and Yoshida4 symplectic integrators. Implicit <code>ode::advance</code> for backward Euler steps.</p>
     </div>
     <div class="module-card">
       <h3>quantum</h3>
@@ -504,7 +496,7 @@ function showEx(idx) {
     </div>
     <div class="module-card">
       <h3>physics apps</h3>
-      <p>SPH 2D/3D, Navier-Stokes, TDSE, EM fields, Ising MC, N-body gravity. Full interactive apps, each built directly on library modules.</p>
+      <p>SPH 2D/3D, Navier-Stokes, TDSE, EM fields, Ising MC, N-body gravity. Interactive simulations using the per-step low-level API.</p>
     </div>
   </div>
 </section>

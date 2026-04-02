@@ -6,11 +6,10 @@ A C++ scientific computing library: linear algebra, ODE/PDE solvers, spectral me
 
 ## Example: Lorenz attractor
 
-The Lorenz system is integrated with `num::rk45` (adaptive Dormand-Prince) and the trajectory is plotted with `num::plt` -- the full program is ~35 lines (`examples/lorenz.cpp`):
+The Lorenz system is integrated with `num::solve` + `num::RK45` (adaptive Dormand-Prince) and the trajectory is plotted with `num::plt` -- the full program is ~30 lines (`examples/lorenz.cpp`):
 
 ```cpp
 #include "numerics.hpp"
-#include <cstdio>
 
 int main() {
     const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
@@ -21,18 +20,15 @@ int main() {
         ds[2] = s[0] * s[1] - beta * s[2];
     };
 
-    num::Vector y0 = {1.0, 0.0, 0.0};
     num::Series xz;
-
-    num::ODEParams params = {.tf = 50.0, .rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000};
-
-    // observer: stores the (x, z) output at each accepted step
-    auto observer = [&](double /*t*/, const num::Vector& y) {
+    auto observer = [&](double, const num::Vector& y) {
         xz.emplace_back(y[0], y[2]);
     };
 
-    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10
-    num::ode_rk45(lorenz, y0, params, observer);
+    num::solve(
+        num::ODEProblem{lorenz, {1.0, 0.0, 0.0}, 0.0, 50.0},
+        num::RK45{.rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000},
+        observer);
 
     num::plt::plot(xz);
     num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");
@@ -42,15 +38,6 @@ int main() {
 }
 ```
 
-Build and run (requires gnuplot in PATH):
-
-```
-g++ -std=c++20 -O2 -Iinclude examples/lorenz.cpp src/ode/ode.cpp -o lorenz
-./lorenz
-```
-
-This is what the plot generates:
-
 \image html lorenz.png "Lorenz attractor phase portrait (x vs z)" width=600px
 
 ---
@@ -59,17 +46,20 @@ This is what the plot generates:
 
 @subpage page_heat_demo
 
-`num::laplacian_stencil_2d_4th` -- the O(h⁴) 13-point cross stencil -- integrates the heat equation forward in time. `num::fill_grid` + `num::gaussian2d` set up the IC; `num::row_slice` extracts a plottable cross-section:
+Implicit backward Euler via sparse CG. `Grid2D` carries geometry; `ScalarField2D` carries data. The sparse system `A = I - coeff*L` is assembled once and reused at every step:
 
 ```cpp
-num::fill_grid(u, N, h, [=](double x, double y) {
-    return num::gaussian2d(x, y, 0.5, 0.5, sigma);   // Gaussian heat source
+num::Grid2D       grid{N, h};
+num::SparseMatrix A      = num::pde::backward_euler_matrix(grid, coeff);
+num::LinearSolver solver = num::make_cg_solver(A);
+
+num::ScalarField2D u(grid, [=](double x, double y) {
+    return num::gaussian2d(x, y, 0.5, 0.5, sigma);
 });
-// ...explicit Euler with 4th-order Laplacian...
-num::plt::plot(num::row_slice(u, N, h, N/2), "t = 0.05");
+num::solve(u, num::BackwardEuler{.solver=solver, .dt=dt, .nstep=nstep});
 ```
 
-\image html heat_demo.png "Slice u(x, 0.5): initial Gaussian source and diffused distribution at t=0.05." width=700px
+\image html heat_demo.png "Initial Gaussian and diffused distribution at t=T_end." width=700px
 
 ---
 
@@ -140,16 +130,30 @@ num::plt::plot(num::row_slice(u, N, h, N/2), "t = 0.05");
 - `num::markov::UmbrellaWindow`, `MetropolisStats`, `UmbrellaStats`
 - @ref num::markov::make_seeded_rng -- hardware-entropy RNG seeding
 
+### fields -- Grid geometry and field storage
+
+- `num::Grid2D` -- geometry only: N, h, coordinate accessors, flat index
+- `num::Grid3D` -- 3D analogue with nx, ny, nz
+- `num::ScalarField2D` -- owns `Grid2D` + data vector; callable constructor fills from `f(x,y)`
+- `num::ScalarField3D`, `num::VectorField3D` -- 3D field types with trilinear sampling
+
+### solve -- Unified solver dispatcher
+
+- `num::solve(problem, algorithm)` -- C++20 concept-dispatched entry point
+- `num::ODEProblem{f, u0, t0, tf}` -- explicit ODE formulation
+- `num::MCMCProblem{accept_prob, propose, n_sites}` -- MCMC formulation
+- Algorithm tags: `num::Euler`, `num::RK4`, `num::RK45`, `num::BackwardEuler`, `num::Metropolis`
+
 ### sparse and banded -- Structured sparse formats
 
 - `num::SparseMatrix` -- CSR format; @ref num::sparse_matvec
 - `num::BandedMatrix` -- band-storage; @ref num::banded_matvec, @ref num::banded_solve
+- `num::LinearSolver` -- universal callable: `(rhs, x) -> SolverResult`
 
-### spatial -- Spatial data structures and grid
+### meshfree -- Particle-based spatial structures
 
 - @ref num::CellList2D, @ref num::CellList3D -- linked-cell neighbour search
 - @ref num::VerletList -- Verlet neighbour list with skin radius
-- @ref num::Grid3D -- 3D scalar field with index helpers (Poisson/diffusion interop)
 
 ---
 

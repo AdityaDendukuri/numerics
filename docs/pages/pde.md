@@ -3,7 +3,7 @@
 **Header:** `#include "pde/pde.hpp"`
 **Namespace:** `num`, `num::pde`
 
-Finite-difference PDE infrastructure: stencil operators, 3D field types, Crank-Nicolson ADI time-stepping, and explicit diffusion steps.
+Finite-difference PDE infrastructure: stencil operators, backward-Euler matrix assembly, Crank-Nicolson ADI, and explicit diffusion steps. Grid geometry and field storage live in `fields/`; time integration lives in `ode/`. The `pde/` module is spatial operators only.
 
 ---
 
@@ -12,9 +12,9 @@ Finite-difference PDE infrastructure: stencil operators, 3D field types, Crank-N
 | Header | What it provides |
 |--------|-----------------|
 | `pde/stencil.hpp` | 2D/3D Laplacians, gradient, divergence, curl, fiber sweeps |
+| `pde/diffusion.hpp` | `backward_euler_matrix`, `make_cg_solver`; implicit backward-Euler setup |
 | `pde/fields.hpp` | `ScalarField3D`, `VectorField3D`, `FieldSolver`, `MagneticSolver` |
 | `pde/adi.hpp` | `CrankNicolsonADI` -- Strang-split CN solver for parabolic equations |
-| `pde/diffusion.hpp` | `diffusion_step_2d`, `diffusion_step_2d_dirichlet` -- explicit Euler |
 
 ---
 
@@ -149,7 +149,24 @@ it is factored once on construction and reused for every fiber.
 
 ---
 
-## Explicit diffusion (`pde/diffusion.hpp`)
+## Implicit backward Euler (`pde/diffusion.hpp`)
+
+Assembly for the implicit system `A = I - coeff*L` where `L` is the 2D Dirichlet Laplacian.
+`A` is sparse SPD — conjugate gradient converges in O(N) iterations.
+
+```cpp
+// Build once; reuse A and solver across all time steps
+num::Grid2D       grid{N, h};
+num::SparseMatrix A      = num::pde::backward_euler_matrix(grid, coeff);
+num::LinearSolver solver = num::make_cg_solver(A);
+
+// Integrate: solve A u^{n+1} = u^n  for nstep steps
+num::solve(u, num::BackwardEuler{.solver=solver, .dt=dt, .nstep=nstep});
+```
+
+`coeff = kappa * dt / h²`. Implicit stepping removes the `dt < 0.25 h²` Von Neumann stability constraint.
+
+## Explicit diffusion (`pde/stencil.hpp`)
 
 Forward Euler diffusion steps for 2D uniform grids. Von Neumann stability requires `coeff <= 0.25`.
 
@@ -161,12 +178,6 @@ num::pde::diffusion_step_2d(u, N, coeff, num::best_backend);
 // Dirichlet BCs: u += coeff * Lap_dirichlet(u)
 num::pde::diffusion_step_2d_dirichlet(u, N, coeff);
 ```
-
-`coeff = alpha*dt/h^2` where \f$\alpha\f$ is the diffusion coefficient (e.g. kinematic viscosity \f$\nu\f$).
-
-The explicit update is
-
-\f[u^{n+1}_{i,j} = u^n_{i,j} + \text{coeff}\,\bigl(u^n_{i+1,j} + u^n_{i-1,j} + u^n_{i,j+1} + u^n_{i,j-1} - 4u^n_{i,j}\bigr)\f]
 
 ### Typical usage (Navier-Stokes viscosity)
 
