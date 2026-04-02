@@ -24,6 +24,7 @@
 
 #include "core/types.hpp"
 #include "core/vector.hpp"
+#include "ode/implicit.hpp"
 #include <functional>
 
 namespace num {

@@ -19,6 +19,7 @@
 #include "core/vector.hpp"
 #include "plot/plot.hpp"
 #include "spatial/grid3d.hpp"
+#include "fields/grid2d.hpp"
 #include "pde/scalar_field_2d.hpp"
 #include <vector>
 #include <algorithm>
@@ -240,6 +241,19 @@ inline Series row_slice(const ScalarField2D& g, int row) {
 
 inline Series col_slice(const ScalarField2D& g, int col) {
     return col_slice(g.vec(), g.N(), g.h(), col);
+}
+
+inline void laplacian_stencil_2d_periodic(const ScalarField2D& x, ScalarField2D& y) {
+    laplacian_stencil_2d_periodic(x.vec(), y.vec(), x.N());
+}
+
+inline void laplacian_stencil_2d_4th(const ScalarField2D& x, ScalarField2D& y) {
+    laplacian_stencil_2d_4th(x.vec(), y.vec(), x.N());
+}
+
+inline real sample_2d_periodic(const ScalarField2D& g, real px, real py,
+                                real ox = 0.0, real oy = 0.0) {
+    return sample_2d_periodic(g.vec(), static_cast<idx>(g.N()), g.h(), px, py, ox, oy);
 }
 
 namespace plt {

@@ -8,6 +8,7 @@
 #include "core/types.hpp"
 #include "core/vector.hpp"
 #include <vector>
+#include <utility>
 
 namespace num {
 
@@ -44,6 +45,20 @@ class Grid3D {
         data_[flat(i, j, k)] = v;
     }
     void fill(real v);
+
+    /// Fill every cell with f(i, j, k).
+    template<typename F>
+    void fill(F&& f) {
+        for (int k = 0; k < nz_; ++k)
+            for (int j = 0; j < ny_; ++j)
+                for (int i = 0; i < nx_; ++i)
+                    data_[flat(i, j, k)] = f(i, j, k);
+    }
+
+    /// Construct and fill from callable f(i, j, k) -> real.
+    template<typename F>
+    Grid3D(int nx, int ny, int nz, double dx, F&& f)
+        : Grid3D(nx, ny, nz, dx) { fill(std::forward<F>(f)); }
 
     /// Copy contents into a new Vector (for solver interop).
     Vector to_vector() const;

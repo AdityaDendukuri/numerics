@@ -93,6 +93,10 @@ class BasicVector {
         return n_;
     }
 
+    /// Satisfy the VecField concept: a Vector is its own underlying vector.
+    BasicVector&       vec()       { return *this; }
+    const BasicVector& vec() const { return *this; }
+
     T* data() {
         return data_.get();
     }

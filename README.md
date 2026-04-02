@@ -7,46 +7,74 @@ without changing the call site.
 
 ## Why numerics?
 
-`numerics` started off as my attempt to standardize all of the code I had written throughout my research projects and courses. Over time, that snowballed into a much more structured package that, in many ways, functions like a C++ analogue of NumPy and SciPy.
+`numerics` started off as my attempt to standardize all of the code I had written throughout my research projects and courses. Over time, that snowballed into a much more structured package that, in many ways, functions like a C++ analogue of NumPy/SciPy — but designed around C++20 and built for performance from the ground up.
 
-For example, here is a simple program for simulating the Lorenz attractor:
+---
+
+## Two API layers
+
+The library exposes two levels of abstraction. You can use either, or mix them.
+
+### High-level: `num::solve(problem, algorithm)`
+
+Modelled after Julia's SciML ecosystem. Problems carry the mathematics; algorithms carry the numerics. Swapping the algorithm never touches the problem.
 
 ```cpp
-#include "numerics.hpp"
+// Explicit ODE (Lorenz attractor)
+num::solve(
+    num::ODEProblem{lorenz, {1.0, 0.0, 0.0}, 0.0, 50.0},
+    num::RK45{.rtol = 1e-8, .atol = 1e-10},
+    observer);
 
-int main() {
-    const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
+// Implicit ODE (2D heat equation -- backward Euler + sparse CG)
+num::Grid2D       grid{N, h};
+num::SparseMatrix A      = num::pde::backward_euler_matrix(grid, coeff);
+num::LinearSolver solver = num::make_cg_solver(A);
 
-    auto lorenz = [&](double, const num::Vector& s, num::Vector& ds) {
-        ds[0] = sigma * (s[1] - s[0]);
-        ds[1] = s[0] * (rho - s[2]) - s[1];
-        ds[2] = s[0] * s[1] - beta * s[2];
-    };
+num::ScalarField2D u(grid, init_val);
+num::solve(u, num::BackwardEuler{.solver = solver, .dt = dt, .nstep = nstep});
 
-    num::Vector y0 = {1.0, 0.0, 0.0};
-    num::Series xz;
-
-    num::ODEParams params = {.tf = 50.0, .rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000};
-
-    // observer: stores the (x, z) output at each accepted step
-    auto observer = [&](double /*t*/, const num::Vector& y) {
-        xz.emplace_back(y[0], y[2]);
-    };
-
-    // Runge-Kutta RK4(5): t=[0, 50], rtol=1e-8, atol=1e-10
-    num::ode_rk45(lorenz, y0, params, observer);
-
-    num::plt::plot(xz);
-    num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");
-    num::plt::xlabel("x");
-    num::plt::ylabel("z");
-    num::plt::savefig("lorenz.png");
-}
+// MCMC (Ising model -- Metropolis sampling)
+double m = num::solve(
+    num::MCMCProblem{accept_prob, flip, n_sites},
+    num::Metropolis{.equilibration = 2000, .measurements = 500},
+    measure, rng);
 ```
 
-Another major feature of the library is backend dispatch. Many of the core linear algebra and numerical kernels can automatically route to the fastest available implementation depending on what is installed on your system. That includes support for sequential, SIMD, BLAS, OpenMP, and CUDA backends, while keeping the user-facing call site unchanged.
+The algorithm is a swappable tag. Change `RK45{}` to `RK4{}` or `Euler{}` without touching the problem; change `BackwardEuler{}` to a future `CrankNicolson{}` the same way.
 
-`numerics` also has a fairly extensive testing and benchmarking framework. Benchmark output can be fed directly into a gnuplot-based workflow to automatically generate plots, which makes it much easier to compare implementations and see where the performance differences actually come from.
+This layer is the right choice for **batch computations**: parameter sweeps, convergence studies, producing output files.
+
+### Low-level: per-step primitives
+
+Every solver also exposes its building blocks directly. These are the right choice when the time loop is driven externally — by a GUI event loop, a real-time renderer, or a custom orchestration layer.
+
+```cpp
+// Single Metropolis sweep (used by interactive Ising app each render frame)
+num::markov::metropolis_sweep_prob(n_sites, accept_prob, flip, rng);
+
+// Single implicit step (used by fluid sim each substep)
+num::ode::advance(u, solver, {1, dt});
+
+// Explicit ODE lazy range (iterate step-by-step with full control)
+for (auto [t, y] : num::rk45(lorenz, y0, params))
+    record(t, y);
+```
+
+The interactive `apps/` (fluid sim, Ising visualizer, NS demo) use this layer because the GUI owns the loop. `num::solve()` would be the wrong abstraction there — the problem changes each frame as the user moves sliders.
+
+---
+
+## Examples
+
+The `examples/` directory shows all three problem classes through the high-level API:
+
+| Example | Physics | Algorithm |
+|---------|---------|-----------|
+| `lorenz.cpp` | Lorenz attractor (chaotic ODE) | `RK45` adaptive |
+| `heat_demo.cpp` | 2D heat equation (implicit PDE) | `BackwardEuler` + sparse CG |
+| `ising_demo.cpp` | Ising model magnetization curve | `Metropolis` MCMC |
+| `fft_demo.cpp` | FFT / power spectrum | — |
 
 ---
 
@@ -111,18 +139,19 @@ cmake --build build --target report
 | Module | What it provides |
 |--------|-----------------|
 | `core` | `Vector`, `Matrix`, `SparseMatrix`, `BandedMatrix`; backend dispatch |
+| `fields` | `Grid2D`, `Grid3D`, `ScalarField2D/3D`, `VectorField3D` — geometry + field types |
 | `factorization` | LU (partial pivoting), QR (Householder), Thomas algorithm |
-| `solvers` | CG, matrix-free CG, restarted GMRES, Jacobi, Gauss-Seidel |
+| `solvers` | CG, matrix-free CG, restarted GMRES, Jacobi, Gauss-Seidel; `LinearSolver` callable type |
 | `eigen` | Power / inverse / Rayleigh iteration, Lanczos, dense symmetric Jacobi |
 | `svd` | Full SVD, randomized truncated SVD |
+| `ode` | Euler, RK4, RK45 (adaptive), Verlet, Yoshida4; lazy-range and high-level integrators |
+| `pde` | Stencils (2D/3D Laplacian, periodic/Dirichlet), backward-Euler matrix builder |
+| `solve` | `num::solve(problem, algorithm)` dispatcher; `ODEProblem`, `MCMCProblem`, algorithm tags |
 | `spectral` | FFT, IFFT, RFFT, IRFFT; FFTW3 and native Cooley-Tukey backends; `FFTPlan` |
 | `analysis` | Trapz, Simpson, Gauss-Legendre, adaptive Simpson, Romberg; bisection, Newton, secant, Brent |
 | `stats` | `RunningStats` (Welford), `Histogram`, `autocorr_time` |
 | `markov` | Metropolis sweep, umbrella sampling; template-based, zero overhead |
-| `sparse` | CSR sparse matrix, `sparse_matvec` |
-| `banded` | Band-storage matrix, `banded_solve`, `banded_matvec` |
-| `spatial` | `CellList2D/3D`, `VerletList` |
-| `grid` | `Grid3D` scalar field |
+| `meshfree` | `CellList2D/3D`, `VerletList` -- particle-based and meshfree spatial structures |
 | `parallel` | CUDA and MPI interfaces (optional) |
 
 ### Backend dispatch
@@ -130,8 +159,6 @@ cmake --build build --target report
 Every compute-intensive operation accepts an optional `Backend` parameter:
 
 ```cpp
-#include "numerics.hpp"
-
 num::Matrix A(N, N), B(N, N), C(N, N);
 matmul(A, B, C);               // default -- blas if available, else blocked
 matmul(A, B, C, num::seq);     // naive triple loop
@@ -155,36 +182,38 @@ matmul(A, B, C, num::gpu);     // CUDA kernel
 
 The FFT module has its own `FFTBackend` enum (`seq` = Cooley-Tukey, `fftw` = FFTW3).
 
-### Quick example
+---
 
-```cpp
-#include "numerics.hpp"
-using namespace num;
+## Physics applications
 
-// Solve Ax = b
-SolverResult r = cg(A, b, x);
-SolverResult r = cg(A, b, x, 1e-10, 1000, blas);
+The `apps/` directory contains standalone interactive simulations built on the low-level API.
+Apps are **not built by default** — enable them individually or all at once.
 
-// Factorizations
-LUResult f = lu(A);
-lu_solve(f, b, x);
+| App | CMake flag | Description |
+|-----|-----------|-------------|
+| `apps/fluid_sim` | `NUMERICS_BUILD_FLUID_SIM` | 2D weakly-compressible SPH with heat transport and particle injection |
+| `apps/fluid_sim_3d` | `NUMERICS_BUILD_FLUID_SIM_3D` | 3D SPH with opposing hose jets and free-orbit camera |
+| `apps/ns_demo` | `NUMERICS_BUILD_NS_DEMO` | 2D incompressible Navier-Stokes, Chorin projection, real-time vorticity |
+| `apps/ising` | `NUMERICS_BUILD_ISING` | 2D Ising model -- interactive Metropolis with live temperature/field sliders |
+| `apps/ising_nucleation` | `NUMERICS_BUILD_ISING` | Umbrella-sampled nucleation, live nucleus size control |
+| `apps/tdse` | `NUMERICS_BUILD_TDSE` | 2D time-dependent Schrodinger equation, Strang splitting, Lanczos eigenmodes |
+| `apps/em_demo` | `NUMERICS_BUILD_EM_DEMO` | DC current flow + magnetostatics on a 32^3 voxel grid, matrix-free CG |
+| `apps/quantum_demo` | `NUMERICS_BUILD_QUANTUM_DEMO` | Quantum circuit statevector simulator |
+| `apps/nbody` | `NUMERICS_BUILD_NBODY` | N-body gravitational dynamics, symplectic Verlet |
 
-// Eigenvalues
-LanczosResult l = lanczos(matvec_fn, n, /*k=*/20);
+```bash
+# One app
+cmake -B build -DNUMERICS_BUILD_FLUID_SIM=ON
+cmake --build build -j$(nproc)
 
-// SVD
-SVDResult s = svd_truncated(A, /*k=*/10);
+# All apps
+cmake -B build -DNUMERICS_BUILD_APPS=ON
+cmake --build build -j$(nproc)
+```
 
-// FFT
-#include "spectral/fft.hpp"
-num::CVector X(n);
-num::spectral::fft(x, X);                           // default backend
-num::spectral::fft(x, X, num::spectral::seq);       // force Cooley-Tukey
-num::spectral::FFTPlan plan(n);                     // precomputed, reuse across frames
-plan.execute(x, X);
-
-// Quadrature
-real I = gauss_legendre([](real x){ return std::sin(x); }, 0.0, pi, 5);
+Apps require raylib (fetched automatically) and on Linux also need X11 headers:
+```bash
+sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
 ```
 
 ---
@@ -247,70 +276,35 @@ CMake reports detected backends at configure time:
 
 ---
 
-## Physics applications
-
-The `apps/` directory contains standalone simulations that use the library.
-Apps are **not built by default** -- enable them individually or all at once.
-
-| App | CMake flag | Description |
-|-----|-----------|-------------|
-| `apps/fluid_sim` | `NUMERICS_BUILD_FLUID_SIM` | 2D weakly-compressible SPH with heat transport and particle injection |
-| `apps/fluid_sim_3d` | `NUMERICS_BUILD_FLUID_SIM_3D` | 3D SPH with opposing hose jets and free-orbit camera |
-| `apps/ns_demo` | `NUMERICS_BUILD_NS_DEMO` | 2D incompressible Navier-Stokes, Chorin projection, real-time vorticity |
-| `apps/ising` | `NUMERICS_BUILD_ISING` | 2D Ising model -- Metropolis dynamics and umbrella-sampled nucleation |
-| `apps/tdse` | `NUMERICS_BUILD_TDSE` | 2D time-dependent Schrodinger equation, Strang splitting, Lanczos eigenmodes |
-| `apps/em_demo` | `NUMERICS_BUILD_EM_DEMO` | DC current flow + magnetostatics on a 32^3 voxel grid, matrix-free CG |
-| `apps/quantum_demo` | `NUMERICS_BUILD_QUANTUM_DEMO` | Quantum circuit demo |
-
-```bash
-# One app (use the flag from the table above)
-cmake -B build -DNUMERICS_BUILD_FLUID_SIM=ON
-cmake --build build -j$(nproc)
-
-# All apps
-cmake -B build -DNUMERICS_BUILD_APPS=ON
-cmake --build build -j$(nproc)
-```
-
-Apps require raylib (fetched automatically) and on Linux also need X11 headers:
-```bash
-sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
-```
-
----
-
 ## Project layout
 
 ```
 include/            Public headers (namespace num::)
-  core/             Vector, Matrix, types, policy, SmallMatrix
+  core/             Vector, Matrix, types, policy, backends
+  fields/           Grid2D, Grid3D, ScalarField2D/3D, VectorField3D
+  linalg/
+    solvers/        CG, GMRES, Jacobi, Gauss-Seidel; LinearSolver type
+    factorization/  LU, QR, Thomas
+    eigen/          Power iteration, Lanczos, dense Jacobi
+    svd/            Full and truncated SVD
+    sparse/         SparseMatrix (CSR), sparse_matvec
+    banded/         BandedMatrix, banded_solve
+  ode/              Euler, RK4, RK45, Verlet, Yoshida4; implicit advance
+  pde/              Stencils, Laplacian builders, diffusion operators
+  solve/            num::solve() dispatcher, ODEProblem, MCMCProblem, algorithm tags
   spectral/         FFT interface and FFTBackend enum
-  factorization/    LU, QR, Thomas
-  solvers/          CG, GMRES, Jacobi, Gauss-Seidel
-  eigen/            Power iteration, Lanczos, dense Jacobi
-  svd/              Full and truncated SVD
   analysis/         Quadrature, root finding
   stats/            RunningStats, Histogram, autocorr_time
-  markov/           Metropolis, umbrella sampling
-  banded/           BandedMatrix, banded_solve
-  sparse/           SparseMatrix (CSR), sparse_matvec
-  spatial/          CellList2D/3D, VerletList
-  grid/             Grid3D
+  stochastic/       Metropolis sweep, umbrella sampling
+  meshfree/         CellList2D/3D, VerletList (particle/meshfree methods)
   parallel/         CUDA and MPI interfaces
   numerics.hpp      Umbrella include
 
 src/                Implementations
-  core/backends/    seq / blas / omp / gpu / simd
-  spectral/         fft.cpp, backends/seq/impl.hpp, backends/fftw/impl.hpp
-  ...
-
-apps/               Physics simulations (not built by default)
+examples/           Batch demos using num::solve() (lorenz, heat, ising, fft)
+apps/               Interactive simulations using low-level per-step API
 tests/              GTest unit tests
 benchmarks/         Google Benchmark suite + gnuplot plots
-report/             Report generator (gen_report.cpp, template.md)
-output/             Generated files -- REPORT.md, plots/, JSON  [gitignored]
-cmake/              Build helpers
-docs/               Doxygen configuration and pages
 ```
 
 ---
@@ -318,18 +312,24 @@ docs/               Doxygen configuration and pages
 ## Module dependencies
 
 ```
-numerics.hpp
-  +-- core/          (types, Vector, Matrix, policy)
-  +-- spectral/      (FFT, FFTPlan)                  <- depends on core/
-  +-- analysis/      (quadrature, roots, stats)      <- no deps on other modules
-  +-- markov/        (mcmc, rng)                     <- depends on core/
-  +-- factorization/ (lu, qr, thomas)                <- depends on core/
-  +-- eigen/         (power, lanczos, jacobi_eig)    <- depends on core/, factorization/
-  +-- svd/                                           <- depends on core/, eigen/
-  +-- solvers/       (cg, gmres, jacobi, gauss_seidel) <- depends on core/
-  +-- sparse/                                        <- depends on core/
-  +-- banded/                                        <- depends on core/
-  +-- grid/                                          <- depends on core/
-  +-- spatial/       (CellList2D/3D, VerletList)     <- depends on core/
-  +-- parallel/      (cuda, mpi)                     <- optional, depends on core/
+core/          (types, Vector, Matrix, policy)
+  |
+  +-- fields/        (Grid2D, Grid3D, ScalarField -- geometry + field storage)
+  |
+  +-- linalg/        (sparse, solvers, factorization, eigen, svd)
+  |     |
+  |     +-- LinearSolver  (universal callable: A*x = rhs)
+  |
+  +-- ode/           (explicit: Euler/RK4/RK45/Verlet; implicit: advance)
+  |
+  +-- pde/           (stencils, matrix builders)   <- needs fields/ + linalg/
+  |
+  +-- solve/         (num::solve dispatcher)        <- needs ode/ + pde/ + stochastic/
+  |
+  +-- spectral/      (FFT)
+  +-- stochastic/    (Metropolis, umbrella)
+  +-- meshfree/      (CellList, VerletList -- particle methods)
+  +-- analysis/      (quadrature, roots)
+  +-- stats/
+  +-- parallel/      (CUDA, MPI -- optional)
 ```

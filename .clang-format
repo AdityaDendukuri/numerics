@@ -11,6 +11,7 @@ IndentCaseLabels: true
 IndentPPDirectives: BeforeHash
 NamespaceIndentation: None
 
+AlignConsecutiveDeclarations: true
 ColumnLimit: 80
 ReflowComments: true
 

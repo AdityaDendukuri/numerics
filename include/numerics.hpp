@@ -3,6 +3,7 @@
 #pragma once
 
 #include "analysis/analysis.hpp"
+#include "fields/fields.hpp"
 #include "stats/stats.hpp"
 #include "core/types.hpp"
 #include "core/policy.hpp"
@@ -21,5 +22,6 @@
 #include "core/util/integer_pow.hpp"
 #include "stochastic/markov.hpp"
 #include "ode/ode.hpp"
+#include "solve/solve.hpp"
 #include "spectral/fft.hpp"
 #include "plot/plot.hpp"

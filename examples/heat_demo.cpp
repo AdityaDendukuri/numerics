@@ -9,50 +9,39 @@
 #include "numerics.hpp"
 #include <string>
 
+using namespace num;
+
 int main() {
   const int N = 64;
-  const double kappa = 1.0;
-  const double sigma = 0.06;
-  const double T_end = 0.012;
-  const double h = 1.0 / (N + 1); // N interior nodes; boundaries fixed at 0
-  const double dt = 4.0 * h * h;  // 16x larger than explicit limit (0.25 h^2)
+  const double kappa = 1.0, sigma = 0.06, T_end = 0.012;
+  const double h = 1.0 / (N + 1);
+  const double dt = 4.0 * h * h;
   const int nstep = static_cast<int>(T_end / dt) + 1;
-  const double coeff = kappa * dt / (h * h); // kappa*dt/h^2
 
-  // Sparse backward Euler system matrix  A = I - coeff*L
-  num::ScalarField2D u(N, h);
-  num::SparseMatrix A = num::pde::backward_euler_matrix_2d(u, coeff);
-  num::SolveStep solver = num::pde::make_cg_solver(A);
+  // Build the implicit system: A = I - (kappa*dt/h^2)*L,
+  // solve A u^{n+1} = u^n. A is sparse SPD
+  // conjugate gradient converges in O(N) iterations
+  const double coeff = kappa * dt / (h * h);
+  Grid2D grid{N, h};
+  SparseMatrix A = pde::backward_euler_matrix(grid, coeff);
+  LinearSolver solver = make_cg_solver(A);
 
-  // Initial condition: 2D Gaussian centred at (0.5, 0.5)
-  auto initial_temperature = [=](double x, double y) {
-    return num::gaussian2d(x, y, 0.5, 0.5, sigma);
+  auto init_val = [=](double x, double y) {
+    return gaussian2d(x, y, 0.5, 0.5, sigma);
   };
 
-  // fill grid with the initial condition
-  num::fill_grid(u, initial_temperature);
+  ScalarField2D u0(grid, init_val);
+  ScalarField2D u = u0;
+  solve(u, BackwardEuler{.solver=solver, .dt=dt, .nstep=nstep});
 
-  // callback function should save snapshiots for plotting
-  num::ScalarField2D u0(N, h);
-  auto save_snapshots = [&](int step, double /*t*/,
-                            const num::ScalarField2D &state) {
-    if (step == 0) {
-      u0 = state;
-    }
-  };
+  // plotting
+  plt::subplot(1, 2);
+  plt::heatmap(u0);
+  plt::title("t = 0");
 
-  num::pde::diffusion_2d(u, solver, {nstep, dt}, save_snapshots);
+  plt::next();
+  plt::heatmap(u);
+  plt::title("t = " + std::to_string(T_end).substr(0, 6));
 
-  num::plt::subplot(2, 1);
-  num::plt::heatmap(u0);
-  num::plt::title("t = 0");
-  num::plt::xlabel("x");
-  num::plt::ylabel("y");
-  num::plt::next();
-
-  num::plt::heatmap(u);
-  num::plt::title("t = " + std::to_string(T_end).substr(0, 6));
-  num::plt::xlabel("x");
-
-  num::plt::savefig("heat_demo.png");
+  plt::savefig("heat_demo.png");
 }

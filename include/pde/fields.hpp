@@ -12,6 +12,7 @@
 #include "spatial/grid3d.hpp"
 #include "linalg/solvers/solvers.hpp"
 #include <array>
+#include <utility>
 #include <vector>
 
 namespace num {
@@ -66,6 +67,15 @@ class ScalarField3D {
     void fill(double v) {
         grid_.fill(v);
     }
+    /// Fill every cell with f(i, j, k).
+    template<typename F>
+    void fill(F&& f) { grid_.fill(std::forward<F>(f)); }
+
+    /// Construct and fill from callable f(i, j, k) -> double.
+    template<typename F>
+    ScalarField3D(int nx, int ny, int nz, float dx, F&& f,
+                  float ox = 0.0f, float oy = 0.0f, float oz = 0.0f)
+        : ScalarField3D(nx, ny, nz, dx, ox, oy, oz) { fill(std::forward<F>(f)); }
 
     /// Trilinear interpolation at world position (x,y,z).
     /// Returns 0 outside the grid domain.
