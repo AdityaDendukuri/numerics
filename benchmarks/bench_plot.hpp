@@ -122,9 +122,9 @@ static void plot_matmul(Gnuplot& gp, const std::vector<Run>& runs,
         {"Matmul_Naive",      "naive",       1},
         {"Matmul_Blocked",    "blocked",     2},
         {"Matmul_RegBlocked", "reg-blocked", 3},
-        {"Backend::simd",     "simd",        4},
-        {"Backend::blas",     "blas",        5},
-        {"Backend::omp",      "omp",         6},
+        {"BM_Matmul<Backend::simd",     "simd",        4},
+        {"BM_Matmul<Backend::blas",     "blas",        5},
+        {"BM_Matmul<Backend::omp",      "omp",         6},
     };
 
     // collect non-empty series first
@@ -380,15 +380,28 @@ static void plot_fft(Gnuplot& gp, const std::vector<Run>& runs,
 static void plot_banded(Gnuplot& gp, const std::vector<Run>& runs,
                          const std::string& outdir,
                          const std::string& ext = ".pdf") {
-    auto data = series_by_time(runs, "BM_Band");
+    struct Variant { std::string key; std::string label; int ls; };
+    std::vector<Variant> variants = {
+        {"BM_BandedSolve_Tridiagonal",  "tridiagonal",  1},
+        {"BM_BandedSolve_Pentadiagonal","pentadiagonal", 2},
+        {"BM_BandedSolve_General_KL2",  "general (kl=2)",3},
+        {"BM_BandedSolve_General_KL5",  "general (kl=5)",4},
+    };
+    std::vector<std::pair<Variant, Series>> data;
+    for (auto& v : variants) {
+        auto s = series_by_time(runs, v.key);
+        if (!s.empty()) data.emplace_back(v, std::move(s));
+    }
     if (data.empty()) return;
     gp << "set output '" + outdir + "/banded" + ext + "'\n"
        << "set title 'Banded Solver: time vs system size' font 'Times-Bold,14'\n"
        << "set xlabel 'n' font 'Times,12'\n"
        << "set ylabel 'Time ({/Symbol m}s)' font 'Times,12'\n";
     set_loglog(gp);
-    gp << plot_cmd({{"banded", 1}});
-    gp.send1d(data);
+    std::vector<std::pair<std::string,int>> labels;
+    for (auto& [v, _] : data) labels.emplace_back(v.label, v.ls);
+    gp << plot_cmd(labels);
+    for (auto& [_, s] : data) gp.send1d(s);
 }
 
 /// lu.pdf  -- GFLOP/s vs n: our seq vs our omp vs LAPACK
