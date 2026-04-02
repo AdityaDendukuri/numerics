@@ -19,6 +19,7 @@
 #include "core/vector.hpp"
 #include "plot/plot.hpp"
 #include "spatial/grid3d.hpp"
+#include "pde/scalar_field_2d.hpp"
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -225,6 +226,28 @@ inline Series col_slice(const Vector& u, int N, double h, int col) {
     }
     return s;
 }
+
+// ScalarField2D overloads -- N and h are carried by the grid
+
+template<typename F>
+void fill_grid(ScalarField2D& g, F&& f) {
+    fill_grid(g.vec(), g.N(), g.h(), std::forward<F>(f));
+}
+
+inline Series row_slice(const ScalarField2D& g, int row) {
+    return row_slice(g.vec(), g.N(), g.h(), row);
+}
+
+inline Series col_slice(const ScalarField2D& g, int col) {
+    return col_slice(g.vec(), g.N(), g.h(), col);
+}
+
+namespace plt {
+/// Heatmap overload for ScalarField2D -- no need to pass N or h separately.
+inline void heatmap(const ScalarField2D& g, double vmin = 0.0, double vmax = 1.0) {
+    heatmap<ScalarField2D>(g, g.N(), g.h(), vmin, vmax);
+}
+} // namespace plt
 
 // 3-D stencils  (Grid3D)
 

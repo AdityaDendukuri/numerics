@@ -10,48 +10,49 @@
 #include <string>
 
 int main() {
-    const int    N     = 64;
-    const double kappa = 1.0;
-    const double sigma = 0.06;
-    const double T_end = 0.012;
-    const double h     = 1.0 / (N + 1);  // N interior nodes; boundaries fixed at 0
-    const double dt    = 4.0 * h * h;    // 16x larger than explicit limit (0.25 h^2)
-    const int    nstep = static_cast<int>(T_end / dt) + 1;
-    const double coeff = kappa * dt / (h * h);  // kappa*dt/h^2
+  const int N = 64;
+  const double kappa = 1.0;
+  const double sigma = 0.06;
+  const double T_end = 0.012;
+  const double h = 1.0 / (N + 1); // N interior nodes; boundaries fixed at 0
+  const double dt = 4.0 * h * h;  // 16x larger than explicit limit (0.25 h^2)
+  const int nstep = static_cast<int>(T_end / dt) + 1;
+  const double coeff = kappa * dt / (h * h); // kappa*dt/h^2
 
-    // Sparse backward Euler system matrix  A = I - coeff*L
-    num::SparseMatrix A = num::pde::backward_euler_matrix_2d(N, coeff);
-    auto matvec = [&](const num::Vector& x, num::Vector& y) {
-        num::sparse_matvec(A, x, y);
-    };
+  // Sparse backward Euler system matrix  A = I - coeff*L
+  num::ScalarField2D u(N, h);
+  num::SparseMatrix A = num::pde::backward_euler_matrix_2d(u, coeff);
+  num::SolveStep solver = num::pde::make_cg_solver(A);
 
-    // Initial condition: Gaussian blob centred at (0.5, 0.5)
-    auto initial_temperature = [=](double x, double y) {
-        return num::gaussian2d(x, y, 0.5, 0.5, sigma);
-    };
-    num::Vector u(static_cast<std::size_t>(N) * N);
-    num::fill_grid(u, N, h, initial_temperature);
+  // Initial condition: 2D Gaussian centred at (0.5, 0.5)
+  auto initial_temperature = [=](double x, double y) {
+    return num::gaussian2d(x, y, 0.5, 0.5, sigma);
+  };
 
-    num::Vector u0 = u, u_mid;
+  // fill grid with the initial condition
+  num::fill_grid(u, initial_temperature);
 
-    // Solve A * u^{n+1} = u^n at each step (CG warm-starts from previous u)
-    for (int s = 0; s < nstep; ++s) {
-        if (s == nstep / 4) { u_mid = u; }
-        num::Vector rhs = u;
-        num::cg_matfree(matvec, rhs, u);
+  // callback function should save snapshiots for plotting
+  num::ScalarField2D u0(N, h);
+  auto save_snapshots = [&](int step, double /*t*/,
+                            const num::ScalarField2D &state) {
+    if (step == 0) {
+      u0 = state;
     }
+  };
 
-    num::plt::subplot(3, 1);
-    num::plt::heatmap(u0,    N, h); num::plt::title("t = 0");
-    num::plt::xlabel("x");  num::plt::ylabel("y");  num::plt::next();
+  num::pde::diffusion_2d(u, solver, {nstep, dt}, save_snapshots);
 
-    num::plt::heatmap(u_mid, N, h);
-    num::plt::title("t = " + std::to_string((nstep/4)*dt).substr(0, 6));
-    num::plt::xlabel("x");  num::plt::next();
+  num::plt::subplot(2, 1);
+  num::plt::heatmap(u0);
+  num::plt::title("t = 0");
+  num::plt::xlabel("x");
+  num::plt::ylabel("y");
+  num::plt::next();
 
-    num::plt::heatmap(u,     N, h);
-    num::plt::title("t = " + std::to_string(T_end).substr(0, 6));
-    num::plt::xlabel("x");
+  num::plt::heatmap(u);
+  num::plt::title("t = " + std::to_string(T_end).substr(0, 6));
+  num::plt::xlabel("x");
 
-    num::plt::savefig("heat_demo.png");
+  num::plt::savefig("heat_demo.png");
 }

@@ -18,6 +18,9 @@
 #include "core/vector.hpp"
 #include "core/policy.hpp"
 #include "linalg/sparse/sparse.hpp"
+#include "linalg/solvers/cg.hpp"
+#include "linalg/solvers/solver_result.hpp"
+#include <functional>
 #include <vector>
 
 namespace num::pde {
@@ -64,6 +67,16 @@ inline void diffusion_step_2d_4th_dirichlet(Vector& u,
     axpy(coeff, lap, u, b);
 }
 
+// ScalarField2D overloads
+
+inline void diffusion_step_2d_dirichlet(ScalarField2D& g, double coeff, Backend b = best_backend) {
+    diffusion_step_2d_dirichlet(g.vec(), g.N(), coeff, b);
+}
+
+inline void diffusion_step_2d_4th_dirichlet(ScalarField2D& g, double coeff, Backend b = best_backend) {
+    diffusion_step_2d_4th_dirichlet(g.vec(), g.N(), coeff, b);
+}
+
 /// Build the N^2 x N^2 sparse 5-point Laplacian matrix for an NxN Dirichlet
 /// grid. Entry (k,k) = -4, off-diagonals = +1 for each interior neighbor.
 inline SparseMatrix laplacian_sparse_2d(int N) {
@@ -107,6 +120,62 @@ inline SparseMatrix backward_euler_matrix_2d(int N, double coeff) {
         }
     }
     return SparseMatrix::from_triplets(n, n, rows, cols, vals);
+}
+
+/// ScalarField2D overload -- N is read from the grid.
+inline SparseMatrix backward_euler_matrix_2d(const ScalarField2D& g, double coeff) {
+    return backward_euler_matrix_2d(g.N(), coeff);
+}
+
+} // namespace num::pde
+
+namespace num {
+/// Callable type for one solve step:  f(rhs, x) solves A*x = rhs in-place.
+using SolveStep = std::function<SolverResult(const Vector&, Vector&)>;
+} // namespace num
+
+namespace num::pde {
+
+/// Returns a SolveStep that solves A*x = rhs using matrix-free CG.
+/// Captures A by reference -- A must outlive the returned callable.
+inline SolveStep make_cg_solver(const SparseMatrix& A, real tol = 1e-6) {
+    return [&A, tol](const Vector& rhs, Vector& x) {
+        auto matvec = [&A](const Vector& v, Vector& w) { sparse_matvec(A, v, w); };
+        return cg_matfree(matvec, rhs, x, tol);
+    };
+}
+
+// Time integration
+
+/// Parameters for diffusion_2d.
+struct DiffusionParams {
+    int    nstep; ///< Number of time steps
+    double dt;    ///< Step size (used to report t to the observer)
+};
+
+/// Advance u forward in time using the provided solver.
+/// observer(step, t, state) is called at step 0 (initial) and after each solve.
+template<typename Observer>
+inline void diffusion_2d(ScalarField2D&                u,
+                         const SolveStep&       solver,
+                         const DiffusionParams& params,
+                         Observer&&             observer) {
+    observer(0, 0.0, u);
+    for (int s = 0; s < params.nstep; ++s) {
+        Vector rhs = u.vec();
+        solver(rhs, u.vec());
+        observer(s + 1, (s + 1) * params.dt, u);
+    }
+}
+
+/// Overload without observer.
+inline void diffusion_2d(ScalarField2D&                u,
+                         const SolveStep&       solver,
+                         const DiffusionParams& params) {
+    for (int s = 0; s < params.nstep; ++s) {
+        Vector rhs = u.vec();
+        solver(rhs, u.vec());
+    }
 }
 
 } // namespace num::pde
