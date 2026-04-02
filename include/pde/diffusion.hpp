@@ -17,6 +17,8 @@
 #include "pde/stencil.hpp"
 #include "core/vector.hpp"
 #include "core/policy.hpp"
+#include "linalg/sparse/sparse.hpp"
+#include <vector>
 
 namespace num::pde {
 
@@ -60,6 +62,51 @@ inline void diffusion_step_2d_4th_dirichlet(Vector& u,
     Vector lap(u.size());
     laplacian_stencil_2d_4th(u, lap, N);
     axpy(coeff, lap, u, b);
+}
+
+/// Build the N^2 x N^2 sparse 5-point Laplacian matrix for an NxN Dirichlet
+/// grid. Entry (k,k) = -4, off-diagonals = +1 for each interior neighbor.
+inline SparseMatrix laplacian_sparse_2d(int N) {
+    const int n = N * N;
+    std::vector<idx>  rows, cols;
+    std::vector<real> vals;
+    rows.reserve(5 * n);
+    cols.reserve(5 * n);
+    vals.reserve(5 * n);
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            int k = i * N + j;
+            rows.push_back(k); cols.push_back(k); vals.push_back(-4.0);
+            if (i > 0)   { rows.push_back(k); cols.push_back((i-1)*N + j); vals.push_back(1.0); }
+            if (i < N-1) { rows.push_back(k); cols.push_back((i+1)*N + j); vals.push_back(1.0); }
+            if (j > 0)   { rows.push_back(k); cols.push_back(i*N + (j-1)); vals.push_back(1.0); }
+            if (j < N-1) { rows.push_back(k); cols.push_back(i*N + (j+1)); vals.push_back(1.0); }
+        }
+    }
+    return SparseMatrix::from_triplets(n, n, rows, cols, vals);
+}
+
+/// Build the backward Euler system matrix  A = I - coeff*L
+/// where L = laplacian_sparse_2d(N) and coeff = kappa*dt/h^2.
+/// Solve  A * u^{n+1} = u^n  at each time step.
+inline SparseMatrix backward_euler_matrix_2d(int N, double coeff) {
+    const int n = N * N;
+    std::vector<idx>  rows, cols;
+    std::vector<real> vals;
+    rows.reserve(5 * n);
+    cols.reserve(5 * n);
+    vals.reserve(5 * n);
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            int k = i * N + j;
+            rows.push_back(k); cols.push_back(k); vals.push_back(1.0 + 4.0 * coeff);
+            if (i > 0)   { rows.push_back(k); cols.push_back((i-1)*N + j); vals.push_back(-coeff); }
+            if (i < N-1) { rows.push_back(k); cols.push_back((i+1)*N + j); vals.push_back(-coeff); }
+            if (j > 0)   { rows.push_back(k); cols.push_back(i*N + (j-1)); vals.push_back(-coeff); }
+            if (j < N-1) { rows.push_back(k); cols.push_back(i*N + (j+1)); vals.push_back(-coeff); }
+        }
+    }
+    return SparseMatrix::from_triplets(n, n, rows, cols, vals);
 }
 
 } // namespace num::pde
