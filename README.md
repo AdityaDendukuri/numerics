@@ -7,7 +7,7 @@ without changing the call site.
 
 ## Why numerics?
 
-`numerics` started off as my attempt to standardize all of the code I had written throughout my research projects and courses. Over time, that snowballed into a much more structured package that, in many ways, functions like a C++ analogue of NumPy/SciPy — but designed around C++20 and built for performance from the ground up.
+`numerics` started off as my attempt to standardize all of the code I had written throughout my research projects and courses. Over time, that snowballed into a much more structured package that, in many ways, functions like a C++ analogue of NumPy/SciPy (but designed around C++20 and built for performance from the ground up).
 
 ---
 
@@ -17,7 +17,7 @@ The library exposes two levels of abstraction. You can use either, or mix them.
 
 ### High-level: `num::solve(problem, algorithm)`
 
-Modelled after Julia's SciML ecosystem. Problems carry the mathematics; algorithms carry the numerics. Swapping the algorithm never touches the problem.
+Modelled after Julia's SciML ecosystem. The problem struct encodes the mathematical formulation; the algorithm struct encodes the numerical method. The two are decoupled; changing the algorithm requires no edits to the problem definition.
 
 ```cpp
 // Explicit ODE (Lorenz attractor)
@@ -107,30 +107,42 @@ target_link_libraries(my_app PRIVATE numerics)
 
 ## Status report
 
-Every push to `main` runs the full test + benchmark suite in CI and publishes a status
-report directly on the Actions run page.
-
-**To view it:**
-1. Go to the repo on GitHub -> **Actions** tab
-2. Open the latest run on `main`
-3. Click the **Report** job
-4. The rendered `REPORT.md` appears under **Summary**.
-
 The report covers: build environment (compiler, detected backends), test pass/fail counts
 per suite, benchmark throughput tables for every module, and throughput-vs-size plots.
 Sections whose backend was absent at configure time show placeholders.
 
-To generate the report locally:
+**Run it first thing after cloning** to verify which backends are active on your machine
+and get a baseline of what performance to expect:
 
 ```bash
+git clone https://github.com/AdityaDendukuri/numerics
 cmake -B build \
   -DNUMERICS_BUILD_TESTS=ON \
   -DNUMERICS_BUILD_BENCHMARKS=ON \
   -DNUMERICS_BUILD_REPORT=ON
 cmake --build build -j$(nproc)
 cmake --build build --target report
-# output/REPORT.md, output/plots/*.png
+# output/REPORT.md  — open this to see your system's results
+# output/plots/*.png — throughput-vs-size curves per module
 ```
+
+CMake reports detected backends at configure time:
+
+```
+-- BLAS:   found (/usr/lib/libopenblas.so)
+-- FFTW3:  found (fftw3)
+-- OpenMP: found (4.5)
+-- SIMD:   NEON (AArch64)
+-- CUDA:   not found
+```
+
+Install and reconfigure if missing a backend — the benchmarks will automatically pick it
+up and the report will show the new numbers alongside the fallback paths.
+
+Every push to `main` also runs the full suite in CI. To read the latest CI report:
+1. Go to the repo on GitHub → **Actions** tab
+2. Open the latest run on `main`
+3. Click the **Report** job → rendered `REPORT.md` appears under **Summary**.
 
 ---
 
