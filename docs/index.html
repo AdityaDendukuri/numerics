@@ -182,6 +182,7 @@ target_link_libraries(my_app PRIVATE numerics)</code></pre>
     <button class="ex-tab active" onclick="showEx(0)">Lorenz attractor</button>
     <button class="ex-tab"        onclick="showEx(1)">FFT power spectrum</button>
     <button class="ex-tab"        onclick="showEx(2)">Ising phase transition</button>
+    <button class="ex-tab"        onclick="showEx(3)">2D heat equation</button>
   </div>
 
   <!-- Panel 0: Lorenz -->
@@ -304,6 +305,56 @@ int main() {
     <div class="example-fig">
       <img src="ising_demo.png" alt="Ising magnetization vs temperature">
       <div class="cap"><strong>Ising phase transition</strong> — <code>num::markov::metropolis_sweep_prob</code> + <code>num::PBCLattice2D</code>; |m| drops at T<sub>c</sub> ≈ 2.27</div>
+    </div>
+  </div>
+
+  <!-- Panel 3: 2D heat equation -->
+  <div class="ex-panel" id="ex-3">
+    <div class="example-code">
+      <pre><code class="language-cpp">#include "numerics.hpp"
+#include &lt;string&gt;
+
+int main() {
+    const int    N     = 64;
+    const double kappa = 1.0, sigma = 0.06, T_end = 0.012;
+    const double h     = 1.0 / (N + 1);  // N interior nodes; boundaries held at 0
+    const double dt    = 0.20 * h * h;   // explicit Euler stable for dt &lt; 0.25 h^2
+    const int    nstep = static_cast&lt;int&gt;(T_end / dt) + 1;
+
+    // flat NxN field; fill_grid evaluates f(x,y) at each interior node
+    num::Vector u(static_cast&lt;std::size_t&gt;(N) * N);
+    num::fill_grid(u, N, h, [=](double x, double y) {
+        return num::gaussian2d(x, y, 0.5, 0.5, sigma);
+    });
+
+    num::Vector u0 = u, u_mid;
+    const double coeff = kappa * dt / (h * h);  // kappa*dt/h^2, passed to each step
+
+    // advance u_t = kappa*lap(u)
+    for (int s = 0; s &lt; nstep; ++s) {
+        if (s == nstep / 4) { u_mid = u; }
+        num::pde::diffusion_step_2d_dirichlet(u, N, coeff);
+    }
+
+    // column of three heatmaps: t=0, t=T/4, t=T
+    num::plt::subplot(3, 1);
+    num::plt::heatmap(u0,    N, h); num::plt::title("t = 0");
+    num::plt::xlabel("x");  num::plt::ylabel("y");  num::plt::next();
+
+    num::plt::heatmap(u_mid, N, h);
+    num::plt::title("t = " + std::to_string((nstep/4)*dt).substr(0,6));
+    num::plt::xlabel("x");  num::plt::next();
+
+    num::plt::heatmap(u,     N, h);
+    num::plt::title("t = " + std::to_string(T_end).substr(0,6));
+    num::plt::xlabel("x");
+
+    num::plt::savefig("heat_demo.png");
+}</code></pre>
+    </div>
+    <div class="example-fig">
+      <img src="heat_demo.png" alt="2D heat equation — Gaussian spreading">
+      <div class="cap"><strong>2D heat equation</strong> — Gaussian blob spreading on [0,1]² (t = 0 → T/4 → T); <code>num::pde::diffusion_step_2d_dirichlet</code> + <code>num::plt::heatmap</code></div>
     </div>
   </div>
 

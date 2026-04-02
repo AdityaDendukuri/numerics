@@ -17,6 +17,7 @@
 #pragma once
 
 #include "core/vector.hpp"
+#include "plot/plot.hpp"
 #include "spatial/grid3d.hpp"
 #include <vector>
 #include <algorithm>
@@ -72,6 +73,42 @@ void laplacian_stencil_2d_periodic(const BasicVector<T>& x,
         // j = N-1: right neighbor wraps to j = 0
         d[N - 1] = row_p[N - 1] + row_m[N - 1] + row[0] + row[N - 2]
                    - T(4) * row[N - 1];
+    }
+}
+
+/// 4th-order accurate 2D Laplacian: 13-point cross stencil, Dirichlet BCs.
+///
+/// Sums the standard 4th-order 1D stencil independently along each axis:
+/// \f[
+///   y_{i,j} = \tfrac{1}{12}\bigl(
+///     -x_{i-2,j} + 16x_{i-1,j} - 30x_{i,j} + 16x_{i+1,j} - x_{i+2,j}
+///     -x_{i,j-2} + 16x_{i,j-1}              + 16x_{i,j+1} - x_{i,j+2}
+///   \bigr)
+/// \f]
+///
+/// Out-of-bounds neighbors are treated as 0 (Dirichlet).
+/// Divide by h² to recover the discrete Laplacian: \f$\nabla^2 u \approx y/h^2\f$.
+/// Truncation error: \f$O(h^4)\f$.
+template<typename T>
+void laplacian_stencil_2d_4th(const BasicVector<T>& x, BasicVector<T>& y, int N) {
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            int k   = i * N + j;
+            T   val = T(-30) * x[k];
+            // i-axis: ±1
+            if (i > 0)     val += T(16) * x[(i - 1) * N + j];
+            if (i < N - 1) val += T(16) * x[(i + 1) * N + j];
+            // i-axis: ±2
+            if (i > 1)     val -= x[(i - 2) * N + j];
+            if (i < N - 2) val -= x[(i + 2) * N + j];
+            // j-axis: ±1
+            if (j > 0)     val += T(16) * x[k - 1];
+            if (j < N - 1) val += T(16) * x[k + 1];
+            // j-axis: ±2
+            if (j > 1)     val -= x[k - 2];
+            if (j < N - 2) val -= x[k + 2];
+            y[k] = val / T(12);
+        }
     }
 }
 
@@ -151,6 +188,42 @@ void row_fiber_sweep(BasicVector<T>& data, int N, F&& f) {
         for (int j = 0; j < N; ++j)
             data[i * N + j] = fiber[j];
     }
+}
+
+// 2-D grid utilities
+
+/// Initialize an NxN field (row-major, node (i,j) at ((i+1)*h, (j+1)*h))
+/// from a callable f(x, y) -> real.
+template<typename F>
+void fill_grid(Vector& u, int N, double h, F&& f) {
+    for (int i = 0; i < N; ++i) {
+        double xi = (i + 1) * h;
+        for (int j = 0; j < N; ++j) {
+            u[static_cast<std::size_t>(i) * N + j] = f(xi, (j + 1) * h);
+        }
+    }
+}
+
+/// Extract row `row` of an NxN field as an (x, value) Series;
+/// node j sits at x = (j+1)*h.
+inline Series row_slice(const Vector& u, int N, double h, int row) {
+    Series s;
+    s.reserve(static_cast<std::size_t>(N));
+    for (int j = 0; j < N; ++j) {
+        s.store((j + 1) * h, u[static_cast<std::size_t>(row) * N + j]);
+    }
+    return s;
+}
+
+/// Extract column `col` of an NxN field as a (y, value) Series;
+/// node i sits at y = (i+1)*h.
+inline Series col_slice(const Vector& u, int N, double h, int col) {
+    Series s;
+    s.reserve(static_cast<std::size_t>(N));
+    for (int i = 0; i < N; ++i) {
+        s.store((i + 1) * h, u[static_cast<std::size_t>(i) * N + col]);
+    }
+    return s;
 }
 
 // 3-D stencils  (Grid3D)

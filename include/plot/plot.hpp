@@ -125,13 +125,24 @@ struct SeriesEntry {
     std::string style; // gnuplot "with" clause, e.g. "lines"
 };
 
+/// 2-D field snapshot for heatmap rendering via gnuplot pm3d map.
+struct HeatmapEntry {
+    std::vector<double> data; // NxN row-major values
+    int    N    = 0;
+    double h    = 1.0;
+    double vmin = 0.0;
+    double vmax = 1.0;
+};
+
 struct Panel {
-    std::vector<SeriesEntry> series;
-    std::string              title_, xlabel_, ylabel_;
-    std::string              xrange_, yrange_;
-    bool                     legend_ = false;
-    bool                     logx_   = false;
-    bool                     logy_   = false;
+    std::vector<SeriesEntry>  series;
+    std::vector<HeatmapEntry> heatmaps;
+    std::string               title_, xlabel_, ylabel_;
+    std::string               xrange_, yrange_;
+    std::string               palette_; // gnuplot palette string; empty = hot/fire
+    bool                      legend_ = false;
+    bool                      logx_   = false;
+    bool                      logy_   = false;
 };
 
 struct State {
@@ -152,10 +163,10 @@ inline State& state() {
 // Write all datablocks for a panel, then emit the plot command for that panel.
 // block_offset: index of the first $d_N block allocated to this panel.
 inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
-    if (p.series.empty())
+    if (p.series.empty() && p.heatmaps.empty())
         return;
 
-    // Labels / decorators
+    // Common decorators
     if (!p.title_.empty())
         fprintf(pipe, "set title '%s'\n", p.title_.c_str());
     else
@@ -168,52 +179,76 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
         fprintf(pipe, "set ylabel '%s'\n", p.ylabel_.c_str());
     else
         fputs("unset ylabel\n", pipe);
-    if (!p.xrange_.empty())
-        fprintf(pipe, "set xrange %s\n", p.xrange_.c_str());
-    else
-        fputs("set xrange [*:*]\n", pipe);
-    if (!p.yrange_.empty())
-        fprintf(pipe, "set yrange %s\n", p.yrange_.c_str());
-    else
-        fputs("set yrange [*:*]\n", pipe);
 
-    if (p.logx_ && p.logy_) {
-        fputs(
-            "set logscale xy\nset format x '10^{%L}'\nset format y '10^{%L}'\n",
-            pipe);
-    } else if (p.logx_) {
-        fputs("set logscale x\nset format x '10^{%L}'\n", pipe);
-    } else if (p.logy_) {
-        fputs("set logscale y\nset format y '10^{%L}'\n", pipe);
-    } else {
-        fputs("unset logscale\n", pipe);
-    }
-
-    if (p.legend_) {
-        fputs("set key top right Left reverse samplen 3 spacing 1.2\nset key "
-              "box lt 1 lw 0.5\n",
-              pipe);
-    } else {
-        fputs("unset key\n", pipe);
-    }
-
-    // plot command — references pre-written datablocks
-    fputs("plot ", pipe);
-    for (std::size_t i = 0; i < p.series.size(); ++i) {
-        if (i)
-            fputs(", ", pipe);
-        const auto& e = p.series[i];
-        fprintf(pipe,
-                "$d_%d with %s ls %zu",
-                block_offset + (int)i,
-                e.style.c_str(),
-                i + 1);
-        if (!e.label.empty())
-            fprintf(pipe, " title '%s'", e.label.c_str());
+    if (!p.heatmaps.empty()) {
+        // Heatmap panel — rendered with pm3d map
+        const auto& hm = p.heatmaps[0];
+        if (!p.palette_.empty())
+            fprintf(pipe, "set palette %s\n", p.palette_.c_str());
         else
-            fputs(" notitle", pipe);
+            fputs("set palette defined "
+                  "(0 'white', 0.35 '#ffffb2', 0.65 '#fd8d3c', 1 '#bd0026')\n",
+                  pipe);
+        fprintf(pipe, "set cbrange [%g:%g]\n", hm.vmin, hm.vmax);
+        fputs("set pm3d map\n", pipe);
+        fputs("set size ratio 1\n", pipe);
+        if (!p.xrange_.empty())
+            fprintf(pipe, "set xrange %s\n", p.xrange_.c_str());
+        else
+            fputs("set xrange [*:*]\n", pipe);
+        if (!p.yrange_.empty())
+            fprintf(pipe, "set yrange %s\n", p.yrange_.c_str());
+        else
+            fputs("set yrange [*:*]\n", pipe);
+        fputs("unset key\n", pipe);
+        fprintf(pipe, "splot $d_%d with pm3d notitle\n", block_offset);
+    } else {
+        // Line-plot panel
+        fputs("unset pm3d\n", pipe);
+        if (!p.xrange_.empty())
+            fprintf(pipe, "set xrange %s\n", p.xrange_.c_str());
+        else
+            fputs("set xrange [*:*]\n", pipe);
+        if (!p.yrange_.empty())
+            fprintf(pipe, "set yrange %s\n", p.yrange_.c_str());
+        else
+            fputs("set yrange [*:*]\n", pipe);
+
+        if (p.logx_ && p.logy_) {
+            fputs("set logscale xy\nset format x '10^{%L}'\nset format y '10^{%L}'\n",
+                  pipe);
+        } else if (p.logx_) {
+            fputs("set logscale x\nset format x '10^{%L}'\n", pipe);
+        } else if (p.logy_) {
+            fputs("set logscale y\nset format y '10^{%L}'\n", pipe);
+        } else {
+            fputs("unset logscale\n", pipe);
+        }
+
+        if (p.legend_) {
+            fputs("set key top right Left reverse samplen 3 spacing 1.2\n"
+                  "set key box lt 1 lw 0.5\n", pipe);
+        } else {
+            fputs("unset key\n", pipe);
+        }
+
+        fputs("plot ", pipe);
+        for (std::size_t i = 0; i < p.series.size(); ++i) {
+            if (i)
+                fputs(", ", pipe);
+            const auto& e = p.series[i];
+            fprintf(pipe,
+                    "$d_%d with %s ls %zu",
+                    block_offset + (int)i,
+                    e.style.c_str(),
+                    i + 1);
+            if (!e.label.empty())
+                fprintf(pipe, " title '%s'", e.label.c_str());
+            else
+                fputs(" notitle", pipe);
+        }
+        fputc('\n', pipe);
     }
-    fputc('\n', pipe);
 }
 
 inline void flush_to(FILE* pipe, const std::string& outfile) {
@@ -262,13 +297,26 @@ inline void flush_to(FILE* pipe, const std::string& outfile) {
     // Write all datablocks up front (required for multiplot; harmless for
     // single)
     int block = 0;
-    for (const auto& p : all)
+    for (const auto& p : all) {
         for (const auto& e : p.series) {
             fprintf(pipe, "$d_%d << EOD\n", block++);
             for (const auto& [x, y] : e.data)
                 fprintf(pipe, "%.15g %.15g\n", x, y);
             fputs("EOD\n", pipe);
         }
+        for (const auto& hm : p.heatmaps) {
+            fprintf(pipe, "$d_%d << EOD\n", block++);
+            for (int i = 0; i < hm.N; ++i) {
+                double xi = (i + 1) * hm.h;
+                for (int j = 0; j < hm.N; ++j)
+                    fprintf(pipe, "%.8g %.8g %.8g\n",
+                            xi, (j + 1) * hm.h,
+                            hm.data[static_cast<std::size_t>(i) * hm.N + j]);
+                fputs("\n", pipe);
+            }
+            fputs("EOD\n", pipe);
+        }
+    }
 
     if (multiplot) {
         fprintf(pipe,
@@ -278,7 +326,7 @@ inline void flush_to(FILE* pipe, const std::string& outfile) {
         int off = 0;
         for (const auto& p : all) {
             write_panel(pipe, p, off);
-            off += (int)p.series.size();
+            off += (int)p.series.size() + (int)p.heatmaps.size();
         }
         fputs("unset multiplot\n", pipe);
     } else {
@@ -350,6 +398,43 @@ inline void semilogy() {
 /// Log x-axis only.
 inline void semilogx() {
     detail::state().current.logx_ = true;
+}
+
+// -- 2-D heatmap --------------------------------------------------------------
+
+/// Add a 2-D heatmap to the current panel.
+/// @tparam Container  Any type with .data() and .size() (num::Vector,
+///                    std::vector<double>, etc.)
+/// @param u    NxN row-major field values
+/// @param N    Grid side length
+/// @param h    Grid spacing (node (i,j) lives at ((i+1)*h, (j+1)*h))
+/// @param vmin Lower bound of the colour scale (default 0)
+/// @param vmax Upper bound of the colour scale (default 1)
+///
+/// @code
+///   num::plt::subplot(1, 3);
+///   num::plt::heatmap(u0,   N, h); num::plt::title("t = 0");    num::plt::next();
+///   num::plt::heatmap(u_mid,N, h); num::plt::title("t = T/2");  num::plt::next();
+///   num::plt::heatmap(u,    N, h); num::plt::title("t = T");
+///   num::plt::savefig("heat.png");
+/// @endcode
+template<typename Container>
+inline void heatmap(const Container& u,
+                    int              N,
+                    double           h,
+                    double           vmin = 0.0,
+                    double           vmax = 1.0) {
+    detail::HeatmapEntry e;
+    e.data.assign(u.data(), u.data() + u.size());
+    e.N = N; e.h = h; e.vmin = vmin; e.vmax = vmax;
+    detail::state().current.heatmaps.push_back(std::move(e));
+}
+
+/// Override the gnuplot palette for the current panel's heatmap.
+/// @param palette  A gnuplot palette definition string, e.g.
+///                 "defined (0 'blue', 1 'red')"  or  "rgbformulae 33,13,10"
+inline void colormap(const std::string& palette) {
+    detail::state().current.palette_ = palette;
 }
 
 // -- Multiplot ----------------------------------------------------------------

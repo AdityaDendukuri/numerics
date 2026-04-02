@@ -6,3 +6,6 @@ target_link_libraries(fft_demo PRIVATE numerics)
 
 add_executable(ising_demo ising_demo.cpp)
 target_link_libraries(ising_demo PRIVATE numerics)
+
+add_executable(heat_demo heat_demo.cpp)
+target_link_libraries(heat_demo PRIVATE numerics)

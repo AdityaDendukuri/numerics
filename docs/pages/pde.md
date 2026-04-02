@@ -30,9 +30,38 @@ void num::laplacian_stencil_2d(const Vector& x, Vector& y, int N);
 void num::laplacian_stencil_2d_periodic(const Vector& x, Vector& y, int N);
 ```
 
-Both compute the 5-point discrete Laplacian:
+All three stencils return `h² ∇²u` — divide by h² to recover the Laplacian:
+
+| Function | Points | Order |
+|----------|--------|-------|
+| `laplacian_stencil_2d` | 5 (cross) | O(h²), Dirichlet |
+| `laplacian_stencil_2d_periodic` | 5 (cross) | O(h²), periodic |
+| `laplacian_stencil_2d_4th` | 13 (extended cross) | O(h⁴), Dirichlet |
+
+The standard 5-point stencil:
 
 \f[y_{i,j} = x_{i+1,j} + x_{i-1,j} + x_{i,j+1} + x_{i,j-1} - 4\,x_{i,j}\f]
+
+The 4th-order 13-point stencil:
+
+\f[
+  y_{i,j} = \frac{1}{12}\bigl(
+    -x_{i-2,j} + 16\,x_{i-1,j} - 30\,x_{i,j} + 16\,x_{i+1,j} - x_{i+2,j}
+    -x_{i,j-2} + 16\,x_{i,j-1}               + 16\,x_{i,j+1} - x_{i,j+2}
+  \bigr)
+\f]
+
+### 2D grid utilities
+
+```cpp
+// Initialise an NxN field from a callable f(x,y) -> real
+template<typename F>
+void num::fill_grid(Vector& u, int N, double h, F&& f);
+
+// Extract a row/column as a plottable Series (node k at (k+1)*h)
+num::Series num::row_slice(const Vector& u, int N, double h, int row);
+num::Series num::col_slice(const Vector& u, int N, double h, int col);
+```
 
 with Dirichlet or periodic treatment at the boundaries.
 

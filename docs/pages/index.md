@@ -55,6 +55,24 @@ This is what the plot generates:
 
 ---
 
+## Example: 2D heat equation
+
+@subpage page_heat_demo
+
+`num::laplacian_stencil_2d_4th` -- the O(h⁴) 13-point cross stencil -- integrates the heat equation forward in time. `num::fill_grid` + `num::gaussian2d` set up the IC; `num::row_slice` extracts a plottable cross-section:
+
+```cpp
+num::fill_grid(u, N, h, [=](double x, double y) {
+    return num::gaussian2d(x, y, 0.5, 0.5, sigma);   // Gaussian heat source
+});
+// ...explicit Euler with 4th-order Laplacian...
+num::plt::plot(num::row_slice(u, N, h, N/2), "t = 0.05");
+```
+
+\image html heat_demo.png "Slice u(x, 0.5): initial Gaussian source and diffused distribution at t=0.05." width=700px
+
+---
+
 ## Library Modules
 
 ### core -- Vectors, matrices, and backend dispatch

@@ -307,4 +307,13 @@ inline int rng_int(Rng* r, int lo, int hi) {
     return std::uniform_int_distribution<int>{lo, hi}(r->engine);
 }
 
+// Spatial distributions
+
+/// @brief 2D isotropic Gaussian centred at \f$(c_x, c_y)\f$ with width \f$\sigma\f$:
+/// \f$\exp\!\bigl(-\tfrac{(x-c_x)^2+(y-c_y)^2}{2\sigma^2}\bigr)\f$
+inline real gaussian2d(real x, real y, real cx, real cy, real sigma) {
+    real dx = x - cx, dy = y - cy;
+    return std::exp(-((dx * dx) + (dy * dy)) / (2.0 * sigma * sigma));
+}
+
 } // namespace num

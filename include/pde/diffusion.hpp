@@ -48,4 +48,18 @@ inline void diffusion_step_2d_dirichlet(Vector& u,
     axpy(coeff, lap, u, b);
 }
 
+/// Explicit Euler diffusion step with Dirichlet BCs and 4th-order Laplacian:
+///   u += coeff * Lap4_dirichlet(u)
+///
+/// coeff = alpha*dt/h^2. Stability requires coeff <= ~0.08 (vs 0.25 for 2nd order)
+/// due to the larger spectral radius of the 13-point stencil.
+inline void diffusion_step_2d_4th_dirichlet(Vector& u,
+                                            int     N,
+                                            double  coeff,
+                                            Backend b = best_backend) {
+    Vector lap(u.size());
+    laplacian_stencil_2d_4th(u, lap, N);
+    axpy(coeff, lap, u, b);
+}
+
 } // namespace num::pde
