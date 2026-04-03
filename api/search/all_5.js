@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['4_0',['Classic RK4 &amp;ndash; O(h^4)',['../page_ode.html#autotoc_md311',1,'']]],
+  ['4_20—_20quantum_20teleportation_203_20qubits_1',['4 — Quantum Teleportation  (3 qubits)',['../md__2home_2runner_2work_2numerics_2numerics_2apps_2quantum__demo_2README.html#autotoc_md1031',1,'']]],
+  ['4_201_20cg_20on_20gpu_2',['4.1 CG on GPU',['../page_week4.html#autotoc_md690',1,'']]],
+  ['4_201_20operation_20counts_3',['4.1 Operation Counts',['../page_week5.html#autotoc_md721',1,'']]],
+  ['4_202_20comparison_20with_20dense_20and_20tridiagonal_4',['4.2 Comparison with Dense and Tridiagonal',['../page_week5.html#autotoc_md722',1,'']]],
+  ['4_202_20thomas_20algorithm_20on_20gpu_5',['4.2 Thomas Algorithm on GPU',['../page_week4.html#autotoc_md693',1,'']]],
+  ['4_203_20memory_20bandwidth_20analysis_6',['4.3 Memory Bandwidth Analysis',['../page_week5.html#autotoc_md723',1,'']]],
+  ['4_20api_20reference_7',['4. API Reference',['../page_week9.html#autotoc_md868',1,'']]],
+  ['4_20benchmark_20results_20ndash_20a_20surprise_8',['4. Benchmark Results &amp;ndash; A Surprise',['../page_week7.html#autotoc_md800',1,'']]],
+  ['4_20code_20references_9',['9.4 Code References',['../page_week5.html#autotoc_md749',1,'']]],
+  ['4_20collective_20operations_10',['4. Collective Operations',['../page_week2.html#autotoc_md608',1,'']]],
+  ['4_20common_20patterns_11',['4. Common Patterns',['../page_week3.html#autotoc_md648',1,'']]],
+  ['4_20compile_20time_20dispatch_12',['4. Compile-Time Dispatch',['../page_week8.html#autotoc_md834',1,'']]],
+  ['4_20complexity_20analysis_13',['4 complexity analysis',['../page_week4.html#autotoc_md686',1,'3.4 Complexity Analysis'],['../page_week5.html#autotoc_md720',1,'4. Complexity Analysis']]],
+  ['4_20convergence_20analysis_14',['2.4 Convergence Analysis',['../page_week4.html#autotoc_md679',1,'']]],
+  ['4_20cuda_20implementation_15',['4. CUDA Implementation',['../page_week4.html#autotoc_md689',1,'']]],
+  ['4_20linear_20algebra_20fundamentals_16',['4. Linear Algebra Fundamentals',['../page_week1.html#autotoc_md579',1,'']]],
+  ['4_20multiple_20right_20hand_20sides_17',['6.4 Multiple Right-Hand Sides',['../page_week5.html#autotoc_md734',1,'']]],
+  ['4_20solving_20after_20factorization_18',['3.4 Solving After Factorization',['../page_week5.html#autotoc_md718',1,'']]],
+  ['4_20symplectic_19',['Yoshida 4th-order &amp;ndash; O(h^4), symplectic',['../page_ode.html#autotoc_md314',1,'']]],
+  ['4_20the_20blocking_20idea_20',['4. The Blocking Idea',['../page_week6.html#autotoc_md763',1,'']]],
+  ['4_20via_20single_20view_20algorithm_21',['Avoiding Step 4 via Single-View Algorithm',['../page_svd_random_notes.html#autotoc_md553',1,'']]],
+  ['4_3a_20linear_20solvers_20theory_20and_20parallel_20implementation_22',['Week 4: Linear Solvers -- Theory and Parallel Implementation',['../page_week4.html',1,'index']]],
+  ['4_3a_20projection_20f_24b_20q_20ta_20f_24_23',['Step 4: Projection \f$B = Q^TA\f$',['../page_svd_random_notes.html#autotoc_md539',1,'']]],
+  ['4th_20order_20ndash_20o_20h_204_20symplectic_24',['Yoshida 4th-order &amp;ndash; O(h^4), symplectic',['../page_ode.html#autotoc_md314',1,'']]]
+];

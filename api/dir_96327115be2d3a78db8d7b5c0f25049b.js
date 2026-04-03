@@ -1,0 +1,4 @@
+var dir_96327115be2d3a78db8d7b5c0f25049b =
+[
+    [ "ising", "dir_e852f0d39e729599c37f864824739e91.html", "dir_e852f0d39e729599c37f864824739e91" ]
+];

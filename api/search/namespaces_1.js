@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['nbody_0',['nbody',['../namespacenbody.html',1,'']]],
+  ['ns_1',['ns',['../namespacens.html',1,'']]],
+  ['num_2',['num',['../namespacenum.html',1,'']]],
+  ['num_3a_3abackends_3',['backends',['../namespacenum_1_1backends.html',1,'num']]],
+  ['num_3a_3abackends_3a_3ablas_4',['blas',['../namespacenum_1_1backends_1_1blas.html',1,'num::backends']]],
+  ['num_3a_3abackends_3a_3agpu_5',['gpu',['../namespacenum_1_1backends_1_1gpu.html',1,'num::backends']]],
+  ['num_3a_3abackends_3a_3alapack_6',['lapack',['../namespacenum_1_1backends_1_1lapack.html',1,'num::backends']]],
+  ['num_3a_3abackends_3a_3aomp_7',['omp',['../namespacenum_1_1backends_1_1omp.html',1,'num::backends']]],
+  ['num_3a_3abackends_3a_3aseq_8',['seq',['../namespacenum_1_1backends_1_1seq.html',1,'num::backends']]],
+  ['num_3a_3abackends_3a_3asimd_9',['simd',['../namespacenum_1_1backends_1_1simd.html',1,'num::backends']]],
+  ['num_3a_3acuda_10',['cuda',['../namespacenum_1_1cuda.html',1,'num']]],
+  ['num_3a_3adetail_11',['detail',['../namespacenum_1_1detail.html',1,'num']]],
+  ['num_3a_3amarkov_12',['markov',['../namespacenum_1_1markov.html',1,'num']]],
+  ['num_3a_3amarkov_3a_3abackends_13',['backends',['../namespacenum_1_1markov_1_1backends.html',1,'num::markov']]],
+  ['num_3a_3amarkov_3a_3abackends_3a_3aomp_14',['omp',['../namespacenum_1_1markov_1_1backends_1_1omp.html',1,'num::markov::backends']]],
+  ['num_3a_3amarkov_3a_3abackends_3a_3aseq_15',['seq',['../namespacenum_1_1markov_1_1backends_1_1seq.html',1,'num::markov::backends']]],
+  ['num_3a_3ampi_16',['mpi',['../namespacenum_1_1mpi.html',1,'num']]],
+  ['num_3a_3aode_17',['ode',['../namespacenum_1_1ode.html',1,'num']]],
+  ['num_3a_3apde_18',['pde',['../namespacenum_1_1pde.html',1,'num']]],
+  ['num_3a_3aplt_19',['plt',['../namespacenum_1_1plt.html',1,'num']]],
+  ['num_3a_3aplt_3a_3adetail_20',['detail',['../namespacenum_1_1plt_1_1detail.html',1,'num::plt']]],
+  ['num_3a_3aquantum_21',['quantum',['../namespacenum_1_1quantum.html',1,'num']]],
+  ['num_3a_3aspectral_22',['spectral',['../namespacenum_1_1spectral.html',1,'num']]],
+  ['num_3a_3aviz_23',['viz',['../namespacenum_1_1viz.html',1,'num']]],
+  ['num_3a_3aviz_3a_3adetail_24',['detail',['../namespacenum_1_1viz_1_1detail.html',1,'num::viz']]]
+];

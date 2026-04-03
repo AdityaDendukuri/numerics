@@ -1,0 +1,24 @@
+var searchData=
+[
+  ['s_0',['s',['../structnum_1_1SVDResult.html#a6277fce480de0e767fd00269fcb77fce',1,'num::SVDResult::S'],['../structnum_1_1GivensRotation.html#a5f302690fd7486cf7569114d44b87472',1,'num::GivensRotation::s']]],
+  ['seq_1',['seq',['../namespacenum_1_1spectral.html#afd0aa53adcd3c904dcee66c8d11daed2',1,'num::spectral::seq'],['../namespacenum.html#af3e0ad917f8584f6a1007de3ed5cedb3',1,'num::seq']]],
+  ['shots_2',['shots',['../structnum_1_1Result.html#aafe9e8490f8b7267cda443afebb1133c',1,'num::Result']]],
+  ['simd_3',['simd',['../namespacenum.html#a04d4d043b4e114a0f1b2aea610e6440d',1,'num']]],
+  ['singular_4',['singular',['../structnum_1_1LUResult.html#ad8fe997412251b84a2f63a17c9e763d1',1,'num::LUResult']]],
+  ['sizes_5',['sizes',['../structnum_1_1ClusterResult.html#ac3a9c8094796cbffef48c91cc4c85ad8',1,'num::ClusterResult']]],
+  ['slider_5fcount_6',['slider_count',['../structnum_1_1viz_1_1detail_1_1State.html#ac53367823a29b47ca8071636094ef91d',1,'num::viz::detail::State']]],
+  ['soft_7',['soft',['../structnbody_1_1NBodySim.html#afdcf1bd301f9e18babf2dacf1371936e',1,'nbody::NBodySim']]],
+  ['solver_8',['solver',['../structnum_1_1BackwardEuler.html#a2fbea9849797ba07a2aa81e14f715b06',1,'num::BackwardEuler']]],
+  ['source_9',['source',['../structHose.html#a127d93a8f2e3ade5c2545e58aac50426',1,'Hose']]],
+  ['speed_10',['speed',['../structHose.html#a7a1b246290116b62c87995f7e0539f3d',1,'Hose']]],
+  ['spins_11',['spins',['../structIsingLattice.html#a41f8254e3bafbd416b0181dfb4aea628',1,'IsingLattice']]],
+  ['sqrt2_12',['sqrt2',['../namespacenum.html#afeaf2e7aac48adeccf35c3e9c4989245',1,'num']]],
+  ['sqrt3_13',['sqrt3',['../namespacenum.html#a1d5f7e3e0ba38363df3b931d211e72d2',1,'num']]],
+  ['stats_14',['stats',['../classtdse_1_1TDSESolver.html#addc586295d98331175f2beb3c8184ad7',1,'tdse::TDSESolver::stats'],['../classns_1_1NSSolver.html#a3adf8619b87e9ea6bde910f5c11a2d65',1,'ns::NSSolver::stats']]],
+  ['step_5fms_15',['step_ms',['../structtdse_1_1Stats.html#a8fc5d02d2fff501835ad3f045b6de350',1,'tdse::Stats']]],
+  ['steps_16',['steps',['../structnum_1_1SymplecticResult.html#a426d617e51765771181303073e885b69',1,'num::SymplecticResult::steps'],['../structnum_1_1ODEResult.html#a48e4608a25d49bd3005915fb70732dea',1,'num::ODEResult::steps'],['../structnum_1_1LanczosResult.html#a5359fb0d081c015736ad45dfbb01f697',1,'num::LanczosResult::steps']]],
+  ['substeps_17',['substeps',['../structnum_1_1viz_1_1detail_1_1State.html#abb0f9f6cea809fffcbc316a0341d713f',1,'num::viz::detail::State::substeps'],['../structnum_1_1viz_1_1Frame.html#aa8d7a3748531fb7a0cca08d28655cdca',1,'num::viz::Frame::substeps']]],
+  ['success_18',['success',['../structnum_1_1BandedSolverResult.html#a1a82dee403e99e62770fcb5249ded3d4',1,'num::BandedSolverResult']]],
+  ['sv_19',['sv',['../structnum_1_1Result.html#aaa2fd616a8631d21b7dc82d00f79e81d',1,'num::Result']]],
+  ['sweeps_20',['sweeps',['../structnum_1_1EigenResult.html#a38899c418f8b3a2fc13a213432e438bf',1,'num::EigenResult::sweeps'],['../structnum_1_1SVDResult.html#ae33d7ae3b87e9bf46f4eff6e1ec97aa2',1,'num::SVDResult::sweeps']]]
+];

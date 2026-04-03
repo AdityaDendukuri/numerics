@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['p_0',['p',['../classns_1_1NSSolver.html#a0a025ac3e97cdb894518120d401697c8',1,'ns::NSSolver']]],
+  ['paused_1',['paused',['../structnum_1_1viz_1_1detail_1_1State.html#a8dae508f12672ad57194c4e8f87bd542',1,'num::viz::detail::State::paused'],['../structnum_1_1viz_1_1Frame.html#a181d5be53b30d251567026a0efeeb077',1,'num::viz::Frame::paused']]],
+  ['perp_5fu_2',['perp_u',['../structHose.html#a9be4f87ba2912f76477ec72162356484',1,'Hose']]],
+  ['perp_5fv_3',['perp_v',['../structHose.html#a37e4e86fcef7ca3129dd8cef687865fe',1,'Hose']]],
+  ['phi_4',['phi',['../structtdse_1_1EigenMode.html#a66e777065abb05ae0e864a97c4f172a6',1,'tdse::EigenMode::phi'],['../namespacenum.html#a14822036806c57171355b63de037a96f',1,'num::phi']]],
+  ['phys_5fradius_5',['phys_radius',['../structnbody_1_1Body.html#a0298cb72a666e6f50b1bf6d325e06a7e',1,'nbody::Body']]],
+  ['pi_6',['pi',['../namespacenum.html#a78d7fbfab27d115f37b5b9d8a9db523b',1,'num']]],
+  ['piv_7',['piv',['../structnum_1_1LUResult.html#a3465306a6dfb69390872ecf6905fabbd',1,'num::LUResult']]],
+  ['pivot_5frow_8',['pivot_row',['../structnum_1_1BandedSolverResult.html#a33a50e69f1ed4912f34722663eb7eed3',1,'num::BandedSolverResult']]],
+  ['policy_9',['policy',['../structphysics_1_1FluidParams.html#a3a656b8024e482170f0c281683c934fa',1,'physics::FluidParams::policy'],['../structphysics_1_1FluidParams3D.html#ab78bdeeb042870d6c7dd17e8b0a2b9e4',1,'physics::FluidParams3D::policy']]],
+  ['pressure_10',['pressure',['../structphysics_1_1Particle.html#ad8dd4687d15917b712994e0c8cdb1517',1,'physics::Particle::pressure'],['../structphysics_1_1Particle3D.html#ab9ca9d3f0243daf39ce2c5b5fde501f1',1,'physics::Particle3D::pressure']]],
+  ['pressure_5fms_11',['pressure_ms',['../structns_1_1Stats.html#aea174977cd95207dbe4b1aeba724d41a',1,'ns::Stats']]],
+  ['project_5fms_12',['project_ms',['../structns_1_1Stats.html#a53805f9ff196ebb0e995cbd91afa5289',1,'ns::Stats']]],
+  ['propose_13',['propose',['../structnum_1_1MCMCProblem.html#a9d7b9905dd1dbce8fdecf7f6dd2413cc',1,'num::MCMCProblem']]],
+  ['psi_14',['psi',['../classtdse_1_1TDSESolver.html#abd5c144d9118bfd4adaa059f0aece900',1,'tdse::TDSESolver']]],
+  ['px_15',['px',['../structnum_1_1viz_1_1Frame_1_1Cam3.html#a254d632dbc4f6592399eb130dafcb2fd',1,'num::viz::Frame::Cam3']]],
+  ['py_16',['py',['../structnum_1_1viz_1_1Frame_1_1Cam3.html#a7720dc8faea8ad24dcb917631c0f102f',1,'num::viz::Frame::Cam3']]],
+  ['pz_17',['pz',['../structnum_1_1viz_1_1Frame_1_1Cam3.html#aff6eaa2f9f1fdb39ff0f3c92ca834a3d',1,'num::viz::Frame::Cam3']]]
+];
