@@ -168,9 +168,10 @@ int main() {
         ds[2] = s[0] * s[1] - beta * s[2];
     };
 
+    // simulation observer function to store (x, z) each step
     num::Series xz;
     auto observer = [&](double, const num::Vector& y) {
-        xz.emplace_back(y[0], y[2]);
+        xz.store(y[0], y[2]);
     };
 
     num::solve(
