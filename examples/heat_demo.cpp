@@ -26,13 +26,16 @@ int main() {
   SparseMatrix A = pde::backward_euler_matrix(grid, coeff);
   LinearSolver solver = make_cg_solver(A);
 
+  // function defining a gaussian distribution
   auto init_val = [=](double x, double y) {
     return gaussian2d(x, y, 0.5, 0.5, sigma);
   };
 
   ScalarField2D u0(grid, init_val);
   ScalarField2D u = u0;
-  solve(u, BackwardEuler{.solver=solver, .dt=dt, .nstep=nstep});
+  solve(u, BackwardEuler{.solver=solver,
+                         .dt=dt,
+                         .nstep=nstep});
 
   // plotting
   plt::subplot(1, 2);
