@@ -26,13 +26,5 @@ doxygen_add_docs(docs
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/pages
-    ${CMAKE_SOURCE_DIR}/apps/em_demo
-    ${CMAKE_SOURCE_DIR}/apps/fluid_sim
-    ${CMAKE_SOURCE_DIR}/apps/fluid_sim_3d
-    ${CMAKE_SOURCE_DIR}/apps/ns_demo
-    ${CMAKE_SOURCE_DIR}/apps/tdse
-    ${CMAKE_SOURCE_DIR}/apps/ising
-    ${CMAKE_SOURCE_DIR}/apps/quantum_demo
-    ${CMAKE_SOURCE_DIR}/apps/nbody
     COMMENT "Generate API documentation"
 )

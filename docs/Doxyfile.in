@@ -5,13 +5,7 @@ OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
 # ── Sources ──────────────────────────────────────────────────────────────────
 # Include the library headers, the pages directory, and each app's README.md.
 INPUT                  = @CMAKE_SOURCE_DIR@/include        \
-                         @CMAKE_SOURCE_DIR@/docs/pages     \
-                         @CMAKE_SOURCE_DIR@/apps/ising     \
-                         @CMAKE_SOURCE_DIR@/apps/fluid_sim  \
-                         @CMAKE_SOURCE_DIR@/apps/fluid_sim_3d \
-                         @CMAKE_SOURCE_DIR@/apps/ns_demo   \
-                         @CMAKE_SOURCE_DIR@/apps/tdse      \
-                         @CMAKE_SOURCE_DIR@/apps/em_demo
+                         @CMAKE_SOURCE_DIR@/docs/pages
 FILE_PATTERNS          = *.hpp *.h *.md
 IMAGE_PATH             = @CMAKE_SOURCE_DIR@/docs/pages
 RECURSIVE              = YES

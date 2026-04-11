@@ -1,0 +1,49 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # allow manual trigger from the GitHub UI
+
+permissions:
+  contents: write      # needed to push to gh-pages branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y doxygen
+
+      - name: Configure (docs-only preset)
+        run: cmake --preset release -DNUMERICS_BUILD_TESTS=OFF -DNUMERICS_BUILD_BENCHMARKS=OFF -DNUMERICS_BUILD_PHYSICS=OFF
+
+      - name: Build docs
+        run: cmake --build --preset release --target docs
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/api _site/report
+          # Landing page
+          cp docs/index.html _site/index.html
+          # Static assets (images etc) referenced by index.html
+          find docs -maxdepth 1 -name "*.png" -exec cp {} _site/ \;
+          # Doxygen API output
+          cp -r build/docs/html/. _site/api/
+          # Report (committed to repo, updated locally via `cmake --build --target report`)
+          cp -r docs/report/. _site/report/
+          touch _site/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
+          force_orphan: true        # keeps gh-pages history clean
