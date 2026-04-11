@@ -1,0 +1,28 @@
+/// @file linalg.hpp
+/// @brief Master include for the linear algebra module
+#pragma once
+
+#include "analysis/analysis.hpp"
+#include "fields/fields.hpp"
+#include "stats/stats.hpp"
+#include "core/types.hpp"
+#include "core/policy.hpp"
+#include "core/vector.hpp"
+#include "core/matrix.hpp"
+#include "linalg/factorization/factorization.hpp"
+#include "linalg/eigen/eigen.hpp"
+#include "linalg/svd/svd.hpp"
+#include "linalg/banded/banded.hpp"
+#include "linalg/sparse/sparse.hpp"
+#include "linalg/solvers/solvers.hpp"
+#include "core/parallel/cuda_ops.hpp"
+#include "core/parallel/mpi_ops.hpp"
+#include "spatial/spatial.hpp"
+#include "pde/pde.hpp"
+#include "core/util/integer_pow.hpp"
+#include "stochastic/markov.hpp"
+#include "ode/ode.hpp"
+#include "solve/solve.hpp"
+#include "spectral/fft.hpp"
+#include "plot/plot.hpp"
+#include "kernel/kernel.hpp"
