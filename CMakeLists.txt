@@ -30,3 +30,24 @@ include(cmake/apple.cmake)
 
 include(cmake/physics.cmake)
 include(cmake/install.cmake)
+
+if(NUMERICS_BUILD_TESTS)
+    include(cmake/dependencies.cmake)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+if(NUMERICS_BUILD_BENCHMARKS)
+    if(NOT NUMERICS_BUILD_TESTS)
+        include(cmake/dependencies.cmake)
+    endif()
+    add_subdirectory(benchmarks)
+endif()
+
+if(NUMERICS_BUILD_DOCS)
+    add_subdirectory(docs)
+endif()
+
+if(NUMERICS_BUILD_REPORT)
+    add_subdirectory(cmake/report)
+endif()

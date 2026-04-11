@@ -1,4 +1,9 @@
-# Build options for numerics-core
+# Build options for numerics
+option(NUMERICS_BUILD_TESTS      "Build unit tests"               OFF)
+option(NUMERICS_BUILD_BENCHMARKS "Build benchmarks"               OFF)
+option(NUMERICS_BUILD_DOCS       "Build Doxygen documentation"    OFF)
+option(NUMERICS_BUILD_REPORT     "Build benchmark report"         OFF)
+
 option(NUMERICS_ENABLE_CUDA  "Enable CUDA backend"                ON)
 option(NUMERICS_ENABLE_MPI   "Enable MPI distributed backend"     ON)
 option(NUMERICS_USE_BLAS     "Link BLAS/cblas for Backend::blas"  ON)
