@@ -116,7 +116,7 @@
   <a href="#benchmarks">Benchmarks</a>
   <a href="api/">API Docs</a>
   <div class="spacer"></div>
-  <a class="nav-btn" href="https://github.com/AdityaDendukuri/numerics">GitHub ↗</a>
+  <a class="nav-btn" href="https://github.com/numerics-cpp/numerics">GitHub ↗</a>
 </nav>
 
 <div class="hero">
@@ -124,7 +124,7 @@
   <p style="font-size:1.15rem; color:#fff; margin-bottom:0.4rem;">C++ library for numerical linear algebra, ODE/PDE integration, spectral methods, and statistical simulation.</p>
   <p>Iterative solvers (CG, GMRES, Lanczos, expv) share a common kernel layer: BLAS/SIMD primitives, tag-dispatched array operations, and Modified Gram-Schmidt / Arnoldi routines.</p>
   <div class="hero-links">
-    <a class="btn btn-primary" href="https://github.com/AdityaDendukuri/numerics">View on GitHub</a>
+    <a class="btn btn-primary" href="https://github.com/numerics-cpp/numerics">View on GitHub</a>
     <a class="btn btn-outline" href="api/">API Reference</a>
     <a class="btn btn-outline" href="report/index.html">Benchmarks</a>
   </div>
@@ -137,12 +137,12 @@
   <pre><code>include(FetchContent)
 FetchContent_Declare(
     numerics
-    GIT_REPOSITORY https://github.com/AdityaDendukuri/numerics
+    GIT_REPOSITORY https://github.com/numerics-cpp/numerics
     GIT_TAG        main
 )
 FetchContent_MakeAvailable(numerics)
 target_link_libraries(my_app PRIVATE numerics)</code></pre>
-  <p style="font-size:0.82rem; color:var(--dim); margin-top:0.75rem;">Optional system packages: <code>libopenblas-dev</code>, <code>libfftw3-dev</code>, OpenMP, CUDA. See <a href="https://github.com/AdityaDendukuri/numerics#dependencies">README: Dependencies</a>.</p>
+  <p style="font-size:0.82rem; color:var(--dim); margin-top:0.75rem;">Optional system packages: <code>libopenblas-dev</code>, <code>libfftw3-dev</code>, OpenMP, CUDA. See <a href="https://github.com/numerics-cpp/numerics#dependencies">README: Dependencies</a>.</p>
 </section>
 
 <section id="examples">
@@ -594,7 +594,7 @@ function showEx(idx) {
 <script>hljs.highlightAll();</script>
 
 <footer>
-  <p>numerics · <a href="https://github.com/AdityaDendukuri/numerics">github.com/AdityaDendukuri/numerics</a> · built by <a href="https://adityadendukuri.github.io">Aditya Dendukuri</a></p>
+  <p>numerics · <a href="https://github.com/numerics-cpp/numerics">github.com/numerics-cpp/numerics</a> · built by <a href="https://adityadendukuri.github.io">Aditya Dendukuri</a></p>
 </footer>
 
 </body>
