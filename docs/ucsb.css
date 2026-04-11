@@ -1,0 +1,96 @@
+/*
+ * UCSB color theme for doxygen-awesome (dark variant)
+ *
+ * Palette:
+ *   bg          #001a30   deep navy
+ *   bg_dim      #00111f   darkest navy
+ *   bg_dark     #001e38   dark navy
+ *   bg_p1       #002a4a   medium navy
+ *   bg_p2       #003660   UCSB navy
+ *   borders     #005080   border blue
+ *   fg          #e8eef4   light text
+ *   fg2         #a8b8c8   secondary text
+ *   comment     #708090   muted
+ *   gold        #FEBC11   UCSB gold (primary accent)
+ *   gold_dark   #c99000   darker gold
+ *   gold_light  #FFD150   lighter gold
+ */
+
+:root,
+html.dark-mode {
+    /* Primary accent — UCSB Gold */
+    --primary-color: #FEBC11;
+    --primary-dark-color: #c99000;
+    --primary-light-color: #2a2000;
+    --on-primary-color: #001a30;
+
+    --link-color: #FFD150;
+
+    /* Page */
+    --page-background-color: #001a30;
+    --page-foreground-color: #e8eef4;
+    --page-secondary-foreground-color: #a8b8c8;
+
+    --separator-color: #002a4a;
+    --box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.6);
+    --odd-color: rgba(255, 255, 255, 0.03);
+
+    /* Sidebar / nav */
+    --side-nav-background: #00111f;
+    --menu-selected-background: rgba(0, 0, 0, 0.4);
+    --menu-focus-background: #FEBC11;
+    --menu-focus-foreground: #001a30;
+
+    /* Header / search */
+    --header-background: #001a30;
+    --header-foreground: #e8eef4;
+    --searchbar-background: #001e38;
+
+    /* Code & tables */
+    --code-background: #001e38;
+    --section-code-background: rgba(255, 255, 255, 0.04);
+    --section-code-border: rgba(255, 255, 255, 0.08);
+    --tablehead-background: #001e38;
+    --tablehead-foreground: #e8eef4;
+    --blockquote-background: #001e38;
+    --blockquote-foreground: #a8b8c8;
+
+    /* Admonition boxes */
+    --warning-color: #2a1e00;
+    --warning-color-dark: #FEBC11;
+    --warning-color-darker: #FFD980;
+
+    --note-color: #001828;
+    --note-color-dark: #6aaccc;
+    --note-color-darker: #a0d0e8;
+
+    --todo-color: #001428;
+    --todo-color-dark: #7090c0;
+    --todo-color-darker: #a0b8e0;
+
+    --deprecated-color: #1a1e24;
+    --deprecated-color-dark: #a8b8c8;
+    --deprecated-color-darker: #e8eef4;
+
+    --bug-color: #2a1010;
+    --bug-color-dark: #d06060;
+    --bug-color-darker: #e8a0a0;
+
+    --invariant-color: #001a20;
+    --invariant-color-dark: #70a890;
+    --invariant-color-darker: #a0c8b8;
+
+    /* Syntax highlighting in code fragments */
+    --fragment-background: #001e38;
+    --fragment-foreground: #e8eef4;
+    --fragment-keyword: #7090c0;
+    --fragment-keywordtype: #6aaccc;
+    --fragment-keywordflow: #FEBC11;
+    --fragment-token: #70a890;
+    --fragment-comment: #708090;
+    --fragment-link: #FFD150;
+    --fragment-preprocessor: #c090d0;
+    --fragment-linenumber-color: #005080;
+    --fragment-linenumber-background: #00111f;
+    --fragment-linenumber-border: #000d18;
+}
