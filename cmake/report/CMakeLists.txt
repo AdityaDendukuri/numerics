@@ -109,10 +109,14 @@ add_custom_target(report
 
     COMMAND ${CMAKE_COMMAND} -E echo "==> Report ready: ${REPORT_MD}"
 
-    # 5. Sync report into docs/
+    # 5. Also write index.html in output/ so numerics-report serves it directly
+    COMMAND ${CMAKE_COMMAND} -E copy ${REPORT_HTML} ${REPORT_OUT}/index.html
+    COMMAND ${CMAKE_COMMAND} -E touch ${REPORT_OUT}/.nojekyll
+
+    # 6. Sync report into docs/
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/docs/report
     COMMAND ${CMAKE_COMMAND} -E copy ${REPORT_MD} ${CMAKE_SOURCE_DIR}/docs/report/REPORT.md
-    COMMAND ${CMAKE_COMMAND} -E copy ${REPORT_OUT}/REPORT.html ${CMAKE_SOURCE_DIR}/docs/report/index.html
+    COMMAND ${CMAKE_COMMAND} -E copy ${REPORT_HTML} ${CMAKE_SOURCE_DIR}/docs/report/index.html
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PLOTS_DIR} ${CMAKE_SOURCE_DIR}/docs/report/plots
     COMMAND ${CMAKE_COMMAND} -E echo "==> Docs updated: docs/report/"
 
