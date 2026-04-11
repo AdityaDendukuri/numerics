@@ -21,11 +21,16 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y doxygen
 
-      - name: Configure (docs-only preset)
-        run: cmake --preset release -DNUMERICS_BUILD_TESTS=OFF -DNUMERICS_BUILD_BENCHMARKS=OFF -DNUMERICS_BUILD_PHYSICS=OFF
+      - name: Configure
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DNUMERICS_BUILD_TESTS=OFF \
+            -DNUMERICS_BUILD_BENCHMARKS=OFF \
+            -DNUMERICS_BUILD_DOCS=ON
 
       - name: Build docs
-        run: cmake --build --preset release --target docs
+        run: cmake --build build --target docs
 
       - name: Assemble site
         run: |
