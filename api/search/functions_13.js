@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['text_0',['text',['../structnum_1_1viz_1_1Frame.html#ad41ac78b0f9d211cca8b70d89882a090',1,'num::viz::Frame']]],
+  ['textf_1',['textf',['../structnum_1_1viz_1_1Frame.html#a801380650fd27db30db1313863a76b71',1,'num::viz::Frame']]],
+  ['thomas_2',['thomas',['../namespacenum_1_1backends_1_1lapack.html#a970d083ea8f316b5d4ccc979ad24a51e',1,'num::backends::lapack::thomas()'],['../namespacenum_1_1backends_1_1seq.html#aa0dbe56d5236790065cbee41b3341a9a',1,'num::backends::seq::thomas()'],['../namespacenum.html#a64318ccc0c0d92265debebba2685704b',1,'num::thomas()']]],
+  ['thomas_5fbatched_3',['thomas_batched',['../namespacenum_1_1cuda.html#a26a3debc08b81608c1f156a8a0caae53',1,'num::cuda']]],
+  ['to_5fcpu_4',['to_cpu',['../classnum_1_1Matrix.html#adc4b939301a950bd2eb89af3aa7a083d',1,'num::Matrix::to_cpu()'],['../classnum_1_1BasicVector.html#acdacc14e8b090bbb7599fb28a7689300',1,'num::BasicVector::to_cpu()'],['../classnum_1_1BandedMatrix.html#ad5bab9e70abc1c0e56c88669fec7723a',1,'num::BandedMatrix::to_cpu()']]],
+  ['to_5fdevice_5',['to_device',['../namespacenum_1_1cuda.html#a11a94e5b518bf7f095686fcf59eb2571',1,'num::cuda']]],
+  ['to_5fgpu_6',['to_gpu',['../classnum_1_1BasicVector.html#a41d6be927caadd62c4d38d5c11579319',1,'num::BasicVector::to_gpu()'],['../classnum_1_1BandedMatrix.html#aa32a514b9caa1184aa258b250018735b',1,'num::BandedMatrix::to_gpu()'],['../classnum_1_1Matrix.html#ae55c6ed7104c08cbf2761a62398ec59e',1,'num::Matrix::to_gpu()']]],
+  ['to_5fhost_7',['to_host',['../namespacenum_1_1cuda.html#aa9cee3400013c9191572f98ca9f13ace',1,'num::cuda']]],
+  ['to_5fidx_8',['to_idx',['../namespacenum.html#ac50a64ffcb7ef0a3234fcf6a70674ae6',1,'num']]],
+  ['to_5frl_9',['to_rl',['../namespacenum_1_1viz.html#ae0269100eac268280fdb3deed0a0245c',1,'num::viz']]],
+  ['to_5fvector_10',['to_vector',['../classnum_1_1Grid3D.html#aec24b3fe5434c6a70146ccf6cf911a51',1,'num::Grid3D']]],
+  ['total_11',['total',['../structnum_1_1Histogram.html#ae057c1975b2354bdc64cf3817ddcba84',1,'num::Histogram']]],
+  ['transposed_12',['transposed',['../structnum_1_1SmallMatrix.html#a299a5cacb6819de8c15fa6c9018834a6',1,'num::SmallMatrix']]],
+  ['trapz_13',['trapz',['../namespacenum.html#a001e8070960652c15790436537712628',1,'num']]],
+  ['trsv_5flower_14',['trsv_lower',['../namespacenum_1_1kernel_1_1dense.html#a82a5854483d40181730f2480471a5da0',1,'num::kernel::dense::trsv_lower()'],['../namespacenum_1_1kernel_1_1raw.html#a889e46b6ffbf547530545d03bfdd8127',1,'num::kernel::raw::trsv_lower()']]],
+  ['trsv_5fupper_15',['trsv_upper',['../namespacenum_1_1kernel_1_1dense.html#a77fa913f8d5c8a1ee2bca8435341fa63',1,'num::kernel::dense::trsv_upper()'],['../namespacenum_1_1kernel_1_1raw.html#a8e8e6a6ea0c077074176924080d6082b',1,'num::kernel::raw::trsv_upper()']]]
+];

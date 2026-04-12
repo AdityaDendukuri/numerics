@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>numerics — Scientific Computing Library</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --bg2:      #161b22;
+      --border:   #30363d;
+      --text:     #c9d1d9;
+      --dim:      #8b949e;
+      --accent:   #58a6ff;
+      --gold:     #ffa657;
+      --green:    #3fb950;
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; line-height: 1.6; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Nav ── */
+    nav { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0.75rem 2rem; display: flex; align-items: center; gap: 2rem; position: sticky; top: 0; z-index: 10; }
+    nav .brand { font-weight: 700; font-size: 1.1rem; color: var(--text); }
+    nav .brand span { color: var(--accent); }
+    nav a { font-size: 0.9rem; color: var(--dim); }
+    nav a:hover { color: var(--text); text-decoration: none; }
+    nav .spacer { flex: 1; }
+    .nav-btn { border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.75rem; font-size: 0.85rem; color: var(--text) !important; }
+    .nav-btn:hover { background: var(--border); }
+
+    /* ── Hero ── */
+    .hero { max-width: 860px; margin: 4rem auto 3rem; padding: 0 2rem; }
+    .hero h1 { font-size: 2.4rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 1.05rem; color: var(--dim); max-width: 620px; margin: 0.5rem 0 1.5rem; }
+    .hero-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .btn { display: inline-block; padding: 0.5rem 1.1rem; border-radius: 6px; font-size: 0.9rem; font-weight: 500; }
+    .btn-primary { background: var(--accent); color: #0d1117; }
+    .btn-primary:hover { background: #79b8ff; text-decoration: none; }
+    .btn-outline { border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--accent); text-decoration: none; }
+
+    /* ── Sections ── */
+    section { max-width: 960px; margin: 0 auto 3.5rem; padding: 0 2rem; }
+    section h2 { font-size: 1.25rem; font-weight: 600; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; margin-bottom: 1.25rem; }
+
+    /* ── Module grid ── */
+    .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .module-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; }
+    .module-card h3 { font-size: 0.9rem; font-weight: 600; color: var(--gold); margin-bottom: 0.25rem; font-family: "SFMono-Regular", Consolas, monospace; }
+    .module-card h3 a { color: var(--gold); }
+    .module-card h3 a:hover { color: var(--accent); text-decoration: none; }
+    .module-card p { font-size: 0.78rem; color: var(--dim); line-height: 1.4; }
+
+    /* ── Sim grid ── */
+    .sim-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    @media (max-width: 640px) { .sim-grid { grid-template-columns: 1fr; } }
+    .sim-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .sim-card video { width: 100%; display: block; cursor: zoom-in; }
+    .sim-card .cap { padding: 6px 10px; font-size: 0.78rem; color: var(--dim); border-top: 1px solid var(--border); }
+    .sim-card .cap strong { color: var(--text); }
+
+    /* ── Examples tab UI ── */
+    .ex-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+    .ex-tab { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.85rem; font-size: 0.82rem; color: var(--dim); cursor: pointer; font-family: inherit; }
+    .ex-tab:hover { color: var(--text); border-color: var(--accent); }
+    .ex-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(88,166,255,0.07); }
+    .ex-panel { display: none; }
+    .ex-panel.active { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 700px) { .ex-panel.active { grid-template-columns: 1fr; } }
+    .example-code { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .example-code pre { margin: 0; border: none; border-radius: 0; background: transparent; }
+    .example-fig { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+    .example-fig img { width: 100%; display: block; object-fit: contain; }
+    .example-fig .cap { padding: 8px 12px; font-size: 0.78rem; color: var(--dim); border-top: 1px solid var(--border); }
+    .example-fig .cap strong { color: var(--text); }
+
+    /* ── Lightbox ── */
+    #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 100; align-items: center; justify-content: center; cursor: zoom-out; }
+    #modal.open { display: flex; }
+    #modal video { max-width: 92vw; max-height: 88vh; border-radius: 6px; cursor: default; }
+    #modal-close { position: fixed; top: 14px; right: 20px; font-size: 1.8rem; color: #fff; cursor: pointer; line-height: 1; user-select: none; }
+
+    /* ── Why list ── */
+    .why-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .why-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; }
+    .why-card h3 { font-size: 0.88rem; font-weight: 600; color: var(--green); margin-bottom: 0.3rem; }
+    .why-card p { font-size: 0.78rem; color: var(--dim); line-height: 1.45; }
+
+    /* ── Code block ── */
+    pre { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.55; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; }
+    /* prevent hljs theme from overriding our pre layout */
+    pre code.hljs { background: transparent; padding: 0; border-radius: 0; font-size: inherit; line-height: inherit; }
+
+    footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: var(--dim); border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="brand"><span>num</span>erics</span>
+  <a href="#why">Why</a>
+  <a href="#install">Install</a>
+  <a href="#examples">Examples</a>
+  <a href="#simulations">Simulations</a>
+  <a href="#modules">Modules</a>
+  <a href="#notes">Notes</a>
+  <a href="https://adityadendukuri.github.io/cs111-scientific-computing-notes/" style="color:var(--green)">Theory ↗</a>
+  <a href="#benchmarks">Benchmarks</a>
+  <a href="api/">API Docs</a>
+  <div class="spacer"></div>
+  <a class="nav-btn" href="https://github.com/AdityaDendukuri/numerics">GitHub ↗</a>
+</nav>
+
+<div class="hero">
+  <h1><span>numerics</span></h1>
+  <p style="font-size:1.15rem; color:#fff; margin-bottom:0.4rem;">C++ library for numerical linear algebra, ODE/PDE integration, spectral methods, and statistical simulation.</p>
+  <p>Iterative solvers (CG, GMRES, Lanczos, expv) share a common kernel layer: BLAS/SIMD primitives, tag-dispatched array operations, and Modified Gram-Schmidt / Arnoldi routines.</p>
+  <div class="hero-links">
+    <a class="btn btn-primary" href="https://github.com/AdityaDendukuri/numerics">View on GitHub</a>
+    <a class="btn btn-outline" href="api/">API Reference</a>
+    <a class="btn btn-outline" href="report/index.html">Benchmarks</a>
+  </div>
+</div>
+
+
+<section id="install">
+  <h2>Install</h2>
+  <p style="font-size:0.88rem; color:var(--dim); margin-bottom:0.85rem;">Drop this in your CMake configuration:</p>
+  <pre><code>include(FetchContent)
+FetchContent_Declare(
+    numerics
+    GIT_REPOSITORY https://github.com/AdityaDendukuri/numerics
+    GIT_TAG        main
+)
+FetchContent_MakeAvailable(numerics)
+target_link_libraries(my_app PRIVATE numerics)</code></pre>
+  <p style="font-size:0.82rem; color:var(--dim); margin-top:0.75rem;">Optional system packages: <code>libopenblas-dev</code>, <code>libfftw3-dev</code>, OpenMP, CUDA. See <a href="https://github.com/AdityaDendukuri/numerics#dependencies">README: Dependencies</a>.</p>
+</section>
+
+<section id="examples">
+  <h2>Examples</h2>
+
+  <div class="ex-tabs">
+    <button class="ex-tab active" onclick="showEx(0)">Lorenz attractor</button>
+    <button class="ex-tab"        onclick="showEx(1)">FFT power spectrum</button>
+    <button class="ex-tab"        onclick="showEx(2)">Ising phase transition</button>
+    <button class="ex-tab"        onclick="showEx(3)">2D heat equation</button>
+  </div>
+
+  <!-- Panel 0: Lorenz -->
+  <div class="ex-panel active" id="ex-0">
+    <div class="example-code">
+      <pre><code class="language-cpp">#include "numerics.hpp"
+
+int main() {
+    const double sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
+
+    auto lorenz = [&](double, const num::Vector& s, num::Vector& ds) {
+        ds[0] = sigma * (s[1] - s[0]);
+        ds[1] = s[0] * (rho - s[2]) - s[1];
+        ds[2] = s[0] * s[1] - beta * s[2];
+    };
+
+    // simulation observer function to store (x, z) each step
+    num::Series xz;
+    auto observer = [&](double, const num::Vector& y) {
+        xz.store(y[0], y[2]);
+    };
+
+    num::solve(
+        num::ODEProblem{lorenz, {1.0, 0.0, 0.0}, 0.0, 50.0},
+        num::RK45{.rtol = 1e-8, .atol = 1e-10, .max_steps = 2000000},
+        observer);
+
+    num::plt::plot(xz);
+    num::plt::title("Lorenz attractor (sigma=10, rho=28, beta=8/3)");
+    num::plt::xlabel("x");
+    num::plt::ylabel("z");
+    num::plt::savefig("lorenz.png");
+}</code></pre>
+    </div>
+    <div class="example-fig">
+      <img src="lorenz.png" alt="Lorenz attractor phase portrait (x vs z)">
+      <div class="cap"><strong>Lorenz attractor</strong> — adaptive RK45 via <code>num::solve</code> + <code>num::RK45</code></div>
+    </div>
+  </div>
+
+  <!-- Panel 1: FFT -->
+  <div class="ex-panel" id="ex-1">
+    <div class="example-code">
+      <pre><code class="language-cpp">#include "plot/plot.hpp"
+#include "spectral/fft.hpp"
+
+int main() {
+    const int N = 1024; const double fs = 1000.0;  // N samples at fs Hz
+
+    num::Vector x(N);  // real-valued time-domain signal
+    for (int i = 0; i &lt; N; ++i)
+        x[i] = std::sin(2*M_PI*50.0*i/fs)
+             + 0.5*std::sin(2*M_PI*120.0*i/fs);
+
+    // rfft output has N/2+1 bins: real input has conjugate symmetry,
+    // so only the non-redundant half [0 .. N/2] is stored
+    num::CVector X(N/2 + 1);  // complex frequency-domain coefficients
+    num::spectral::rfft(x, X);
+
+    num::Series signal, spectrum;  // lists of (x, y) pairs for plotting
+    for (int i = 0; i &lt; 100; ++i)
+        signal.emplace_back(i/fs*1000.0, x[i]);  // first 100 ms
+    for (int k = 0; k &lt; (int)X.size(); ++k)
+        spectrum.emplace_back(k*fs/N, std::abs(X[k]));  // bin k maps to freq k*fs/N Hz
+
+    num::plt::subplot(2, 1);
+    num::plt::plot(signal);
+    num::plt::title("Signal: 50 Hz + 0.5 * 120 Hz");
+    num::plt::xlabel("time (ms)");  num::plt::ylabel("amplitude");
+
+    num::plt::next();
+    num::plt::plot(spectrum);
+    num::plt::title("FFT power spectrum");
+    num::plt::xlabel("frequency (Hz)");  num::plt::ylabel("|X[k]|");
+
+    num::plt::savefig("fft_demo.png");
+}</code></pre>
+    </div>
+    <div class="example-fig">
+      <img src="fft_demo.png" alt="FFT power spectrum">
+      <div class="cap"><strong>FFT power spectrum</strong> — <code>num::spectral::rfft</code>; peaks at 50 Hz and 120 Hz</div>
+    </div>
+  </div>
+
+  <!-- Panel 2: Ising -->
+  <div class="ex-panel" id="ex-2">
+    <div class="example-code">
+      <pre><code class="language-cpp">#include "numerics.hpp"
+#include "spatial/pbc_lattice.hpp"
+#include "stochastic/boltzmann_table.hpp"
+
+int main() {
+    const int N = 64, NN = N*N;
+    num::PBCLattice2D   nbr(N);
+    std::vector&lt;double&gt; spins(NN);
+    std::mt19937        rng(42);
+
+    num::Series curve;
+    for (double T = 0.5; T &lt;= 4.01; T += 0.1) {
+        std::fill(spins.begin(), spins.end(), 1.0);
+        double beta = 1.0 / T;
+
+        auto accept = [&](int i) {
+            double ns = spins[nbr.up[i]] + spins[nbr.dn[i]]
+                      + spins[nbr.lt[i]] + spins[nbr.rt[i]];
+            return num::markov::boltzmann_accept(2.0*spins[i]*ns, beta);
+        };
+        auto flip    = [&](int i) { spins[i] = -spins[i]; };
+        auto measure = [&]() {
+            return std::abs(std::accumulate(spins.begin(), spins.end(), 0.0) / NN);
+        };
+
+        double m = num::solve(
+            num::MCMCProblem{accept, flip, NN},
+            num::Metropolis{.equilibration=2000, .measurements=500},
+            measure, rng);
+
+        curve.store(T, m);
+    }
+    num::plt::plot(curve);
+    num::plt::xlabel("T");  num::plt::ylabel("|&lt;m&gt;|");
+    num::plt::savefig("ising_demo.png");
+}</code></pre>
+    </div>
+    <div class="example-fig">
+      <img src="ising_demo.png" alt="Ising magnetization vs temperature">
+      <div class="cap"><strong>Ising phase transition</strong> — <code>num::solve</code> + <code>num::Metropolis</code>; |m| drops at T<sub>c</sub> ≈ 2.27</div>
+    </div>
+  </div>
+
+  <!-- Panel 3: 2D heat equation -->
+  <div class="ex-panel" id="ex-3">
+    <div class="example-code">
+      <pre><code class="language-cpp">#include "numerics.hpp"
+#include &lt;string&gt;
+
+using namespace num;
+
+int main() {
+  const int N = 64;
+  const double kappa = 1.0, sigma = 0.06, T_end = 0.012;
+  const double h = 1.0 / (N + 1);
+  const double dt = 4.0 * h * h;   // 16x larger than explicit limit
+  const int nstep = static_cast&lt;int&gt;(T_end / dt) + 1;
+  const double coeff = kappa * dt / (h * h);
+
+  // A = I - coeff*L  (sparse SPD -- CG converges in O(N) iterations)
+  Grid2D       grid{N, h};
+  SparseMatrix A      = pde::backward_euler_matrix(grid, coeff);
+  LinearSolver solver = make_cg_solver(A);
+
+  ScalarField2D u0(grid, [=](double x, double y) {
+    return gaussian2d(x, y, 0.5, 0.5, sigma);
+  });
+  ScalarField2D u = u0;
+  solve(u, BackwardEuler{.solver=solver, .dt=dt, .nstep=nstep});
+
+  plt::subplot(1, 2);
+  plt::heatmap(u0);  plt::title("t = 0");
+  plt::next();
+  plt::heatmap(u);   plt::title("t = " + std::to_string(T_end).substr(0, 6));
+  plt::savefig("heat_demo.png");
+}</code></pre>
+    </div>
+    <div class="example-fig">
+      <img src="heat_demo.png" alt="2D heat equation — Gaussian spreading">
+      <div class="cap"><strong>2D heat equation</strong> — implicit backward Euler via sparse CG; <code>num::solve</code> + <code>num::BackwardEuler</code></div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+function showEx(idx) {
+  document.querySelectorAll('.ex-tab').forEach(function(t,i){ t.classList.toggle('active', i===idx); });
+  document.querySelectorAll('.ex-panel').forEach(function(p,i){ p.classList.toggle('active', i===idx); });
+}
+</script>
+
+<section id="simulations">
+  <h2>Some Simulations Built with numerics and Raylib</h2>
+  <div class="sim-grid">
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/fluid_sim_record.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>2D SPH Fluid</strong> — dam-break, hot/cold spheres, heat transfer, falling rigid body</div>
+    </div>
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/fluid_sim_3d_record.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>3D SPH Fluid</strong> — dual temperature hoses, free-orbit camera</div>
+    </div>
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/ns_demo_record.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>Navier-Stokes</strong> — Kelvin-Helmholtz instability, particle tracers</div>
+    </div>
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/em_demo_record.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>Electromagnetism</strong> — FEM potential solve, B-field, orbiting dipole</div>
+    </div>
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/tdse_record.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>Schrödinger Equation</strong> — double-slit diffraction, Strang splitting</div>
+    </div>
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/quantum_demo_record.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>Quantum Circuits</strong> — Bell, GHZ, Grover, teleportation, QFT₃</div>
+    </div>
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/ising_record.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>Ising Nucleation</strong> — free-energy barrier crossing (F=0.1, T&lt;Tc)</div>
+    </div>
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/ising_classic_record.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>Ising Ordering</strong> — spontaneous symmetry breaking from random init</div>
+    </div>
+
+    <div class="sim-card">
+      <video autoplay loop muted playsinline>
+        <source src="https://adityadendukuri.github.io/assets/video/gal.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><strong>Galaxy Collapse</strong> — 50 random bodies under gravity; bodies merge on contact, growing in mass and radius until a dominant body with moons remains. Integrated with symplectic velocity Verlet.</div>
+    </div>
+
+  </div>
+</section>
+
+<section id="modules">
+  <h2>Library Modules</h2>
+  <div class="module-grid">
+    <div class="module-card">
+      <h3>kernel</h3>
+      <p>Performance substrate. Tier 1: raw BLAS/SIMD dot/axpy. Tier 2: tag-dispatched array/reduce (<code>seq_t</code>/<code>par_t</code>). Tier 3: <code>LinearOp</code>, MGS orthogonalization, Arnoldi step — shared by GMRES, Lanczos, and expv.</p>
+    </div>
+    <div class="module-card">
+      <h3>core</h3>
+      <p>Vector, Matrix, SparseMatrix, BandedMatrix. High-level backend dispatch (seq, SIMD, BLAS, OpenMP, CUDA) for matmul and matvec.</p>
+    </div>
+    <div class="module-card">
+      <h3>fields</h3>
+      <p>Grid2D, Grid3D — geometry only. ScalarField2D/3D, VectorField3D — field storage over a grid.</p>
+    </div>
+    <div class="module-card">
+      <h3>solve</h3>
+      <p><code>num::solve(problem, algorithm)</code> dispatcher. ODEProblem, MCMCProblem, algorithm tags (RK45, BackwardEuler, Metropolis…).</p>
+    </div>
+    <div class="module-card">
+      <h3>factorization</h3>
+      <p>LU, QR, Thomas tridiagonal. Direct solvers for dense and structured systems.</p>
+    </div>
+    <div class="module-card">
+      <h3>solvers</h3>
+      <p>Conjugate gradient, matrix-free CG, restarted GMRES, Jacobi, Gauss-Seidel. <code>LinearSolver</code> universal callable.</p>
+    </div>
+    <div class="module-card">
+      <h3>eigen</h3>
+      <p>Power iteration, inverse iteration, Rayleigh quotient, Lanczos, dense Jacobi sweeps.</p>
+    </div>
+    <div class="module-card">
+      <h3>svd</h3>
+      <p>Full SVD and randomized truncated SVD for large matrices.</p>
+    </div>
+    <div class="module-card">
+      <h3>spectral</h3>
+      <p>Radix-2 FFT/IFFT, real FFT, precomputed plans. Optional FFTW3 backend.</p>
+    </div>
+    <div class="module-card">
+      <h3>analysis</h3>
+      <p>Quadrature (trapz, Simpson, Gauss-Legendre, Romberg) and root-finding (bisection, Newton, Brent).</p>
+    </div>
+    <div class="module-card">
+      <h3>markov</h3>
+      <p>Metropolis sweep, precomputed-probability variant, umbrella sampling. Boltzmann acceptance table for discrete ΔE.</p>
+    </div>
+    <div class="module-card">
+      <h3>stats</h3>
+      <p>Online Welford mean/variance, histogram with WHAM reweighting, autocorrelation time.</p>
+    </div>
+    <div class="module-card">
+      <h3>meshfree</h3>
+      <p>CellList2D/3D, Verlet list, SPHKernel&lt;Dim&gt; (2D/3D). Particle-based spatial structures for Lagrangian methods.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_pde.html">pde</a></h3>
+      <p>Stencils (2D/3D Laplacians, periodic/Dirichlet), backward-Euler matrix builder, CrankNicolsonADI, explicit diffusion steps.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_ode.html">ode</a></h3>
+      <p>Euler, RK4, adaptive RK45. Velocity Verlet and Yoshida4 symplectic integrators. Implicit <code>ode::advance</code> for backward Euler steps.</p>
+    </div>
+    <div class="module-card">
+      <h3>quantum</h3>
+      <p>Statevector simulation, quantum circuit builder, EDMD for unitary evolution.</p>
+    </div>
+    <div class="module-card">
+      <h3>physics apps</h3>
+      <p>SPH 2D/3D, Navier-Stokes, TDSE, EM fields, Ising MC, N-body gravity. Interactive simulations using the per-step low-level API.</p>
+    </div>
+  </div>
+</section>
+
+<section id="notes">
+  <h2>Implementation Notes</h2>
+  <div class="module-grid">
+    <div class="module-card">
+      <h3><a href="api/page_week6.html">cache blocking</a></h3>
+      <p>L1/L2 tile sizes, blocked matmul, 6× speedup over naive on large matrices without any parallelism.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_week7.html">register blocking</a></h3>
+      <p>Micro-kernel design, register reuse, and the limits of scalar code before SIMD is required.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_week8.html">SIMD vectorization</a></h3>
+      <p>Explicit AVX-256 and ARM NEON intrinsics applied to the matmul micro-kernel; additional 2× over register blocking.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_ns_perf.html">NS performance</a></h3>
+      <p>Roofline analysis of the Navier-Stokes projection solver: advect, pressure CG, project.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_stencil_hof.html">stencil / HOF</a></h3>
+      <p>Higher-order grid functions: 2D/3D Laplacians, fiber sweeps for ADI splitting, gradient, divergence, curl on Grid3D.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_fields.html">3D fields &amp; solvers</a></h3>
+      <p>ScalarField3D, VectorField3D, FieldSolver (Poisson/gradient/curl), MagneticSolver (vector Poisson → B = ∇×A).</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_sph_kernel.html">SPH kernels</a></h3>
+      <p>SPHKernel&lt;Dim&gt; unified 2D/3D template: cubic spline density, Morris Laplacian, spiky pressure gradient.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_pbc_lattice.html">PBC lattice</a></h3>
+      <p>PBCLattice2D: precomputed periodic-boundary neighbor arrays for 2D square lattices; eliminates modulo in hot paths.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_connected_components.html">connected components</a></h3>
+      <p>Template BFS labelling with pre-allocated flat queue. ClusterResult tracks largest component for Ising nucleation.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_boltzmann_table.html">Boltzmann table</a></h3>
+      <p>boltzmann_accept and make_boltzmann_table: precompute min(1,exp(-βΔE)) for discrete energy sets.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_fft.html">FFT</a></h3>
+      <p>Cooley-Tukey radix-2, twiddle factors, real FFT, FFTW3 backend, and plan reuse.</p>
+    </div>
+    <div class="module-card">
+      <h3><a href="api/page_pde.html">PDE module</a></h3>
+      <p>CrankNicolsonADI Strang splitting, explicit diffusion steps, 3D field solvers, stencil operators.</p>
+    </div>
+  </div>
+  <p style="margin-top:1.25rem; font-size:0.88rem; color:var(--dim);">
+    For algorithm theory (LU/QR, CG, GMRES, Lanczos, eigenvalue methods, quadrature, ODE integrators) see the companion notes:
+    <a href="https://adityadendukuri.github.io/cs111-scientific-computing-notes/">Scientific Computing ↗</a>
+  </p>
+</section>
+
+<section id="benchmarks">
+  <h2>Benchmarks</h2>
+  <p style="font-size:0.88rem; color:var(--dim); margin-bottom:1rem;">
+    Generated by <code>cmake --build build --target report</code>. Build environment, test results, and throughput tables per module.
+  </p>
+  <a class="btn btn-outline" href="report/index.html" style="font-size:0.85rem;">View Report →</a>
+  <div id="report-plots" style="margin-top:1.25rem; display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:10px;"></div>
+</section>
+
+<script>
+(function(){
+  /* Probe for plot images; show any that exist */
+  var plots = ['matmul.png','matvec.png','dot.png','axpy.png',
+               'fft.png','fft_plan.png','rfft.png'];
+  var grid = document.getElementById('report-plots');
+  plots.forEach(function(f){
+    var img = new Image();
+    img.onload = function(){
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;';
+      img.style.cssText = 'width:100%;display:block;';
+      wrap.appendChild(img);
+      grid.appendChild(wrap);
+    };
+    img.src = 'report/plots/' + f;
+  });
+})();
+</script>
+
+<!-- Lightbox -->
+<div id="modal">
+  <span id="modal-close" title="Close">&#x2715;</span>
+  <video id="modal-player" autoplay loop muted playsinline></video>
+</div>
+<script>
+(function(){
+  const modal = document.getElementById('modal');
+  const player = document.getElementById('modal-player');
+  document.querySelectorAll('.sim-card video').forEach(function(v){
+    v.addEventListener('click', function(e){
+      e.stopPropagation();
+      player.innerHTML = '';
+      var s = document.createElement('source');
+      s.src = v.querySelector('source').src; s.type = 'video/mp4';
+      player.appendChild(s); player.load(); player.play();
+      modal.classList.add('open');
+    });
+  });
+  function close(){ modal.classList.remove('open'); player.pause(); player.innerHTML=''; }
+  document.getElementById('modal-close').addEventListener('click', close);
+  modal.addEventListener('click', function(e){ if(e.target===modal) close(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+<footer>
+  <p>numerics · <a href="https://github.com/AdityaDendukuri/numerics">github.com/AdityaDendukuri/numerics</a> · built by <a href="https://adityadendukuri.github.io">Aditya Dendukuri</a></p>
+</footer>
+
+</body>
+</html>

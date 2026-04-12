@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['rank_0',['rank',['../namespacenum_1_1mpi.html#ae8841a8210918eaeee02c727ca427ab2',1,'num::mpi']]],
+  ['rayleigh_5fiteration_1',['rayleigh_iteration',['../namespacenum.html#adf249c83cf886e52c4b42e2cc15fb7f8',1,'num']]],
+  ['rect_2',['rect',['../structnum_1_1viz_1_1Frame.html#af419d5b46b59f5bdac150d58336dcd27',1,'num::viz::Frame']]],
+  ['rect_5foutline_3',['rect_outline',['../structnum_1_1viz_1_1Frame.html#a55960e327f018871f6a2c8c59355817f',1,'num::viz::Frame']]],
+  ['reduce_4',['reduce',['../namespacenum_1_1kernel_1_1array.html#aec1b5d3f9504fed90754ee8b7645d626',1,'num::kernel::array']]],
+  ['reset_5',['reset',['../structnum_1_1RunningStats.html#a1af8c87906c157878dd3453062849670',1,'num::RunningStats::reset()'],['../structnum_1_1Histogram.html#a5092c3459250fcab9bc1c96c0e96da01',1,'num::Histogram::reset()']]],
+  ['reset_5fpressed_6',['reset_pressed',['../structnum_1_1viz_1_1Frame.html#a76a1c693c97cefb2450be8adc3baf863',1,'num::viz::Frame']]],
+  ['rfft_7',['rfft',['../namespacenum_1_1spectral.html#ae32ed28f18a5fba99505324f6018ef84',1,'num::spectral::rfft()'],['../namespacebackends_1_1opt.html#afdf85d03730a87c662cdbc59cf9b9bf4',1,'backends::opt::rfft()'],['../namespacebackends_1_1seq.html#a8d11104632310425fe565bf8f20b693d',1,'backends::seq::rfft()']]],
+  ['rk4_8',['rk4',['../namespacenum.html#a8c98d79b425bf4242d9e272a014691ad',1,'num']]],
+  ['rk45_9',['rk45',['../namespacenum.html#ac489b84873be91b11ecaf7c9957309d3',1,'num']]],
+  ['rk45steps_10',['RK45Steps',['../classnum_1_1RK45Steps.html#a3e1cca943939f89bdc2467e199abe55c',1,'num::RK45Steps']]],
+  ['rk4_5f2nd_11',['rk4_2nd',['../namespacenum.html#aa20c600c9d6ce1f25d488cd8913a8ec8',1,'num']]],
+  ['rk4_5f2ndsteps_12',['RK4_2ndSteps',['../classnum_1_1RK4__2ndSteps.html#a8c0c072bd02de0328d554099d6b4a9ba',1,'num::RK4_2ndSteps']]],
+  ['rk4steps_13',['RK4Steps',['../classnum_1_1RK4Steps.html#a3a67fc15a40bd3152e4baa1a3d17b2dc',1,'num::RK4Steps']]],
+  ['rng_14',['rng',['../structnum_1_1Rng.html#ab87c34a9c440be6a6d0cc022a77c2cf6',1,'num::Rng::Rng()'],['../structnum_1_1Rng.html#ae612d60b3abf6d22949ee9bfb3a46ec3',1,'num::Rng::Rng(uint32_t seed)']]],
+  ['rng_5fint_15',['rng_int',['../namespacenum.html#a2d62c88d7dff390703363e9444c42618',1,'num']]],
+  ['rng_5fnormal_16',['rng_normal',['../namespacenum.html#a6a2339ab8032343561e5061b3b456f61',1,'num']]],
+  ['rng_5funiform_17',['rng_uniform',['../namespacenum.html#a4cb6df5dbb4bfbe5503be646ef77f4e3',1,'num']]],
+  ['romberg_18',['romberg',['../namespacenum.html#adfe454630fef4a03d2c9666eef3f0967',1,'num']]],
+  ['row_5ffiber_5fsweep_19',['row_fiber_sweep',['../namespacenum.html#a0978344e13a9f4077a27d8c532452f68',1,'num']]],
+  ['row_5fptr_20',['row_ptr',['../classnum_1_1SparseMatrix.html#ace103e1fc87512d66733426179992e70',1,'num::SparseMatrix']]],
+  ['row_5fslice_21',['row_slice',['../namespacenum.html#ad24ee9b4755924fa20279acbc57dacc5',1,'num::row_slice(const Vector &amp;u, int N, double h, int row)'],['../namespacenum.html#a12ffb2d4e55a92701e3503747efe72d7',1,'num::row_slice(const ScalarField2D &amp;g, int row)']]],
+  ['rows_22',['rows',['../classnum_1_1BandedMatrix.html#a7fa6c2dcd5def66cd712c1425b37cf8a',1,'num::BandedMatrix::rows()'],['../structnum_1_1kernel_1_1subspace_1_1CallableOp.html#a3fb874f5681d8abd7929b6a1e09c4d25',1,'num::kernel::subspace::CallableOp::rows()'],['../structnum_1_1kernel_1_1subspace_1_1SparseOp.html#a1138e392c8128588627bb918b05d9c3e',1,'num::kernel::subspace::SparseOp::rows()'],['../structnum_1_1kernel_1_1subspace_1_1DenseOp.html#a4a8ea703693420df71b423eb2aa1f705',1,'num::kernel::subspace::DenseOp::rows()'],['../structnum_1_1kernel_1_1subspace_1_1LinearOp.html#ab4961e98f118cf108648a63123f4c1fa',1,'num::kernel::subspace::LinearOp::rows()'],['../structnum_1_1SmallMatrix.html#a8d71556f6f4012ff667c95031049aaa7',1,'num::SmallMatrix::rows()'],['../classnum_1_1Matrix.html#ad32ac6c9cec1ee270ef0fac73d12e05a',1,'num::Matrix::rows()']]],
+  ['run_23',['run',['../namespacenum_1_1viz.html#a5e605dfe34313d763b1b573d5c8eeb78',1,'num::viz::run()'],['../classnum_1_1RK4__2ndSteps.html#a76b0cb30f93269263f04ffddbdee3f68',1,'num::RK4_2ndSteps::run()'],['../classnum_1_1Yoshida4Steps.html#aa5c2c1756548d776928403ac539e1471',1,'num::Yoshida4Steps::run()'],['../classnum_1_1VerletSteps.html#a96bcd1794bf2f5d817c0aafc9e3aa890',1,'num::VerletSteps::run()'],['../classnum_1_1RK45Steps.html#a1a55729646c446a2fbd70db0c10add7e',1,'num::RK45Steps::run()'],['../classnum_1_1RK4Steps.html#aaaa4ac5384fcdc47d372aba6f4c0caf5',1,'num::RK4Steps::run()'],['../classnum_1_1EulerSteps.html#ad3221247ace1a953a4e0206c846ba40c',1,'num::EulerSteps::run()']]]
+];

@@ -1,0 +1,7 @@
+var searchData=
+[
+  ['impl_2ehpp_0',['impl.hpp',['../linalg_2eigen_2backends_2omp_2impl_8hpp.html',1,'(Global Namespace)'],['../spectral_2backends_2stdsimd_2impl_8hpp.html',1,'(Global Namespace)'],['../spectral_2backends_2seq_2impl_8hpp.html',1,'(Global Namespace)'],['../spectral_2backends_2opt_2impl_8hpp.html',1,'(Global Namespace)'],['../spectral_2backends_2fftw_2impl_8hpp.html',1,'(Global Namespace)'],['../linalg_2svd_2backends_2seq_2impl_8hpp.html',1,'(Global Namespace)'],['../linalg_2svd_2backends_2lapack_2impl_8hpp.html',1,'(Global Namespace)'],['../linalg_2factorization_2backends_2seq_2impl_8hpp.html',1,'(Global Namespace)'],['../linalg_2factorization_2backends_2lapack_2impl_8hpp.html',1,'(Global Namespace)'],['../linalg_2eigen_2backends_2seq_2impl_8hpp.html',1,'(Global Namespace)'],['../linalg_2eigen_2backends_2lapack_2impl_8hpp.html',1,'(Global Namespace)'],['../core_2backends_2simd_2impl_8hpp.html',1,'(Global Namespace)'],['../core_2backends_2seq_2impl_8hpp.html',1,'(Global Namespace)'],['../core_2backends_2omp_2impl_8hpp.html',1,'(Global Namespace)'],['../core_2backends_2gpu_2impl_8hpp.html',1,'(Global Namespace)'],['../core_2backends_2blas_2impl_8hpp.html',1,'(Global Namespace)']]],
+  ['implicit_2ehpp_1',['implicit.hpp',['../implicit_8hpp.html',1,'']]],
+  ['index_2emd_2',['index.md',['../index_8md.html',1,'']]],
+  ['integer_5fpow_2ehpp_3',['integer_pow.hpp',['../integer__pow_8hpp.html',1,'']]]
+];
