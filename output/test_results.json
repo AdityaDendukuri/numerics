@@ -3,7 +3,7 @@
   "failures": 0,
   "disabled": 0,
   "errors": 0,
-  "timestamp": "2026-04-11T17:18:57Z",
+  "timestamp": "2026-04-11T17:47:06Z",
   "time": "0.011s",
   "name": "AllTests",
   "testsuites": [
@@ -13,7 +13,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -22,7 +22,7 @@
           "line": 6,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Vector"
         },
@@ -32,7 +32,7 @@
           "line": 19,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Vector"
         },
@@ -42,7 +42,7 @@
           "line": 28,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Vector"
         },
@@ -52,7 +52,7 @@
           "line": 36,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Vector"
         },
@@ -62,7 +62,7 @@
           "line": 46,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Vector"
         },
@@ -72,7 +72,7 @@
           "line": 55,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Vector"
         },
@@ -82,7 +82,7 @@
           "line": 61,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Vector"
         }
@@ -94,7 +94,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -103,7 +103,7 @@
           "line": 6,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Matrix"
         },
@@ -113,7 +113,7 @@
           "line": 17,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Matrix"
         },
@@ -123,7 +123,7 @@
           "line": 28,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Matrix"
         },
@@ -133,7 +133,7 @@
           "line": 45,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Matrix"
         },
@@ -143,7 +143,7 @@
           "line": 71,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Matrix"
         }
@@ -155,7 +155,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -164,7 +164,7 @@
           "line": 98,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "MatmulPolicy"
         }
@@ -176,7 +176,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -185,7 +185,7 @@
           "line": 109,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "MatvecPolicy"
         }
@@ -197,7 +197,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -206,7 +206,7 @@
           "line": 11,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "CG"
         },
@@ -216,7 +216,7 @@
           "line": 33,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "CG"
         },
@@ -226,7 +226,7 @@
           "line": 57,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "CG"
         }
@@ -238,7 +238,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -247,7 +247,7 @@
           "line": 76,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Thomas"
         },
@@ -257,7 +257,7 @@
           "line": 84,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Thomas"
         },
@@ -267,7 +267,7 @@
           "line": 98,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Thomas"
         }
@@ -279,8 +279,8 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
-      "time": "0.002s",
+      "timestamp": "2026-04-11T17:47:06Z",
+      "time": "0.001s",
       "testsuite": [
         {
           "name": "DiagonalDominant3x3",
@@ -288,8 +288,8 @@
           "line": 107,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
-          "time": "0.002s",
+          "timestamp": "2026-04-11T17:47:06Z",
+          "time": "0.001s",
           "classname": "GaussSeidel"
         },
         {
@@ -298,7 +298,7 @@
           "line": 129,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "GaussSeidel"
         },
@@ -308,7 +308,7 @@
           "line": 146,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "GaussSeidel"
         }
@@ -320,7 +320,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -329,7 +329,7 @@
           "line": 171,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Jacobi"
         },
@@ -339,7 +339,7 @@
           "line": 192,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Jacobi"
         },
@@ -349,7 +349,7 @@
           "line": 209,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Jacobi"
         }
@@ -361,7 +361,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -370,7 +370,7 @@
           "line": 233,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "GMRES"
         },
@@ -380,7 +380,7 @@
           "line": 255,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "GMRES"
         },
@@ -390,7 +390,7 @@
           "line": 272,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "GMRES"
         },
@@ -400,7 +400,7 @@
           "line": 307,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "GMRES"
         }
@@ -412,7 +412,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -421,7 +421,7 @@
           "line": 330,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "SparseMatrix"
         },
@@ -431,7 +431,7 @@
           "line": 343,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "SparseMatrix"
         },
@@ -441,7 +441,7 @@
           "line": 354,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "SparseMatrix"
         }
@@ -453,7 +453,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -462,7 +462,7 @@
           "line": 14,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedMatrix"
         },
@@ -472,7 +472,7 @@
           "line": 26,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedMatrix"
         },
@@ -482,7 +482,7 @@
           "line": 37,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedMatrix"
         },
@@ -492,7 +492,7 @@
           "line": 66,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedMatrix"
         },
@@ -502,7 +502,7 @@
           "line": 84,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedMatrix"
         },
@@ -512,7 +512,7 @@
           "line": 104,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedMatrix"
         }
@@ -524,7 +524,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -533,7 +533,7 @@
           "line": 118,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -543,7 +543,7 @@
           "line": 149,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -553,7 +553,7 @@
           "line": 183,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -563,7 +563,7 @@
           "line": 226,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -573,7 +573,7 @@
           "line": 271,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -583,7 +583,7 @@
           "line": 314,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -593,7 +593,7 @@
           "line": 426,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -603,7 +603,7 @@
           "line": 459,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -613,7 +613,7 @@
           "line": 517,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -623,7 +623,7 @@
           "line": 530,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         },
@@ -633,7 +633,7 @@
           "line": 549,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedSolver"
         }
@@ -645,7 +645,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -654,7 +654,7 @@
           "line": 372,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedMatvec"
         },
@@ -664,7 +664,7 @@
           "line": 401,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedMatvec"
         }
@@ -676,7 +676,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -685,7 +685,7 @@
           "line": 499,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "BandedNorm"
         }
@@ -697,7 +697,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -706,7 +706,7 @@
           "line": 25,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         },
@@ -716,7 +716,7 @@
           "line": 53,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         },
@@ -726,7 +726,7 @@
           "line": 68,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         },
@@ -736,7 +736,7 @@
           "line": 87,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         },
@@ -746,7 +746,7 @@
           "line": 113,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         },
@@ -756,7 +756,7 @@
           "line": 124,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         },
@@ -766,7 +766,7 @@
           "line": 142,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         },
@@ -776,7 +776,7 @@
           "line": 169,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         },
@@ -786,7 +786,7 @@
           "line": 204,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "LU"
         }
@@ -798,7 +798,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -807,7 +807,7 @@
           "line": 250,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "QR"
         },
@@ -817,7 +817,7 @@
           "line": 266,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "QR"
         },
@@ -827,7 +827,7 @@
           "line": 282,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "QR"
         },
@@ -837,7 +837,7 @@
           "line": 304,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "QR"
         },
@@ -847,7 +847,7 @@
           "line": 325,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "QR"
         },
@@ -857,7 +857,7 @@
           "line": 348,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "QR"
         },
@@ -867,7 +867,7 @@
           "line": 389,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "QR"
         }
@@ -879,7 +879,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -888,7 +888,7 @@
           "line": 13,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         },
@@ -898,7 +898,7 @@
           "line": 23,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         },
@@ -908,7 +908,7 @@
           "line": 30,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         },
@@ -918,7 +918,7 @@
           "line": 43,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         },
@@ -928,7 +928,7 @@
           "line": 56,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         },
@@ -938,7 +938,7 @@
           "line": 65,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         },
@@ -948,7 +948,7 @@
           "line": 74,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         },
@@ -958,7 +958,7 @@
           "line": 83,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         },
@@ -968,7 +968,7 @@
           "line": 90,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Roots"
         }
@@ -980,7 +980,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -989,7 +989,7 @@
           "line": 109,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -999,7 +999,7 @@
           "line": 118,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1009,7 +1009,7 @@
           "line": 127,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1019,7 +1019,7 @@
           "line": 134,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1029,7 +1029,7 @@
           "line": 143,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1039,7 +1039,7 @@
           "line": 152,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1049,7 +1049,7 @@
           "line": 160,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1059,7 +1059,7 @@
           "line": 169,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1069,7 +1069,7 @@
           "line": 179,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1079,7 +1079,7 @@
           "line": 198,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         },
@@ -1089,7 +1089,7 @@
           "line": 207,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Quadrature"
         }
@@ -1101,7 +1101,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0.002s",
       "testsuite": [
         {
@@ -1110,7 +1110,7 @@
           "line": 87,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0.001s",
           "classname": "FFT"
         },
@@ -1120,7 +1120,7 @@
           "line": 104,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1130,7 +1130,7 @@
           "line": 124,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1140,7 +1140,7 @@
           "line": 145,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1150,7 +1150,7 @@
           "line": 169,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1160,7 +1160,7 @@
           "line": 200,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1170,7 +1170,7 @@
           "line": 214,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1180,7 +1180,7 @@
           "line": 231,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1190,7 +1190,7 @@
           "line": 309,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1200,7 +1200,7 @@
           "line": 334,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1210,7 +1210,7 @@
           "line": 364,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1220,7 +1220,7 @@
           "line": 371,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         },
@@ -1230,7 +1230,7 @@
           "line": 378,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFT"
         }
@@ -1242,7 +1242,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0.001s",
       "testsuite": [
         {
@@ -1251,7 +1251,7 @@
           "line": 252,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFTPlan"
         },
@@ -1261,7 +1261,7 @@
           "line": 270,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFTPlan"
         },
@@ -1271,7 +1271,7 @@
           "line": 290,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFTPlan"
         },
@@ -1281,7 +1281,7 @@
           "line": 385,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "FFTPlan"
         }
@@ -1293,7 +1293,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1302,7 +1302,7 @@
           "line": 47,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Euler"
         }
@@ -1314,7 +1314,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1323,7 +1323,7 @@
           "line": 65,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_RK4"
         },
@@ -1333,7 +1333,7 @@
           "line": 78,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_RK4"
         }
@@ -1345,7 +1345,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1354,7 +1354,7 @@
           "line": 88,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_RK45"
         },
@@ -1364,7 +1364,7 @@
           "line": 97,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_RK45"
         }
@@ -1376,7 +1376,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1385,7 +1385,7 @@
           "line": 109,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Stepper"
         },
@@ -1395,7 +1395,7 @@
           "line": 123,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Stepper"
         }
@@ -1407,7 +1407,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1416,7 +1416,7 @@
           "line": 136,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Verlet"
         },
@@ -1426,7 +1426,7 @@
           "line": 147,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Verlet"
         },
@@ -1436,7 +1436,7 @@
           "line": 162,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Verlet"
         },
@@ -1446,7 +1446,7 @@
           "line": 238,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Verlet"
         }
@@ -1458,7 +1458,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1467,7 +1467,7 @@
           "line": 199,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Yoshida4"
         },
@@ -1477,7 +1477,7 @@
           "line": 208,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Yoshida4"
         },
@@ -1487,7 +1487,7 @@
           "line": 223,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "ODE_Yoshida4"
         }
@@ -1499,7 +1499,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1508,7 +1508,7 @@
           "line": 54,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "EigSym_Jacobi"
         },
@@ -1518,7 +1518,7 @@
           "line": 71,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "EigSym_Jacobi"
         },
@@ -1528,7 +1528,7 @@
           "line": 78,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "EigSym_Jacobi"
         }
@@ -1540,7 +1540,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1549,7 +1549,7 @@
           "line": 126,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "PowerIteration"
         }
@@ -1561,7 +1561,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1570,7 +1570,7 @@
           "line": 142,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "Lanczos"
         }
@@ -1582,7 +1582,7 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
+      "timestamp": "2026-04-11T17:47:06Z",
       "time": "0s",
       "testsuite": [
         {
@@ -1591,7 +1591,7 @@
           "line": 58,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "SVD_Jacobi"
         },
@@ -1601,7 +1601,7 @@
           "line": 67,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "SVD_Jacobi"
         },
@@ -1611,7 +1611,7 @@
           "line": 74,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "SVD_Jacobi"
         }
@@ -1623,8 +1623,8 @@
       "failures": 0,
       "disabled": 0,
       "errors": 0,
-      "timestamp": "2026-04-11T17:18:57Z",
-      "time": "0.001s",
+      "timestamp": "2026-04-11T17:47:06Z",
+      "time": "0s",
       "testsuite": [
         {
           "name": "TopKSingularValues",
@@ -1632,7 +1632,7 @@
           "line": 140,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "SVD_Randomized"
         },
@@ -1642,7 +1642,7 @@
           "line": 152,
           "status": "RUN",
           "result": "COMPLETED",
-          "timestamp": "2026-04-11T17:18:57Z",
+          "timestamp": "2026-04-11T17:47:06Z",
           "time": "0s",
           "classname": "SVD_Randomized"
         }
