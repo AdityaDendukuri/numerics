@@ -74,7 +74,7 @@ for (auto [t, y] : num::rk45(lorenz, y0, params))
 ### Clone and build
 
 ```bash
-git clone https://github.com/numerics-cpp/numerics
+git clone https://github.com/AdityaDendukuri/numerics
 cmake -B build -DNUMERICS_BUILD_TESTS=ON -DNUMERICS_BUILD_BENCHMARKS=ON
 cmake --build build -j$(nproc)
 ./build/tests/numerics_tests
@@ -87,7 +87,7 @@ cmake --build build -j$(nproc)
 include(FetchContent)
 FetchContent_Declare(
     numerics
-    GIT_REPOSITORY https://github.com/numerics-cpp/numerics.git
+    GIT_REPOSITORY https://github.com/AdityaDendukuri/numerics.git
     GIT_TAG        main
 )
 FetchContent_MakeAvailable(numerics)
@@ -101,7 +101,7 @@ target_link_libraries(my_app PRIVATE numerics)
 The report covers: build environment (compiler, detected backends), test pass/fail counts
 per suite, benchmark throughput tables for every module, and throughput-vs-size plots.
 
-**Browse the latest report:** [numerics-cpp.github.io/numerics-report](https://numerics-cpp.github.io/numerics-report)
+**Browse the latest report:** [adityadendukuri.github.io/numerics/report](https://adityadendukuri.github.io/numerics/report)
 
 **Generate locally:**
 
@@ -181,7 +181,7 @@ real h_next = kernel::subspace::arnoldi_step(op, V, h, j, scratch);
 ## Physics applications
 
 Interactive simulations built on the low-level API live in
-[numerics-apps](https://github.com/numerics-cpp/numerics-apps).
+[numerics-apps](https://github.com/AdityaDendukuri/numerics-apps).
 
 | App | Description |
 |-----|-------------|

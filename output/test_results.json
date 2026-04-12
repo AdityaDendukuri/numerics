@@ -1,0 +1,1652 @@
+{
+  "tests": 130,
+  "failures": 0,
+  "disabled": 0,
+  "errors": 0,
+  "timestamp": "2026-04-11T17:18:57Z",
+  "time": "0.011s",
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "Vector",
+      "tests": 7,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Construction",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 6,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Vector"
+        },
+        {
+          "name": "CopyMove",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 19,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Vector"
+        },
+        {
+          "name": "Scale",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 28,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Vector"
+        },
+        {
+          "name": "Add",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 36,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Vector"
+        },
+        {
+          "name": "Axpy",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 46,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Vector"
+        },
+        {
+          "name": "Dot",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 55,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Vector"
+        },
+        {
+          "name": "Norm",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 61,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Vector"
+        }
+      ]
+    },
+    {
+      "name": "Matrix",
+      "tests": 5,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Construction",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 6,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Matrix"
+        },
+        {
+          "name": "CopyMove",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 17,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Matrix"
+        },
+        {
+          "name": "Matvec",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 28,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Matrix"
+        },
+        {
+          "name": "Matmul",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 45,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Matrix"
+        },
+        {
+          "name": "Matadd",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 71,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Matrix"
+        }
+      ]
+    },
+    {
+      "name": "MatmulPolicy",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "BlockedMatchesSeq",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 98,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "MatmulPolicy"
+        }
+      ]
+    },
+    {
+      "name": "MatvecPolicy",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "BlockedMatchesSeq",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 109,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "MatvecPolicy"
+        }
+      ]
+    },
+    {
+      "name": "CG",
+      "tests": 3,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Small3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 11,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "CG"
+        },
+        {
+          "name": "DiagonalDominant5x5",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 33,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "CG"
+        },
+        {
+          "name": "ConvergesWithinN",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 57,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "CG"
+        }
+      ]
+    },
+    {
+      "name": "Thomas",
+      "tests": 3,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Small4x4",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 76,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Thomas"
+        },
+        {
+          "name": "Laplacian1D",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 84,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Thomas"
+        },
+        {
+          "name": "TwoByTwo",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 98,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Thomas"
+        }
+      ]
+    },
+    {
+      "name": "GaussSeidel",
+      "tests": 3,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0.002s",
+      "testsuite": [
+        {
+          "name": "DiagonalDominant3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 107,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0.002s",
+          "classname": "GaussSeidel"
+        },
+        {
+          "name": "DiagonalSystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 129,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "GaussSeidel"
+        },
+        {
+          "name": "ResidualVerified",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 146,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "GaussSeidel"
+        }
+      ]
+    },
+    {
+      "name": "Jacobi",
+      "tests": 3,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "DiagonalDominant3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 171,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Jacobi"
+        },
+        {
+          "name": "DiagonalSystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 192,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Jacobi"
+        },
+        {
+          "name": "ResidualVerified",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 209,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Jacobi"
+        }
+      ]
+    },
+    {
+      "name": "GMRES",
+      "tests": 4,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "SPD3x3Dense",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 233,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "GMRES"
+        },
+        {
+          "name": "NonSymmetricDense",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 255,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "GMRES"
+        },
+        {
+          "name": "SparseLaplacian1D",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 272,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "GMRES"
+        },
+        {
+          "name": "MatrixFree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 307,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "GMRES"
+        }
+      ]
+    },
+    {
+      "name": "SparseMatrix",
+      "tests": 3,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "FromTriplets",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 330,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "SparseMatrix"
+        },
+        {
+          "name": "DuplicatesSummed",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 343,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "SparseMatrix"
+        },
+        {
+          "name": "Matvec",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 354,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "SparseMatrix"
+        }
+      ]
+    },
+    {
+      "name": "BandedMatrix",
+      "tests": 6,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "ConstructBasic",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 14,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedMatrix"
+        },
+        {
+          "name": "ConstructWithValue",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 26,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedMatrix"
+        },
+        {
+          "name": "ElementAccess",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 37,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedMatrix"
+        },
+        {
+          "name": "InBandCheck",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 66,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedMatrix"
+        },
+        {
+          "name": "CopyConstruct",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 84,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedMatrix"
+        },
+        {
+          "name": "MoveConstruct",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 104,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedMatrix"
+        }
+      ]
+    },
+    {
+      "name": "BandedSolver",
+      "tests": 11,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Tridiagonal4x4",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 118,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "Tridiagonal1DLaplacian",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 149,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "Pentadiagonal",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 183,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "GeneralBanded",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 226,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "LUFactorizationReuse",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 271,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "MultipleRHS",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 314,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "LargeTridiagonal",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 426,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "LargePentadiagonal",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 459,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "Size1",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 517,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "Size2",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 530,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        },
+        {
+          "name": "DiagonalMatrix",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 549,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedSolver"
+        }
+      ]
+    },
+    {
+      "name": "BandedMatvec",
+      "tests": 2,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Basic",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 372,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedMatvec"
+        },
+        {
+          "name": "GEMV",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 401,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedMatvec"
+        }
+      ]
+    },
+    {
+      "name": "BandedNorm",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Norm1",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 499,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "BandedNorm"
+        }
+      ]
+    },
+    {
+      "name": "LU",
+      "tests": 9,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "SolveSmall3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 25,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        },
+        {
+          "name": "SolveIdentitySystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 53,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        },
+        {
+          "name": "SolveDiagonalSystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 68,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        },
+        {
+          "name": "SolveLargerSystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 87,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        },
+        {
+          "name": "Determinant2x2",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 113,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        },
+        {
+          "name": "Determinant3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 124,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        },
+        {
+          "name": "InverseTimesOriginal",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 142,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        },
+        {
+          "name": "MultipleRHS",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 169,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        },
+        {
+          "name": "SingularMatrix",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 204,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "LU"
+        }
+      ]
+    },
+    {
+      "name": "QR",
+      "tests": 7,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "OrthogonalitySquare3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 250,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "QR"
+        },
+        {
+          "name": "ProductRecoversA_3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 266,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "QR"
+        },
+        {
+          "name": "RIsUpperTriangular",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 282,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "QR"
+        },
+        {
+          "name": "ProductRecoversA_Overdetermined",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 304,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "QR"
+        },
+        {
+          "name": "SolveSquareExact",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 325,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "QR"
+        },
+        {
+          "name": "SolveLeastSquares",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 348,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "QR"
+        },
+        {
+          "name": "IdentityMatrix",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 389,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "QR"
+        }
+      ]
+    },
+    {
+      "name": "Roots",
+      "tests": 9,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "BisectionSimple",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 13,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        },
+        {
+          "name": "BisectionBadBracketThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 23,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        },
+        {
+          "name": "NewtonQuadratic",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 30,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        },
+        {
+          "name": "NewtonTrigonometric",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 43,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        },
+        {
+          "name": "SecantSimple",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 56,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        },
+        {
+          "name": "BrentSimple",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 65,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        },
+        {
+          "name": "BrentTrigonometric",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 74,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        },
+        {
+          "name": "BrentBadBracketThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 83,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        },
+        {
+          "name": "AllMethodsAgree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 90,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Roots"
+        }
+      ]
+    },
+    {
+      "name": "Quadrature",
+      "tests": 11,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "TrapzPolynomial",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 109,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "SimpsonPolynomial",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 118,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "SimpsonOddNThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 127,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "GaussLegendreTrig",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 134,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "GaussLegendreExactPolynomial",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 143,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "AdaptiveSimpsonTrig",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 152,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "AdaptiveSimpsonExp",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 160,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "RombergHighAccuracy",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 169,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "AllMethodsAgree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 179,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "TrapzOmpMatchesSeq",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 198,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        },
+        {
+          "name": "SimpsonOmpMatchesSeq",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 207,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Quadrature"
+        }
+      ]
+    },
+    {
+      "name": "FFT",
+      "tests": 13,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0.002s",
+      "testsuite": [
+        {
+          "name": "DCComponent",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 87,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0.001s",
+          "classname": "FFT"
+        },
+        {
+          "name": "SingleFrequencySpike",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 104,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "RoundTrip",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 124,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "Parseval",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 145,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "Linearity",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 169,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "RfftDC",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 200,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "RfftFrequencySpike",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 214,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "IrfftRoundTrip",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 231,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "AllBackendsAgree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 309,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "AllBackendsIrfftAgree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 334,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "SizeMismatchThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 364,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "RfftSizeMismatchThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 371,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        },
+        {
+          "name": "IrfftSizeMismatchThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 378,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFT"
+        }
+      ]
+    },
+    {
+      "name": "FFTPlan",
+      "tests": 4,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0.001s",
+      "testsuite": [
+        {
+          "name": "MatchesOneShot",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 252,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFTPlan"
+        },
+        {
+          "name": "InversePlanRoundTrip",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 270,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFTPlan"
+        },
+        {
+          "name": "RepeatedExecuteSameResult",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 290,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFTPlan"
+        },
+        {
+          "name": "ExecuteSizeMismatchThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 385,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "FFTPlan"
+        }
+      ]
+    },
+    {
+      "name": "ODE_Euler",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "OrderOne",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 47,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Euler"
+        }
+      ]
+    },
+    {
+      "name": "ODE_RK4",
+      "tests": 2,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "OrderFour",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 65,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_RK4"
+        },
+        {
+          "name": "HarmonicOscillatorAccuracy",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 78,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_RK4"
+        }
+      ]
+    },
+    {
+      "name": "ODE_RK45",
+      "tests": 2,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "HarmonicOscillator",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 88,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_RK45"
+        },
+        {
+          "name": "ExponentialDecay",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 97,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_RK45"
+        }
+      ]
+    },
+    {
+      "name": "ODE_Stepper",
+      "tests": 2,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "RK4RecordsTrajectory",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 109,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Stepper"
+        },
+        {
+          "name": "RK45StepCount",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 123,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Stepper"
+        }
+      ]
+    },
+    {
+      "name": "ODE_Verlet",
+      "tests": 4,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "CircularOrbit",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 136,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Verlet"
+        },
+        {
+          "name": "EnergyBounded",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 147,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Verlet"
+        },
+        {
+          "name": "EnergyBetterThanRK4Long",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 162,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Verlet"
+        },
+        {
+          "name": "StepCount",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 238,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Verlet"
+        }
+      ]
+    },
+    {
+      "name": "ODE_Yoshida4",
+      "tests": 3,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "CircularOrbit",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 199,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Yoshida4"
+        },
+        {
+          "name": "HigherOrderThanVerlet",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 208,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Yoshida4"
+        },
+        {
+          "name": "EnergyBounded",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 223,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "ODE_Yoshida4"
+        }
+      ]
+    },
+    {
+      "name": "EigSym_Jacobi",
+      "tests": 3,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Reconstruct3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 54,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "EigSym_Jacobi"
+        },
+        {
+          "name": "EigenvaluesAscending",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 71,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "EigSym_Jacobi"
+        },
+        {
+          "name": "ReconstructN32",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 78,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "EigSym_Jacobi"
+        }
+      ]
+    },
+    {
+      "name": "PowerIteration",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "DominantEigenvalue",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 126,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "PowerIteration"
+        }
+      ]
+    },
+    {
+      "name": "Lanczos",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "TopKEigenvalues",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 142,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "Lanczos"
+        }
+      ]
+    },
+    {
+      "name": "SVD_Jacobi",
+      "tests": 3,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "Reconstruct3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 58,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "SVD_Jacobi"
+        },
+        {
+          "name": "ReconstructRectangular",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 67,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "SVD_Jacobi"
+        },
+        {
+          "name": "ReconstructN32",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 74,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "SVD_Jacobi"
+        }
+      ]
+    },
+    {
+      "name": "SVD_Randomized",
+      "tests": 2,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2026-04-11T17:18:57Z",
+      "time": "0.001s",
+      "testsuite": [
+        {
+          "name": "TopKSingularValues",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 140,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "SVD_Randomized"
+        },
+        {
+          "name": "ColumnOrthonormality",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 152,
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2026-04-11T17:18:57Z",
+          "time": "0s",
+          "classname": "SVD_Randomized"
+        }
+      ]
+    }
+  ]
+}

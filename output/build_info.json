@@ -1,0 +1,15 @@
+{
+  "date":         "2026-04-11 17:18 UTC",
+  "compiler":     "AppleClang 17.0.0.17000013",
+  "build_type":   "Release",
+  "has_blas":     true,
+  "has_fftw":     true,
+  "has_omp":      true,
+  "has_cuda":     false,
+  "has_mpi":      true,
+  "has_lapack":   false,
+  "system_name":  "macOS",
+  "cpu":          "8 core Apple M1 Pro",
+  "ram_mb":       "16384",
+  "gpu":          "n/a"
+}
