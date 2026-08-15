@@ -1,0 +1,29 @@
+/// @file numerics.hpp
+/// @brief Umbrella include for the numerics library.
+#pragma once
+
+#include "analysis/analysis.hpp"
+#include "core/concepts.hpp"
+#include "core/debug.hpp"
+#include "core/matrix.hpp"
+
+#include "core/parallel/cuda_ops.hpp"
+#include "core/parallel/mpi_ops.hpp"
+#include "core/policy.hpp"
+#include "core/types.hpp"
+#include "core/util/integer_pow.hpp"
+#include "core/vector.hpp"
+#include "fields/fields.hpp"
+#include "kernel/kernel.hpp"
+#include "linalg/linalg.hpp"
+#include "ode/ode.hpp"
+#include "operator/operator.hpp"
+
+#include "pde/pde.hpp"
+#include "plot/plot.hpp"
+#include "solve/sample.hpp"
+#include "solve/solve.hpp"
+#include "spatial/spatial.hpp"
+#include "spectral/fft.hpp"
+#include "stats/stats.hpp"
+#include "stochastic/markov.hpp"

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # ── Job 1: tests ─────────────────────────────────────────────────────────────
+  tests:
+    name: Tests
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends \
+            libopenblas-dev \
+            libfftw3-dev
+
+      - name: Configure
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DNUMERICS_BUILD_TESTS=ON \
+            -DNUMERICS_BUILD_BENCHMARKS=OFF \
+            -DNUMERICS_BUILD_DOCS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Run tests
+        run: ./build/tests/numerics_tests --gtest_output=xml:test_results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.sha }}
+          path: test_results.xml
+          retention-days: 14
+
