@@ -1,8 +1,5 @@
 /// @file solvers.hpp
 /// @brief Umbrella include for all linear solvers
-///
-/// Including this header provides every solver in the library.
-/// Individual headers can also be included directly.
 #pragma once
 
 #include "linalg/solvers/cg.hpp"
@@ -12,4 +9,5 @@
 #include "linalg/solvers/minres.hpp"
 #include "linalg/solvers/pcg.hpp"
 #include "linalg/solvers/preconditioner.hpp"
+#include "linalg/solvers/resolvent.hpp"
 #include "linalg/solvers/solver_result.hpp"

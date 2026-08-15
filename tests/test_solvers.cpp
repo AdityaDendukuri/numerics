@@ -19,7 +19,28 @@ static_assert(!CgCallable<operators::DenseOp>);
 
 // Conjugate Gradient
 
+TEST(Resolvent, DenseSolve) {
+  Matrix A(2, 2, 0.0);
+  A(0, 0) = 1.0; A(0, 1) = 2.0;
+  A(1, 0) = 3.0; A(1, 1) = 4.0;
+
+  Vector b{1.0, 2.0};
+  Complex s(2.0, 1.0);
+
+  auto x = resolvent_solve(s, A, b);
+  ASSERT_EQ(x.size(), 2);
+
+  Complex res0 = (s - Complex(A(0,0), 0)) * x[0] - Complex(A(0,1), 0) * x[1];
+  Complex res1 = -Complex(A(1,0), 0) * x[0] + (s - Complex(A(1,1), 0)) * x[1];
+
+  EXPECT_NEAR(res0.real(), b[0], 1e-10);
+  EXPECT_NEAR(res0.imag(), 0.0, 1e-10);
+  EXPECT_NEAR(res1.real(), b[1], 1e-10);
+  EXPECT_NEAR(res1.imag(), 0.0, 1e-10);
+}
+
 TEST(CG, Small3x3) {
+
   // A = [4 1 0; 1 4 1; 0 1 4], b = [1; 2; 3]  =>  x = [5/28, 2/7, 19/28]
   Matrix A(3, 3, 0.0);
   A(0, 0) = 4;
