@@ -229,11 +229,12 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
       if (i)
         fputs(", ", pipe);
       const auto& e = p.series[i];
-      fprintf(pipe,
-              "$d_%d with %s ls %zu",
-              block_offset + (int)i,
-              e.style.c_str(),
-              i + 1);
+      if (e.style.find("lw") != std::string::npos || e.style.find("lc") != std::string::npos || e.style.find("ps") != std::string::npos) {
+        fprintf(pipe, "$d_%d with %s", block_offset + (int)i, e.style.c_str());
+      } else {
+        fprintf(pipe, "$d_%d with %s ls %zu", block_offset + (int)i, e.style.c_str(), i + 1);
+      }
+
       if (!e.label.empty())
         fprintf(pipe, " title '%s'", e.label.c_str());
       else
