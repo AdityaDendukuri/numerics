@@ -1,41 +1,14 @@
 # examples/CMakeLists.txt
+# Auto-discovers all *.cpp example files and creates executable targets linked to numerics::numerics.
+# Also creates a custom meta-target 'numerics_examples' to build all examples at once.
 
-add_executable(play play.cpp)
-target_link_libraries(play PRIVATE numerics::numerics)
+file(GLOB EXAMPLE_SOURCES CONFIGURE_DEPENDS "*.cpp")
 
-add_executable(property_demo property_demo.cpp)
-target_link_libraries(property_demo PRIVATE numerics::numerics)
+add_custom_target(numerics_examples ALL)
 
-# Comprehensive Solver Showcase Examples
-add_executable(01_direct_factorizations 01_direct_factorizations.cpp)
-target_link_libraries(01_direct_factorizations PRIVATE numerics::numerics)
-
-add_executable(02_iterative_krylov_solvers 02_iterative_krylov_solvers.cpp)
-target_link_libraries(02_iterative_krylov_solvers PRIVATE numerics::numerics)
-
-add_executable(03_resolvent_and_expv 03_resolvent_and_expv.cpp)
-target_link_libraries(03_resolvent_and_expv PRIVATE numerics::numerics)
-
-add_executable(04_eigen_and_svd 04_eigen_and_svd.cpp)
-target_link_libraries(04_eigen_and_svd PRIVATE numerics::numerics)
-
-add_executable(05_symplectic_nbody_ode 05_symplectic_nbody_ode.cpp)
-target_link_libraries(05_symplectic_nbody_ode PRIVATE numerics::numerics)
-
-add_executable(06_pde_poisson_solver 06_pde_poisson_solver.cpp)
-target_link_libraries(06_pde_poisson_solver PRIVATE numerics::numerics)
-
-add_executable(07_spectral_fft_transforms 07_spectral_fft_transforms.cpp)
-target_link_libraries(07_spectral_fft_transforms PRIVATE numerics::numerics)
-
-add_executable(08_root_finding_and_quadrature 08_root_finding_and_quadrature.cpp)
-target_link_libraries(08_root_finding_and_quadrature PRIVATE numerics::numerics)
-
-add_executable(09_mcmc_bayesian_sampling 09_mcmc_bayesian_sampling.cpp)
-target_link_libraries(09_mcmc_bayesian_sampling PRIVATE numerics::numerics)
-
-add_executable(10_banded_and_spd_operators 10_banded_and_spd_operators.cpp)
-target_link_libraries(10_banded_and_spd_operators PRIVATE numerics::numerics)
-
-add_executable(11_terminal_ascii_plot 11_terminal_ascii_plot.cpp)
-target_link_libraries(11_terminal_ascii_plot PRIVATE numerics::numerics)
+foreach(SRC ${EXAMPLE_SOURCES})
+    get_filename_component(TARGET_NAME ${SRC} NAME_WE)
+    add_executable(${TARGET_NAME} ${SRC})
+    target_link_libraries(${TARGET_NAME} PRIVATE numerics::numerics)
+    add_dependencies(numerics_examples ${TARGET_NAME})
+endforeach()

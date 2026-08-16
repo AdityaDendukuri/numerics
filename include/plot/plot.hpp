@@ -385,6 +385,47 @@ inline void semilogx() {
   detail::state().current.logx_ = true;
 }
 
+// -- Multiplot ----------------------------------------------------------------
+
+/// @brief Start a multiplot with the given grid dimensions.
+inline void subplot(int rows, int cols = 1) {
+  detail::state().reset();
+  detail::state().mp_rows_ = rows;
+  detail::state().mp_cols_ = cols;
+}
+
+/// @brief Advance to the next panel.
+inline void next() {
+  detail::state().panels.push_back(detail::state().current);
+  detail::state().current = detail::Panel{};
+}
+
+// -- 2-D heatmap --------------------------------------------------------------
+
+template<typename Container>
+inline void heatmap(const Container& u,
+                    int N,
+                    double h,
+                    double vmin = 0.0,
+                    double vmax = 1.0) {
+  detail::HeatmapEntry e;
+  e.data.assign(u.data(), u.data() + u.size());
+  e.N = N;
+  e.h = h;
+  e.vmin = vmin;
+  e.vmax = vmax;
+  detail::state().current.heatmaps.push_back(std::move(e));
+}
+
+template<class Field>
+inline void heatmap(const Field& g, double vmin = 0.0, double vmax = 1.0) {
+  heatmap(g.vec(), g.N(), g.h(), vmin, vmax);
+}
+
+inline void colormap(const std::string& palette) {
+  detail::state().current.palette_ = palette;
+}
+
 // -- In-Terminal ASCII Plotting -----------------------------------------------
 
 /// Configure terminal ASCII mode with custom width and height.
