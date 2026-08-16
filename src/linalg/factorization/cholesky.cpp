@@ -1,6 +1,11 @@
 #include "linalg/factorization/cholesky.hpp"
 #include <cmath>
 #include <stdexcept>
+#include <vector>
+
+#if defined(NUMERICS_HAS_LAPACK)
+  #include "core/parallel/lapack_wrapper.hpp"
+#endif
 
 namespace num {
 
@@ -14,6 +19,23 @@ CholeskyResult cholesky(const Matrix& A) {
   }
 
   const idx n = A.rows();
+
+#if defined(NUMERICS_HAS_LAPACK)
+  Matrix L = A;
+  int info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), L.data(), static_cast<lapack_int>(n));
+  if (info != 0) {
+    return {std::move(L), false};
+  }
+
+  // Zero out upper triangle for lower triangular result L
+  for (idx i = 0; i < n; ++i) {
+    for (idx j = i + 1; j < n; ++j) {
+      L(i, j) = 0.0;
+    }
+  }
+
+  return {std::move(L), true};
+#else
   Matrix L(n, n, 0.0);
 
   for (idx i = 0; i < n; ++i) {
@@ -35,6 +57,7 @@ CholeskyResult cholesky(const Matrix& A) {
   }
 
   return {std::move(L), true};
+#endif
 }
 
 void cholesky_solve(const CholeskyResult& f, const Vector& b, Vector& x) {
