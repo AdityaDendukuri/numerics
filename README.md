@@ -1,17 +1,23 @@
 # numerics
 
-Modular C++20 numerical kernel and solver suite for dense/structured linear algebra, Krylov methods, ODE/PDE integrators, and spectral transforms.
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+[![CMake](https://img.shields.io/badge/CMake-3.20%2B-brightgreen.svg)](https://cmake.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-163%2F163%20Passing-success.svg)]()
+
+Modular C++20 numerical kernel and solver suite for **dense/structured linear algebra**, **Krylov subspace solvers**, **resolvent systems**, **ODE/PDE integrators**, and **spectral transforms**.
 
 ---
 
-## Three Layers & Target Dependencies
+## 🏛️ Architecture & Target Layering
 
 ```text
                      numerics::kernel  (Layer 1 & 2: Vectors, Matrices, Fields, Operators)
                       /      |      \
                      /       |       \
                     v        |        v
-   numerics::spectral        |       numerics::solvers (LU, QR, Cholesky, CG, GMRES, SVD)
+   numerics::spectral        |       numerics::solvers (LU, QR, Cholesky, CG, GMRES, SVD, Resolvent)
                              |        |
                              |        v
                              +---> numerics::ode (RK4, RK45, Verlet, Yoshida4)
@@ -24,14 +30,27 @@ Modular C++20 numerical kernel and solver suite for dense/structured linear alge
 | :--- | :--- | :--- | :--- |
 | **Layer 1** | `numerics::raw_kernel` | Header-only raw loops and memory routines | Use for zero-overhead inline memory loops without library compilation. |
 | **Layer 2** | `numerics::kernel` | Data structures & operators (`Vector`, `Matrix`, `SparseMatrix`, `BandedMatrix`, `Fields`, `LinearOperator`, `assume_spd()`) | Use when application requires arrays, grids, and operator abstractions without solver overhead or external dependencies. |
-| **Layer 3** | `numerics::numerics` | Full solver suite (`solve()`, LU/QR/SVD, CG, GMRES, RK45, PDE, FFT) | Use when complete linear, differential, or spectral solvers are required. |
+| **Layer 3** | `numerics::numerics` | Full solver suite (`solve()`, LU/QR/Cholesky/SVD, CG, GMRES, Resolvent, RK45, PDE, FFT) | Use when complete linear, differential, spectral, or resolvent solvers are required. |
 
 ---
 
-## Code Examples by Layer
+## 🚀 Hardware Acceleration Backends
 
-### 1. Storage & Core Data Structures (Layer 1 & 2)
+`numerics` features automated compile-time backend dispatch across Linux and macOS:
 
+| Backend | Flag | Supported Operations | macOS Acceleration | Linux Acceleration |
+| :--- | :--- | :--- | :--- | :--- |
+| **BLAS / cblas** | `NUMERICS_HAS_BLAS` | `dgemm`, `dgemv`, `ddot`, `daxpy`, `dger` | macOS Accelerate | OpenBLAS / BLIS |
+| **LAPACK / LAPACKE** | `NUMERICS_HAS_LAPACK` | `dgetrf` (LU), `dgeqrf` (QR), `dpotrf` (Cholesky), `dgesdd` (SVD), `dsyevd` (Eig) | Accelerate C/Fortran Shims | Native `lapacke.h` |
+| **OpenMP** | `NUMERICS_HAS_OMP` | Multi-threaded blocked loops, batched resolvents, parallel reductions | AppleClang OpenMP | GCC / Clang libgomp |
+| **FFTW3** | `NUMERICS_HAS_FFTW` | 1D/2D/3D Real & Complex DFTs | FFTW3 | FFTW3 |
+| **SIMD** | `NUMERICS_HAS_SIMD` | Auto-vectorized array kernels | ARM NEON | AVX2 / AVX-512 |
+
+---
+
+## 💡 Code Examples
+
+### 1. Storage & Core Data Structures
 ```cpp
 #include <numerics.hpp>
 
@@ -48,122 +67,55 @@ S.insert(0, 0, 2.0);
 S.finalize();
 ```
 
-### 2. Operators & Property Tags (Layer 2)
+### 2. Complex Resolvent Solves: $(s I - A) x = b$
+```cpp
+#include <numerics.hpp>
+#include <iostream>
 
+int main() {
+    num::Matrix A(2, 2, 0.0);
+    A(0, 0) = 1.0; A(0, 1) = 2.0;
+    A(1, 0) = 3.0; A(1, 1) = 4.0;
+
+    num::Vector b{1.0, 2.0};
+    num::cplx s(2.0, 1.0);
+
+    // Single shift complex resolvent solve: (sI - A) x = b
+    std::vector<num::cplx> x = num::resolvent_solve(s, A, b);
+
+    // Batched shift resolvent solve over OpenMP threads
+    std::vector<num::cplx> shifts = {num::cplx(1, 0), num::cplx(2, 1), num::cplx(0, 3)};
+    auto batch_sol = num::resolvent_solve_batch(shifts, A, b);
+
+    std::cout << "Resolvent solve completed. x[0] = " << x[0] << "\n";
+    return 0;
+}
+```
+
+### 3. Matrix Exponentials & Arnoldi Krylov Subspace (`num::expv`)
 ```cpp
 #include <numerics.hpp>
 
-// Dense linear operator wrapper
+// Compute e^{t A} v via m-step Arnoldi Krylov subspace projection
 num::operators::DenseOp Aop(A);
-static_assert(num::LinearOperator<decltype(Aop)>);
-
-// SPD property tag (required by CG/PCG solvers)
-auto spd_A = num::operators::assume_spd(Aop);
-static_assert(num::SPDLinearOperator<decltype(spd_A)>);
-
-// Matrix-free operator y = L(u)
-auto Lop = num::operators::make_op(
-    [N](const num::Vector& u, num::Vector& Lu) {
-        apply_laplacian_2d(u, Lu, N);
-    },
-    N * N);
-```
-
-### 3. Solvers & Numerical Integrators (Layer 3)
-
-```cpp
-#include <numerics.hpp>
-
-// Direct LU decomposition
-auto fact = num::lu(A);
-num::Vector sol;
-num::lu_solve(fact, b, sol);
-
-// Iterative Krylov solver
-num::LinearSolution s = num::solve(num::LinearProblem{spd_A, b}, num::CG{});
-
-// Adaptive ODE integration (RK45)
-auto rhs = [](double t, const num::Vector& y, num::Vector& dy) {
-    dy[0] = y[1];
-    dy[1] = -y[0];
-};
-auto ode_res = num::solve(num::ODEProblem{rhs, {1.0, 0.0}, 0.0, 10.0}, num::RK45{});
-
-// Reusable FFT plan
-num::spectral::FFTPlan plan(1024, /*forward=*/true);
-plan.execute(in, out);
+num::Vector v{1.0, 0.0, 0.0};
+num::Vector exp_tv = num::expv(1.0, Aop, v, 30, 1e-8);
 ```
 
 ---
 
-## C++20 Concept Enforcement
-
-Syntactic interfaces and mathematical properties are verified at compile time.
-
-```cpp
-static_assert(num::LinearOperator<decltype(Aop)>);
-
-// Passing untagged operator to CG triggers a static assertion error:
-// num::solve(num::LinearProblem{Aop, b}, num::CG{}); // Fails compile-time check
-
-// Wrap with assume_spd() to validate and satisfy SPDLinearOperator concept:
-auto spd_A = num::operators::assume_spd(Aop);
-num::LinearSolution s = num::solve(num::LinearProblem{spd_A, b}, num::CG{});
-```
-
----
-
-## Runtime Diagnostics
-
-Diagnostic levels inspect dimensions, non-finite values, and mathematical properties at runtime via `std::source_location`.
-
-```cpp
-// Set diagnostic depth: off, basic (dims/NaNs), or full (sampled property checks)
-num::debug::set_level(num::debug::DiagnosticLevel::full);
-
-// If an operator violates positive definiteness, assume_spd() raises a diagnostic:
-// [PropertyError] Error at main.cpp:14 in main:
-//   assume_spd() assertion failed: sampled inner product x^T A x = -4.000000 <= 0.
-```
-
----
-
-## Build & Integration
-
-### Build from Source
+## 🛠️ Build & Test
 
 ```bash
-cmake -B build -DNUMERICS_BUILD_TESTS=ON
+git clone https://github.com/AdityaDendukuri/numerics.git
+cd numerics
+cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
 ctest --test-dir build --output-on-failure
 ```
 
-### CMake Integration
-
-```cmake
-# Layer 1 & 2 (Data structures and operators only):
-find_package(numerics REQUIRED)
-target_link_libraries(my_app PRIVATE numerics::kernel)
-
-# Layer 3 Component Target (PDE field solvers, transitively links numerics::ode, numerics::solvers, numerics::kernel):
-find_package(numerics REQUIRED)
-target_link_libraries(my_app PRIVATE numerics::pde)
-
-# Full solver suite:
-find_package(numerics REQUIRED)
-target_link_libraries(my_app PRIVATE numerics::numerics)
-```
-
 ---
 
-## Sandbox Script
+## 📄 License
 
-```bash
-./play
-```
-
----
-
-## License
-
-MIT License.
+Distributed under the **MIT License**. See `LICENSE` for details.
