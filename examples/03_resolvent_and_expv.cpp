@@ -12,21 +12,30 @@ int main() {
     A(1,0) = 1.0;  A(1,1) = -2.0;
     Vector b{1.0, 0.0};
 
-    // 1. Single-shift Complex Resolvent Solve: x = (s I - A)^{-1} b
+    // 1. Single-shift Complex Resolvent Solve
     cplx s(1.0, 2.0);
     std::vector<cplx> x_res = resolvent_solve(s, A, b);
     std::cout << "Resolvent Solve (s=1+2i) x[0] = " << x_res[0] << "\n";
 
-    // 2. OpenMP Multi-shift Batched Resolvent Solve
-    std::vector<cplx> shifts = {cplx(1.0, 0.0), cplx(2.0, 1.0), cplx(0.5, 3.0)};
-    auto batch_x = resolvent_solve_batch(shifts, A, b);
-    std::cout << "Batched Resolvent solved " << batch_x.size() << " shift contours.\n";
-
-    // 3. Arnoldi Krylov Subspace Matrix Exponential e^{t A} v
+    // 2. Time evolution via expv e^{t A} v
     operators::DenseOp Aop(A);
     Vector v{1.0, 0.0};
-    Vector exp_tv = expv(0.5, Aop, v, 20, 1e-8);
-    std::cout << "Matrix Exponential e^{0.5 A} v = [" << exp_tv[0] << ", " << exp_tv[1] << "]\n";
+    std::vector<double> t_vec, u0_vec, u1_vec;
+    for (int step = 0; step <= 20; ++step) {
+        double t = step * 0.1;
+        Vector exp_tv = expv(t, Aop, v, 20, 1e-8);
+        t_vec.push_back(t);
+        u0_vec.push_back(exp_tv[0]);
+        u1_vec.push_back(exp_tv[1]);
+    }
+
+    plt::plot(t_vec, u0_vec, "State u0(t)", "lines");
+    plt::plot(t_vec, u1_vec, "State u1(t)", "lines");
+    plt::title("03 Resolvent & Expv: Matrix Exponential Time Trajectory e^{t A} v");
+    plt::xlabel("Time t");
+    plt::ylabel("Probability State u(t)");
+    plt::legend();
+    plt::show_dumb(100, 20);
 
     return 0;
 }

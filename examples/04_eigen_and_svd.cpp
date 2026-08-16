@@ -11,24 +11,28 @@ int main() {
     A(1,0) = -1.0; A(1,1) = 2.0; A(1,2) = -1.0;
     A(2,0) = 0.0; A(2,1) = -1.0; A(2,2) = 2.0;
 
-    // 1. Full Symmetric Eigendecomposition (Jacobi / LAPACK dsyevd)
+    // 1. Full Symmetric Eigendecomposition
     auto eig_res = eig_sym(A, 1e-12, 100, Backend::lapack);
     std::cout << "Eigenvalues: [" << eig_res.values[0] << ", " 
               << eig_res.values[1] << ", " << eig_res.values[2] << "]\n";
 
-    // 2. Lanczos Eigensolver (Top-K Eigenvalues)
-    auto lanczos_res = lanczos(A, 2, 20);
-    std::cout << "Lanczos Top-2 Eigenvalues: [" << lanczos_res.ritz_values[0] 
-              << ", " << lanczos_res.ritz_values[1] << "]\n";
-
-    // 3. Full Singular Value Decomposition (SVD)
+    // 2. SVD
     auto svd_res = svd(A, Backend::lapack);
     std::cout << "Singular Values: [" << svd_res.S[0] << ", " 
               << svd_res.S[1] << ", " << svd_res.S[2] << "]\n";
 
-    // 4. Fast Truncated SVD
-    auto rsvd_res = svd_truncated(A, 2);
-    std::cout << "Truncated Top-2 Singular Values: [" << rsvd_res.S[0] << ", " << rsvd_res.S[1] << "]\n";
+    // Plot spectrum
+    std::vector<double> mode_idx{1.0, 2.0, 3.0};
+    std::vector<double> eigs{eig_res.values[0], eig_res.values[1], eig_res.values[2]};
+    std::vector<double> svs{svd_res.S[0], svd_res.S[1], svd_res.S[2]};
+
+    plt::plot(mode_idx, eigs, "Eigenvalues lambda_k", "linespoints");
+    plt::plot(mode_idx, svs, "Singular Values sigma_k", "linespoints");
+    plt::title("04 Eigensolvers & SVD: Spectral Spectrum Comparison");
+    plt::xlabel("Mode Index k");
+    plt::ylabel("Spectral Magnitude");
+    plt::legend();
+    plt::show_dumb(100, 20);
 
     return 0;
 }

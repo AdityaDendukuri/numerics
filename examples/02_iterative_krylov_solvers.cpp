@@ -20,30 +20,29 @@ int main() {
     Vector b(n, 1.0);
     Vector x0(n, 0.0);
 
-    // 1. Conjugate Gradient (CG) with SPD operator tag
+    // 1. Conjugate Gradient (CG)
     operators::SparseOp Aop(A);
     auto spd_A = operators::assume_spd(Aop);
     auto cg_res = cg(spd_A, b, x0, 1e-8, 500);
     std::cout << "CG Converged: " << (cg_res.converged ? "YES" : "NO") 
               << " in " << cg_res.iterations << " iters. Residual = " << cg_res.residual << "\n";
 
-    // 2. GMRES Solver for non-symmetric / general sparse systems
+    // 2. GMRES Solver
     auto gmres_res = gmres(Aop, b, x0, 1e-8, 500, 30);
     std::cout << "GMRES Converged: " << (gmres_res.converged ? "YES" : "NO") 
               << " in " << gmres_res.iterations << " iters. Residual = " << gmres_res.residual << "\n";
 
-    // 3. Matrix-Free Custom Operator Solve
-    auto free_op = operators::make_op(
-        [n](const Vector& v, Vector& Av) {
-            for (idx i = 0; i < n; ++i) {
-                Av[i] = 4.0 * v[i];
-                if (i > 0) Av[i] -= v[i - 1];
-                if (i + 1 < n) Av[i] -= v[i + 1];
-            }
-        }, n, n);
-    auto spd_free = operators::assume_spd(free_op);
-    auto free_res = cg(spd_free, b, x0, 1e-8, 500);
-    std::cout << "Matrix-Free CG Converged in " << free_res.iterations << " iters.\n";
+    // Plot solution vector x over grid
+    std::vector<double> grid, sol;
+    for (idx i = 0; i < n; ++i) {
+        grid.push_back(static_cast<double>(i));
+        sol.push_back(x0[i]);
+    }
+    plt::plot(grid, sol, "x_cg", "lines");
+    plt::title("02 Krylov Iterative Solvers: Solution Vector x");
+    plt::xlabel("Grid Node i");
+    plt::ylabel("Solution x_i");
+    plt::show_dumb(100, 20);
 
     return 0;
 }

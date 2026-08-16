@@ -337,15 +337,16 @@ inline void plot(const Series& data,
   detail::state().current.series.push_back({data, label, style});
 }
 
-/// Append parallel x and y vectors to the current panel.
-inline void plot(const std::vector<double>& x,
-                 const std::vector<double>& y,
+/// Append parallel x and y vectors to the current panel (supports std::vector, num::Vector, etc.).
+template <typename ContainerX, typename ContainerY>
+inline void plot(const ContainerX& x,
+                 const ContainerY& y,
                  const std::string& label = "",
                  const std::string& style = "lines") {
   Series s;
   s.reserve(x.size());
   for (std::size_t i = 0; i < x.size() && i < y.size(); ++i)
-    s.emplace_back(x[i], y[i]);
+    s.emplace_back(static_cast<double>(x[i]), static_cast<double>(y[i]));
   detail::state().current.series.push_back({std::move(s), label, style});
 }
 

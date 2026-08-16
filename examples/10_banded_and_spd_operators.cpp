@@ -6,8 +6,8 @@
 int main() {
     using namespace num;
 
-    idx n = 5;
-    idx kl = 1, ku = 1; // Tridiagonal band structure
+    idx n = 10;
+    idx kl = 1, ku = 1;
     BandedMatrix B(n, kl, ku);
 
     for (idx i = 0; i < n; ++i) {
@@ -16,24 +16,23 @@ int main() {
         if (i + 1 < n) B(i, i + 1) = -1.0;
     }
 
-    Vector x_true(n, 1.0);
-    Vector y(n, 0.0);
-    banded_matvec(B, x_true, y);
-
-    std::cout << "Banded Matrix (n=" << n << ", kl=" << kl << ", ku=" << ku << ") MatVec y[0] = " << y[0] << "\n";
-
-    // Banded Solve
+    Vector b(n, 1.0);
     Vector x_sol(n, 0.0);
-    banded_solve(B, y, x_sol);
-    std::cout << "Banded Solve x[0] = " << x_sol[0] << " (True: " << x_true[0] << ")\n";
+    banded_solve(B, b, x_sol);
 
-    // Compile-time SPD property tagging
-    Matrix dense_A(n, n, 0.0);
-    for (idx i = 0; i < n; ++i) dense_A(i, i) = 4.0;
-    operators::DenseOp B_op(dense_A);
-    auto spd_tag = operators::assume_spd(B_op);
-    static_assert(SPDLinearOperator<decltype(spd_tag), Vector, Vector>);
-    std::cout << "Compile-time SPD Property Tag verified.\n";
+    std::cout << "Banded Matrix (n=" << n << ", kl=" << kl << ", ku=" << ku << ") Solved x[0] = " << x_sol[0] << "\n";
+
+    std::vector<double> grid, sol;
+    for (idx i = 0; i < n; ++i) {
+        grid.push_back(static_cast<double>(i));
+        sol.push_back(x_sol[i]);
+    }
+
+    plt::plot(grid, sol, "Banded x", "linespoints");
+    plt::title("10 Banded Matrices: Solution Vector x");
+    plt::xlabel("Grid Index i");
+    plt::ylabel("Solution x_i");
+    plt::show_dumb(100, 20);
 
     return 0;
 }
