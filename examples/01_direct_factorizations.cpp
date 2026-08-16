@@ -35,14 +35,14 @@ int main() {
     Vector x_thomas(3, 0.0);
     thomas(dl, d, du, b, x_thomas);
 
-    // Terminal ASCII Plot
+    // Terminal ASCII Plot (140x35)
     std::vector<double> idx_vec{0.0, 1.0, 2.0};
     std::vector<double> sol_vec{x_lu[0], x_lu[1], x_lu[2]};
     plt::plot(idx_vec, sol_vec, "x_solution", "linespoints");
     plt::title("01 Direct Factorizations: Solution Vector x");
     plt::xlabel("Index i");
     plt::ylabel("Solution x_i");
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

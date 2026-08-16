@@ -32,7 +32,7 @@ int main() {
     plt::title("09 Statistics: Sample Probability Density Function (PDF)");
     plt::xlabel("Sample Value x");
     plt::ylabel("Probability Density P(x)");
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

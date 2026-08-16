@@ -27,7 +27,7 @@ int main() {
     plt::title("08 Root Finding: Function Curve f(x) with Root at sqrt(2)");
     plt::xlabel("x");
     plt::ylabel("f(x)");
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

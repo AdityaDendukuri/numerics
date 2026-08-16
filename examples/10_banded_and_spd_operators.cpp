@@ -32,7 +32,7 @@ int main() {
     plt::title("10 Banded Matrices: Solution Vector x");
     plt::xlabel("Grid Index i");
     plt::ylabel("Solution x_i");
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

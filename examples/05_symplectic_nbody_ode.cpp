@@ -33,7 +33,7 @@ int main() {
     plt::xlabel("Time t");
     plt::ylabel("Phase Coordinates");
     plt::legend();
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

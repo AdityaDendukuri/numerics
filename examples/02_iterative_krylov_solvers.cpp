@@ -32,7 +32,7 @@ int main() {
     std::cout << "GMRES Converged: " << (gmres_res.converged ? "YES" : "NO") 
               << " in " << gmres_res.iterations << " iters. Residual = " << gmres_res.residual << "\n";
 
-    // Plot solution vector x over grid
+    // Plot solution vector x over grid (140x35)
     std::vector<double> grid, sol;
     for (idx i = 0; i < n; ++i) {
         grid.push_back(static_cast<double>(i));
@@ -42,7 +42,7 @@ int main() {
     plt::title("02 Krylov Iterative Solvers: Solution Vector x");
     plt::xlabel("Grid Node i");
     plt::ylabel("Solution x_i");
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

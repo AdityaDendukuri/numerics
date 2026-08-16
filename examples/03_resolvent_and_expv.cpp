@@ -35,7 +35,7 @@ int main() {
     plt::xlabel("Time t");
     plt::ylabel("Probability State u(t)");
     plt::legend();
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

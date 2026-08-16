@@ -31,13 +31,13 @@ int main() {
     plt::title("07 Spectral FFT: Input Dual-Frequency Signal");
     plt::xlabel("Time t");
     plt::ylabel("Amplitude");
-    plt::show_dumb(100, 18);
+    plt::show_dumb(140, 30);
 
     plt::plot(k_freq, mag_spec, "Spectrum |X(k)|", "linespoints");
     plt::title("07 Spectral FFT: Frequency Spectrum Magnitude");
     plt::xlabel("Frequency Bin k");
     plt::ylabel("|X(k)|");
-    plt::show_dumb(100, 18);
+    plt::show_dumb(140, 30);
 
     return 0;
 }

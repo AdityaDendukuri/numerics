@@ -38,7 +38,7 @@ int main() {
     plt::title("06 PDE Field Solver: 1D Mid-Slice Potential Phi(x)");
     plt::xlabel("Position x");
     plt::ylabel("Potential Phi");
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

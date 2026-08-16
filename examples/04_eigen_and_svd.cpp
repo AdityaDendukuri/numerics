@@ -21,7 +21,7 @@ int main() {
     std::cout << "Singular Values: [" << svd_res.S[0] << ", " 
               << svd_res.S[1] << ", " << svd_res.S[2] << "]\n";
 
-    // Plot spectrum
+    // Plot spectrum with high-res ASCII dimensions (140 cols x 35 rows)
     std::vector<double> mode_idx{1.0, 2.0, 3.0};
     std::vector<double> eigs{eig_res.values[0], eig_res.values[1], eig_res.values[2]};
     std::vector<double> svs{svd_res.S[0], svd_res.S[1], svd_res.S[2]};
@@ -32,7 +32,7 @@ int main() {
     plt::xlabel("Mode Index k");
     plt::ylabel("Spectral Magnitude");
     plt::legend();
-    plt::show_dumb(100, 20);
+    plt::show_dumb(140, 35);
 
     return 0;
 }

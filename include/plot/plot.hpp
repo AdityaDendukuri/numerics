@@ -142,7 +142,7 @@ struct State {
   std::vector<Panel> panels; // accumulated panels in multiplot mode
   int mp_rows_ = 0, mp_cols_ = 0; // 0 = single-plot mode
   std::string term_override_ = ""; // "dumb", "qt", "pngcairo"
-  int term_w_ = 120, term_h_ = 30;
+  int term_w_ = 140, term_h_ = 35;
 
   void reset() { *this = State{}; }
 };
@@ -429,14 +429,14 @@ inline void colormap(const std::string& palette) {
 // -- In-Terminal ASCII Plotting -----------------------------------------------
 
 /// Configure terminal ASCII mode with custom width and height.
-inline void terminal_dumb(int width = 120, int height = 30) {
+inline void terminal_dumb(int width = 140, int height = 35) {
   detail::state().term_override_ = "dumb";
   detail::state().term_w_ = width;
   detail::state().term_h_ = height;
 }
 
 /// Render ASCII plot directly to stdout/terminal window.
-inline void show_dumb(int width = 120, int height = 30) {
+inline void show_dumb(int width = 140, int height = 35) {
   terminal_dumb(width, height);
   FILE* pipe = popen("gnuplot", "w");
   if (!pipe)
