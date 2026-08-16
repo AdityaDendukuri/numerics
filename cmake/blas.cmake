@@ -37,7 +37,7 @@ else()
     message(STATUS "cblas.h: not found — add its directory to CMAKE_PREFIX_PATH")
 endif()
 
-# ── LAPACKE (C interface to LAPACK) ───────────────────────────────────────────
+# ── LAPACKE (Standard C interface to LAPACK across Linux & macOS) ──────────────
 if(NOT NUMERICS_USE_LAPACK)
     return()
 endif()
@@ -47,13 +47,15 @@ find_package(LAPACK QUIET)
 find_path(LAPACKE_INCLUDE_DIR lapacke.h
     PATH_SUFFIXES openblas lapacke
     HINTS
+        /opt/homebrew/opt/lapack/include
+        /usr/local/opt/lapack/include
         /usr/include/openblas
         /usr/local/include/openblas
         /usr/include
         /usr/local/include
 )
 
-find_library(LAPACKE_LIB NAMES lapacke openblas QUIET)
+find_library(LAPACKE_LIB NAMES lapacke openblas HINTS /opt/homebrew/opt/lapack/lib /usr/local/opt/lapack/lib QUIET)
 
 if(LAPACKE_INCLUDE_DIR AND (LAPACKE_LIB OR LAPACK_FOUND))
     target_compile_definitions(numerics_raw_kernel INTERFACE NUMERICS_HAS_LAPACK)

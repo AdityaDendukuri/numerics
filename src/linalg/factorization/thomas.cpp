@@ -8,8 +8,9 @@
 #include <vector>
 
 #if defined(NUMERICS_HAS_LAPACK)
-    #include <lapacke.h>
+    #include "core/parallel/lapack_wrapper.hpp"
 #endif
+
 
 namespace num {
 
