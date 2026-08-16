@@ -2,7 +2,6 @@
 /// @brief Experimental C++20 <experimental/simd> SIMD FFT backend.
 /// Only included by src/spectral/fft.cpp when NUMERICS_HAS_STD_SIMD is defined.
 #pragma once
-#include "backends/seq/impl.hpp"
 #include <experimental/simd>
 
 namespace num {
