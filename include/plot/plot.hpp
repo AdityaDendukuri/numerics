@@ -1,5 +1,5 @@
 /// @file plot/plot.hpp
-/// @brief Matplotlib-style plotting via a gnuplot pipe.
+/// @brief Matplotlib-style plotting via a gnuplot pipe with ASCII terminal support.
 #pragma once
 
 #include "core/vector.hpp"
@@ -141,6 +141,8 @@ struct State {
   Panel current;
   std::vector<Panel> panels; // accumulated panels in multiplot mode
   int mp_rows_ = 0, mp_cols_ = 0; // 0 = single-plot mode
+  std::string term_override_ = ""; // "dumb", "qt", "pngcairo"
+  int term_w_ = 120, term_h_ = 30;
 
   void reset() { *this = State{}; }
 };
@@ -151,7 +153,6 @@ inline State& state() {
 }
 
 // Write all datablocks for a panel, then emit the plot command for that panel.
-// block_offset: index of the first $d_N block allocated to this panel.
 inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
   if (p.series.empty() && p.heatmaps.empty())
     return;
@@ -171,7 +172,6 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
     fputs("unset ylabel\n", pipe);
 
   if (!p.heatmaps.empty()) {
-    // Heatmap panel rendered with pm3d map.
     const auto& hm = p.heatmaps[0];
     if (!p.palette_.empty())
       fprintf(pipe, "set palette %s\n", p.palette_.c_str());
@@ -247,14 +247,15 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
 inline void flush_to(FILE* pipe, const std::string& outfile) {
   auto& s = state();
 
-  // Collect all panels (push current last)
   std::vector<Panel> all = s.panels;
   all.push_back(s.current);
 
   bool multiplot = (s.mp_rows_ > 0);
 
   // Terminal
-  if (outfile.empty()) {
+  if (s.term_override_ == "dumb") {
+    fprintf(pipe, "set terminal dumb size %d,%d\nset autoscale\n", s.term_w_, s.term_h_);
+  } else if (outfile.empty()) {
     int h = multiplot ? 300 * s.mp_rows_ : 600;
     fprintf(pipe, "set terminal qt size 900,%d\n", h);
   } else {
@@ -270,18 +271,19 @@ inline void flush_to(FILE* pipe, const std::string& outfile) {
   }
 
   // Global theme
-  fputs("set style line 1 lt 1 lw 2 pt 7  ps 0.7 lc rgb '#2c3e50'\n", pipe);
-  fputs("set style line 2 lt 2 lw 2 pt 5  ps 0.7 lc rgb '#c0392b'\n", pipe);
-  fputs("set style line 3 lt 3 lw 2 pt 9  ps 0.7 lc rgb '#2980b9'\n", pipe);
-  fputs("set style line 4 lt 4 lw 2 pt 13 ps 0.7 lc rgb '#27ae60'\n", pipe);
-  fputs("set style line 5 lt 5 lw 2 pt 11 ps 0.7 lc rgb '#8e44ad'\n", pipe);
-  fputs("set style line 100 lt 1 lw 0.5 lc rgb '#cccccc'\n", pipe);
-  fputs("set grid back ls 100\n", pipe);
-  fputs("set border 3 lw 1.5\n", pipe);
-  fputs("set tics nomirror\n", pipe);
+  if (s.term_override_ != "dumb") {
+    fputs("set style line 1 lt 1 lw 2 pt 7  ps 0.7 lc rgb '#2c3e50'\n", pipe);
+    fputs("set style line 2 lt 2 lw 2 pt 5  ps 0.7 lc rgb '#c0392b'\n", pipe);
+    fputs("set style line 3 lt 3 lw 2 pt 9  ps 0.7 lc rgb '#2980b9'\n", pipe);
+    fputs("set style line 4 lt 4 lw 2 pt 13 ps 0.7 lc rgb '#27ae60'\n", pipe);
+    fputs("set style line 5 lt 5 lw 2 pt 11 ps 0.7 lc rgb '#8e44ad'\n", pipe);
+    fputs("set style line 100 lt 1 lw 0.5 lc rgb '#cccccc'\n", pipe);
+    fputs("set grid back ls 100\n", pipe);
+    fputs("set border 3 lw 1.5\n", pipe);
+    fputs("set tics nomirror\n", pipe);
+  }
 
-  // Write all datablocks up front (required for multiplot; harmless for
-  // single)
+  // Write datablocks
   int block = 0;
   for (const auto& p : all) {
     for (const auto& e : p.series) {
@@ -359,105 +361,65 @@ inline void ylabel(const std::string& l) {
   detail::state().current.ylabel_ = l;
 }
 
-/// Set x-axis range, e.g. xlim(0, 10).
 inline void xlim(double lo, double hi) {
   detail::state().current.xrange_ =
     "[" + std::to_string(lo) + ":" + std::to_string(hi) + "]";
 }
-/// Set y-axis range.
 inline void ylim(double lo, double hi) {
   detail::state().current.yrange_ =
     "[" + std::to_string(lo) + ":" + std::to_string(hi) + "]";
 }
 
-/// Show a legend using the labels passed to plot().
 inline void legend() {
   detail::state().current.legend_ = true;
 }
 
-/// Log-log axes.
 inline void loglog() {
   detail::state().current.logx_ = detail::state().current.logy_ = true;
 }
-/// Log y-axis only.
 inline void semilogy() {
   detail::state().current.logy_ = true;
 }
-/// Log x-axis only.
 inline void semilogx() {
   detail::state().current.logx_ = true;
 }
 
-// -- 2-D heatmap --------------------------------------------------------------
+// -- In-Terminal ASCII Plotting -----------------------------------------------
 
-/// Add a 2-D heatmap to the current panel.
-/// @tparam Container  Any type with .data() and .size() (num::Vector,
-///                    std::vector<double>, etc.)
-/// @param u    NxN row-major field values
-/// @param N    Grid side length
-/// @param h    Grid spacing (node (i,j) lives at ((i+1)*h, (j+1)*h))
-/// @param vmin Lower bound of the colour scale (default 0)
-/// @param vmax Upper bound of the colour scale (default 1)
-template<typename Container>
-inline void heatmap(const Container& u,
-                    int N,
-                    double h,
-                    double vmin = 0.0,
-                    double vmax = 1.0) {
-  detail::HeatmapEntry e;
-  e.data.assign(u.data(), u.data() + u.size());
-  e.N = N;
-  e.h = h;
-  e.vmin = vmin;
-  e.vmax = vmax;
-  detail::state().current.heatmaps.push_back(std::move(e));
+/// Configure terminal ASCII mode with custom width and height.
+inline void terminal_dumb(int width = 120, int height = 30) {
+  detail::state().term_override_ = "dumb";
+  detail::state().term_w_ = width;
+  detail::state().term_h_ = height;
 }
 
-template<class Field>
-inline void heatmap(const Field& g, double vmin = 0.0, double vmax = 1.0) {
-  heatmap(g.vec(), g.N(), g.h(), vmin, vmax);
-}
-
-
-/// Override the gnuplot palette for the current panel's heatmap.
-/// @param palette  A gnuplot palette definition string, e.g.
-///                 "defined (0 'blue', 1 'red')"  or  "rgbformulae 33,13,10"
-inline void colormap(const std::string& palette) {
-  detail::state().current.palette_ = palette;
-}
-
-// -- Multiplot ----------------------------------------------------------------
-
-/// @brief Start a multiplot with the given grid dimensions.
-inline void subplot(int rows, int cols = 1) {
-  detail::state().reset();
-  detail::state().mp_rows_ = rows;
-  detail::state().mp_cols_ = cols;
-}
-
-/// @brief Advance to the next panel.
-inline void next() {
-  detail::state().panels.push_back(detail::state().current);
-  detail::state().current = detail::Panel{};
-}
-
-// -- Output -------------------------------------------------------------------
-
-/// Open an interactive gnuplot window; blocks until the window is closed.
-/// Resets figure state afterwards.
-inline void show() {
+/// Render ASCII plot directly to stdout/terminal window.
+inline void show_dumb(int width = 120, int height = 30) {
+  terminal_dumb(width, height);
   FILE* pipe = popen("gnuplot", "w");
   if (!pipe)
     throw std::runtime_error("could not open gnuplot -- is it installed?");
   detail::flush_to(pipe, "");
-  fputs("pause mouse close\n", pipe);
   fflush(pipe);
   pclose(pipe);
   detail::state().reset();
 }
 
-/// Save the figure to a file (PNG or PDF inferred from extension).
-/// Resets figure state afterwards.
+// -- Output -------------------------------------------------------------------
+
+inline void show() {
+  FILE* pipe = popen("gnuplot", "w");
+  if (!pipe)
+    throw std::runtime_error("could not open gnuplot -- is it installed?");
+  detail::flush_to(pipe, "");
+  if (detail::state().term_override_ != "dumb") {
+    fputs("pause mouse close\n", pipe);
+  }
+  fflush(pipe);
+  pclose(pipe);
+  detail::state().reset();
+}
+
 inline void savefig(const std::string& filename) {
   FILE* pipe = popen("gnuplot", "w");
   if (!pipe)
@@ -468,7 +430,6 @@ inline void savefig(const std::string& filename) {
   detail::state().reset();
 }
 
-/// Clear the current figure (discard all series and settings).
 inline void clf() {
   detail::state().reset();
 }

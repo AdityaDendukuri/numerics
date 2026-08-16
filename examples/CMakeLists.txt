@@ -1,61 +1,41 @@
-cmake_minimum_required(VERSION 3.20)
-project(numerics_examples LANGUAGES CXX)
+# examples/CMakeLists.txt
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_executable(play play.cpp)
+target_link_libraries(play PRIVATE numerics::numerics)
 
-# Debug and Diagnostic Options for Examples
-option(EXAMPLES_DEBUG_MODE "Build examples with Debug symbols (-g, -O0)" ON)
-option(EXAMPLES_ENABLE_SANITIZERS "Enable Address and UndefinedBehavior Sanitizers (-fsanitize=address,undefined)" OFF)
+add_executable(property_demo property_demo.cpp)
+target_link_libraries(property_demo PRIVATE numerics::numerics)
 
-# Link against root CMake target or installed package
-if(TARGET numerics)
-    set(NUMERICS_TARGET numerics)
-elseif(TARGET numerics::numerics)
-    set(NUMERICS_TARGET numerics::numerics)
-else()
-    find_package(numerics REQUIRED)
-    set(NUMERICS_TARGET numerics::numerics)
-endif()
+# Comprehensive Solver Showcase Examples
+add_executable(01_direct_factorizations 01_direct_factorizations.cpp)
+target_link_libraries(01_direct_factorizations PRIVATE numerics::numerics)
 
-# ------------------------------------------------------------------------------
-# 1-Line Helper Function: add_example(target_name)
-# Usage: add_example(my_experiment) -> compiles examples/my_experiment.cpp
-# ------------------------------------------------------------------------------
-function(add_example NAME)
-    set(SRC_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.cpp")
-    if(NOT EXISTS "${SRC_FILE}")
-        set(SRC_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/main.cpp")
-    endif()
+add_executable(02_iterative_krylov_solvers 02_iterative_krylov_solvers.cpp)
+target_link_libraries(02_iterative_krylov_solvers PRIVATE numerics::numerics)
 
-    if(NOT EXISTS "${SRC_FILE}")
-        message(FATAL_ERROR "add_example: Source file for '${NAME}' not found at ${SRC_FILE}")
-    endif()
+add_executable(03_resolvent_and_expv 03_resolvent_and_expv.cpp)
+target_link_libraries(03_resolvent_and_expv PRIVATE numerics::numerics)
 
-    add_executable(${NAME} "${SRC_FILE}")
-    target_link_libraries(${NAME} PRIVATE ${NUMERICS_TARGET})
+add_executable(04_eigen_and_svd 04_eigen_and_svd.cpp)
+target_link_libraries(04_eigen_and_svd PRIVATE numerics::numerics)
 
-    # Apply debug/optimization compiler options
-    if(EXAMPLES_DEBUG_MODE)
-        target_compile_options(${NAME} PRIVATE -g -O0)
-        target_compile_definitions(${NAME} PRIVATE NUMERICS_DEBUG)
-    else()
-        target_compile_options(${NAME} PRIVATE -O3)
-        target_compile_definitions(${NAME} PRIVATE NDEBUG)
-    endif()
+add_executable(05_symplectic_nbody_ode 05_symplectic_nbody_ode.cpp)
+target_link_libraries(05_symplectic_nbody_ode PRIVATE numerics::numerics)
 
-    # Address & Undefined Behavior Sanitizer flag
-    if(EXAMPLES_ENABLE_SANITIZERS)
-        target_compile_options(${NAME} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
-        target_link_options(${NAME} PRIVATE -fsanitize=address,undefined)
-    endif()
-endfunction()
+add_executable(06_pde_poisson_solver 06_pde_poisson_solver.cpp)
+target_link_libraries(06_pde_poisson_solver PRIVATE numerics::numerics)
 
-# ------------------------------------------------------------------------------
-# Auto-Discovery: Automatically creates a target for every .cpp file in examples/!
-# ------------------------------------------------------------------------------
-file(GLOB EXAMPLE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-foreach(SRC ${EXAMPLE_SOURCES})
-    get_filename_component(EX_NAME ${SRC} NAME_WE)
-    add_example(${EX_NAME})
-endforeach()
+add_executable(07_spectral_fft_transforms 07_spectral_fft_transforms.cpp)
+target_link_libraries(07_spectral_fft_transforms PRIVATE numerics::numerics)
+
+add_executable(08_root_finding_and_quadrature 08_root_finding_and_quadrature.cpp)
+target_link_libraries(08_root_finding_and_quadrature PRIVATE numerics::numerics)
+
+add_executable(09_mcmc_bayesian_sampling 09_mcmc_bayesian_sampling.cpp)
+target_link_libraries(09_mcmc_bayesian_sampling PRIVATE numerics::numerics)
+
+add_executable(10_banded_and_spd_operators 10_banded_and_spd_operators.cpp)
+target_link_libraries(10_banded_and_spd_operators PRIVATE numerics::numerics)
+
+add_executable(11_terminal_ascii_plot 11_terminal_ascii_plot.cpp)
+target_link_libraries(11_terminal_ascii_plot PRIVATE numerics::numerics)
