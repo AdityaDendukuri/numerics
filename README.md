@@ -1,121 +1,161 @@
 # numerics
 
-[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
-[![CMake](https://img.shields.io/badge/CMake-3.20%2B-brightgreen.svg)](https://cmake.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey.svg)]()
-[![Tests](https://img.shields.io/badge/Tests-163%2F163%20Passing-success.svg)]()
+C++20 library for numerical linear algebra, Krylov methods, spectral transforms, and differential equation solvers.
 
-Modular C++20 numerical kernel and solver suite for **dense/structured linear algebra**, **Krylov subspace solvers**, **resolvent systems**, **ODE/PDE integrators**, and **spectral transforms**.
+## Components
 
----
+### `numerics::kernel`
 
-## 🏛️ Architecture & Target Layering
+Core data structures and operators.
 
-```text
-                     numerics::kernel  (Layer 1 & 2: Vectors, Matrices, Fields, Operators)
-                      /      |      \
-                     /       |       \
-                    v        |        v
-   numerics::spectral        |       numerics::solvers (LU, QR, Cholesky, CG, GMRES, SVD, Resolvent)
-                             |        |
-                             |        v
-                             +---> numerics::ode (RK4, RK45, Verlet, Yoshida4)
-                                      |
-                                      v
-                                  numerics::pde (FieldSolver, Poisson DST-I)
-```
+* `Vector`
+* `Matrix`
+* `SparseMatrix`
+* `BandedMatrix`
+* field types
+* `LinearOperator`
 
-| Layer | CMake Target | Components | Recommended Use |
-| :--- | :--- | :--- | :--- |
-| **Layer 1** | `numerics::raw_kernel` | Header-only raw loops and memory routines | Use for zero-overhead inline memory loops without library compilation. |
-| **Layer 2** | `numerics::kernel` | Data structures & operators (`Vector`, `Matrix`, `SparseMatrix`, `BandedMatrix`, `Fields`, `LinearOperator`, `assume_spd()`) | Use when application requires arrays, grids, and operator abstractions without solver overhead or external dependencies. |
-| **Layer 3** | `numerics::numerics` | Full solver suite (`solve()`, LU/QR/Cholesky/SVD, CG, GMRES, Resolvent, RK45, PDE, FFT) | Use when complete linear, differential, spectral, or resolvent solvers are required. |
+### `numerics::solvers`
 
----
+Linear algebra and Krylov methods.
 
-## 🚀 Hardware Acceleration Backends
+* LU, QR, and Cholesky
+* SVD and symmetric eigensolvers
+* CG and GMRES
+* Arnoldi matrix exponential actions
+* complex resolvent solves
 
-`numerics` features automated compile-time backend dispatch across Linux and macOS:
+### `numerics::spectral`
 
-| Backend | Flag | Supported Operations | macOS Acceleration | Linux Acceleration |
-| :--- | :--- | :--- | :--- | :--- |
-| **BLAS / cblas** | `NUMERICS_HAS_BLAS` | `dgemm`, `dgemv`, `ddot`, `daxpy`, `dger` | macOS Accelerate | OpenBLAS / BLIS |
-| **LAPACK / LAPACKE** | `NUMERICS_HAS_LAPACK` | `dgetrf` (LU), `dgeqrf` (QR), `dpotrf` (Cholesky), `dgesdd` (SVD), `dsyevd` (Eig) | Accelerate C/Fortran Shims | Native `lapacke.h` |
-| **OpenMP** | `NUMERICS_HAS_OMP` | Multi-threaded blocked loops, batched resolvents, parallel reductions | AppleClang OpenMP | GCC / Clang libgomp |
-| **FFTW3** | `NUMERICS_HAS_FFTW` | 1D/2D/3D Real & Complex DFTs | FFTW3 | FFTW3 |
-| **SIMD** | `NUMERICS_HAS_SIMD` | Auto-vectorized array kernels | ARM NEON | AVX2 / AVX-512 |
+Spectral transforms.
 
----
+* real and complex FFTs
+* multidimensional transforms
 
-## 💡 Code Examples
+### `numerics::ode`
 
-### 1. Storage & Core Data Structures
+ODE integrators.
+
+* RK4
+* RK45
+* Verlet
+* Yoshida4
+
+### `numerics::pde`
+
+Structured PDE solvers and utilities.
+
+* field solvers
+* Poisson solvers
+* DST-based methods
+
+## Backends
+
+Optional optimized backends are detected at configuration time.
+
+* BLAS
+* LAPACK
+* OpenMP
+* FFTW3
+* SIMD
+
+macOS Accelerate and standard Linux BLAS/LAPACK implementations are supported.
+
+## Examples
+
+### Dense and sparse matrices
+
 ```cpp
 #include <numerics.hpp>
 
-// Contiguous 1D vector and 2D row-major matrix
 num::Vector x{1.0, 2.0, 3.0};
-num::Matrix A(3, 3, 0.0);
-A(0, 0) = 4.0; A(0, 1) = 1.0;
-A(1, 0) = 1.0; A(1, 1) = 4.0; A(1, 2) = 1.0;
-A(2, 1) = 1.0; A(2, 2) = 4.0;
 
-// Compressed Sparse Row (CSR) matrix
+num::Matrix A(3, 3, 0.0);
+A(0, 0) = 4.0;
+A(0, 1) = 1.0;
+A(1, 0) = 1.0;
+A(1, 1) = 4.0;
+A(1, 2) = 1.0;
+A(2, 1) = 1.0;
+A(2, 2) = 4.0;
+
 num::SparseMatrix S(100, 100);
 S.insert(0, 0, 2.0);
 S.finalize();
 ```
 
-### 2. Complex Resolvent Solves: $(s I - A) x = b$
+### Resolvent solve
+
+Solve
+
+$$
+(sI-A)x=b.
+$$
+
 ```cpp
 #include <numerics.hpp>
-#include <iostream>
 
-int main() {
-    num::Matrix A(2, 2, 0.0);
-    A(0, 0) = 1.0; A(0, 1) = 2.0;
-    A(1, 0) = 3.0; A(1, 1) = 4.0;
+num::Matrix A(2, 2, 0.0);
+A(0, 0) = 1.0;
+A(0, 1) = 2.0;
+A(1, 0) = 3.0;
+A(1, 1) = 4.0;
 
-    num::Vector b{1.0, 2.0};
-    num::cplx s(2.0, 1.0);
+num::Vector b{1.0, 2.0};
+num::cplx s(2.0, 1.0);
 
-    // Single shift complex resolvent solve: (sI - A) x = b
-    std::vector<num::cplx> x = num::resolvent_solve(s, A, b);
+auto x = num::resolvent_solve(s, A, b);
 
-    // Batched shift resolvent solve over OpenMP threads
-    std::vector<num::cplx> shifts = {num::cplx(1, 0), num::cplx(2, 1), num::cplx(0, 3)};
-    auto batch_sol = num::resolvent_solve_batch(shifts, A, b);
+std::vector<num::cplx> shifts = {
+    num::cplx(1.0, 0.0),
+    num::cplx(2.0, 1.0),
+    num::cplx(0.0, 3.0)
+};
 
-    std::cout << "Resolvent solve completed. x[0] = " << x[0] << "\n";
-    return 0;
-}
+auto X = num::resolvent_solve_batch(shifts, A, b);
 ```
 
-### 3. Matrix Exponentials & Arnoldi Krylov Subspace (`num::expv`)
+### Matrix exponential action
+
+Compute
+
+$$
+e^{tA}v
+$$
+
+using an Arnoldi Krylov projection.
+
 ```cpp
 #include <numerics.hpp>
 
-// Compute e^{t A} v via m-step Arnoldi Krylov subspace projection
 num::operators::DenseOp Aop(A);
 num::Vector v{1.0, 0.0, 0.0};
-num::Vector exp_tv = num::expv(1.0, Aop, v, 30, 1e-8);
+
+num::Vector y =
+    num::expv(1.0, Aop, v, 30, 1e-8);
 ```
 
----
+## Requirements
 
-## 🛠️ Build & Test
+* C++20
+* CMake 3.20+
+* BLAS/LAPACK optional
+* OpenMP optional
+* FFTW3 optional
+
+Supported platforms are macOS and Linux.
+
+## Build
 
 ```bash
 git clone https://github.com/AdityaDendukuri/numerics.git
 cd numerics
+
 cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
+cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
----
+## License
 
-## 📄 License
-
-Distributed under the **MIT License**. See `LICENSE` for details.
+MIT License. See `LICENSE`.
