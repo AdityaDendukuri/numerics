@@ -30,6 +30,8 @@ set(NUMERICS_CORE_SOURCES
     src/linalg/factorization/qr.cpp
     src/linalg/factorization/thomas.cpp
     src/linalg/factorization/tridiag_complex.cpp
+    src/linalg/sparse/klu.cpp
+    src/linalg/sparse/umfpack.cpp
 
     src/linalg/eigen/power.cpp
     src/linalg/eigen/eig.cpp
@@ -42,6 +44,8 @@ set(NUMERICS_CORE_SOURCES
     src/linalg/solvers/jacobi.cpp
     src/linalg/solvers/gmres.cpp
     src/linalg/expv/expv.cpp
+    src/linalg/solvers/sparse_resolvent.cpp
+    src/linalg/solvers/dense_resolvent.cpp
 )
 
 if(NUMERICS_HAS_CUDA)
@@ -81,4 +85,9 @@ set(NUMERICS_SOURCES
     ${NUMERICS_STOCHASTIC_SOURCES}
     ${NUMERICS_SPECTRAL_SOURCES}
     ${NUMERICS_ODE_SOURCES}
+)
+
+set(NUMERICS_IO_SOURCES
+    src/io/json.cpp
+    src/io/sparse_json.cpp
 )

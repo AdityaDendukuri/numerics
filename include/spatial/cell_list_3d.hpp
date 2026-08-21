@@ -39,12 +39,14 @@ public:
     const int total = nx_ * ny_ * nz_;
 
     std::fill(count_.begin(), count_.end(), 0);
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < n; ++i) {
       ++count_[cell_id_of(get_pos(i))];
+}
 
     start_[0] = 0;
-    for (int c = 0; c < total; ++c)
+    for (int c = 0; c < total; ++c) {
       start_[c + 1] = start_[c] + count_[c];
+}
 
     std::fill(count_.begin(), count_.end(), 0);
     for (int i = 0; i < n; ++i) {
@@ -62,19 +64,23 @@ public:
     const int cz = cell_z(pz);
     for (int dz = -1; dz <= 1; ++dz) {
       const int qz = cz + dz;
-      if (qz < 0 || qz >= nz_)
+      if (qz < 0 || qz >= nz_) {
         continue;
+}
       for (int dy = -1; dy <= 1; ++dy) {
         const int qy = cy + dy;
-        if (qy < 0 || qy >= ny_)
+        if (qy < 0 || qy >= ny_) {
           continue;
+}
         for (int dx = -1; dx <= 1; ++dx) {
           const int qx = cx + dx;
-          if (qx < 0 || qx >= nx_)
+          if (qx < 0 || qx >= nx_) {
             continue;
-          const int cid = (qz * ny_ + qy) * nx_ + qx;
-          for (int k = start_[cid]; k < start_[cid + 1]; ++k)
+}
+          const int cid = (((qz * ny_) + qy) * nx_) + qx;
+          for (int k = start_[cid]; k < start_[cid + 1]; ++k) {
             f(sorted_[k]);
+}
         }
       }
     }
@@ -91,42 +97,49 @@ public:
     for (int cz = 0; cz < nz_; ++cz) {
       for (int cy = 0; cy < ny_; ++cy) {
         for (int cx = 0; cx < nx_; ++cx) {
-          const int cid = (cz * ny_ + cy) * nx_ + cx;
+          const int cid = (((cz * ny_) + cy) * nx_) + cx;
           const int beg = start_[cid];
           const int end = start_[cid + 1];
-          if (beg == end)
+          if (beg == end) {
             continue;
+}
 
           // Intra-cell pairs
-          for (int a = beg; a < end; ++a)
-            for (int b = a + 1; b < end; ++b)
+          for (int a = beg; a < end; ++a) {
+            for (int b = a + 1; b < end; ++b) {
               f(sorted_[a], sorted_[b]);
+}
+}
 
           // Inter-cell: self x 13 forward neighbours
           for (int d = 0; d < 13; ++d) {
             const int ncx = cx + FDX[d];
             const int ncy = cy + FDY[d];
             const int ncz = cz + FDZ[d];
-            if (ncx < 0 || ncx >= nx_ || ncy < 0 || ncy >= ny_ || ncz < 0 || ncz >= nz_)
+            if (ncx < 0 || ncx >= nx_ || ncy < 0 || ncy >= ny_ || ncz < 0 || ncz >= nz_) {
               continue;
-            const int ncid = (ncz * ny_ + ncy) * nx_ + ncx;
+}
+            const int ncid = (((ncz * ny_) + ncy) * nx_) + ncx;
             const int nbeg = start_[ncid];
             const int nend = start_[ncid + 1];
-            if (nbeg == nend)
+            if (nbeg == nend) {
               continue;
-            for (int a = beg; a < end; ++a)
-              for (int b = nbeg; b < nend; ++b)
+}
+            for (int a = beg; a < end; ++a) {
+              for (int b = nbeg; b < nend; ++b) {
                 f(sorted_[a], sorted_[b]);
+}
+}
           }
         }
       }
     }
   }
 
-  int nx() const noexcept { return nx_; }
-  int ny() const noexcept { return ny_; }
-  int nz() const noexcept { return nz_; }
-  int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
+  [[nodiscard]] int nx() const noexcept { return nx_; }
+  [[nodiscard]] int ny() const noexcept { return ny_; }
+  [[nodiscard]] int nz() const noexcept { return nz_; }
+  [[nodiscard]] int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
 
 private:
   Scalar cs_ = 0, xmin_ = 0, ymin_ = 0, zmin_ = 0;
@@ -148,7 +161,7 @@ private:
   }
   int cell_id_of(std::tuple<Scalar, Scalar, Scalar> p) const noexcept {
     const auto [x, y, z] = p;
-    return (cell_z(z) * ny_ + cell_y(y)) * nx_ + cell_x(x);
+    return (((cell_z(z) * ny_) + cell_y(y)) * nx_) + cell_x(x);
   }
 };
 

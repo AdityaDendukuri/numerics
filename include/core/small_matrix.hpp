@@ -62,10 +62,10 @@ template<idx M, idx N>
 struct SmallMatrix {
   std::array<real, M * N> data{};
 
-  constexpr real& operator()(idx i, idx j) noexcept { return data[i * N + j]; }
+  constexpr real& operator()(idx i, idx j) noexcept { return data[(i * N) + j]; }
 
   constexpr const real& operator()(idx i, idx j) const noexcept {
-    return data[i * N + j];
+    return data[(i * N) + j];
   }
 
   static constexpr idx rows() noexcept { return M; }
@@ -141,19 +141,19 @@ struct GivensRotation {
     if (b == 0) {
       return {};
     }
-    const real r = std::sqrt(a * a + b * b);
+    const real r = std::sqrt((a * a) + (b * b));
     return {a / r, b / r};
   }
 
   constexpr void apply(real& x, real& y) const noexcept {
-    const real tmp = c * x + s * y;
-    y = -s * x + c * y;
+    const real tmp = (c * x) + (s * y);
+    y = (-s * x) + (c * y);
     x = tmp;
   }
 
   constexpr void apply_t(real& x, real& y) const noexcept {
-    const real tmp = c * x - s * y;
-    y = s * x + c * y;
+    const real tmp = (c * x) - (s * y);
+    y = (s * x) + (c * y);
     x = tmp;
   }
 

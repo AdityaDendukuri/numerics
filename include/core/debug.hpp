@@ -46,8 +46,9 @@ inline void check_dim(idx expected,
                       idx actual,
                       std::string_view label,
                       std::source_location loc = std::source_location::current()) {
-  if (g_level == DiagnosticLevel::off)
+  if (g_level == DiagnosticLevel::off) {
     return;
+  }
   if (expected != actual) {
     std::string msg = "Dimension mismatch for " + std::string(label) + ": expected "
                       + std::to_string(expected) + ", got " + std::to_string(actual);
@@ -59,8 +60,9 @@ inline void check_dim(idx expected,
 inline void check_non_empty(idx size,
                             std::string_view label,
                             std::source_location loc = std::source_location::current()) {
-  if (g_level == DiagnosticLevel::off)
+  if (g_level == DiagnosticLevel::off) {
     return;
+  }
   if (size == 0) {
     panic("ValueError", std::string(label) + " cannot be empty (size is 0)", loc);
   }
@@ -72,8 +74,9 @@ inline void check_finite(const T* data,
                          idx n,
                          std::string_view label,
                          std::source_location loc = std::source_location::current()) {
-  if (g_level == DiagnosticLevel::off)
+  if (g_level == DiagnosticLevel::off) {
     return;
+  }
   for (idx i = 0; i < n; ++i) {
     if (!std::isfinite(data[i])) {
       panic("ValueError",
@@ -90,18 +93,20 @@ inline void verify_spd_sample(
   const Op& A,
   idx n,
   std::source_location loc = std::source_location::current()) {
-  if (g_level != DiagnosticLevel::full)
+  if (g_level != DiagnosticLevel::full) {
     return;
+  }
 
-  if (n == 0)
+  if (n == 0) {
     return;
+  }
   VectorType x(n, real(1.0));
-  VectorType Ax(n, real(0.0));
-  A.apply(x, Ax);
+  VectorType ax(n, real(0.0));
+  A.apply(x, ax);
 
   real dot_val = 0.0;
   for (idx i = 0; i < n; ++i) {
-    dot_val += x[i] * Ax[i];
+    dot_val += x[i] * ax[i];
   }
 
   if (dot_val <= 0.0) {
@@ -118,11 +123,13 @@ inline void verify_symmetry_sample(
   const Op& A,
   idx n,
   std::source_location loc = std::source_location::current()) {
-  if (g_level != DiagnosticLevel::full)
+  if (g_level != DiagnosticLevel::full) {
     return;
+  }
 
-  if (n <= 1)
+  if (n <= 1) {
     return;
+  }
   VectorType x(n), y(n), Ax(n), Ay(n);
   for (idx i = 0; i < n; ++i) {
     x[i] = (i % 2 == 0) ? real(1.0) : real(0.5);

@@ -26,6 +26,6 @@ TEST(DebugCheck, FalseSPDAssertionCaughtAtRuntime) {
 
   // assume_spd() throws a PropertyError because sampled x^T A x is <= 0!
   EXPECT_THROW(
-      num::operators::assume_spd(Aop),
+      static_cast<void>(num::operators::assume_spd(Aop)),
       std::invalid_argument);
 }

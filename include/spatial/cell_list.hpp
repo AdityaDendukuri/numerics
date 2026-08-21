@@ -13,10 +13,10 @@ namespace num {
 struct IntRange {
   const int* first;
   const int* last;
-  const int* begin() const noexcept { return first; }
-  const int* end() const noexcept { return last; }
-  int size() const noexcept { return static_cast<int>(last - first); }
-  bool empty() const noexcept { return first == last; }
+  [[nodiscard]] const int* begin() const noexcept { return first; }
+  [[nodiscard]] const int* end() const noexcept { return last; }
+  [[nodiscard]] int size() const noexcept { return static_cast<int>(last - first); }
+  [[nodiscard]] bool empty() const noexcept { return first == last; }
 };
 
 template<typename Scalar>
@@ -41,12 +41,14 @@ public:
     const int total = nx_ * ny_;
 
     std::fill(count_.begin(), count_.end(), 0);
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < n; ++i) {
       ++count_[cell_id_of(get_pos(i))];
+}
 
     start_[0] = 0;
-    for (int c = 0; c < total; ++c)
+    for (int c = 0; c < total; ++c) {
       start_[c + 1] = start_[c] + count_[c];
+}
 
     std::fill(count_.begin(), count_.end(), 0);
     for (int i = 0; i < n; ++i) {
@@ -63,15 +65,18 @@ public:
     const int cy = cell_y(py);
     for (int dy = -1; dy <= 1; ++dy) {
       const int qy = cy + dy;
-      if (qy < 0 || qy >= ny_)
+      if (qy < 0 || qy >= ny_) {
         continue;
+}
       for (int dx = -1; dx <= 1; ++dx) {
         const int qx = cx + dx;
-        if (qx < 0 || qx >= nx_)
+        if (qx < 0 || qx >= nx_) {
           continue;
-        const int cid = qy * nx_ + qx;
-        for (int k = start_[cid]; k < start_[cid + 1]; ++k)
+}
+        const int cid = (qy * nx_) + qx;
+        for (int k = start_[cid]; k < start_[cid + 1]; ++k) {
           f(sorted_[k]);
+}
       }
     }
   }
@@ -85,11 +90,12 @@ public:
 
     for (int cy = 0; cy < ny_; ++cy) {
       for (int cx = 0; cx < nx_; ++cx) {
-        const int cid = cy * nx_ + cx;
+        const int cid = (cy * nx_) + cx;
         const int beg = start_[cid];
         const int end = start_[cid + 1];
-        if (beg == end)
+        if (beg == end) {
           continue;
+}
 
         for (int a = beg; a < end; ++a) {
           for (int b = a + 1; b < end; ++b) {
@@ -100,13 +106,15 @@ public:
         for (int d = 0; d < 4; ++d) {
           const int ncx = cx + FDX[d];
           const int ncy = cy + FDY[d];
-          if (ncx < 0 || ncx >= nx_ || ncy < 0 || ncy >= ny_)
+          if (ncx < 0 || ncx >= nx_ || ncy < 0 || ncy >= ny_) {
             continue;
-          const int ncid = ncy * nx_ + ncx;
+}
+          const int ncid = (ncy * nx_) + ncx;
           const int nbeg = start_[ncid];
           const int nend = start_[ncid + 1];
-          if (nbeg == nend)
+          if (nbeg == nend) {
             continue;
+}
           for (int a = beg; a < end; ++a) {
             for (int b = nbeg; b < nend; ++b) {
               f(sorted_[a], sorted_[b]);
@@ -117,14 +125,14 @@ public:
     }
   }
 
-  IntRange cell_particles(int cx, int cy) const noexcept {
-    const int cid = cy * nx_ + cx;
+  [[nodiscard]] IntRange cell_particles(int cx, int cy) const noexcept {
+    const int cid = (cy * nx_) + cx;
     return {sorted_.data() + start_[cid], sorted_.data() + start_[cid + 1]};
   }
 
-  int nx() const noexcept { return nx_; }
-  int ny() const noexcept { return ny_; }
-  int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
+  [[nodiscard]] int nx() const noexcept { return nx_; }
+  [[nodiscard]] int ny() const noexcept { return ny_; }
+  [[nodiscard]] int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
 
 private:
   Scalar cs_ = 0, xmin_ = 0, ymin_ = 0;
@@ -143,7 +151,7 @@ private:
     return cy < 0 ? 0 : (cy >= ny_ ? ny_ - 1 : cy);
   }
   int cell_id_of(std::pair<Scalar, Scalar> p) const noexcept {
-    return cell_y(p.second) * nx_ + cell_x(p.first);
+    return (cell_y(p.second) * nx_) + cell_x(p.first);
   }
 };
 

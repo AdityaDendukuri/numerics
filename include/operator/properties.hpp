@@ -23,7 +23,7 @@ public:
   [[nodiscard]] idx rows() const noexcept { return op_.rows(); }
   [[nodiscard]] idx cols() const noexcept { return op_.cols(); }
 
-  const Op& base() const noexcept { return op_; }
+  [[nodiscard]] const Op& base() const noexcept { return op_; }
 
 private:
   Op op_;
@@ -43,7 +43,7 @@ public:
   [[nodiscard]] idx rows() const noexcept { return op_.rows(); }
   [[nodiscard]] idx cols() const noexcept { return op_.cols(); }
 
-  const Op& base() const noexcept { return op_; }
+  [[nodiscard]] const Op& base() const noexcept { return op_; }
 
 private:
   Op op_;

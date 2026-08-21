@@ -3,7 +3,11 @@
 #pragma once
 
 #include "core/vector.hpp"
+#include <algorithm>
 #include <cstdio>
+#include <iomanip>
+#include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -23,7 +27,7 @@ inline Series row_slice(const Vector& u, int N, double h, int row) {
   Series s;
   s.reserve(static_cast<std::size_t>(N));
   for (int j = 0; j < N; ++j) {
-    s.store((j + 1) * h, u[static_cast<std::size_t>(row) * N + j]);
+    s.store((j + 1) * h, u[(static_cast<std::size_t>(row) * N) + j]);
   }
   return s;
 }
@@ -33,7 +37,7 @@ inline Series col_slice(const Vector& u, int N, double h, int col) {
   Series s;
   s.reserve(static_cast<std::size_t>(N));
   for (int i = 0; i < N; ++i) {
-    s.store((i + 1) * h, u[static_cast<std::size_t>(i) * N + col]);
+    s.store((i + 1) * h, u[(static_cast<std::size_t>(i) * N) + col]);
   }
   return s;
 }
@@ -54,12 +58,14 @@ public:
   explicit Gnuplot(const std::string& args = "") {
     std::string cmd = "gnuplot " + args;
     pipe_ = popen(cmd.c_str(), "w");
-    if (!pipe_)
+    if (!pipe_) {
       throw std::runtime_error("could not open gnuplot -- is it installed?");
+}
   }
   ~Gnuplot() {
-    if (pipe_)
+    if (pipe_) {
       pclose(pipe_);
+}
   }
   Gnuplot(const Gnuplot&) = delete;
   Gnuplot& operator=(const Gnuplot&) = delete;
@@ -69,8 +75,9 @@ public:
     return *this;
   }
   void send1d(const Series& data) {
-    for (const auto& [x, y] : data)
+    for (const auto& [x, y] : data) {
       fprintf(pipe_, "%.15g %.15g\n", x, y);
+}
     fputs("e\n", pipe_);
     fflush(pipe_);
   }
@@ -154,55 +161,64 @@ inline State& state() {
 
 // Write all datablocks for a panel, then emit the plot command for that panel.
 inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
-  if (p.series.empty() && p.heatmaps.empty())
+  if (p.series.empty() && p.heatmaps.empty()) {
     return;
+}
 
   // Common decorators
-  if (!p.title_.empty())
+  if (!p.title_.empty()) {
     fprintf(pipe, "set title '%s'\n", p.title_.c_str());
-  else
+  } else {
     fputs("unset title\n", pipe);
-  if (!p.xlabel_.empty())
+}
+  if (!p.xlabel_.empty()) {
     fprintf(pipe, "set xlabel '%s'\n", p.xlabel_.c_str());
-  else
+  } else {
     fputs("unset xlabel\n", pipe);
-  if (!p.ylabel_.empty())
+}
+  if (!p.ylabel_.empty()) {
     fprintf(pipe, "set ylabel '%s'\n", p.ylabel_.c_str());
-  else
+  } else {
     fputs("unset ylabel\n", pipe);
+}
 
   if (!p.heatmaps.empty()) {
     const auto& hm = p.heatmaps[0];
-    if (!p.palette_.empty())
+    if (!p.palette_.empty()) {
       fprintf(pipe, "set palette %s\n", p.palette_.c_str());
-    else
+    } else {
       fputs("set palette defined "
             "(0 'white', 0.35 '#ffffb2', 0.65 '#fd8d3c', 1 '#bd0026')\n",
             pipe);
+}
     fprintf(pipe, "set cbrange [%g:%g]\n", hm.vmin, hm.vmax);
     fputs("set pm3d map\n", pipe);
     fputs("set size ratio 1\n", pipe);
-    if (!p.xrange_.empty())
+    if (!p.xrange_.empty()) {
       fprintf(pipe, "set xrange %s\n", p.xrange_.c_str());
-    else
+    } else {
       fputs("set xrange [*:*]\n", pipe);
-    if (!p.yrange_.empty())
+}
+    if (!p.yrange_.empty()) {
       fprintf(pipe, "set yrange %s\n", p.yrange_.c_str());
-    else
+    } else {
       fputs("set yrange [*:*]\n", pipe);
+}
     fputs("unset key\n", pipe);
     fprintf(pipe, "splot $d_%d with pm3d notitle\n", block_offset);
   } else {
     // Line-plot panel
     fputs("unset pm3d\n", pipe);
-    if (!p.xrange_.empty())
+    if (!p.xrange_.empty()) {
       fprintf(pipe, "set xrange %s\n", p.xrange_.c_str());
-    else
+    } else {
       fputs("set xrange [*:*]\n", pipe);
-    if (!p.yrange_.empty())
+}
+    if (!p.yrange_.empty()) {
       fprintf(pipe, "set yrange %s\n", p.yrange_.c_str());
-    else
+    } else {
       fputs("set yrange [*:*]\n", pipe);
+}
 
     if (p.logx_ && p.logy_) {
       fputs("set logscale xy\nset format x '10^{%L}'\nset format y "
@@ -226,8 +242,9 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
 
     fputs("plot ", pipe);
     for (std::size_t i = 0; i < p.series.size(); ++i) {
-      if (i)
+      if (i) {
         fputs(", ", pipe);
+}
       const auto& e = p.series[i];
       if (e.style.find("lw") != std::string::npos || e.style.find("lc") != std::string::npos || e.style.find("ps") != std::string::npos) {
         fprintf(pipe, "$d_%d with %s", block_offset + (int)i, e.style.c_str());
@@ -235,10 +252,11 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
         fprintf(pipe, "$d_%d with %s ls %zu", block_offset + (int)i, e.style.c_str(), i + 1);
       }
 
-      if (!e.label.empty())
+      if (!e.label.empty()) {
         fprintf(pipe, " title '%s'", e.label.c_str());
-      else
+      } else {
         fputs(" notitle", pipe);
+}
     }
     fputc('\n', pipe);
   }
@@ -288,20 +306,22 @@ inline void flush_to(FILE* pipe, const std::string& outfile) {
   for (const auto& p : all) {
     for (const auto& e : p.series) {
       fprintf(pipe, "$d_%d << EOD\n", block++);
-      for (const auto& [x, y] : e.data)
+      for (const auto& [x, y] : e.data) {
         fprintf(pipe, "%.15g %.15g\n", x, y);
+}
       fputs("EOD\n", pipe);
     }
     for (const auto& hm : p.heatmaps) {
       fprintf(pipe, "$d_%d << EOD\n", block++);
       for (int i = 0; i < hm.N; ++i) {
         double xi = (i + 1) * hm.h;
-        for (int j = 0; j < hm.N; ++j)
+        for (int j = 0; j < hm.N; ++j) {
           fprintf(pipe,
                   "%.8g %.8g %.8g\n",
                   xi,
                   (j + 1) * hm.h,
-                  hm.data[static_cast<std::size_t>(i) * hm.N + j]);
+                  hm.data[(static_cast<std::size_t>(i) * hm.N) + j]);
+}
         fputs("\n", pipe);
       }
       fputs("EOD\n", pipe);
@@ -345,8 +365,9 @@ inline void plot(const ContainerX& x,
                  const std::string& style = "lines") {
   Series s;
   s.reserve(x.size());
-  for (std::size_t i = 0; i < x.size() && i < y.size(); ++i)
+  for (std::size_t i = 0; i < x.size() && i < y.size(); ++i) {
     s.emplace_back(static_cast<double>(x[i]), static_cast<double>(y[i]));
+}
   detail::state().current.series.push_back({std::move(s), label, style});
 }
 
@@ -373,6 +394,86 @@ inline void ylim(double lo, double hi) {
 
 inline void legend() {
   detail::state().current.legend_ = true;
+}
+
+/// Plot component-wise path means and their min-max envelope.
+template <class Paths, class Labels, class Colors>
+inline void plot_paths(const Paths& paths,
+                       const Labels& labels,
+                       const Colors& colors,
+                       const std::string& plot_title,
+                       std::size_t samples = 1000) {
+  if (paths.empty() || labels.empty() || labels.size() != colors.size() || samples < 2) {
+    throw std::invalid_argument("invalid path plot data");
+  }
+
+  double first_end = std::numeric_limits<double>::infinity();
+  double last_end = 0.0;
+  for (const auto& path : paths) {
+    if (path.times.empty() || path.states.empty()) {
+      throw std::invalid_argument("path plot requires nonempty trajectories");
+    }
+    first_end = std::min(first_end, path.times.back());
+    last_end = std::max(last_end, path.times.back());
+  }
+
+  std::vector<double> times(samples);
+  for (std::size_t i = 0; i < samples; ++i) {
+    times[i] = first_end * static_cast<double>(i) / static_cast<double>(samples - 1);
+  }
+
+  const std::size_t components = labels.size();
+  std::vector<std::vector<double>> lower(
+      components, std::vector<double>(samples, std::numeric_limits<double>::max()));
+  std::vector<std::vector<double>> upper(
+      components, std::vector<double>(samples, std::numeric_limits<double>::lowest()));
+  std::vector<std::vector<double>> mean(components, std::vector<double>(samples, 0.0));
+
+  for (const auto& path : paths) {
+    std::size_t state = 0;
+    for (std::size_t i = 0; i < samples; ++i) {
+      while (state + 1 < path.times.size() && path.times[state + 1] <= times[i]) {
+        ++state;
+      }
+      for (std::size_t component = 0; component < components; ++component) {
+        const double value = path.states[state][component];
+        lower[component][i] = std::min(lower[component][i], value);
+        upper[component][i] = std::max(upper[component][i], value);
+        mean[component][i] += value / static_cast<double>(paths.size());
+      }
+    }
+  }
+
+  if (paths.size() > 1) {
+    for (std::size_t component = 0; component < components; ++component) {
+      Series envelope;
+      envelope.reserve(2 * samples);
+      for (std::size_t i = 0; i < samples; ++i) {
+        envelope.emplace_back(times[i], upper[component][i]);
+      }
+      for (std::size_t i = samples; i-- > 0;) {
+        envelope.emplace_back(times[i], lower[component][i]);
+      }
+      plot(envelope,
+           std::string{},
+           "filledcurves closed fs transparent solid 0.18 noborder lc rgb '" +
+               std::string(colors[component]) + "'");
+    }
+  }
+
+  for (std::size_t component = 0; component < components; ++component) {
+    plot(times,
+         mean[component],
+         std::string(labels[component]),
+         "lines lw 2 lc rgb '" + std::string(colors[component]) + "'");
+  }
+
+  std::ostringstream endpoint;
+  endpoint << std::setprecision(3) << "  endpoint=[" << first_end << ", " << last_end << "]";
+  title(plot_title + endpoint.str());
+  xlabel("t");
+  ylabel("count");
+  legend();
 }
 
 inline void loglog() {
@@ -439,8 +540,9 @@ inline void terminal_dumb(int width = 140, int height = 35) {
 inline void show_dumb(int width = 140, int height = 35) {
   terminal_dumb(width, height);
   FILE* pipe = popen("gnuplot", "w");
-  if (!pipe)
+  if (!pipe) {
     throw std::runtime_error("could not open gnuplot -- is it installed?");
+}
   detail::flush_to(pipe, "");
   fflush(pipe);
   pclose(pipe);
@@ -451,8 +553,9 @@ inline void show_dumb(int width = 140, int height = 35) {
 
 inline void show() {
   FILE* pipe = popen("gnuplot", "w");
-  if (!pipe)
+  if (!pipe) {
     throw std::runtime_error("could not open gnuplot -- is it installed?");
+}
   detail::flush_to(pipe, "");
   if (detail::state().term_override_ != "dumb") {
     fputs("pause mouse close\n", pipe);
@@ -464,8 +567,9 @@ inline void show() {
 
 inline void savefig(const std::string& filename) {
   FILE* pipe = popen("gnuplot", "w");
-  if (!pipe)
+  if (!pipe) {
     throw std::runtime_error("could not open gnuplot -- is it installed?");
+}
   detail::flush_to(pipe, filename);
   fflush(pipe);
   pclose(pipe);

@@ -24,14 +24,15 @@ struct PBCLattice2D {
         dn(N * N),
         lt(N * N),
         rt(N * N) {
-    for (int row = 0; row < N; ++row)
+    for (int row = 0; row < N; ++row) {
       for (int col = 0; col < N; ++col) {
-        const int i = row * N + col;
-        up[i] = ((row - 1 + N) % N) * N + col;
-        dn[i] = ((row + 1) % N) * N + col;
-        lt[i] = row * N + (col - 1 + N) % N;
-        rt[i] = row * N + (col + 1) % N;
+        const int i = (row * N) + col;
+        up[i] = (((row - 1 + N) % N) * N) + col;
+        dn[i] = (((row + 1) % N) * N) + col;
+        lt[i] = (row * N) + ((col - 1 + N) % N);
+        rt[i] = (row * N) + ((col + 1) % N);
       }
+}
   }
 };
 

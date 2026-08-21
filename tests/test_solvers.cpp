@@ -1,6 +1,9 @@
 #include "core/concepts.hpp"
+#include "analysis/talbot.hpp"
 #include "linalg/factorization/thomas.hpp"
 #include "linalg/solvers/solvers.hpp"
+#include "linalg/solvers/sparse_resolvent.hpp"
+#include "linalg/solvers/dense_resolvent.hpp"
 #include "linalg/sparse/sparse.hpp"
 #include "linalg/sparse/sparse_op.hpp"
 #include "operator/operator.hpp"
@@ -68,10 +71,12 @@ TEST(CG, DiagonalDominant5x5) {
   Matrix A(n, n, 0.0);
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 10.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = 1.0;
-    if (i < n - 1)
+}
+    if (i < n - 1) {
       A(i, i + 1) = 1.0;
+}
   }
   Vector b(n, 1.0), x(n, 0.0);
   SolverResult r = cg(A, b, x);
@@ -82,26 +87,30 @@ TEST(CG, DiagonalDominant5x5) {
   Vector Ax(n);
   matvec(A, x, Ax);
   real err = 0;
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     err += (Ax[i] - b[i]) * (Ax[i] - b[i]);
+}
   EXPECT_LT(std::sqrt(err), 1e-9);
 }
 
 TEST(CG, ConvergesWithinN) {
   idx n = 10;
   Matrix A(n, n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     A(i, i) = static_cast<real>(i + 1);
+}
 
   Vector b(n), x(n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     b[i] = static_cast<real>(i + 1);
+}
 
   SolverResult r = cg(A, b, x);
   EXPECT_TRUE(r.converged);
   EXPECT_LE(r.iterations, n);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(x[i], 1.0, 1e-9);
+}
 }
 
 TEST(MatrixProperties, CheckedSymmetricAndSPD) {
@@ -304,8 +313,9 @@ TEST(Thomas, Small4x4) {
   Vector a{-1.0, -1.0, -1.0}, b{2.0, 2.0, 2.0, 2.0}, c{-1.0, -1.0, -1.0};
   Vector d{1.0, 0.0, 0.0, 1.0}, x(4);
   thomas(a, b, c, d, x);
-  for (idx i = 0; i < 4; ++i)
+  for (idx i = 0; i < 4; ++i) {
     EXPECT_NEAR(x[i], 1.0, 1e-10);
+}
 }
 
 TEST(Thomas, Laplacian1D) {
@@ -314,10 +324,12 @@ TEST(Thomas, Laplacian1D) {
   thomas(a, b, c, d, x);
   for (idx i = 0; i < n; ++i) {
     real Ax = b[i] * x[i];
-    if (i > 0)
+    if (i > 0) {
       Ax += a[i - 1] * x[i - 1];
-    if (i < n - 1)
+}
+    if (i < n - 1) {
       Ax += c[i] * x[i + 1];
+}
     EXPECT_NEAR(Ax, d[i], 1e-10);
   }
 }
@@ -357,17 +369,20 @@ TEST(GaussSeidel, DiagonalSystem) {
   // Diagonal A: solution is trivially b[i]/A[i][i]
   idx n = 8;
   Matrix A(n, n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     A(i, i) = static_cast<real>(i + 1);
+}
 
   Vector b(n), x(n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     b[i] = static_cast<real>((i + 1) * (i + 1));
+}
 
   SolverResult r = gauss_seidel(A, b, x);
   EXPECT_TRUE(r.converged);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(x[i], static_cast<real>(i + 1), 1e-8);
+}
 }
 
 TEST(GaussSeidel, ResidualVerified) {
@@ -375,10 +390,12 @@ TEST(GaussSeidel, ResidualVerified) {
   Matrix A(n, n, 0.0);
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 8.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -1.0;
-    if (i < n - 1)
+}
+    if (i < n - 1) {
       A(i, i + 1) = -1.0;
+}
   }
   Vector b(n, 1.0), x(n, 0.0);
   SolverResult r = gauss_seidel(A, b, x);
@@ -389,8 +406,9 @@ TEST(GaussSeidel, ResidualVerified) {
   // Verify Ax ~= b
   Vector Ax(n);
   matvec(A, x, Ax);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(Ax[i], b[i], 1e-8);
+}
 }
 
 // Jacobi
@@ -419,18 +437,21 @@ TEST(Jacobi, DiagonalDominant3x3) {
 TEST(Jacobi, DiagonalSystem) {
   idx n = 8;
   Matrix A(n, n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     A(i, i) = static_cast<real>(i + 1);
+}
 
   Vector b(n), x(n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     b[i] = static_cast<real>((i + 1) * (i + 1));
+}
 
   // Diagonal system: Jacobi converges in one iteration
   SolverResult r = jacobi(A, b, x, 1e-10, 1);
   EXPECT_EQ(r.iterations, static_cast<idx>(1));
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(x[i], static_cast<real>(i + 1), 1e-10);
+}
 }
 
 TEST(Jacobi, ResidualVerified) {
@@ -438,10 +459,12 @@ TEST(Jacobi, ResidualVerified) {
   Matrix A(n, n, 0.0);
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 8.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -1.0;
-    if (i < n - 1)
+}
+    if (i < n - 1) {
       A(i, i + 1) = -1.0;
+}
   }
   Vector b(n, 1.0), x(n, 0.0);
   SolverResult r = jacobi(A, b, x);
@@ -451,8 +474,9 @@ TEST(Jacobi, ResidualVerified) {
 
   Vector Ax(n);
   matvec(A, x, Ax);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(Ax[i], b[i], 1e-8);
+}
 }
 
 // GMRES (Krylov)
@@ -550,21 +574,24 @@ TEST(GMRES, SparseLaplacian1D) {
   // Verify Ax ~= b
   Vector Ax(n);
   sparse_matvec(A, x, Ax);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(Ax[i], b[i], 1e-5);
+}
 }
 
 TEST(GMRES, MatrixFree) {
   idx n = 5;
   Vector diag(n);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     diag[i] = static_cast<real>(i + 1);
+}
 
   auto op = operators::make_op(
     [&](const Vector& in, Vector& out) {
       out = Vector(n);
-      for (idx i = 0; i < n; ++i)
+      for (idx i = 0; i < n; ++i) {
         out[i] = diag[i] * in[i];
+}
     },
     n);
 
@@ -572,8 +599,9 @@ TEST(GMRES, MatrixFree) {
   SolverResult r = gmres(op, b, x);
 
   EXPECT_TRUE(r.converged);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(x[i], 1.0 / static_cast<real>(i + 1), 1e-5);
+}
 }
 
 // SparseMatrix construction
@@ -586,6 +614,20 @@ TEST(SparseMatrix, FromTriplets) {
   EXPECT_NEAR(I(0, 0), 1.0, 1e-15);
   EXPECT_NEAR(I(1, 1), 1.0, 1e-15);
   EXPECT_NEAR(I(0, 1), 0.0, 1e-15);
+}
+
+TEST(SparseMatrix, FromCSC) {
+  // CSC for [1 0 2; 0 3 0], with an Armadillo-style trailing payload item.
+  const SparseMatrix A = SparseMatrix::from_csc(
+    2, 3,
+    {1.0, 3.0, 2.0, 99.0},
+    {0, 1, 0, 999},
+    {0, 1, 2, 3});
+  EXPECT_EQ(A.nnz(), static_cast<idx>(3));
+  EXPECT_NEAR(A(0, 0), 1.0, 1e-15);
+  EXPECT_NEAR(A(1, 1), 3.0, 1e-15);
+  EXPECT_NEAR(A(0, 2), 2.0, 1e-15);
+  EXPECT_NEAR(A(1, 0), 0.0, 1e-15);
 }
 
 TEST(SparseMatrix, DuplicatesSummed) {
@@ -604,4 +646,65 @@ TEST(SparseMatrix, Matvec) {
   sparse_matvec(A, x, y);
   EXPECT_NEAR(y[0], 1.0, 1e-14);
   EXPECT_NEAR(y[1], 1.0, 1e-14);
+}
+
+TEST(Resolvent, ReusableFactorAndBatch) {
+  Matrix A(2, 2);
+  A(0, 0) = 1.0; A(0, 1) = 0.0;
+  A(1, 0) = 0.0; A(1, 1) = 2.0;
+  ResolventFactor factor(cplx(3.0, 0.0), A);
+  const auto x = factor.solve(std::vector<cplx>{cplx(2.0), cplx(6.0)});
+  EXPECT_NEAR(x[0].real(), 1.0, 1e-12);
+  EXPECT_NEAR(x[1].real(), 6.0, 1e-12);
+}
+
+TEST(Talbot, NodesScaleWithTime) {
+  const auto a = talbot_nodes(1.0, 8);
+  const auto b = talbot_nodes(2.0, 8);
+  ASSERT_EQ(a.size(), b.size());
+  for (idx k = 0; k < a.size(); ++k) {
+    EXPECT_NEAR((a[k].shift / b[k].shift).real(), 2.0, 1e-12);
+    EXPECT_NEAR((a[k].weight / b[k].weight).real(), 2.0, 1e-12);
+  }
+}
+
+TEST(SparseResolvent, OptionalBackend) {
+  SparseMatrix A = SparseMatrix::from_triplets(2, 2, {0, 1}, {0, 1}, {2.0, 3.0});
+  SparseResolventSolver solver(A);
+  if (!sparse_resolvent_available()) {
+    EXPECT_THROW(solver.factorize(cplx(1.0)), std::runtime_error);
+    return;
+  }
+  solver.factorize(cplx(1.0));
+  const auto x1 = solver.solve(std::vector<cplx>{cplx(1.0), cplx(2.0)});
+  EXPECT_NEAR(x1[0].real(), -1.0, 1e-12);
+  EXPECT_NEAR(x1[1].real(), -1.0, 1e-12);
+  solver.factorize(cplx(4.0));
+  const auto x2 = solver.solve(std::vector<cplx>{cplx(2.0), cplx(1.0)});
+  EXPECT_NEAR(x2[0].real(), 1.0, 1e-12);
+  EXPECT_NEAR(x2[1].real(), 1.0, 1e-12);
+
+  SparseResolventSolver symmetric_solver(A, {.symmetric_pattern = true});
+  symmetric_solver.factorize(cplx(4.0));
+  const auto x3 = symmetric_solver.solve(std::vector<cplx>{cplx(2.0), cplx(1.0)});
+  EXPECT_NEAR(x3[0].real(), 1.0, 1e-12);
+  EXPECT_NEAR(x3[1].real(), 1.0, 1e-12);
+}
+
+TEST(DenseResolvent, ReusableFactorization) {
+  const SparseMatrix matrix =
+      SparseMatrix::from_triplets(2, 2, {0, 0, 1}, {0, 1, 1}, {2.0, 1.0, 3.0});
+  DenseResolventSolver solver(matrix);
+
+  solver.factorize(cplx(4.0, 1.0));
+  const std::vector<cplx> expected{cplx(1.0, -0.5), cplx(-0.25, 0.75)};
+  std::vector<cplx> rhs(2);
+  rhs[0] = (cplx(4.0, 1.0) - 2.0) * expected[0] - expected[1];
+  rhs[1] = (cplx(4.0, 1.0) - 3.0) * expected[1];
+  const auto solution = solver.solve(rhs);
+
+  EXPECT_NEAR(solution[0].real(), expected[0].real(), 1e-12);
+  EXPECT_NEAR(solution[0].imag(), expected[0].imag(), 1e-12);
+  EXPECT_NEAR(solution[1].real(), expected[1].real(), 1e-12);
+  EXPECT_NEAR(solution[1].imag(), expected[1].imag(), 1e-12);
 }

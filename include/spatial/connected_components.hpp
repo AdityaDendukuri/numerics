@@ -42,15 +42,17 @@ ClusterResult connected_components(int n_sites,
   res.id.resize(n_sites);
   res.sizes.reserve(64);
 
-  for (int i = 0; i < n_sites; ++i)
+  for (int i = 0; i < n_sites; ++i) {
     res.id[i] = in_cluster(i) ? -1 : -2; // -1 = unvisited included, -2 = excluded
+}
 
   std::vector<int> queue(n_sites);
   int qhead = 0, qtail = 0;
 
   for (int start = 0; start < n_sites; ++start) {
-    if (res.id[start] != -1)
+    if (res.id[start] != -1) {
       continue;
+}
 
     const int cid = static_cast<int>(res.sizes.size());
     res.sizes.push_back(0);

@@ -2,9 +2,11 @@
 /// @brief Backend enum and default backend selection.
 #pragma once
 
+#include <cstdint>
+
 namespace num {
 
-enum class Backend {
+enum class Backend : std::uint8_t {
   seq,
   blocked,
   simd,

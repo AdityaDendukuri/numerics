@@ -32,9 +32,21 @@ public:
                                     const std::vector<idx>& cols,
                                     const std::vector<real>& vals);
 
-  idx n_rows() const { return n_rows_; }
-  idx n_cols() const { return n_cols_; }
-  idx nnz() const { return vals_.size(); }
+  /// @brief Build from zero-based compressed-column (CSC) arrays.
+  ///
+  /// The returned matrix is stored in Numerics' native CSR format.  The
+  /// payload arrays may contain a trailing unused entry, as produced by the
+  /// Armadillo sparse serializer; only the first `col_ptrs.back()` entries
+  /// are consumed.  All indices and pointers are zero-based.
+  static SparseMatrix from_csc(idx n_rows,
+                               idx n_cols,
+                               const std::vector<real>& vals,
+                               const std::vector<idx>& row_indices,
+                               const std::vector<idx>& col_ptrs);
+
+  [[nodiscard]] idx n_rows() const { return n_rows_; }
+  [[nodiscard]] idx n_cols() const { return n_cols_; }
+  [[nodiscard]] idx nnz() const { return vals_.size(); }
 
   /// @brief Element access A(i,j); returns 0 if outside stored pattern  --
   /// O(nnz/n)

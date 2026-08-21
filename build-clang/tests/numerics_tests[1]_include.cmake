@@ -1,0 +1,5 @@
+if(EXISTS "/Users/adityadendukuri/numerics/build-clang/tests/numerics_tests[1]_tests.cmake")
+  include("/Users/adityadendukuri/numerics/build-clang/tests/numerics_tests[1]_tests.cmake")
+else()
+  add_test(numerics_tests_NOT_BUILT numerics_tests_NOT_BUILT)
+endif()

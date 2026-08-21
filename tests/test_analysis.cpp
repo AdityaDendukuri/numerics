@@ -13,7 +13,7 @@ using namespace num;
 TEST(Roots, BisectionSimple) {
   // x^2 - 2 = 0, root at sqrt(2)
   auto f = [](real x) {
-    return x * x - 2.0;
+    return (x * x) - 2.0;
   };
   RootResult r = bisection(f, 1.0, 2.0);
   EXPECT_TRUE(r.converged);
@@ -22,14 +22,14 @@ TEST(Roots, BisectionSimple) {
 
 TEST(Roots, BisectionBadBracketThrows) {
   auto f = [](real x) {
-    return x * x + 1.0;
+    return (x * x) + 1.0;
   }; // no real root
   EXPECT_THROW(bisection(f, -2.0, 2.0), std::invalid_argument);
 }
 
 TEST(Roots, NewtonQuadratic) {
   auto f = [](real x) {
-    return x * x - 2.0;
+    return (x * x) - 2.0;
   };
   auto df = [](real x) {
     return 2.0 * x;
@@ -55,7 +55,7 @@ TEST(Roots, NewtonTrigonometric) {
 
 TEST(Roots, SecantSimple) {
   auto f = [](real x) {
-    return x * x - 2.0;
+    return (x * x) - 2.0;
   };
   RootResult r = secant(f, 1.0, 2.0);
   EXPECT_TRUE(r.converged);
@@ -64,7 +64,7 @@ TEST(Roots, SecantSimple) {
 
 TEST(Roots, BrentSimple) {
   auto f = [](real x) {
-    return x * x - 2.0;
+    return (x * x) - 2.0;
   };
   RootResult r = brent(f, 1.0, 2.0);
   EXPECT_TRUE(r.converged);
@@ -82,7 +82,7 @@ TEST(Roots, BrentTrigonometric) {
 
 TEST(Roots, BrentBadBracketThrows) {
   auto f = [](real x) {
-    return x * x + 1.0;
+    return (x * x) + 1.0;
   };
   EXPECT_THROW(brent(f, -2.0, 2.0), std::invalid_argument);
 }
@@ -90,10 +90,10 @@ TEST(Roots, BrentBadBracketThrows) {
 TEST(Roots, AllMethodsAgree) {
   // x^3 - x - 1 = 0, root ~1.3247179572
   auto f = [](real x) {
-    return x * x * x - x - 1.0;
+    return (x * x * x) - x - 1.0;
   };
   auto df = [](real x) {
-    return 3.0 * x * x - 1.0;
+    return (3.0 * x * x) - 1.0;
   };
   RootResult rb = bisection(f, 1.0, 2.0);
   RootResult rn = newton(f, df, 1.5);

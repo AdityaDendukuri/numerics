@@ -16,15 +16,15 @@ struct Grid3D {
   double dx = 1.0;                      ///< uniform cell size
   double ox = 0.0, oy = 0.0, oz = 0.0;  ///< origin (physical coordinate of node 0)
 
-  int size() const { return nx * ny * nz; }
+  [[nodiscard]] int size() const { return nx * ny * nz; }
 
-  idx flat(int i, int j, int k) const {
+  [[nodiscard]] idx flat(int i, int j, int k) const {
     return static_cast<idx>((k * ny * nx) + (j * nx) + i);
   }
 
-  double x(int i) const { return ox + (i * dx); }
-  double y(int j) const { return oy + (j * dx); }
-  double z(int k) const { return oz + (k * dx); }
+  [[nodiscard]] double x(int i) const { return ox + (i * dx); }
+  [[nodiscard]] double y(int j) const { return oy + (j * dx); }
+  [[nodiscard]] double z(int k) const { return oz + (k * dx); }
 };
 
 } // namespace num

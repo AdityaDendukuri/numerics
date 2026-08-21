@@ -33,6 +33,9 @@ include(cmake/openmp.cmake)
 include(cmake/simd.cmake)
 include(cmake/stdsimd.cmake)
 include(cmake/apple.cmake)
+include(cmake/suitesparse.cmake)
+
+find_package(Boost REQUIRED COMPONENTS json)
 
 # 2. Level 1 + Level 2 Kernel Target (Data structures, matrices, fields, operators; 0 solver overhead)
 add_library(numerics_kernel ${NUMERICS_KERNEL_SOURCES})
@@ -95,6 +98,16 @@ target_include_directories(numerics PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(numerics PUBLIC numerics_raw_kernel)
+
+# Optional file-I/O layer. Core numerical users do not depend on JSON.
+add_library(numerics_io ${NUMERICS_IO_SOURCES})
+add_library(numerics::io ALIAS numerics_io)
+target_compile_features(numerics_io PUBLIC cxx_std_20)
+target_include_directories(numerics_io PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(numerics_io PUBLIC numerics::kernel Boost::json)
 
 add_custom_target(tags
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen-tags.sh

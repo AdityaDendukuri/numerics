@@ -17,13 +17,15 @@ static_assert(!LanczosCallable<operators::DenseOp>);
 
 static Matrix make_sym(idx n) {
   Matrix A(n, n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     for (idx j = i; j < n; ++j) {
       real v = 1.0 / (1.0 + i + j);
       A(i, j) = A(j, i) = v;
     }
-  for (idx i = 0; i < n; ++i)
+}
+  for (idx i = 0; i < n; ++i) {
     A(i, i) += static_cast<real>(n);
+}
   return A;
 }
 
@@ -118,8 +120,9 @@ TEST(EigSym_LAPACK, MatchesJacobi) {
   auto rj = eig_sym(A, 1e-12, 100, Backend::seq);
   auto rl = eig_sym(A, 1e-12, 100, Backend::lapack);
   ASSERT_EQ(rj.values.size(), rl.values.size());
-  for (idx i = 0; i < rj.values.size(); ++i)
+  for (idx i = 0; i < rj.values.size(); ++i) {
     EXPECT_NEAR(rj.values[i], rl.values[i], 1e-8);
+}
 }
 
 TEST(EigSym_LAPACK, ReconstructN64) {
@@ -186,11 +189,12 @@ TEST(Lanczos, DenseOperator) {
   for (idx i = 0; i < 5; ++i) {
     real lref = ref.values[n - 1 - i];
     bool found = false;
-    for (idx j = 0; j < r.ritz_values.size(); ++j)
+    for (idx j = 0; j < r.ritz_values.size(); ++j) {
       if (std::abs(r.ritz_values[j] - lref) < 1e-4) {
         found = true;
         break;
       }
+}
     EXPECT_TRUE(found) << "Lanczos missed eigenvalue " << lref;
   }
 }

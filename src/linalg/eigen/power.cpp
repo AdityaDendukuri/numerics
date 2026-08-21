@@ -10,8 +10,9 @@ namespace num {
 PowerResult power_iteration(const Matrix& A, real tol, idx max_iter, Backend backend) {
   constexpr real tiny = 1e-300;
   const idx n = A.rows();
-  if (A.cols() != n)
+  if (A.cols() != n) {
     throw std::invalid_argument("power_iteration: matrix must be square");
+  }
 
   Vector v(n, 0.0);
   v[0] = 1.0;
@@ -50,13 +51,15 @@ PowerResult inverse_iteration(const Matrix& A,
                               Backend backend) {
   constexpr real tiny = 1e-300;
   const idx n = A.rows();
-  if (A.cols() != n)
+  if (A.cols() != n) {
     throw std::invalid_argument("inverse_iteration: matrix must be square");
+  }
 
   // Factorize (A - sigma*I) once
   Matrix M = A;
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     M(i, i) -= sigma;
+  }
   LUResult f = lu(M);
 
   Vector v(n, 0.0);
@@ -73,9 +76,9 @@ PowerResult inverse_iteration(const Matrix& A,
     detail::normalise(w);
 
     // Rayleigh quotient as eigenvalue estimate
-    Vector Av(n);
-    matvec(A, w, Av, backend);
-    real new_lambda = dot(w, Av, backend);
+    Vector av(n);
+    matvec(A, w, av, backend);
+    real new_lambda = dot(w, av, backend);
 
     real delta = std::abs(new_lambda - lambda);
     lambda = new_lambda;
@@ -98,18 +101,20 @@ PowerResult rayleigh_iteration(const Matrix& A,
                                idx max_iter,
                                Backend backend) {
   const idx n = A.rows();
-  if (A.cols() != n)
+  if (A.cols() != n) {
     throw std::invalid_argument("rayleigh_iteration: matrix must be square");
-  if (x0.size() != n)
+  }
+  if (x0.size() != n) {
     throw std::invalid_argument("rayleigh_iteration: x0 size mismatch");
+  }
 
   Vector v = x0;
   detail::normalise(v);
 
   // Initial Rayleigh quotient
-  Vector Av(n);
-  matvec(A, v, Av, backend);
-  real sigma = dot(v, Av, backend);
+  Vector av(n);
+  matvec(A, v, av, backend);
+  real sigma = dot(v, av, backend);
 
   PowerResult result{sigma, v, 0, false};
 
@@ -118,24 +123,26 @@ PowerResult rayleigh_iteration(const Matrix& A,
 
     // Factorize (A - sigma*I); fresh each iteration (cubic convergence)
     Matrix M = A;
-    for (idx i = 0; i < n; ++i)
+    for (idx i = 0; i < n; ++i) {
       M(i, i) -= sigma;
+    }
     LUResult f = lu(M);
 
-    if (f.singular)
+    if (f.singular) {
       break;
+    }
 
     Vector w(n);
     lu_solve(f, v, w);
     detail::normalise(w);
 
-    matvec(A, w, Av, backend);
-    real new_sigma = dot(w, Av, backend);
+    matvec(A, w, av, backend);
+    real new_sigma = dot(w, av, backend);
 
     // Residual: ||A*v - sigma*v||
     real res = 0;
     for (idx i = 0; i < n; ++i) {
-      real d = Av[i] - new_sigma * w[i];
+      real d = av[i] - (new_sigma * w[i]);
       res += d * d;
     }
     res = std::sqrt(res);

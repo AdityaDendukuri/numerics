@@ -33,12 +33,15 @@ namespace detail {
 /// Normalise v in-place; returns the old norm.
 inline real normalise(Vector& v) {
   real nrm = 0;
-  for (idx i = 0; i < v.size(); ++i)
+  for (idx i = 0; i < v.size(); ++i) {
     nrm += v[i] * v[i];
+}
   nrm = std::sqrt(nrm);
-  if (nrm > 1e-300)
-    for (idx i = 0; i < v.size(); ++i)
+  if (nrm > 1e-300) {
+    for (idx i = 0; i < v.size(); ++i) {
       v[i] /= nrm;
+}
+}
   return nrm;
 }
 } // namespace detail

@@ -89,7 +89,7 @@ public:
   [[nodiscard]] constexpr idx size() const noexcept { return rows_ * cols_; }
 
   T* data() { return data_.get(); }
-  const T* data() const { return data_.get(); }
+  [[nodiscard]] const T* data() const { return data_.get(); }
 
   T& operator()(idx i, idx j) { return data_[(i * cols_) + j]; }
   T operator()(idx i, idx j) const { return data_[(i * cols_) + j]; }
@@ -114,7 +114,7 @@ public:
   }
 
   T* gpu_data() { return d_data_; }
-  const T* gpu_data() const { return d_data_; }
+  [[nodiscard]] const T* gpu_data() const { return d_data_; }
   [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
 
 private:

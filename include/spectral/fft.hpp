@@ -10,11 +10,12 @@
 
 #include "core/types.hpp"
 #include "core/vector.hpp"
+#include <cstdint>
 
 namespace num {
 namespace spectral {
 
-enum class FFTBackend {
+enum class FFTBackend : std::uint8_t {
   seq,
   simd,
   stdsimd,
@@ -84,8 +85,8 @@ public:
 
   void execute(const CVector& in, CVector& out) const;
 
-  int size() const { return n_; }
-  FFTBackend backend() const { return backend_; }
+  [[nodiscard]] int size() const { return n_; }
+  [[nodiscard]] FFTBackend backend() const { return backend_; }
 
 private:
   int n_;

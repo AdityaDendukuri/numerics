@@ -43,12 +43,14 @@ namespace backends {
 namespace seq {
 void matmul(const Matrix& A, const Matrix& B, Matrix& C) {
     const idx M = A.rows(), K = A.cols(), N = B.cols();
-    for (idx i = 0; i < M; ++i)
+    for (idx i = 0; i < M; ++i) {
         for (idx j = 0; j < N; ++j) {
             C(i, j) = 0;
-            for (idx k = 0; k < K; ++k)
+            for (idx k = 0; k < K; ++k) {
                 C(i, j) += A(i, k) * B(k, j);
+}
         }
+}
 }
 void matvec(const Matrix& A, const Vector& x, Vector& y) {
     kernel::raw::matvec(y.data(), A.data(), x.data(), A.rows(), A.cols());
@@ -69,8 +71,9 @@ void matmul_blocked(const Matrix& A, const Matrix& B, Matrix& C, idx block_size)
                 for (idx i = ii; i < i_end; ++i) {
                     for (idx k = kk; k < k_end; ++k) {
                         const real a_ik = A(i, k);
-                        for (idx j = jj; j < j_end; ++j)
+                        for (idx j = jj; j < j_end; ++j) {
                             C(i, j) += a_ik * B(k, j);
+}
                     }
                 }
             }
@@ -92,19 +95,24 @@ void matmul_register_blocked(const Matrix& A, const Matrix& B, Matrix& C, idx bl
                     for (idx jr = jj; jr < j_lim; jr += reg_size) {
                         const idx rj = std::min(jr + reg_size, j_lim);
                         real c[4][4] = {};
-                        for (idx i = ir; i < ri; ++i)
-                            for (idx j = jr; j < rj; ++j)
+                        for (idx i = ir; i < ri; ++i) {
+                            for (idx j = jr; j < rj; ++j) {
                                 c[i - ir][j - jr] = C(i, j);
+}
+}
                         for (idx k = kk; k < k_lim; ++k) {
                             for (idx i = ir; i < ri; ++i) {
                                 const real a_ik = A(i, k);
-                                for (idx j = jr; j < rj; ++j)
+                                for (idx j = jr; j < rj; ++j) {
                                     c[i - ir][j - jr] += a_ik * B(k, j);
+}
                             }
                         }
-                        for (idx i = ir; i < ri; ++i)
-                            for (idx j = jr; j < rj; ++j)
+                        for (idx i = ir; i < ri; ++i) {
+                            for (idx j = jr; j < rj; ++j) {
                                 C(i, j) = c[i - ir][j - jr];
+}
+}
                     }
                 }
             }
@@ -165,8 +173,9 @@ void matmul(const Matrix& A, const Matrix& B, Matrix& C) {
                 for (idx i = ii; i < i_lim; ++i) {
                     for (idx k = kk; k < k_lim; ++k) {
                         const real a_ik = A(i, k);
-                        for (idx j = jj; j < j_lim; ++j)
+                        for (idx j = jj; j < j_lim; ++j) {
                             C(i, j) += a_ik * B(k, j);
+}
                     }
                 }
             }
@@ -181,8 +190,9 @@ void matvec(const Matrix& A, const Vector& x, Vector& y) {
     #pragma omp parallel for schedule(static)
     for (idx i = 0; i < A.rows(); ++i) {
         real sum = 0;
-        for (idx j = 0; j < A.cols(); ++j)
+        for (idx j = 0; j < A.cols(); ++j) {
             sum += A(i, j) * x[j];
+}
         y[i] = sum;
     }
 #else
@@ -193,8 +203,9 @@ void matadd(real alpha, const Matrix& A, real beta, const Matrix& B, Matrix& C) 
 #ifdef NUMERICS_HAS_OMP
     const idx n = A.size();
     #pragma omp parallel for schedule(static)
-    for (idx i = 0; i < n; ++i)
-        C.data()[i] = alpha * A.data()[i] + beta * B.data()[i];
+    for (idx i = 0; i < n; ++i) {
+        C.data()[i] = (alpha * A.data()[i]) + (beta * B.data()[i]);
+}
 #else
     seq::matadd(alpha, A, beta, B, C);
 #endif
@@ -310,7 +321,7 @@ static void matvec_avx(const Matrix& A, const Vector& x, Vector& y) {
 #ifdef NUMERICS_HAS_NEON
 static inline void neon_tile_4x4(const Matrix& A, const Matrix& B, Matrix& C, idx ir, idx jr, idx kk, idx k_lim) {
     const idx N = B.cols();
-    real* Crow = C.data() + ir * N;
+    real* Crow = C.data() + (ir * N);
     float64x2_t c0lo = vld1q_f64(Crow + 0 * N + jr);
     float64x2_t c0hi = vld1q_f64(Crow + 0 * N + jr + 2);
     float64x2_t c1lo = vld1q_f64(Crow + 1 * N + jr);
@@ -321,7 +332,7 @@ static inline void neon_tile_4x4(const Matrix& A, const Matrix& B, Matrix& C, id
     float64x2_t c3hi = vld1q_f64(Crow + 3 * N + jr + 2);
 
     for (idx k = kk; k < k_lim; ++k) {
-        const real* Brow = B.data() + k * N + jr;
+        const real* Brow = B.data() + (k * N) + jr;
         float64x2_t blo = vld1q_f64(Brow), bhi = vld1q_f64(Brow + 2);
         float64x2_t a0 = vdupq_n_f64(A(ir + 0, k)), a1 = vdupq_n_f64(A(ir + 1, k));
         float64x2_t a2 = vdupq_n_f64(A(ir + 2, k)), a3 = vdupq_n_f64(A(ir + 3, k));
@@ -357,8 +368,9 @@ static void matmul_neon(const Matrix& A, const Matrix& B, Matrix& C, idx block_s
                 idx ir = ii;
                 for (; ir + 4 <= i_lim; ir += 4) {
                     idx jr = jj;
-                    for (; jr + 4 <= j_lim; jr += 4)
+                    for (; jr + 4 <= j_lim; jr += 4) {
                         neon_tile_4x4(A, B, C, ir, jr, kk, k_lim);
+}
                     for (; jr < j_lim; ++jr) {
                         real c0 = C(ir + 0, jr), c1 = C(ir + 1, jr);
                         real c2 = C(ir + 2, jr), c3 = C(ir + 3, jr);
@@ -378,8 +390,9 @@ static void matmul_neon(const Matrix& A, const Matrix& B, Matrix& C, idx block_s
                 for (; ir < i_lim; ++ir) {
                     for (idx k = kk; k < k_lim; ++k) {
                         const real a_ik = A(ir, k);
-                        for (idx j = jj; j < j_lim; ++j)
+                        for (idx j = jj; j < j_lim; ++j) {
                             C(ir, j) += a_ik * B(k, j);
+}
                     }
                 }
             }
@@ -398,8 +411,9 @@ static void matvec_neon(const Matrix& A, const Vector& x, Vector& y) {
             acc = vfmaq_f64(acc, a, xv);
         }
         real result = vgetq_lane_f64(acc, 0) + vgetq_lane_f64(acc, 1);
-        for (; j < N; ++j)
+        for (; j < N; ++j) {
             result += A(i, j) * x[j];
+}
         y[i] = result;
     }
 }

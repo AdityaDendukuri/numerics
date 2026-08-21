@@ -18,11 +18,11 @@ void ger(real alpha, const Vector& x, const Vector& y, Matrix& A, par_t) {
   const idx n = y.size();
   const real* xd = x.data();
   const real* yd = y.data();
-  real* Ad = A.data();
+  real* ad = A.data();
   #pragma omp parallel for schedule(static)
   for (idx i = 0; i < m; ++i) {
     const real axi = alpha * xd[i];
-    real* row = Ad + (i * n);
+    real* row = ad + (i * n);
     for (idx j = 0; j < n; ++j) {
       row[j] += axi * yd[j];
     }

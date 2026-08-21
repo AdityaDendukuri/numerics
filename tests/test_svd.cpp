@@ -11,9 +11,11 @@ using namespace num;
 
 static Matrix make_rect(idx m, idx n) {
   Matrix A(m, n, 0.0);
-  for (idx i = 0; i < m; ++i)
-    for (idx j = 0; j < n; ++j)
+  for (idx i = 0; i < m; ++i) {
+    for (idx j = 0; j < n; ++j) {
       A(i, j) = 1.0 / (1.0 + i + j);
+}
+}
   return A;
 }
 
@@ -21,13 +23,15 @@ static Matrix make_rect(idx m, idx n) {
 static real reconstruction_error(const Matrix& A, const SVDResult& r) {
   idx m = A.rows(), n = A.cols(), k = r.S.size();
   real err = 0.0;
-  for (idx i = 0; i < m; ++i)
+  for (idx i = 0; i < m; ++i) {
     for (idx j = 0; j < n; ++j) {
       real aij = 0.0;
-      for (idx p = 0; p < k; ++p)
+      for (idx p = 0; p < k; ++p) {
         aij += r.U(i, p) * r.S[p] * r.Vt(p, j);
+}
       err = std::max(err, std::abs(A(i, j) - aij));
     }
+}
   return err;
 }
 
@@ -35,21 +39,25 @@ static real reconstruction_error(const Matrix& A, const SVDResult& r) {
 static real col_ortho_error(const Matrix& U) {
   idx m = U.rows(), k = U.cols();
   real err = 0.0;
-  for (idx i = 0; i < k; ++i)
+  for (idx i = 0; i < k; ++i) {
     for (idx j = 0; j < k; ++j) {
       real dot = 0.0;
-      for (idx p = 0; p < m; ++p)
+      for (idx p = 0; p < m; ++p) {
         dot += U(p, i) * U(p, j);
+}
       err = std::max(err, std::abs(dot - (i == j ? 1.0 : 0.0)));
     }
+}
   return err;
 }
 
 /// Singular values must be non-negative and descending.
 static bool sv_descending(const Vector& S) {
-  for (idx i = 1; i < S.size(); ++i)
-    if (S[i] > S[i - 1] + 1e-12)
+  for (idx i = 1; i < S.size(); ++i) {
+    if (S[i] > S[i - 1] + 1e-12) {
       return false;
+}
+}
   return true;
 }
 
@@ -97,8 +105,9 @@ TEST(SVD_LAPACK, MatchesJacobi) {
   auto rj = svd(A, Backend::seq);
   auto rl = svd(A, Backend::lapack);
   ASSERT_EQ(rj.S.size(), rl.S.size());
-  for (idx i = 0; i < rj.S.size(); ++i)
+  for (idx i = 0; i < rj.S.size(); ++i) {
     EXPECT_NEAR(rj.S[i], rl.S[i], 1e-8);
+}
 }
 
 TEST(SVD_LAPACK, ReconstructN64) {
@@ -121,11 +130,14 @@ TEST(SVD_LAPACK, ReconstructRectangular) {
 
 static Matrix make_lowrank(idx n, idx k) {
   Matrix A(n, n, 0.0);
-  for (idx i = 0; i < k; ++i)
+  for (idx i = 0; i < k; ++i) {
     A(i, i) = std::pow(10.0, static_cast<real>(k - i));
-  for (idx i = 0; i < n; ++i)
-    for (idx j = 0; j < n; ++j)
+}
+  for (idx i = 0; i < n; ++i) {
+    for (idx j = 0; j < n; ++j) {
       A(i, j) += 1e-6 / (1.0 + i + j);
+}
+}
   return A;
 }
 
@@ -137,8 +149,9 @@ TEST(SVD_Randomized, TopKSingularValues) {
   auto rfull = svd(A, Backend::seq);
   auto rrand = svd_truncated(A, k, default_backend);
   // top-k singular values should match to within 0.1% of the dominant S[0]
-  for (idx i = 0; i < k; ++i)
+  for (idx i = 0; i < k; ++i) {
     EXPECT_NEAR(rrand.S[i], rfull.S[i], rfull.S[0] * 1e-3);
+}
 }
 
 TEST(SVD_Randomized, ColumnOrthonormality) {

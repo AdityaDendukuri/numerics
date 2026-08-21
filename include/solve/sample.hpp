@@ -20,8 +20,9 @@ struct MCMCModel {
 /// @brief Run equilibration then measurement sweeps; return the mean observable.
 template<IsMCMCAlg A, typename RNG>
 double sample(const MCMCModel& model, const A& alg, RNG& rng) {
-  for (int s = 0; s < alg.equilibration; ++s)
+  for (int s = 0; s < alg.equilibration; ++s) {
     markov::metropolis_sweep_prob(model.n_sites, model.accept_prob, model.propose, rng);
+}
   double acc = 0.0;
   for (int s = 0; s < alg.measurements; ++s) {
     markov::metropolis_sweep_prob(model.n_sites, model.accept_prob, model.propose, rng);

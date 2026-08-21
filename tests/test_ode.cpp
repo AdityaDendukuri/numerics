@@ -20,7 +20,7 @@ static ODERhsFn harmonic_osc() {
 
 static AccelFn kepler_accel() {
   return [](const Vector& q, Vector& a) {
-    real r2 = q[0] * q[0] + q[1] * q[1];
+    real r2 = (q[0] * q[0]) + (q[1] * q[1]);
     real r3 = r2 * std::sqrt(r2);
     a[0] = -q[0] / r3;
     a[1] = -q[1] / r3;
@@ -28,9 +28,9 @@ static AccelFn kepler_accel() {
 }
 
 static real kepler_energy(const Vector& q, const Vector& v) {
-  real KE = 0.5 * (v[0] * v[0] + v[1] * v[1]);
-  real r = std::sqrt(q[0] * q[0] + q[1] * q[1]);
-  return KE - 1.0 / r;
+  real KE = 0.5 * ((v[0] * v[0]) + (v[1] * v[1]));
+  real r = std::sqrt((q[0] * q[0]) + (q[1] * q[1]));
+  return KE - (1.0 / r);
 }
 
 static Vector kepler_q0() {
@@ -117,8 +117,9 @@ TEST(ODE_Stepper, RK45StepCount) {
   int count = 0;
   for (auto s : rk45(harmonic_osc(),
                      {1.0, 0.0},
-                     {.tf = 1.0, .rtol = 1e-6, .atol = 1e-9, .max_steps = 100000}))
+                     {.tf = 1.0, .rtol = 1e-6, .atol = 1e-9, .max_steps = 100000})) {
     (void)s, ++count;
+}
   EXPECT_GT(count, 0);
 }
 
@@ -151,7 +152,7 @@ TEST(ODE_Verlet, EnergyBetterThanRK4Long) {
   real h = 0.05;
 
   auto rhs = [](real, const Vector& y, Vector& dy) {
-    real r2 = y[0] * y[0] + y[1] * y[1];
+    real r2 = (y[0] * y[0]) + (y[1] * y[1]);
     real r3 = r2 * std::sqrt(r2);
     dy[0] = y[2];
     dy[1] = y[3];
@@ -210,7 +211,8 @@ TEST(ODE_Yoshida4, EnergyBounded) {
 
 TEST(ODE_Verlet, StepCount) {
   int count = 0;
-  for (auto s : verlet(kepler_accel(), kepler_q0(), kepler_v0(), {.tf = 1.0, .h = 0.1}))
+  for (auto s : verlet(kepler_accel(), kepler_q0(), kepler_v0(), {.tf = 1.0, .h = 0.1})) {
     (void)s, ++count;
+}
   EXPECT_EQ(count, 10);
 }

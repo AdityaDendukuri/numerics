@@ -10,7 +10,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # Library artifacts + export set
-install(TARGETS numerics_raw_kernel numerics_kernel numerics_solvers numerics_ode numerics_pde numerics_spectral numerics
+install(TARGETS numerics_raw_kernel numerics_kernel numerics_solvers numerics_ode numerics_pde numerics_spectral numerics numerics_io
     EXPORT      NumericsTargets
     ARCHIVE     DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT full
     LIBRARY     DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT full
@@ -66,4 +66,3 @@ install(FILES
     cmake/FindFFTW3.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/numerics
 )
-

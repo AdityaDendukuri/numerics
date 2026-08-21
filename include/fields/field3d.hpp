@@ -44,15 +44,15 @@ public:
     fill(std::forward<F>(f));
   }
 
-  const Grid3D& grid() const { return grid_; }
+  [[nodiscard]] const Grid3D& grid() const { return grid_; }
 
-  int nx() const { return grid_.nx; }
-  int ny() const { return grid_.ny; }
-  int nz() const { return grid_.nz; }
-  float dx() const { return static_cast<float>(grid_.dx); }
-  float ox() const { return static_cast<float>(grid_.ox); }
-  float oy() const { return static_cast<float>(grid_.oy); }
-  float oz() const { return static_cast<float>(grid_.oz); }
+  [[nodiscard]] int nx() const { return grid_.nx; }
+  [[nodiscard]] int ny() const { return grid_.ny; }
+  [[nodiscard]] int nz() const { return grid_.nz; }
+  [[nodiscard]] float dx() const { return static_cast<float>(grid_.dx); }
+  [[nodiscard]] float ox() const { return static_cast<float>(grid_.ox); }
+  [[nodiscard]] float oy() const { return static_cast<float>(grid_.oy); }
+  [[nodiscard]] float oz() const { return static_cast<float>(grid_.oz); }
 
   real& operator()(int i, int j, int k) { return data_[grid_.flat(i, j, k)]; }
   real operator()(int i, int j, int k) const { return data_[grid_.flat(i, j, k)]; }
@@ -62,26 +62,30 @@ public:
   }
 
   void fill(double v) {
-    for (idx n = 0; n < data_.size(); ++n)
+    for (idx n = 0; n < data_.size(); ++n) {
       data_[n] = static_cast<real>(v);
+}
   }
 
   /// Fill every node with f(i, j, k).
   template<typename F>
   void fill(F&& f) {
-    for (int k = 0; k < grid_.nz; ++k)
-      for (int j = 0; j < grid_.ny; ++j)
-        for (int i = 0; i < grid_.nx; ++i)
+    for (int k = 0; k < grid_.nz; ++k) {
+      for (int j = 0; j < grid_.ny; ++j) {
+        for (int i = 0; i < grid_.nx; ++i) {
           data_[grid_.flat(i, j, k)] = static_cast<real>(f(i, j, k));
+}
+}
+}
   }
 
   Vector& vec() { return data_; }
-  const Vector& vec() const { return data_; }
+  [[nodiscard]] const Vector& vec() const { return data_; }
   real* data() { return data_.data(); }
-  const real* data() const { return data_.data(); }
-  idx size() const { return data_.size(); }
+  [[nodiscard]] const real* data() const { return data_.data(); }
+  [[nodiscard]] idx size() const { return data_.size(); }
 
-  float sample(float x, float y, float z) const;
+  [[nodiscard]] float sample(float x, float y, float z) const;
 
 private:
   Grid3D grid_;
@@ -99,7 +103,7 @@ struct VectorField3D {
                 float oy = 0.0f,
                 float oz = 0.0f);
 
-  std::array<float, 3> sample(float px, float py, float pz) const;
+  [[nodiscard]] std::array<float, 3> sample(float px, float py, float pz) const;
 
   void scale(float s);
 };

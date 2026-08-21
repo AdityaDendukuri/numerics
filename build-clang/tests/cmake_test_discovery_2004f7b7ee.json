@@ -1,0 +1,1174 @@
+{
+  "tests": 170,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "Vector",
+      "tests": 7,
+      "testsuite": [
+        {
+          "name": "Construction",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 6
+        },
+        {
+          "name": "CopyMove",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 20
+        },
+        {
+          "name": "Scale",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 29
+        },
+        {
+          "name": "Add",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 37
+        },
+        {
+          "name": "Axpy",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 47
+        },
+        {
+          "name": "Dot",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 56
+        },
+        {
+          "name": "Norm",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_vector.cpp",
+          "line": 62
+        }
+      ]
+    },
+    {
+      "name": "Matrix",
+      "tests": 5,
+      "testsuite": [
+        {
+          "name": "Construction",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 6
+        },
+        {
+          "name": "CopyMove",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 17
+        },
+        {
+          "name": "Matvec",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 28
+        },
+        {
+          "name": "Matmul",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 45
+        },
+        {
+          "name": "Matadd",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 71
+        }
+      ]
+    },
+    {
+      "name": "MatmulPolicy",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "BlockedMatchesSeq",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 101
+        }
+      ]
+    },
+    {
+      "name": "MatvecPolicy",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "BlockedMatchesSeq",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_matrix.cpp",
+          "line": 114
+        }
+      ]
+    },
+    {
+      "name": "Resolvent",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "DenseSolve",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 25
+        },
+        {
+          "name": "ReusableFactorAndBatch",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 651
+        }
+      ]
+    },
+    {
+      "name": "CG",
+      "tests": 5,
+      "testsuite": [
+        {
+          "name": "Small3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 46
+        },
+        {
+          "name": "DiagonalDominant5x5",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 69
+        },
+        {
+          "name": "ConvergesWithinN",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 96
+        },
+        {
+          "name": "DenseOperator",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 156
+        },
+        {
+          "name": "SparseOperator",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 217
+        }
+      ]
+    },
+    {
+      "name": "MatrixProperties",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "CheckedSymmetricAndSPD",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 116
+        },
+        {
+          "name": "CheckedConstructorsRejectInvalidInput",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 132
+        }
+      ]
+    },
+    {
+      "name": "SolveDispatch",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "MatrixCGWithCheckedSPD",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 183
+        },
+        {
+          "name": "DenseGMRES",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 202
+        }
+      ]
+    },
+    {
+      "name": "Operators",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "CallableOperator",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 239
+        }
+      ]
+    },
+    {
+      "name": "PCG",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "JacobiPreconditioner",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 259
+        }
+      ]
+    },
+    {
+      "name": "MINRES",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "SymmetricIndefiniteOperator",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 281
+        }
+      ]
+    },
+    {
+      "name": "PDEOperators",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "BackwardEulerOperatorIsSPD",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 298
+        }
+      ]
+    },
+    {
+      "name": "Thomas",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "Small4x4",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 312
+        },
+        {
+          "name": "Laplacian1D",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 321
+        },
+        {
+          "name": "TwoByTwo",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 337
+        }
+      ]
+    },
+    {
+      "name": "GaussSeidel",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "DiagonalDominant3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 346
+        },
+        {
+          "name": "DiagonalSystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 368
+        },
+        {
+          "name": "ResidualVerified",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 388
+        }
+      ]
+    },
+    {
+      "name": "Jacobi",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "DiagonalDominant3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 416
+        },
+        {
+          "name": "DiagonalSystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 437
+        },
+        {
+          "name": "ResidualVerified",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 457
+        }
+      ]
+    },
+    {
+      "name": "GMRES",
+      "tests": 5,
+      "testsuite": [
+        {
+          "name": "SPD3x3Dense",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 484
+        },
+        {
+          "name": "DenseOperator",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 506
+        },
+        {
+          "name": "NonSymmetricDense",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 529
+        },
+        {
+          "name": "SparseLaplacian1D",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 546
+        },
+        {
+          "name": "MatrixFree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 582
+        }
+      ]
+    },
+    {
+      "name": "SparseMatrix",
+      "tests": 4,
+      "testsuite": [
+        {
+          "name": "FromTriplets",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 609
+        },
+        {
+          "name": "FromCSC",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 619
+        },
+        {
+          "name": "DuplicatesSummed",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 633
+        },
+        {
+          "name": "Matvec",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 641
+        }
+      ]
+    },
+    {
+      "name": "Talbot",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "NodesScaleWithTime",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 661
+        }
+      ]
+    },
+    {
+      "name": "SparseResolvent",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "OptionalBackend",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 671
+        }
+      ]
+    },
+    {
+      "name": "DenseResolvent",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "ReusableFactorization",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solvers.cpp",
+          "line": 694
+        }
+      ]
+    },
+    {
+      "name": "BandedMatrix",
+      "tests": 6,
+      "testsuite": [
+        {
+          "name": "ConstructBasic",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 14
+        },
+        {
+          "name": "ConstructWithValue",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 26
+        },
+        {
+          "name": "ElementAccess",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 37
+        },
+        {
+          "name": "InBandCheck",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 66
+        },
+        {
+          "name": "CopyConstruct",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 84
+        },
+        {
+          "name": "MoveConstruct",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 104
+        }
+      ]
+    },
+    {
+      "name": "BandedSolver",
+      "tests": 11,
+      "testsuite": [
+        {
+          "name": "Tridiagonal4x4",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 118
+        },
+        {
+          "name": "Tridiagonal1DLaplacian",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 151
+        },
+        {
+          "name": "Pentadiagonal",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 187
+        },
+        {
+          "name": "GeneralBanded",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 234
+        },
+        {
+          "name": "LUFactorizationReuse",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 279
+        },
+        {
+          "name": "MultipleRHS",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 324
+        },
+        {
+          "name": "LargeTridiagonal",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 438
+        },
+        {
+          "name": "LargePentadiagonal",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 473
+        },
+        {
+          "name": "Size1",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 535
+        },
+        {
+          "name": "Size2",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 548
+        },
+        {
+          "name": "DiagonalMatrix",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 567
+        }
+      ]
+    },
+    {
+      "name": "BandedMatvec",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "Basic",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 384
+        },
+        {
+          "name": "GEMV",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 413
+        }
+      ]
+    },
+    {
+      "name": "BandedNorm",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "Norm1",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_banded.cpp",
+          "line": 517
+        }
+      ]
+    },
+    {
+      "name": "KLU",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "SparseFactorAndBlockSolve",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "name": "UMFPACK",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "SparseFactorAndSolve",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 60
+        }
+      ]
+    },
+    {
+      "name": "LU",
+      "tests": 9,
+      "testsuite": [
+        {
+          "name": "SolveSmall3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 75
+        },
+        {
+          "name": "SolveIdentitySystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 103
+        },
+        {
+          "name": "SolveDiagonalSystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 120
+        },
+        {
+          "name": "SolveLargerSystem",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 139
+        },
+        {
+          "name": "Determinant2x2",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 170
+        },
+        {
+          "name": "Determinant3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 181
+        },
+        {
+          "name": "InverseTimesOriginal",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 199
+        },
+        {
+          "name": "MultipleRHS",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 228
+        },
+        {
+          "name": "SingularMatrix",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 265
+        }
+      ]
+    },
+    {
+      "name": "QR",
+      "tests": 7,
+      "testsuite": [
+        {
+          "name": "OrthogonalitySquare3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 314
+        },
+        {
+          "name": "ProductRecoversA_3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 330
+        },
+        {
+          "name": "RIsUpperTriangular",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 346
+        },
+        {
+          "name": "ProductRecoversA_Overdetermined",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 370
+        },
+        {
+          "name": "SolveSquareExact",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 391
+        },
+        {
+          "name": "SolveLeastSquares",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 414
+        },
+        {
+          "name": "IdentityMatrix",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 455
+        }
+      ]
+    },
+    {
+      "name": "Cholesky",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "SPDSolve",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 473
+        },
+        {
+          "name": "IndefiniteFails",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_factorization.cpp",
+          "line": 496
+        }
+      ]
+    },
+    {
+      "name": "Roots",
+      "tests": 9,
+      "testsuite": [
+        {
+          "name": "BisectionSimple",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 13
+        },
+        {
+          "name": "BisectionBadBracketThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 23
+        },
+        {
+          "name": "NewtonQuadratic",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 30
+        },
+        {
+          "name": "NewtonTrigonometric",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 43
+        },
+        {
+          "name": "SecantSimple",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 56
+        },
+        {
+          "name": "BrentSimple",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 65
+        },
+        {
+          "name": "BrentTrigonometric",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 74
+        },
+        {
+          "name": "BrentBadBracketThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 83
+        },
+        {
+          "name": "AllMethodsAgree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "name": "Quadrature",
+      "tests": 11,
+      "testsuite": [
+        {
+          "name": "TrapzPolynomial",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 109
+        },
+        {
+          "name": "SimpsonPolynomial",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 118
+        },
+        {
+          "name": "SimpsonOddNThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 127
+        },
+        {
+          "name": "GaussLegendreTrig",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 134
+        },
+        {
+          "name": "GaussLegendreExactPolynomial",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 143
+        },
+        {
+          "name": "AdaptiveSimpsonTrig",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 152
+        },
+        {
+          "name": "AdaptiveSimpsonExp",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 160
+        },
+        {
+          "name": "RombergHighAccuracy",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 169
+        },
+        {
+          "name": "AllMethodsAgree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 179
+        },
+        {
+          "name": "TrapzOmpMatchesSeq",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 198
+        },
+        {
+          "name": "SimpsonOmpMatchesSeq",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_analysis.cpp",
+          "line": 207
+        }
+      ]
+    },
+    {
+      "name": "FFT",
+      "tests": 13,
+      "testsuite": [
+        {
+          "name": "DCComponent",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 79
+        },
+        {
+          "name": "SingleFrequencySpike",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 97
+        },
+        {
+          "name": "RoundTrip",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 118
+        },
+        {
+          "name": "Parseval",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 140
+        },
+        {
+          "name": "Linearity",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 163
+        },
+        {
+          "name": "RfftDC",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 194
+        },
+        {
+          "name": "RfftFrequencySpike",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 209
+        },
+        {
+          "name": "IrfftRoundTrip",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 225
+        },
+        {
+          "name": "AllBackendsAgree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 306
+        },
+        {
+          "name": "AllBackendsIrfftAgree",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 330
+        },
+        {
+          "name": "SizeMismatchThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 360
+        },
+        {
+          "name": "RfftSizeMismatchThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 367
+        },
+        {
+          "name": "IrfftSizeMismatchThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 374
+        }
+      ]
+    },
+    {
+      "name": "FFTPlan",
+      "tests": 4,
+      "testsuite": [
+        {
+          "name": "MatchesOneShot",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 247
+        },
+        {
+          "name": "InversePlanRoundTrip",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 265
+        },
+        {
+          "name": "RepeatedExecuteSameResult",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 287
+        },
+        {
+          "name": "ExecuteSizeMismatchThrows",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fft.cpp",
+          "line": 381
+        }
+      ]
+    },
+    {
+      "name": "ODE_Euler",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "OrderOne",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "name": "ODE_RK4",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "OrderFour",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 62
+        },
+        {
+          "name": "HarmonicOscillatorAccuracy",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 75
+        }
+      ]
+    },
+    {
+      "name": "ODE_RK45",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "HarmonicOscillator",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 83
+        },
+        {
+          "name": "ExponentialDecay",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 91
+        }
+      ]
+    },
+    {
+      "name": "ODE_Stepper",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "RK4RecordsTrajectory",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 102
+        },
+        {
+          "name": "RK45StepCount",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 116
+        }
+      ]
+    },
+    {
+      "name": "ODE_Verlet",
+      "tests": 4,
+      "testsuite": [
+        {
+          "name": "CircularOrbit",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 128
+        },
+        {
+          "name": "EnergyBounded",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 137
+        },
+        {
+          "name": "EnergyBetterThanRK4Long",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 150
+        },
+        {
+          "name": "StepCount",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 212
+        }
+      ]
+    },
+    {
+      "name": "ODE_Yoshida4",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "CircularOrbit",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 181
+        },
+        {
+          "name": "HigherOrderThanVerlet",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 188
+        },
+        {
+          "name": "EnergyBounded",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_ode.cpp",
+          "line": 199
+        }
+      ]
+    },
+    {
+      "name": "EigSym_Jacobi",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "Reconstruct3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 65
+        },
+        {
+          "name": "EigenvaluesAscending",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 82
+        },
+        {
+          "name": "ReconstructN32",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "name": "EigSym_LAPACK",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "Reconstruct3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 101
+        },
+        {
+          "name": "MatchesJacobi",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 118
+        },
+        {
+          "name": "ReconstructN64",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 128
+        }
+      ]
+    },
+    {
+      "name": "PowerIteration",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "DominantEigenvalue",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 139
+        }
+      ]
+    },
+    {
+      "name": "Lanczos",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "TopKEigenvalues",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 155
+        },
+        {
+          "name": "DenseOperator",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_eigen.cpp",
+          "line": 179
+        }
+      ]
+    },
+    {
+      "name": "SVD_Jacobi",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "Reconstruct3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 66
+        },
+        {
+          "name": "ReconstructRectangular",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 75
+        },
+        {
+          "name": "ReconstructN32",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 82
+        }
+      ]
+    },
+    {
+      "name": "SVD_LAPACK",
+      "tests": 4,
+      "testsuite": [
+        {
+          "name": "Reconstruct3x3",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 94
+        },
+        {
+          "name": "MatchesJacobi",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 103
+        },
+        {
+          "name": "ReconstructN64",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 113
+        },
+        {
+          "name": "ReconstructRectangular",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 121
+        }
+      ]
+    },
+    {
+      "name": "SVD_Randomized",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "TopKSingularValues",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 144
+        },
+        {
+          "name": "ColumnOrthonormality",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_svd.cpp",
+          "line": 157
+        }
+      ]
+    },
+    {
+      "name": "ScalarField3D",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "StorageRoundTrip",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fields.cpp",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "name": "VectorField3D",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "Scale",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fields.cpp",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "name": "FieldSolver",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "PoissonManufacturedSolution",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fields.cpp",
+          "line": 43
+        },
+        {
+          "name": "GradientOfLinearFieldIsConstant",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_fields.cpp",
+          "line": 95
+        }
+      ]
+    },
+    {
+      "name": "Solve",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "ODEProblemRK45",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solve.cpp",
+          "line": 16
+        },
+        {
+          "name": "LinearCacheWarmStart",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solve.cpp",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "name": "Sample",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "MCMCModelMeasure",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_solve.cpp",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "name": "Umbrella",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "IncludeHeader",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_umbrella.cpp",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "name": "DebugCheck",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "DimensionMismatch",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_debug.cpp",
+          "line": 5
+        },
+        {
+          "name": "NonFiniteValueError",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_debug.cpp",
+          "line": 11
+        },
+        {
+          "name": "FalseSPDAssertionCaughtAtRuntime",
+          "file": "\/Users\/adityadendukuri\/numerics\/tests\/test_debug.cpp",
+          "line": 18
+        }
+      ]
+    }
+  ]
+}

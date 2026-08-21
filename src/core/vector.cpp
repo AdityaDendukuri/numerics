@@ -37,8 +37,9 @@ void scale(Vector& v, real alpha) {
     kernel::raw::scale(v.data(), alpha, v.size());
 }
 void add(const Vector& x, const Vector& y, Vector& z) {
-    for (idx i = 0; i < x.size(); ++i)
+    for (idx i = 0; i < x.size(); ++i) {
         z[i] = x[i] + y[i];
+}
 }
 void axpy(real alpha, const Vector& x, Vector& y) {
     kernel::raw::axpy(y.data(), x.data(), alpha, x.size());
@@ -91,8 +92,9 @@ void scale(Vector& v, real alpha) {
 #ifdef NUMERICS_HAS_OMP
     const idx n = v.size();
     #pragma omp parallel for schedule(static)
-    for (idx i = 0; i < n; ++i)
+    for (idx i = 0; i < n; ++i) {
         v[i] *= alpha;
+}
 #else
     seq::scale(v, alpha);
 #endif
@@ -101,8 +103,9 @@ void axpy(real alpha, const Vector& x, Vector& y) {
 #ifdef NUMERICS_HAS_OMP
     const idx n = x.size();
     #pragma omp parallel for schedule(static)
-    for (idx i = 0; i < n; ++i)
+    for (idx i = 0; i < n; ++i) {
         y[i] += alpha * x[i];
+}
 #else
     seq::axpy(alpha, x, y);
 #endif
@@ -112,8 +115,9 @@ real dot(const Vector& x, const Vector& y) {
     real sum = 0;
     const idx n = x.size();
     #pragma omp parallel for reduction(+ : sum) schedule(static)
-    for (idx i = 0; i < n; ++i)
+    for (idx i = 0; i < n; ++i) {
         sum += x[i] * y[i];
+}
     return sum;
 #else
     return seq::dot(x, y);
@@ -248,26 +252,30 @@ real norm(const Vector& x, Backend b) {
 }
 
 void scale(CVector& v, cplx alpha) {
-    for (idx i = 0; i < v.size(); ++i)
+    for (idx i = 0; i < v.size(); ++i) {
         v[i] *= alpha;
+}
 }
 
 void axpy(cplx alpha, const CVector& x, CVector& y) {
-    for (idx i = 0; i < x.size(); ++i)
+    for (idx i = 0; i < x.size(); ++i) {
         y[i] += alpha * x[i];
+}
 }
 
 cplx dot(const CVector& x, const CVector& y) {
     cplx sum{0, 0};
-    for (idx i = 0; i < x.size(); ++i)
+    for (idx i = 0; i < x.size(); ++i) {
         sum += std::conj(x[i]) * y[i];
+}
     return sum;
 }
 
 real norm(const CVector& x) {
     real sum = 0;
-    for (idx i = 0; i < x.size(); ++i)
+    for (idx i = 0; i < x.size(); ++i) {
         sum += std::norm(x[i]);
+}
     return std::sqrt(sum);
 }
 

@@ -12,8 +12,9 @@ SolverResult gmres(const SparseMatrix& A,
                    real tol,
                    idx max_iter,
                    idx restart) {
-  if (A.n_rows() != A.n_cols())
+  if (A.n_rows() != A.n_cols()) {
     throw std::invalid_argument("GMRES requires a square matrix");
+  }
   operators::SparseOp op(A);
   return gmres(op, b, x, tol, max_iter, restart);
 }
@@ -27,8 +28,9 @@ SolverResult gmres(const Matrix& A,
                    idx max_iter,
                    idx restart,
                    Backend backend) {
-  if (A.rows() != A.cols())
+  if (A.rows() != A.cols()) {
     throw std::invalid_argument("GMRES requires a square matrix");
+  }
   operators::DenseOp op(A, backend);
   return gmres(op, b, x, tol, max_iter, restart);
 }

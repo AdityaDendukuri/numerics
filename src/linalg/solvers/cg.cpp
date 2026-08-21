@@ -12,8 +12,9 @@ SolverResult cg(const Matrix& A,
                 idx max_iter,
                 Backend backend) {
     idx n = b.size();
-    if (A.rows() != n || A.cols() != n || x.size() != n)
+    if (A.rows() != n || A.cols() != n || x.size() != n) {
         throw std::invalid_argument("Dimension mismatch in CG solver");
+}
 
     // GPU path: transfer all data to device first
     if (backend == Backend::gpu) {
@@ -35,10 +36,12 @@ SolverResult cg(const Matrix& A,
         axpy(1.0, b, r, backend);
         cuda::to_device(p.gpu_data(), r.gpu_data(), n);
     } else {
-        for (idx i = 0; i < n; ++i)
+        for (idx i = 0; i < n; ++i) {
             r[i] = b[i] - r[i];
-        for (idx i = 0; i < n; ++i)
+}
+        for (idx i = 0; i < n; ++i) {
             p[i] = r[i];
+}
     }
 
     real rsold = dot(r, r, backend);
@@ -49,8 +52,9 @@ SolverResult cg(const Matrix& A,
         matvec(A, p, Ap, backend);
 
         real pAp = dot(p, Ap, backend);
-        if (std::abs(pAp) < 1e-15)
+        if (std::abs(pAp) < 1e-15) {
             break;
+}
         real alpha = rsold / pAp;
 
         axpy(alpha, p, x, backend);
@@ -70,8 +74,9 @@ SolverResult cg(const Matrix& A,
         rsold = rsnew;
     }
 
-    if (backend == Backend::gpu)
+    if (backend == Backend::gpu) {
         x.to_cpu();
+}
     return result;
 }
 

@@ -15,13 +15,15 @@ TEST(ScalarField3D, StorageRoundTrip) {
 
   f.fill([](int i, int j, int k) { return (100 * i) + (10 * j) + k; });
 
-  for (int k = 0; k < f.nz(); ++k)
-    for (int j = 0; j < f.ny(); ++j)
+  for (int k = 0; k < f.nz(); ++k) {
+    for (int j = 0; j < f.ny(); ++j) {
       for (int i = 0; i < f.nx(); ++i) {
         const double expected = (100 * i) + (10 * j) + k;
         EXPECT_DOUBLE_EQ(f(i, j, k), expected);
         EXPECT_DOUBLE_EQ(f.vec()[f.grid().flat(i, j, k)], expected);
       }
+}
+}
 }
 
 TEST(VectorField3D, Scale) {
@@ -55,8 +57,8 @@ TEST(FieldSolver, PoissonManufacturedSolution) {
 
   // source = discrete Laplacian of phi_exact on the interior (dx^2 = 1).
   ScalarField3D source(n, n, n, dx);
-  for (int k = 1; k < n - 1; ++k)
-    for (int j = 1; j < n - 1; ++j)
+  for (int k = 1; k < n - 1; ++k) {
+    for (int j = 1; j < n - 1; ++j) {
       for (int i = 1; i < n - 1; ++i) {
         const double lap = phi_exact(i + 1, j, k) + phi_exact(i - 1, j, k)
                            + phi_exact(i, j + 1, k) + phi_exact(i, j - 1, k)
@@ -64,22 +66,29 @@ TEST(FieldSolver, PoissonManufacturedSolution) {
                            - (6.0 * phi_exact(i, j, k));
         source(i, j, k) = lap;
       }
+}
+}
 
   ScalarField3D phi(n, n, n, dx); // initial guess: 0
   const auto result = FieldSolver::solve_poisson(phi, source, 1e-9, 2000);
   ASSERT_TRUE(result.converged);
 
   double max_err = 0.0;
-  for (int k = 0; k < n; ++k)
-    for (int j = 0; j < n; ++j)
-      for (int i = 0; i < n; ++i)
+  for (int k = 0; k < n; ++k) {
+    for (int j = 0; j < n; ++j) {
+      for (int i = 0; i < n; ++i) {
         max_err = std::max(max_err, std::abs(phi(i, j, k) - phi_exact(i, j, k)));
+}
+}
+}
   EXPECT_LT(max_err, 1e-6);
 
   // Boundary stays pinned to zero.
-  for (int j = 0; j < n; ++j)
-    for (int i = 0; i < n; ++i)
+  for (int j = 0; j < n; ++j) {
+    for (int i = 0; i < n; ++i) {
       EXPECT_NEAR(phi(i, j, 0), 0.0, 1e-9);
+}
+}
 }
 
 // Central-difference gradient of phi = x (i.e. i*dx) is exactly 1 in x, 0 else.

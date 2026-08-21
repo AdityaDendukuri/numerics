@@ -6,7 +6,7 @@
 #include "core/concepts.hpp"
 #include "core/debug.hpp"
 #include "core/matrix.hpp"
-
+#include "core/multi_index.hpp"
 #include "core/parallel/cuda_ops.hpp"
 #include "core/parallel/mpi_ops.hpp"
 #include "core/policy.hpp"
@@ -18,7 +18,6 @@
 #include "linalg/linalg.hpp"
 #include "ode/ode.hpp"
 #include "operator/operator.hpp"
-
 #include "pde/pde.hpp"
 #include "plot/plot.hpp"
 #include "solve/sample.hpp"

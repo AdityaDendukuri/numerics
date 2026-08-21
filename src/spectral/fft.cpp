@@ -13,8 +13,9 @@ namespace spectral {
 // -- One-shot dispatch --------------------------------------------------------
 
 void fft(const CVector& in, CVector& out, FFTBackend b) {
-  if (out.size() != in.size())
+  if (out.size() != in.size()) {
     throw std::invalid_argument("fft: in and out must have the same size");
+  }
 #ifdef NUMERICS_HAS_FFTW
   if (b == FFTBackend::fftw) {
     num::backends::fftw::fft(in, out);
@@ -63,8 +64,9 @@ void ifft(const CVector& in, CVector& out, FFTBackend b) {
 }
 
 void rfft(const Vector& in, CVector& out, FFTBackend b) {
-  if (static_cast<int>(out.size()) != static_cast<int>(in.size()) / 2 + 1)
+  if (static_cast<int>(out.size()) != (static_cast<int>(in.size()) / 2) + 1) {
     throw std::invalid_argument("rfft: out must have size n/2+1");
+  }
 #ifdef NUMERICS_HAS_FFTW
   if (b == FFTBackend::fftw) {
     num::backends::fftw::rfft(in, out);
@@ -87,10 +89,12 @@ void rfft(const Vector& in, CVector& out, FFTBackend b) {
 }
 
 void irfft(const CVector& in, int n, Vector& out, FFTBackend b) {
-  if (static_cast<int>(in.size()) != n / 2 + 1)
+  if (static_cast<int>(in.size()) != (n / 2) + 1) {
     throw std::invalid_argument("irfft: in must have size n/2+1");
-  if (static_cast<int>(out.size()) != n)
+  }
+  if (static_cast<int>(out.size()) != n) {
     throw std::invalid_argument("irfft: out must have size n");
+  }
 #ifdef NUMERICS_HAS_FFTW
   if (b == FFTBackend::fftw) {
     num::backends::fftw::irfft(in, n, out);
@@ -138,17 +142,16 @@ FFTPlan::FFTPlan(int n, bool forward, FFTBackend b)
   impl_ = std::make_unique<num::backends::seq::FFTPlanImpl>(n, !forward);
 }
 
-
 FFTPlan::~FFTPlan() = default;
 FFTPlan::FFTPlan(FFTPlan&&) noexcept = default;
 FFTPlan& FFTPlan::operator=(FFTPlan&&) noexcept = default;
 
 void FFTPlan::execute(const CVector& in, CVector& out) const {
-  if (static_cast<int>(in.size()) != n_ || static_cast<int>(out.size()) != n_)
+  if (static_cast<int>(in.size()) != n_ || static_cast<int>(out.size()) != n_) {
     throw std::invalid_argument("FFTPlan::execute: size mismatch");
+  }
   impl_->execute(in, out);
 }
-
 
 } // namespace spectral
 } // namespace num

@@ -128,10 +128,12 @@ TEST(BandedSolver, Tridiagonal4x4) {
   // Set up tridiagonal system
   for (idx i = 0; i < 4; ++i) {
     A(i, i) = 2.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -1.0;
-    if (i < 3)
+    }
+    if (i < 3) {
       A(i, i + 1) = -1.0;
+    }
   }
 
   Vector b{1.0, 0.0, 0.0, 1.0};
@@ -154,10 +156,12 @@ TEST(BandedSolver, Tridiagonal1DLaplacian) {
 
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 2.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -1.0;
-    if (i < n - 1)
+    }
+    if (i < n - 1) {
       A(i, i + 1) = -1.0;
+    }
   }
 
   Vector b(n, 1.0); // Constant RHS
@@ -188,14 +192,18 @@ TEST(BandedSolver, Pentadiagonal) {
   // Pattern: 1, -4, 6, -4, 1 (biharmonic operator)
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 6.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -4.0;
-    if (i > 1)
+    }
+    if (i > 1) {
       A(i, i - 2) = 1.0;
-    if (i < n - 1)
+    }
+    if (i < n - 1) {
       A(i, i + 1) = -4.0;
-    if (i < n - 2)
+    }
+    if (i < n - 2) {
       A(i, i + 2) = 1.0;
+    }
   }
 
   // Make diagonally dominant by scaling
@@ -275,10 +283,12 @@ TEST(BandedSolver, LUFactorizationReuse) {
 
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 4.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -1.0;
-    if (i < n - 1)
+    }
+    if (i < n - 1) {
       A(i, i + 1) = -1.0;
+    }
   }
 
   // Keep original for verification
@@ -319,10 +329,12 @@ TEST(BandedSolver, MultipleRHS) {
   BandedMatrix A(n, 1, 1, 0.0);
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 3.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -1.0;
-    if (i < n - 1)
+    }
+    if (i < n - 1) {
       A(i, i + 1) = -1.0;
+    }
   }
 
   BandedMatrix A_orig = A;
@@ -336,7 +348,7 @@ TEST(BandedSolver, MultipleRHS) {
   std::unique_ptr<real[]> B = std::make_unique<real[]>(n * nrhs);
   for (idx rhs = 0; rhs < nrhs; ++rhs) {
     for (idx i = 0; i < n; ++i) {
-      B[i + rhs * n] = static_cast<real>((rhs + 1) * (i + 1));
+      B[i + (rhs * n)] = static_cast<real>((rhs + 1) * (i + 1));
     }
   }
 
@@ -352,8 +364,8 @@ TEST(BandedSolver, MultipleRHS) {
     Vector x(n);
     Vector b(n);
     for (idx i = 0; i < n; ++i) {
-      x[i] = B[i + rhs * n];
-      b[i] = B_orig[i + rhs * n];
+      x[i] = B[i + (rhs * n)];
+      b[i] = B_orig[i + (rhs * n)];
     }
 
     Vector r(n);
@@ -431,10 +443,12 @@ TEST(BandedSolver, LargeTridiagonal) {
   // 1D Laplacian
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 2.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -1.0;
-    if (i < n - 1)
+    }
+    if (i < n - 1) {
       A(i, i + 1) = -1.0;
+    }
   }
 
   Vector b(n, 1.0);
@@ -464,14 +478,18 @@ TEST(BandedSolver, LargePentadiagonal) {
   // Diagonally dominant pentadiagonal
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 10.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -2.0;
-    if (i > 1)
+    }
+    if (i > 1) {
       A(i, i - 2) = -0.5;
-    if (i < n - 1)
+    }
+    if (i < n - 1) {
       A(i, i + 1) = -2.0;
-    if (i < n - 2)
+    }
+    if (i < n - 2) {
       A(i, i + 2) = -0.5;
+    }
   }
 
   Vector b(n, 1.0);

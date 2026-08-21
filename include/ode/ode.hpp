@@ -79,7 +79,7 @@ public:
     advance();
     return {this};
   }
-  StepEnd end() const { return {}; }
+  [[nodiscard]] StepEnd end() const { return {}; }
   ODEResult run();
 };
 
@@ -110,7 +110,7 @@ public:
     advance();
     return {this};
   }
-  StepEnd end() const { return {}; }
+  [[nodiscard]] StepEnd end() const { return {}; }
   ODEResult run();
 };
 
@@ -141,7 +141,7 @@ public:
     advance();
     return {this};
   }
-  StepEnd end() const { return {}; }
+  [[nodiscard]] StepEnd end() const { return {}; }
   ODEResult run();
 };
 
@@ -172,7 +172,7 @@ public:
     advance();
     return {this};
   }
-  StepEnd end() const { return {}; }
+  [[nodiscard]] StepEnd end() const { return {}; }
   SymplecticResult run();
 };
 
@@ -203,7 +203,7 @@ public:
     advance();
     return {this};
   }
-  StepEnd end() const { return {}; }
+  [[nodiscard]] StepEnd end() const { return {}; }
   SymplecticResult run();
 };
 
@@ -234,7 +234,7 @@ public:
     advance();
     return {this};
   }
-  StepEnd end() const { return {}; }
+  [[nodiscard]] StepEnd end() const { return {}; }
   SymplecticResult run();
 };
 
@@ -251,27 +251,30 @@ RK4_2ndSteps rk4_2nd(AccelFn accel, Vector q0, Vector v0, ODEParams p = {});
 // High-level integrators return final state only.
 
 /// @brief Forward Euler, 1st-order, fixed step.
-ODEResult ode_euler(ODERhsFn f, Vector y0, ODEParams p = {}, ObserverFn obs = nullptr);
+ODEResult ode_euler(ODERhsFn f, Vector y0, ODEParams p = {},
+                   const ObserverFn& obs = {});
 
 /// @brief Classic 4th-order Runge-Kutta, fixed step.
-ODEResult ode_rk4(ODERhsFn f, Vector y0, ODEParams p = {}, ObserverFn obs = nullptr);
+ODEResult ode_rk4(ODERhsFn f, Vector y0, ODEParams p = {},
+                 const ObserverFn& obs = {});
 
 /// @brief Adaptive Dormand-Prince RK45 with FSAL and PI step-size control.
-ODEResult ode_rk45(ODERhsFn f, Vector y0, ODEParams p = {}, ObserverFn obs = nullptr);
+ODEResult ode_rk45(ODERhsFn f, Vector y0, ODEParams p = {},
+                  const ObserverFn& obs = {});
 
 /// @brief Velocity Verlet, 2nd-order symplectic, 1 force evaluation per step.
 SymplecticResult ode_verlet(AccelFn accel,
                             Vector q0,
                             Vector v0,
                             ODEParams p = {},
-                            SympObserverFn obs = nullptr);
+                            const SympObserverFn& obs = {});
 
 /// @brief Yoshida 4th-order symplectic, 3 force evaluations per step.
 SymplecticResult ode_yoshida4(AccelFn accel,
                               Vector q0,
                               Vector v0,
                               ODEParams p = {},
-                              SympObserverFn obs = nullptr);
+                              const SympObserverFn& obs = {});
 
 /// @brief RK4 for second-order systems q'' = accel(q), Nystrom form.
 /// @note Not symplectic. Prefer ode_verlet or ode_yoshida4 for long Hamiltonian
@@ -280,6 +283,6 @@ SymplecticResult ode_rk4_2nd(AccelFn accel,
                              Vector q0,
                              Vector v0,
                              ODEParams p = {},
-                             SympObserverFn obs = nullptr);
+                             const SympObserverFn& obs = {});
 
 } // namespace num

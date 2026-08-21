@@ -80,28 +80,28 @@ inline SparseMatrix laplacian_sparse_2d(int N) {
   vals.reserve(5 * n);
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
-      int k = i * N + j;
+      int k = (i * N) + j;
       rows.push_back(k);
       cols.push_back(k);
       vals.push_back(-4.0);
       if (i > 0) {
         rows.push_back(k);
-        cols.push_back((i - 1) * N + j);
+        cols.push_back(((i - 1) * N) + j);
         vals.push_back(1.0);
       }
       if (i < N - 1) {
         rows.push_back(k);
-        cols.push_back((i + 1) * N + j);
+        cols.push_back(((i + 1) * N) + j);
         vals.push_back(1.0);
       }
       if (j > 0) {
         rows.push_back(k);
-        cols.push_back(i * N + (j - 1));
+        cols.push_back((i * N) + (j - 1));
         vals.push_back(1.0);
       }
       if (j < N - 1) {
         rows.push_back(k);
-        cols.push_back(i * N + (j + 1));
+        cols.push_back((i * N) + (j + 1));
         vals.push_back(1.0);
       }
     }
@@ -118,28 +118,28 @@ inline SparseMatrix backward_euler_matrix(int N, double coeff) {
   vals.reserve(5 * n);
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
-      int k = i * N + j;
+      int k = (i * N) + j;
       rows.push_back(k);
       cols.push_back(k);
-      vals.push_back(1.0 + 4.0 * coeff);
+      vals.push_back(1.0 + (4.0 * coeff));
       if (i > 0) {
         rows.push_back(k);
-        cols.push_back((i - 1) * N + j);
+        cols.push_back(((i - 1) * N) + j);
         vals.push_back(-coeff);
       }
       if (i < N - 1) {
         rows.push_back(k);
-        cols.push_back((i + 1) * N + j);
+        cols.push_back(((i + 1) * N) + j);
         vals.push_back(-coeff);
       }
       if (j > 0) {
         rows.push_back(k);
-        cols.push_back(i * N + (j - 1));
+        cols.push_back((i * N) + (j - 1));
         vals.push_back(-coeff);
       }
       if (j < N - 1) {
         rows.push_back(k);
-        cols.push_back(i * N + (j + 1));
+        cols.push_back((i * N) + (j + 1));
         vals.push_back(-coeff);
       }
     }

@@ -22,7 +22,11 @@ CholeskyResult cholesky(const Matrix& A) {
 
 #if defined(NUMERICS_HAS_LAPACK)
   Matrix L = A;
-  int info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), L.data(), static_cast<lapack_int>(n));
+  int info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR,
+                            'L',
+                            static_cast<lapack_int>(n),
+                            L.data(),
+                            static_cast<lapack_int>(n));
   if (info != 0) {
     return {std::move(L), false};
   }

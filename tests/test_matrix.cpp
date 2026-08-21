@@ -82,16 +82,19 @@ TEST(Matrix, Matadd) {
 
 static Matrix make_test_matrix(idx rows, idx cols) {
   Matrix A(rows, cols);
-  for (idx i = 0; i < rows; ++i)
-    for (idx j = 0; j < cols; ++j)
-      A(i, j) = static_cast<real>(i * cols + j + 1);
+  for (idx i = 0; i < rows; ++i) {
+    for (idx j = 0; j < cols; ++j) {
+      A(i, j) = static_cast<real>((i * cols) + j + 1);
+}
+}
   return A;
 }
 
 static Vector make_test_vector(idx n) {
   Vector v(n);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     v[i] = static_cast<real>(i + 1);
+}
   return v;
 }
 
@@ -101,9 +104,11 @@ TEST(MatmulPolicy, BlockedMatchesSeq) {
   Matrix C_seq(32, 32), C_blk(32, 32);
   matmul(A, B, C_seq, Backend::seq);
   matmul(A, B, C_blk, Backend::blocked);
-  for (idx i = 0; i < 32; ++i)
-    for (idx j = 0; j < 32; ++j)
+  for (idx i = 0; i < 32; ++i) {
+    for (idx j = 0; j < 32; ++j) {
       EXPECT_NEAR(C_blk(i, j), C_seq(i, j), 1e-10);
+}
+}
 }
 
 TEST(MatvecPolicy, BlockedMatchesSeq) {
@@ -112,6 +117,7 @@ TEST(MatvecPolicy, BlockedMatchesSeq) {
   Vector y_seq(16), y_blk(16);
   matvec(A, x, y_seq, Backend::seq);
   matvec(A, x, y_blk, Backend::blocked);
-  for (idx i = 0; i < 16; ++i)
+  for (idx i = 0; i < 16; ++i) {
     EXPECT_NEAR(y_blk[i], y_seq[i], 1e-10);
+}
 }

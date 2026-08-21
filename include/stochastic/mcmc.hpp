@@ -8,7 +8,7 @@ namespace num::markov {
 struct MetropolisStats {
   idx accepted = 0;
   idx total = 0;
-  real acceptance_rate() const {
+  [[nodiscard]] real acceptance_rate() const {
     return total > 0 ? static_cast<real>(accepted) / total : 0.0;
   }
 };
@@ -22,7 +22,7 @@ struct UmbrellaStats {
 struct UmbrellaWindow {
   idx lo = 0;
   idx hi = 0;
-  bool contains(idx v) const { return v >= lo && v <= hi; }
+  [[nodiscard]] bool contains(idx v) const { return v >= lo && v <= hi; }
 };
 
 } // namespace num::markov

@@ -19,26 +19,28 @@ public:
     fill(std::forward<F>(f));
   }
 
-  const Grid2D& grid() const { return grid_; }
-  int N() const { return grid_.N; }
-  double h() const { return grid_.h; }
+  [[nodiscard]] const Grid2D& grid() const { return grid_; }
+  [[nodiscard]] int N() const { return grid_.N; }
+  [[nodiscard]] double h() const { return grid_.h; }
 
-  real& operator()(int i, int j) { return data_[static_cast<idx>(i) * grid_.N + j]; }
-  real operator()(int i, int j) const { return data_[static_cast<idx>(i) * grid_.N + j]; }
+  real& operator()(int i, int j) { return data_[(static_cast<idx>(i) * grid_.N) + j]; }
+  real operator()(int i, int j) const { return data_[(static_cast<idx>(i) * grid_.N) + j]; }
 
   template<typename F>
   void fill(F&& f) {
-    for (int i = 0; i < grid_.N; ++i)
-      for (int j = 0; j < grid_.N; ++j)
-        data_[static_cast<idx>(i) * grid_.N + j] = f(grid_.x(i), grid_.y(j));
+    for (int i = 0; i < grid_.N; ++i) {
+      for (int j = 0; j < grid_.N; ++j) {
+        data_[(static_cast<idx>(i) * grid_.N) + j] = f(grid_.x(i), grid_.y(j));
+}
+}
   }
 
   Vector& vec() { return data_; }
-  const Vector& vec() const { return data_; }
+  [[nodiscard]] const Vector& vec() const { return data_; }
 
   real* data() { return data_.data(); }
-  const real* data() const { return data_.data(); }
-  idx size() const { return data_.size(); }
+  [[nodiscard]] const real* data() const { return data_.data(); }
+  [[nodiscard]] idx size() const { return data_.size(); }
 
 private:
   Grid2D grid_;

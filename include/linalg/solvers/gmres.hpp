@@ -94,13 +94,13 @@ SolverResult gmres(const Op& A,
       }
 
       for (idx i = 0; i < j; ++i) {
-        real tmp = cs[i] * H[j][i] + sn[i] * H[j][i + 1];
-        H[j][i + 1] = -sn[i] * H[j][i] + cs[i] * H[j][i + 1];
+        real tmp = (cs[i] * H[j][i]) + (sn[i] * H[j][i + 1]);
+        H[j][i + 1] = (-sn[i] * H[j][i]) + (cs[i] * H[j][i + 1]);
         H[j][i] = tmp;
       }
 
       real h0 = H[j][j], h1 = H[j][j + 1];
-      real denom = std::sqrt(h0 * h0 + h1 * h1);
+      real denom = std::sqrt((h0 * h0) + (h1 * h1));
       if (denom < real(1e-15)) {
         cs[j] = 1.0;
         sn[j] = 0.0;
@@ -109,7 +109,7 @@ SolverResult gmres(const Op& A,
         sn[j] = h1 / denom;
       }
 
-      H[j][j] = cs[j] * h0 + sn[j] * h1;
+      H[j][j] = (cs[j] * h0) + (sn[j] * h1);
       H[j][j + 1] = 0.0;
 
       g[j + 1] = -sn[j] * g[j];

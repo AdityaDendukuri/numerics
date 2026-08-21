@@ -37,8 +37,9 @@ public:
 
   ~BasicVector() {
     if constexpr (std::is_same_v<T, real>) {
-      if (d_data_)
+      if (d_data_) {
         cuda::free(d_data_);
+}
     }
   }
 
@@ -68,8 +69,9 @@ public:
   BasicVector& operator=(BasicVector&& o) noexcept {
     if (this != &o) {
       if constexpr (std::is_same_v<T, real>) {
-        if (d_data_)
+        if (d_data_) {
           cuda::free(d_data_);
+}
       }
       n_ = o.n_;
       data_ = std::move(o.data_);
@@ -80,21 +82,21 @@ public:
     return *this;
   }
 
-  constexpr idx size() const noexcept { return n_; }
+  [[nodiscard]] constexpr idx size() const noexcept { return n_; }
 
   BasicVector& vec() { return *this; }
-  const BasicVector& vec() const { return *this; }
+  [[nodiscard]] const BasicVector& vec() const { return *this; }
 
   T* data() { return data_.get(); }
-  const T* data() const { return data_.get(); }
+  [[nodiscard]] const T* data() const { return data_.get(); }
 
   T& operator[](idx i) { return data_[i]; }
   T operator[](idx i) const { return data_[i]; }
 
   T* begin() { return data_.get(); }
   T* end() { return data_.get() + n_; }
-  const T* begin() const { return data_.get(); }
-  const T* end() const { return data_.get() + n_; }
+  [[nodiscard]] const T* begin() const { return data_.get(); }
+  [[nodiscard]] const T* end() const { return data_.get() + n_; }
 
   void to_gpu() {
     if constexpr (std::is_same_v<T, real>) {
@@ -116,8 +118,8 @@ public:
   }
 
   real* gpu_data() { return d_data_; }
-  const real* gpu_data() const { return d_data_; }
-  bool on_gpu() const { return d_data_ != nullptr; }
+  [[nodiscard]] const real* gpu_data() const { return d_data_; }
+  [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
 
 private:
   idx n_;
@@ -152,20 +154,20 @@ real norm(const Vector& x, Backend b = default_backend);
 struct Vec2View {
   Vector& v;
 
-  idx size() const noexcept { return v.size() / 2; }
+  [[nodiscard]] idx size() const noexcept { return v.size() / 2; }
 
   real& x(idx i) noexcept { return v[2 * i]; }
-  real x(idx i) const noexcept { return v[2 * i]; }
-  real& y(idx i) noexcept { return v[2 * i + 1]; }
-  real y(idx i) const noexcept { return v[2 * i + 1]; }
+  [[nodiscard]] real x(idx i) const noexcept { return v[2 * i]; }
+  real& y(idx i) noexcept { return v[(2 * i) + 1]; }
+  [[nodiscard]] real y(idx i) const noexcept { return v[(2 * i) + 1]; }
 };
 
 struct Vec2ConstView {
   const Vector& v;
 
-  idx size() const noexcept { return v.size() / 2; }
-  real x(idx i) const noexcept { return v[2 * i]; }
-  real y(idx i) const noexcept { return v[2 * i + 1]; }
+  [[nodiscard]] idx size() const noexcept { return v.size() / 2; }
+  [[nodiscard]] real x(idx i) const noexcept { return v[2 * i]; }
+  [[nodiscard]] real y(idx i) const noexcept { return v[(2 * i) + 1]; }
 };
 
 /// @brief v *= alpha

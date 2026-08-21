@@ -22,11 +22,11 @@ struct RunningStats {
     M2 += delta * delta2;
   }
 
-  real variance() const { return (count < 2) ? 0.0 : M2 / static_cast<real>(count - 1); }
+  [[nodiscard]] real variance() const { return (count < 2) ? 0.0 : M2 / static_cast<real>(count - 1); }
 
-  real std_dev() const { return std::sqrt(variance()); }
+  [[nodiscard]] real std_dev() const { return std::sqrt(variance()); }
 
-  real stderr_mean() const {
+  [[nodiscard]] real stderr_mean() const {
     return (count < 2) ? 0.0 : std_dev() / std::sqrt(static_cast<real>(count));
   }
 
@@ -49,17 +49,18 @@ struct Histogram {
         hi(hi),
         nbins(nbins) {}
 
-  idx bin(real x) const {
-    if (x < lo || x >= hi)
+  [[nodiscard]] idx bin(real x) const {
+    if (x < lo || x >= hi) {
       return nbins;
+}
     return static_cast<idx>((x - lo) / (hi - lo) * static_cast<real>(nbins));
   }
 
-  real bin_centre(idx b) const {
+  [[nodiscard]] real bin_centre(idx b) const {
     return lo + ((static_cast<real>(b) + 0.5) * (hi - lo) / static_cast<real>(nbins));
   }
 
-  real bin_width() const { return (hi - lo) / static_cast<real>(nbins); }
+  [[nodiscard]] real bin_width() const { return (hi - lo) / static_cast<real>(nbins); }
 
   void fill(real x, real weight = 1.0) {
     idx b = bin(x);
@@ -70,7 +71,7 @@ struct Histogram {
 
   void reset() { std::fill(counts.begin(), counts.end(), 0.0); }
 
-  real total() const {
+  [[nodiscard]] real total() const {
     real s = 0.0;
     for (real c : counts) {
       s += c;
@@ -79,7 +80,7 @@ struct Histogram {
   }
 
   /// Normalise so that the histogram integrates to 1 (probability density).
-  std::vector<real> pdf() const {
+  [[nodiscard]] std::vector<real> pdf() const {
     real norm = total() * bin_width();
     std::vector<real> p(nbins);
     if (norm > 0.0) {

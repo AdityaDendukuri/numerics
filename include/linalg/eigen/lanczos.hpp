@@ -136,7 +136,7 @@ LanczosResult lanczos_operator_impl(const Op& A,
     real res = 0;
     const real lam = ritz_vals[i];
     for (idx r = 0; r < n; ++r) {
-      const real d = Au[r] - lam * u[r];
+      const real d = Au[r] - (lam * u[r]);
       res += d * d;
     }
     if (std::sqrt(res) > tol) {

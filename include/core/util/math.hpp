@@ -261,8 +261,9 @@ inline std::vector<real> linspace(real start, real stop, idx n) {
   assert(n >= 2);
   std::vector<real> out(n);
   real step = (stop - start) / static_cast<real>(n - 1);
-  for (idx i = 0; i < n; ++i)
-    out[i] = start + static_cast<real>(i) * step;
+  for (idx i = 0; i < n; ++i) {
+    out[i] = start + (static_cast<real>(i) * step);
+}
   return out;
 }
 

@@ -14,8 +14,9 @@ inline double boltzmann_accept(double dE, double beta) noexcept {
 inline std::vector<double> make_boltzmann_table(const std::vector<double>& dEs,
                                                 double beta) {
   std::vector<double> table(dEs.size());
-  for (std::size_t i = 0; i < dEs.size(); ++i)
+  for (std::size_t i = 0; i < dEs.size(); ++i) {
     table[i] = boltzmann_accept(dEs[i], beta);
+}
   return table;
 }
 

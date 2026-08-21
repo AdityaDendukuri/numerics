@@ -1,4 +1,7 @@
 #include "linalg/factorization/factorization.hpp"
+#include "linalg/sparse/klu.hpp"
+#include "linalg/sparse/sparse.hpp"
+#include "linalg/sparse/umfpack.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
 
@@ -7,20 +10,67 @@ using namespace num;
 // Helpers
 static real mat_norm_inf(const Matrix& A) {
   real m = 0;
-  for (idx i = 0; i < A.rows(); ++i)
-    for (idx j = 0; j < A.cols(); ++j)
+  for (idx i = 0; i < A.rows(); ++i) {
+    for (idx j = 0; j < A.cols(); ++j) {
       m = std::max(m, std::abs(A(i, j)));
+}
+}
   return m;
 }
 
 static real vec_norm_inf(const Vector& v) {
   real m = 0;
-  for (idx i = 0; i < v.size(); ++i)
+  for (idx i = 0; i < v.size(); ++i) {
     m = std::max(m, std::abs(v[i]));
+}
   return m;
 }
 
 // LU factorization
+
+TEST(KLU, SparseFactorAndBlockSolve) {
+  if (!klu_available()) {
+    GTEST_SKIP() << "SuiteSparse KLU is not available";
+}
+
+  const auto A = SparseMatrix::from_triplets(
+      3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
+      {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
+  KLUFactor factor(A);
+  Vector b{15.0, 10.0, 10.0};
+  Vector x;
+  factor.solve(b, x);
+  EXPECT_NEAR(x[0], 5.0, 1e-12);
+  EXPECT_NEAR(x[1], 5.0, 1e-12);
+  EXPECT_NEAR(x[2], 5.0, 1e-12);
+
+  Matrix B(3, 2, 0.0);
+  for (idx row = 0; row < 3; ++row) {
+    B(row, 0) = b[row];
+    B(row, 1) = 2.0 * b[row];
+  }
+  Matrix X;
+  factor.solve(B, X);
+  for (idx row = 0; row < 3; ++row) {
+    EXPECT_NEAR(X(row, 0), 5.0, 1e-12);
+    EXPECT_NEAR(X(row, 1), 10.0, 1e-12);
+  }
+}
+
+TEST(UMFPACK, SparseFactorAndSolve) {
+  if (!umfpack_available()) {
+    GTEST_SKIP() << "SuiteSparse UMFPACK is not available";
+}
+  const auto A = SparseMatrix::from_triplets(
+      3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
+      {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
+  UMFPACKFactor factor(A);
+  Vector x;
+  factor.solve(Vector{15.0, 10.0, 10.0}, x);
+  EXPECT_NEAR(x[0], 5.0, 1e-12);
+  EXPECT_NEAR(x[1], 5.0, 1e-12);
+  EXPECT_NEAR(x[2], 5.0, 1e-12);
+}
 
 TEST(LU, SolveSmall3x3) {
   // [2  1  0]       [1]
@@ -53,16 +103,18 @@ TEST(LU, SolveSmall3x3) {
 TEST(LU, SolveIdentitySystem) {
   idx n = 5;
   Matrix A(n, n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     A(i, i) = 1.0;
+}
   Vector b{1.0, 2.0, 3.0, 4.0, 5.0};
 
   auto f = lu(A);
   Vector x(n);
   lu_solve(f, b, x);
 
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(x[i], b[i], 1e-12);
+}
 }
 
 TEST(LU, SolveDiagonalSystem) {
@@ -92,22 +144,27 @@ TEST(LU, SolveLargerSystem) {
   // Tridiagonal + dominant diagonal
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 10.0;
-    if (i > 0)
+    if (i > 0) {
       A(i, i - 1) = -1.0;
-    if (i < n - 1)
+}
+    if (i < n - 1) {
       A(i, i + 1) = -2.0;
+}
   }
   // b = A * ones
   Vector b(n, 0.0);
-  for (idx i = 0; i < n; ++i)
-    for (idx j = 0; j < n; ++j)
+  for (idx i = 0; i < n; ++i) {
+    for (idx j = 0; j < n; ++j) {
       b[i] += A(i, j) * 1.0;
+}
+}
 
   auto f = lu(A);
   Vector x(n);
   lu_solve(f, b, x);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(x[i], 1.0, 1e-10);
+}
 }
 
 TEST(LU, Determinant2x2) {
@@ -156,14 +213,16 @@ TEST(LU, InverseTimesOriginal) {
   Matrix Ainv = lu_inv(f);
 
   // Check A * Ainv ~= I
-  for (idx i = 0; i < 3; ++i)
+  for (idx i = 0; i < 3; ++i) {
     for (idx j = 0; j < 3; ++j) {
       real entry = 0;
-      for (idx k = 0; k < 3; ++k)
+      for (idx k = 0; k < 3; ++k) {
         entry += A(i, k) * Ainv(k, j);
+}
       real expected = (i == j) ? 1.0 : 0.0;
       EXPECT_NEAR(entry, expected, 1e-12);
     }
+}
 }
 
 TEST(LU, MultipleRHS) {
@@ -192,13 +251,15 @@ TEST(LU, MultipleRHS) {
   lu_solve(f, B, X);
 
   // Verify A * X[:,j] = B[:,j] for each column
-  for (idx j = 0; j < 2; ++j)
+  for (idx j = 0; j < 2; ++j) {
     for (idx i = 0; i < 3; ++i) {
       real ax = 0;
-      for (idx k = 0; k < 3; ++k)
+      for (idx k = 0; k < 3; ++k) {
         ax += A(i, k) * X(k, j);
+}
       EXPECT_NEAR(ax, B(i, j), 1e-12);
     }
+}
 }
 
 TEST(LU, SingularMatrix) {
@@ -222,14 +283,16 @@ TEST(LU, SingularMatrix) {
 // Helper: check ||Q^T Q - I||_inf < tol
 static void expect_orthogonal(const Matrix& Q, real tol = 1e-10) {
   const idx m = Q.rows();
-  for (idx i = 0; i < m; ++i)
+  for (idx i = 0; i < m; ++i) {
     for (idx j = 0; j < m; ++j) {
       real entry = 0;
-      for (idx k = 0; k < m; ++k)
+      for (idx k = 0; k < m; ++k) {
         entry += Q(k, i) * Q(k, j);
+}
       real expected = (i == j) ? 1.0 : 0.0;
       EXPECT_NEAR(entry, expected, tol) << "Q^T Q [" << i << "," << j << "]";
     }
+}
 }
 
 // Helper: check ||Q R - A||_inf < tol
@@ -237,13 +300,15 @@ static void expect_qr_product(const Matrix& Q,
                               const Matrix& R,
                               const Matrix& A,
                               real tol = 1e-10) {
-  for (idx i = 0; i < A.rows(); ++i)
+  for (idx i = 0; i < A.rows(); ++i) {
     for (idx j = 0; j < A.cols(); ++j) {
       real qr_ij = 0;
-      for (idx k = 0; k < Q.cols(); ++k)
+      for (idx k = 0; k < Q.cols(); ++k) {
         qr_ij += Q(i, k) * R(k, j);
+}
       EXPECT_NEAR(qr_ij, A(i, j), tol) << "QR [" << i << "," << j << "]";
     }
+}
 }
 
 TEST(QR, OrthogonalitySquare3x3) {
@@ -295,9 +360,11 @@ TEST(QR, RIsUpperTriangular) {
 
   auto f = qr(A);
   // All sub-diagonal entries of R must be zero
-  for (idx i = 1; i < f.R.rows(); ++i)
-    for (idx j = 0; j < std::min(i, f.R.cols()); ++j)
+  for (idx i = 1; i < f.R.rows(); ++i) {
+    for (idx j = 0; j < std::min(i, f.R.cols()); ++j) {
       EXPECT_NEAR(f.R(i, j), 0.0, 1e-10);
+}
+}
 }
 
 TEST(QR, ProductRecoversA_Overdetermined) {
@@ -370,7 +437,7 @@ TEST(QR, SolveLeastSquares) {
   // larger
   real res = 0;
   for (idx i = 0; i < 4; ++i) {
-    real ri = A(i, 0) * x[0] + A(i, 1) * x[1] - b[i];
+    real ri = (A(i, 0) * x[0]) + (A(i, 1) * x[1]) - b[i];
     res += ri * ri;
   }
 
@@ -379,7 +446,7 @@ TEST(QR, SolveLeastSquares) {
   x1[0] += 0.1;
   real res1 = 0;
   for (idx i = 0; i < 4; ++i) {
-    real ri = A(i, 0) * x1[0] + A(i, 1) * x1[1] - b[i];
+    real ri = (A(i, 0) * x1[0]) + (A(i, 1) * x1[1]) - b[i];
     res1 += ri * ri;
   }
   EXPECT_LT(res, res1);
@@ -391,14 +458,16 @@ TEST(QR, IdentityMatrix) {
   // Correctness check: Q is orthogonal and Q*R = I.
   idx n = 4;
   Matrix A(n, n, 0.0);
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     A(i, i) = 1.0;
+}
   auto f = qr(A);
   expect_orthogonal(f.Q);
   expect_qr_product(f.Q, f.R, A);
   // R diagonal must be +/-1
-  for (idx i = 0; i < n; ++i)
+  for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(std::abs(f.R(i, i)), 1.0, 1e-10);
+}
 }
 
 TEST(Cholesky, SPDSolve) {

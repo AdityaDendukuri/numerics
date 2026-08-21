@@ -14,10 +14,10 @@ struct Grid2D {
   int N; ///< interior nodes per side
   double h; ///< grid spacing = 1/(N+1)
 
-  double x(int i) const { return (i + 1) * h; }
-  double y(int j) const { return (j + 1) * h; }
-  int flat(int i, int j) const { return (i * N) + j; }
-  int size() const { return N * N; }
+  [[nodiscard]] double x(int i) const { return (i + 1) * h; }
+  [[nodiscard]] double y(int j) const { return (j + 1) * h; }
+  [[nodiscard]] int flat(int i, int j) const { return (i * N) + j; }
+  [[nodiscard]] int size() const { return N * N; }
 };
 
 } // namespace num

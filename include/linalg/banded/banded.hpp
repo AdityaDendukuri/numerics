@@ -26,34 +26,34 @@ public:
   BandedMatrix& operator=(const BandedMatrix&);
   BandedMatrix& operator=(BandedMatrix&&) noexcept;
 
-  idx size() const { return n_; }
-  idx rows() const { return n_; }
-  idx cols() const { return n_; }
+  [[nodiscard]] idx size() const { return n_; }
+  [[nodiscard]] idx rows() const { return n_; }
+  [[nodiscard]] idx cols() const { return n_; }
 
-  idx kl() const { return kl_; }
+  [[nodiscard]] idx kl() const { return kl_; }
 
-  idx ku() const { return ku_; }
+  [[nodiscard]] idx ku() const { return ku_; }
 
-  idx bandwidth() const { return kl_ + ku_ + 1; }
+  [[nodiscard]] idx bandwidth() const { return kl_ + ku_ + 1; }
 
-  idx ldab() const { return ldab_; }
+  [[nodiscard]] idx ldab() const { return ldab_; }
 
   real& operator()(idx i, idx j);
   real operator()(idx i, idx j) const;
 
   real& band(idx band_row, idx col);
-  real band(idx band_row, idx col) const;
+  [[nodiscard]] real band(idx band_row, idx col) const;
 
   real* data() { return data_.get(); }
-  const real* data() const { return data_.get(); }
+  [[nodiscard]] const real* data() const { return data_.get(); }
 
-  bool in_band(idx i, idx j) const;
+  [[nodiscard]] bool in_band(idx i, idx j) const;
 
   void to_gpu();
   void to_cpu();
   real* gpu_data() { return d_data_; }
-  const real* gpu_data() const { return d_data_; }
-  bool on_gpu() const { return d_data_ != nullptr; }
+  [[nodiscard]] const real* gpu_data() const { return d_data_; }
+  [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
 
 private:
   idx n_ = 0;
