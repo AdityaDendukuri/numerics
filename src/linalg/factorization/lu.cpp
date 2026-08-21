@@ -191,6 +191,46 @@ void lu_solve(const LUResult& f, const Matrix& B, Matrix& X) {
 #endif
 }
 
+void lu_solve_transpose(const LUResult& f, const Vector& b, Vector& x) {
+  const idx n = f.LU.rows();
+  if (f.LU.cols() != n || b.size() != n) {
+    throw std::invalid_argument("lu_solve_transpose: dimension mismatch");
+  }
+  Vector work = b;
+  // U^T q = b.
+  for (idx row = 0; row < n; ++row) {
+    for (idx column = 0; column < row; ++column) {
+      work[row] -= f.LU(column, row) * work[column];
+    }
+    work[row] /= f.LU(row, row);
+  }
+  // L^T y = q; L has a unit diagonal.
+  for (idx row = n; row-- > 0;) {
+    for (idx column = row + 1; column < n; ++column) {
+      work[row] -= f.LU(column, row) * work[column];
+    }
+  }
+  // x = P^T y: undo row interchanges in reverse order.
+  for (idx step = n; step-- > 0;) {
+    if (f.piv[step] != step) {
+      std::swap(work[step], work[f.piv[step]]);
+    }
+  }
+  x = std::move(work);
+}
+
+void solve_in_place(const LUResult& f, Vector& right_hand_side) {
+  Vector result(right_hand_side.size(), 0.0);
+  lu_solve(f, right_hand_side, result);
+  right_hand_side = std::move(result);
+}
+
+void solve_in_place(const LUResult& f, Matrix& right_hand_sides) {
+  Matrix result;
+  lu_solve(f, right_hand_sides, result);
+  right_hand_sides = std::move(result);
+}
+
 real lu_det(const LUResult& f) {
   const idx n = f.LU.rows();
   real det = real(1);

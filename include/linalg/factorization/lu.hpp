@@ -23,6 +23,12 @@ void lu_solve(const LUResult& f, const Vector& b, Vector& x);
 /// @brief Solve \f$AX=B\f$ from a precomputed \f$PA=LU\f$ factorization.
 void lu_solve(const LUResult& f, const Matrix& B, Matrix& X);
 
+/// Solve A^T x=b from a precomputed PA=LU factorization.
+void lu_solve_transpose(const LUResult& f, const Vector& b, Vector& x);
+
+void solve_in_place(const LUResult& f, Vector& right_hand_side);
+void solve_in_place(const LUResult& f, Matrix& right_hand_sides);
+
 /// @brief Compute \f$\det(A)=\det(P)^{-1}\prod_i U_{ii}\f$.
 real lu_det(const LUResult& f);
 

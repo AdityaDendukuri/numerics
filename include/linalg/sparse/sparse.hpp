@@ -1,10 +1,10 @@
 /// @file sparse.hpp
 /// @brief Compressed Sparse Row (CSR) matrix and operations
-/// @todo Add transpose, symmetry diagnostics, and efficient diagonal extraction
-/// utilities for sparse solvers and preconditioners.
 #pragma once
+#include "core/matrix.hpp"
 #include "core/types.hpp"
 #include "core/vector.hpp"
+#include <span>
 #include <stdexcept>
 #include <vector>
 
@@ -65,5 +65,21 @@ private:
 
 /// @brief y = A * x
 void sparse_matvec(const SparseMatrix& A, const Vector& x, Vector& y);
+
+/// Return alpha*A while preserving the CSR pattern.
+[[nodiscard]] SparseMatrix scaled(const SparseMatrix& A, real alpha);
+
+/// Return the CSR transpose of A.
+[[nodiscard]] SparseMatrix transpose(const SparseMatrix& A);
+
+/// Convert a sparse matrix to dense storage.
+[[nodiscard]] Matrix dense(const SparseMatrix& A);
+
+/// Extract the main diagonal. Missing entries are returned as zero.
+[[nodiscard]] Vector diagonal(const SparseMatrix& A);
+
+/// Return D^-1 A D for positive diagonal entries D=diag(weights).
+[[nodiscard]] Matrix diagonal_similarity(const SparseMatrix& A,
+                                         std::span<const real> weights);
 
 } // namespace num

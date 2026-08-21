@@ -12,6 +12,7 @@
 #include "core/policy.hpp"
 #include "core/types.hpp"
 #include "core/util/integer_pow.hpp"
+#include "core/util/math.hpp"
 #include "core/vector.hpp"
 #include "fields/fields.hpp"
 #include "kernel/kernel.hpp"

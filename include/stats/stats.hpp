@@ -1,6 +1,8 @@
 /// @file stats/stats.hpp
 /// @brief Online statistics for Monte Carlo observables.
 #pragma once
+#include "stats/probability.hpp"
+#include "stats/selection.hpp"
 
 #include "core/types.hpp"
 #include <cmath>
@@ -22,7 +24,9 @@ struct RunningStats {
     M2 += delta * delta2;
   }
 
-  [[nodiscard]] real variance() const { return (count < 2) ? 0.0 : M2 / static_cast<real>(count - 1); }
+  [[nodiscard]] real variance() const {
+    return (count < 2) ? 0.0 : M2 / static_cast<real>(count - 1);
+  }
 
   [[nodiscard]] real std_dev() const { return std::sqrt(variance()); }
 
@@ -52,7 +56,7 @@ struct Histogram {
   [[nodiscard]] idx bin(real x) const {
     if (x < lo || x >= hi) {
       return nbins;
-}
+    }
     return static_cast<idx>((x - lo) / (hi - lo) * static_cast<real>(nbins));
   }
 

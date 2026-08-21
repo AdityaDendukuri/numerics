@@ -3,7 +3,6 @@
 #include <boost/json/object.hpp>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 namespace num::io {
@@ -12,32 +11,10 @@ namespace {
 const boost::json::value& field(const boost::json::object& object, const char* name) {
   const auto* value = object.if_contains(name);
   if (value == nullptr) {
-    throw std::invalid_argument(std::string("sparse matrix JSON is missing '") + name + "'");
+    throw std::invalid_argument(std::string("sparse matrix JSON is missing '") + name
+                                + "'");
   }
   return *value;
-}
-
-template <class T>
-std::vector<T> array(const boost::json::value& value, const char* name) {
-  if (!value.is_array()) {
-    throw std::invalid_argument(std::string("sparse matrix field '") + name + "' must be an array");
-  }
-  std::vector<T> result;
-  result.reserve(value.as_array().size());
-  for (const auto& item : value.as_array()) {
-    if constexpr (std::is_same_v<T, real>) {
-      if (!item.is_double() && !item.is_int64() && !item.is_uint64()) {
-        throw std::invalid_argument("sparse matrix values must be numeric");
-      }
-      result.push_back(item.to_number<real>());
-    } else {
-      if (!item.is_int64() && !item.is_uint64()) {
-        throw std::invalid_argument("sparse matrix indices must be integers");
-      }
-      result.push_back(item.to_number<T>());
-    }
-  }
-  return result;
 }
 
 } // namespace
@@ -47,29 +24,29 @@ SparseMatrix sparse_matrix(const boost::json::value& value) {
     throw std::invalid_argument("sparse matrix JSON must be an object");
   }
   const auto& object = value.as_object();
-  const auto shape = array<idx>(field(object, "shape"), "shape");
+  const auto shape = json_vector<idx>(field(object, "shape"));
   if (shape.size() != 2) {
     throw std::invalid_argument("sparse matrix shape must have two entries");
   }
-  const auto values = array<real>(field(object, "values"), "values");
+  const auto values = json_vector<real>(field(object, "values"));
   const auto* format = object.if_contains("format");
-  const std::string storage = format != nullptr && format->is_string()
-                                   ? std::string(format->as_string())
-                                   : "csc";
+  const std::string storage =
+    format != nullptr && format->is_string() ? std::string(format->as_string()) : "csc";
   if (storage == "csr") {
-    const auto columns = array<idx>(field(object, "col_indices"), "col_indices");
-    const auto pointers = array<idx>(field(object, "row_ptrs"), "row_ptrs");
-    if (pointers.size() != shape[0] + 1 || pointers.back() != values.size() ||
-        columns.size() != values.size()) {
+    const auto columns = json_vector<idx>(field(object, "col_indices"));
+    const auto pointers = json_vector<idx>(field(object, "row_ptrs"));
+    if (pointers.size() != shape[0] + 1 || pointers.back() != values.size()
+        || columns.size() != values.size()) {
       throw std::invalid_argument("invalid sparse matrix CSR arrays");
     }
     return SparseMatrix(shape[0], shape[1], values, columns, pointers);
   }
   if (storage != "csc")
     throw std::invalid_argument("sparse matrix format must be 'csr' or 'csc'");
-  const auto rows = array<idx>(field(object, "row_indices"), "row_indices");
-  const auto pointers = array<idx>(field(object, "col_ptrs"), "col_ptrs");
-  if (pointers.empty() || pointers.back() > values.size() || pointers.back() > rows.size()) {
+  const auto rows = json_vector<idx>(field(object, "row_indices"));
+  const auto pointers = json_vector<idx>(field(object, "col_ptrs"));
+  if (pointers.empty() || pointers.back() > values.size()
+      || pointers.back() > rows.size()) {
     throw std::invalid_argument("invalid sparse matrix CSC pointers");
   }
   return SparseMatrix::from_csc(shape[0], shape[1], values, rows, pointers);

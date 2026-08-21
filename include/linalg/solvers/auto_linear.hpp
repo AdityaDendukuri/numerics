@@ -1,5 +1,5 @@
-/// @file klu.hpp
-/// @brief Optional SuiteSparse KLU factorization for real sparse matrices.
+/// @file linalg/solvers/auto_linear.hpp
+/// @brief Automatic dense/sparse factorization for reusable real solves.
 #pragma once
 
 #include "core/matrix.hpp"
@@ -9,18 +9,18 @@
 
 namespace num {
 
-/// True when Numerics was built with the optional SuiteSparse KLU backend.
-[[nodiscard]] bool klu_available() noexcept;
+struct AutoLinearOptions {
+  idx dense_limit = 32;
+};
 
-/// Reusable sparse LU factorization backed by SuiteSparse KLU.
-class KLUFactor {
+class AutoLinearSolver {
 public:
-  explicit KLUFactor(const SparseMatrix& matrix);
-  ~KLUFactor();
-  KLUFactor(KLUFactor&&) noexcept;
-  KLUFactor& operator=(KLUFactor&&) noexcept;
-  KLUFactor(const KLUFactor&) = delete;
-  KLUFactor& operator=(const KLUFactor&) = delete;
+  explicit AutoLinearSolver(const SparseMatrix& matrix, AutoLinearOptions options = {});
+  ~AutoLinearSolver();
+  AutoLinearSolver(AutoLinearSolver&&) noexcept;
+  AutoLinearSolver& operator=(AutoLinearSolver&&) noexcept;
+  AutoLinearSolver(const AutoLinearSolver&) = delete;
+  AutoLinearSolver& operator=(const AutoLinearSolver&) = delete;
 
   [[nodiscard]] idx size() const noexcept;
   void solve(const Vector& rhs, Vector& solution) const;

@@ -1,4 +1,5 @@
 #include "linalg/factorization/factorization.hpp"
+#include "linalg/matrix_utils.hpp"
 #include "linalg/sparse/klu.hpp"
 #include "linalg/sparse/sparse.hpp"
 #include "linalg/sparse/umfpack.hpp"
@@ -13,8 +14,8 @@ static real mat_norm_inf(const Matrix& A) {
   for (idx i = 0; i < A.rows(); ++i) {
     for (idx j = 0; j < A.cols(); ++j) {
       m = std::max(m, std::abs(A(i, j)));
-}
-}
+    }
+  }
   return m;
 }
 
@@ -22,7 +23,7 @@ static real vec_norm_inf(const Vector& v) {
   real m = 0;
   for (idx i = 0; i < v.size(); ++i) {
     m = std::max(m, std::abs(v[i]));
-}
+  }
   return m;
 }
 
@@ -31,11 +32,13 @@ static real vec_norm_inf(const Vector& v) {
 TEST(KLU, SparseFactorAndBlockSolve) {
   if (!klu_available()) {
     GTEST_SKIP() << "SuiteSparse KLU is not available";
-}
+  }
 
-  const auto A = SparseMatrix::from_triplets(
-      3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
-      {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
+  const auto A = SparseMatrix::from_triplets(3,
+                                             3,
+                                             {0, 0, 1, 1, 1, 2, 2},
+                                             {0, 1, 0, 1, 2, 1, 2},
+                                             {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
   KLUFactor factor(A);
   Vector b{15.0, 10.0, 10.0};
   Vector x;
@@ -57,13 +60,69 @@ TEST(KLU, SparseFactorAndBlockSolve) {
   }
 }
 
+TEST(Cholesky, RankOneUpdateAndDowndate) {
+  Matrix identity_matrix = identity(3);
+  auto factor = cholesky(identity_matrix);
+  Vector update{0.5, -0.25, 0.75};
+  cholesky_update(factor, update);
+
+  Matrix reconstructed(3, 3, 0.0);
+  for (idx row = 0; row < 3; ++row) {
+    for (idx column = 0; column < 3; ++column) {
+      for (idx k = 0; k < 3; ++k) {
+        reconstructed(row, column) += factor.L(row, k) * factor.L(column, k);
+      }
+      EXPECT_NEAR(reconstructed(row, column),
+                  (row == column ? 1.0 : 0.0) + update[row] * update[column],
+                  1e-12);
+    }
+  }
+
+  cholesky_downdate(factor, update);
+  for (idx row = 0; row < 3; ++row) {
+    for (idx column = 0; column <= row; ++column) {
+      EXPECT_NEAR(factor.L(row, column), row == column ? 1.0 : 0.0, 1e-12);
+    }
+  }
+}
+
+TEST(AutoLinear, SolveTransposeAndInverseDiagonal) {
+  const auto matrix =
+    SparseMatrix::from_triplets(2, 2, {0, 0, 1, 1}, {0, 1, 0, 1}, {4.0, 1.0, 2.0, 3.0});
+  AutoLinearSolver factor(matrix, {.dense_limit = 0});
+
+  Vector solution(2, 0.0);
+  factor.solve(Vector{6.0, 8.0}, solution);
+  EXPECT_NEAR(solution[0], 1.0, 1e-12);
+  EXPECT_NEAR(solution[1], 2.0, 1e-12);
+
+  factor.solve_transpose(Vector{8.0, 7.0}, solution);
+  EXPECT_NEAR(solution[0], 1.0, 1e-12);
+  EXPECT_NEAR(solution[1], 2.0, 1e-12);
+
+  Vector inverse_diag(2, 0.0);
+  InverseDiagonalWorkspace workspace;
+  inverse_diagonal(factor, inverse_diag, workspace, 1);
+  EXPECT_NEAR(inverse_diag[0], 0.3, 1e-12);
+  EXPECT_NEAR(inverse_diag[1], 0.4, 1e-12);
+
+  const std::vector<idx> rows{0, 1};
+  const std::vector<idx> columns{1, 0};
+  Vector selected(2, 0.0);
+  selected_inverse(factor, rows, columns, selected, workspace);
+  EXPECT_NEAR(selected[0], -0.1, 1e-12);
+  EXPECT_NEAR(selected[1], -0.2, 1e-12);
+}
+
 TEST(UMFPACK, SparseFactorAndSolve) {
   if (!umfpack_available()) {
     GTEST_SKIP() << "SuiteSparse UMFPACK is not available";
-}
-  const auto A = SparseMatrix::from_triplets(
-      3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
-      {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
+  }
+  const auto A = SparseMatrix::from_triplets(3,
+                                             3,
+                                             {0, 0, 1, 1, 1, 2, 2},
+                                             {0, 1, 0, 1, 2, 1, 2},
+                                             {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
   UMFPACKFactor factor(A);
   Vector x;
   factor.solve(Vector{15.0, 10.0, 10.0}, x);
@@ -105,7 +164,7 @@ TEST(LU, SolveIdentitySystem) {
   Matrix A(n, n, 0.0);
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 1.0;
-}
+  }
   Vector b{1.0, 2.0, 3.0, 4.0, 5.0};
 
   auto f = lu(A);
@@ -114,7 +173,7 @@ TEST(LU, SolveIdentitySystem) {
 
   for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(x[i], b[i], 1e-12);
-}
+  }
 }
 
 TEST(LU, SolveDiagonalSystem) {
@@ -146,25 +205,25 @@ TEST(LU, SolveLargerSystem) {
     A(i, i) = 10.0;
     if (i > 0) {
       A(i, i - 1) = -1.0;
-}
+    }
     if (i < n - 1) {
       A(i, i + 1) = -2.0;
-}
+    }
   }
   // b = A * ones
   Vector b(n, 0.0);
   for (idx i = 0; i < n; ++i) {
     for (idx j = 0; j < n; ++j) {
       b[i] += A(i, j) * 1.0;
-}
-}
+    }
+  }
 
   auto f = lu(A);
   Vector x(n);
   lu_solve(f, b, x);
   for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(x[i], 1.0, 1e-10);
-}
+  }
 }
 
 TEST(LU, Determinant2x2) {
@@ -218,11 +277,11 @@ TEST(LU, InverseTimesOriginal) {
       real entry = 0;
       for (idx k = 0; k < 3; ++k) {
         entry += A(i, k) * Ainv(k, j);
-}
+      }
       real expected = (i == j) ? 1.0 : 0.0;
       EXPECT_NEAR(entry, expected, 1e-12);
     }
-}
+  }
 }
 
 TEST(LU, MultipleRHS) {
@@ -289,11 +348,11 @@ static void expect_orthogonal(const Matrix& Q, real tol = 1e-10) {
       real entry = 0;
       for (idx k = 0; k < m; ++k) {
         entry += Q(k, i) * Q(k, j);
-}
+      }
       real expected = (i == j) ? 1.0 : 0.0;
       EXPECT_NEAR(entry, expected, tol) << "Q^T Q [" << i << "," << j << "]";
     }
-}
+  }
 }
 
 // Helper: check ||Q R - A||_inf < tol
@@ -306,10 +365,10 @@ static void expect_qr_product(const Matrix& Q,
       real qr_ij = 0;
       for (idx k = 0; k < Q.cols(); ++k) {
         qr_ij += Q(i, k) * R(k, j);
-}
+      }
       EXPECT_NEAR(qr_ij, A(i, j), tol) << "QR [" << i << "," << j << "]";
     }
-}
+  }
 }
 
 TEST(QR, OrthogonalitySquare3x3) {
@@ -364,8 +423,8 @@ TEST(QR, RIsUpperTriangular) {
   for (idx i = 1; i < f.R.rows(); ++i) {
     for (idx j = 0; j < std::min(i, f.R.cols()); ++j) {
       EXPECT_NEAR(f.R(i, j), 0.0, 1e-10);
-}
-}
+    }
+  }
 }
 
 TEST(QR, ProductRecoversA_Overdetermined) {
@@ -461,14 +520,14 @@ TEST(QR, IdentityMatrix) {
   Matrix A(n, n, 0.0);
   for (idx i = 0; i < n; ++i) {
     A(i, i) = 1.0;
-}
+  }
   auto f = qr(A);
   expect_orthogonal(f.Q);
   expect_qr_product(f.Q, f.R, A);
   // R diagonal must be +/-1
   for (idx i = 0; i < n; ++i) {
     EXPECT_NEAR(std::abs(f.R(i, i)), 1.0, 1e-10);
-}
+  }
 }
 
 TEST(Cholesky, SPDSolve) {

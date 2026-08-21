@@ -10,7 +10,7 @@ TEST(Vector, Construction) {
   Vector v2(5, 3.0);
   for (idx i = 0; i < 5; ++i) {
     EXPECT_DOUBLE_EQ(v2[i], 3.0);
-}
+  }
 
   Vector v3{1.0, 2.0, 3.0};
   EXPECT_EQ(v3.size(), 3);
@@ -57,6 +57,12 @@ TEST(Vector, Dot) {
   Vector x{1.0, 2.0, 3.0};
   Vector y{4.0, 5.0, 6.0};
   EXPECT_DOUBLE_EQ(dot(x, y), 32.0);
+
+  const std::vector<real> sx{1.0, 2.0, 3.0};
+  const std::vector<real> sy{4.0, 5.0, 6.0};
+  EXPECT_DOUBLE_EQ(dot(std::span<const real>(sx), std::span<const real>(sy)), 32.0);
+  EXPECT_THROW(dot(std::span<const real>(sx), std::span<const real>(sy).first(2)),
+               std::invalid_argument);
 }
 
 TEST(Vector, Norm) {

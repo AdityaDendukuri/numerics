@@ -153,4 +153,37 @@ void KLUFactor::solve(const Matrix& rhs, Matrix& solution) const {
 #endif
 }
 
+void KLUFactor::solve_transpose(const Vector& rhs, Vector& solution) const {
+#if defined(NUMERICS_HAS_KLU)
+  if (rhs.size() != impl_->n) {
+    throw std::invalid_argument("KLU transpose solve dimension mismatch");
+  }
+  solution = rhs;
+  if (!klu_tsolve(impl_->symbolic,
+                  impl_->numeric,
+                  static_cast<int>(impl_->n),
+                  1,
+                  solution.data(),
+                  &impl_->common)) {
+    throw std::runtime_error("KLU transpose solve failed");
+  }
+#else
+  (void)rhs;
+  (void)solution;
+  throw std::runtime_error("Numerics was built without SuiteSparse KLU support");
+#endif
+}
+
+void KLUFactor::solve_in_place(Vector& right_hand_side) const {
+  Vector result(right_hand_side.size(), 0.0);
+  solve(right_hand_side, result);
+  right_hand_side = std::move(result);
+}
+
+void KLUFactor::solve_in_place(Matrix& right_hand_sides) const {
+  Matrix result;
+  solve(right_hand_sides, result);
+  right_hand_sides = std::move(result);
+}
+
 } // namespace num

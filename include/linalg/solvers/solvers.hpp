@@ -2,6 +2,8 @@
 /// @brief Umbrella include for all linear solvers
 #pragma once
 
+#include "linalg/solvers/auto_linear.hpp"
+#include "linalg/solvers/auto_resolvent.hpp"
 #include "linalg/solvers/cg.hpp"
 #include "linalg/solvers/gauss_seidel.hpp"
 #include "linalg/solvers/gmres.hpp"

@@ -21,6 +21,7 @@ add_executable(numerics_tests
 
 target_link_libraries(numerics_tests PRIVATE
     numerics
+    numerics_io
     GTest::gtest_main
 )
 

@@ -1,5 +1,6 @@
 #include "linalg/sparse/sparse.hpp"
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 #include <stdexcept>
 
@@ -195,6 +196,87 @@ void sparse_matvec(const SparseMatrix& A, const Vector& x, Vector& y) {
     }
     y[i] = sum;
   }
+}
+
+SparseMatrix scaled(const SparseMatrix& A, real alpha) {
+  std::vector<real> values(A.values(), A.values() + A.nnz());
+  for (real& value : values) {
+    value *= alpha;
+  }
+  return {A.n_rows(),
+          A.n_cols(),
+          std::move(values),
+          std::vector<idx>(A.col_idx(), A.col_idx() + A.nnz()),
+          std::vector<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
+}
+
+SparseMatrix transpose(const SparseMatrix& A) {
+  std::vector<idx> column_ptr(A.n_cols() + 1, 0);
+  for (idx entry = 0; entry < A.nnz(); ++entry) {
+    ++column_ptr[A.col_idx()[entry] + 1];
+  }
+  for (idx column = 0; column < A.n_cols(); ++column) {
+    column_ptr[column + 1] += column_ptr[column];
+  }
+
+  std::vector<real> values(A.nnz());
+  std::vector<idx> columns(A.nnz());
+  std::vector<idx> next = column_ptr;
+  for (idx row = 0; row < A.n_rows(); ++row) {
+    for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
+      const idx destination = next[A.col_idx()[entry]]++;
+      values[destination] = A.values()[entry];
+      columns[destination] = row;
+    }
+  }
+  return {A.n_cols(),
+          A.n_rows(),
+          std::move(values),
+          std::move(columns),
+          std::move(column_ptr)};
+}
+
+Matrix dense(const SparseMatrix& A) {
+  Matrix result(A.n_rows(), A.n_cols(), 0.0);
+  for (idx row = 0; row < A.n_rows(); ++row) {
+    for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
+      result(row, A.col_idx()[entry]) = A.values()[entry];
+    }
+  }
+  return result;
+}
+
+Vector diagonal(const SparseMatrix& A) {
+  const idx n = std::min(A.n_rows(), A.n_cols());
+  Vector result(n, 0.0);
+  for (idx row = 0; row < n; ++row) {
+    for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
+      if (A.col_idx()[entry] == row) {
+        result[row] = A.values()[entry];
+        break;
+      }
+    }
+  }
+  return result;
+}
+
+Matrix diagonal_similarity(const SparseMatrix& A, std::span<const real> weights) {
+  if (A.n_rows() != A.n_cols() || weights.size() != A.n_rows()) {
+    throw std::invalid_argument("diagonal_similarity: dimensions must match");
+  }
+  if (!std::all_of(weights.begin(), weights.end(), [](real value) {
+        return value > 0.0;
+      })) {
+    throw std::invalid_argument("diagonal_similarity: weights must be positive");
+  }
+  Matrix result(A.n_rows(), A.n_cols(), 0.0);
+  for (idx row = 0; row < A.n_rows(); ++row) {
+    for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
+      const idx column = A.col_idx()[entry];
+      result(row, column) = A.values()[entry] * weights[column] / weights[row];
+    }
+  }
+  return result;
 }
 
 } // namespace num

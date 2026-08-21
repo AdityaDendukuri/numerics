@@ -7,7 +7,10 @@
 #include "core/types.hpp"
 #include <algorithm>
 #include <memory>
+#include <span>
+#include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 namespace num {
 
@@ -35,11 +38,20 @@ public:
     std::copy(init.begin(), init.end(), data_.get());
   }
 
+  explicit BasicVector(std::span<const T> values)
+      : n_(values.size()),
+        data_(new T[n_]) {
+    std::copy(values.begin(), values.end(), data_.get());
+  }
+
+  explicit BasicVector(const std::vector<T>& values)
+      : BasicVector(std::span<const T>(values)) {}
+
   ~BasicVector() {
     if constexpr (std::is_same_v<T, real>) {
       if (d_data_) {
         cuda::free(d_data_);
-}
+      }
     }
   }
 
@@ -71,7 +83,7 @@ public:
       if constexpr (std::is_same_v<T, real>) {
         if (d_data_) {
           cuda::free(d_data_);
-}
+        }
       }
       n_ = o.n_;
       data_ = std::move(o.data_);
@@ -127,6 +139,19 @@ private:
   real* d_data_ = nullptr; // GPU mirror (real-typed); always nullptr for T != real
 };
 
+template<typename T>
+void copy_to(const BasicVector<T>& source, std::span<T> destination) {
+  if (source.size() != destination.size()) {
+    throw std::invalid_argument("copy_to: vector sizes must match");
+  }
+  std::copy(source.begin(), source.end(), destination.begin());
+}
+
+template<typename T>
+void copy_to(const BasicVector<T>& source, std::vector<T>& destination) {
+  copy_to(source, std::span<T>(destination));
+}
+
 /// @brief Real-valued dense vector with full backend dispatch (CPU + GPU)
 using Vector = BasicVector<real>;
 
@@ -146,6 +171,18 @@ void axpy(real alpha, const Vector& x, Vector& y, Backend b = default_backend);
 
 /// @brief Compute \f$x^T y\f$.
 real dot(const Vector& x, const Vector& y, Backend b = default_backend);
+
+/// @brief Compute a sequential dot product over non-owning vectors.
+inline real dot(std::span<const real> x, std::span<const real> y) {
+  if (x.size() != y.size()) {
+    throw std::invalid_argument("dot: vector sizes must match");
+  }
+  real result = 0.0;
+  for (idx index = 0; index < x.size(); ++index) {
+    result += x[index] * y[index];
+  }
+  return result;
+}
 
 /// @brief Compute \f$\|x\|_2\f$.
 real norm(const Vector& x, Backend b = default_backend);

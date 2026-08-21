@@ -263,7 +263,16 @@ inline std::vector<real> linspace(real start, real stop, idx n) {
   real step = (stop - start) / static_cast<real>(n - 1);
   for (idx i = 0; i < n; ++i) {
     out[i] = start + (static_cast<real>(i) * step);
+  }
+  return out;
 }
+
+/// @brief Values with evenly spaced exponents, inclusive.
+inline std::vector<real> logspace(real start, real stop, idx n, real base = 10.0) {
+  auto out = linspace(start, stop, n);
+  for (real& exponent : out) {
+    exponent = std::pow(base, exponent);
+  }
   return out;
 }
 

@@ -23,7 +23,12 @@ Linear algebra and Krylov methods.
 * SVD and symmetric eigensolvers
 * CG and GMRES
 * Arnoldi matrix exponential actions
-* complex resolvent solves
+* automatic dense/sparse real and complex resolvent solves
+* reusable LU, Cholesky, and KLU factors with vector, matrix, transpose, and
+  in-place solves
+* inverse-diagonal and selected-inverse entries
+* Cholesky rank-one updates and downdates
+* sparse transforms and inverse-Laplace accumulation
 
 ### `numerics::spectral`
 
@@ -114,6 +119,16 @@ std::vector<num::cplx> shifts = {
 
 auto X = num::resolvent_solve_batch(shifts, A, b);
 ```
+
+For reusable sparse systems, `num::AutoLinearSolver` and
+`num::AutoResolventSolver` select dense or SuiteSparse backends automatically.
+Numerics also provides `num::inverse_diagonal`, `num::selected_inverse`, and
+`num::inverse_laplace_accumulate` for factorization-aware higher-level work.
+Sequence and reduction helpers include `num::linspace`, `num::logspace`,
+projection-based `num::argmax` and `num::weighted_sum`, span-based `num::dot`,
+and dense row or element scaling. `num::io::json_vector` and
+`num::io::json_matrix` convert numeric JSON arrays without application-level
+parsing loops.
 
 ### Matrix exponential action
 

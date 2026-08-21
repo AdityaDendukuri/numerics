@@ -1,4 +1,6 @@
 #include "core/matrix.hpp"
+#include "linalg/matrix_properties.hpp"
+#include "linalg/matrix_utils.hpp"
 #include <gtest/gtest.h>
 
 using namespace num;
@@ -77,6 +79,32 @@ TEST(Matrix, Matadd) {
   EXPECT_DOUBLE_EQ(C(0, 0), 8.0);
 }
 
+TEST(Matrix, RowAndElementScaling) {
+  Matrix A(2, 2, 1.0);
+  const std::vector<real> weights{2.0, 4.0};
+  scale_rows(A, weights);
+  EXPECT_DOUBLE_EQ(A(0, 1), 2.0);
+  EXPECT_DOUBLE_EQ(A(1, 0), 4.0);
+  divide_rows(A, weights);
+  EXPECT_DOUBLE_EQ(A(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(A(1, 0), 1.0);
+
+  Vector x{3.0, 5.0};
+  scale_elements(x, weights);
+  EXPECT_DOUBLE_EQ(x[0], 6.0);
+  EXPECT_DOUBLE_EQ(x[1], 20.0);
+  divide_elements(x, weights);
+  EXPECT_DOUBLE_EQ(x[0], 3.0);
+  EXPECT_DOUBLE_EQ(x[1], 5.0);
+}
+
+TEST(Matrix, RelativeSymmetryError) {
+  Matrix A(2, 2, 0.0);
+  A(0, 1) = 100.0;
+  A(1, 0) = 100.01;
+  EXPECT_NEAR(linalg::relative_symmetry_error(A), 0.01 / 100.01, 1e-14);
+}
+
 // Backend correctness: every backend must produce the same result as
 // Backend::seq
 
@@ -85,8 +113,8 @@ static Matrix make_test_matrix(idx rows, idx cols) {
   for (idx i = 0; i < rows; ++i) {
     for (idx j = 0; j < cols; ++j) {
       A(i, j) = static_cast<real>((i * cols) + j + 1);
-}
-}
+    }
+  }
   return A;
 }
 
@@ -94,7 +122,7 @@ static Vector make_test_vector(idx n) {
   Vector v(n);
   for (idx i = 0; i < n; ++i) {
     v[i] = static_cast<real>(i + 1);
-}
+  }
   return v;
 }
 
@@ -107,8 +135,8 @@ TEST(MatmulPolicy, BlockedMatchesSeq) {
   for (idx i = 0; i < 32; ++i) {
     for (idx j = 0; j < 32; ++j) {
       EXPECT_NEAR(C_blk(i, j), C_seq(i, j), 1e-10);
-}
-}
+    }
+  }
 }
 
 TEST(MatvecPolicy, BlockedMatchesSeq) {
@@ -119,5 +147,5 @@ TEST(MatvecPolicy, BlockedMatchesSeq) {
   matvec(A, x, y_blk, Backend::blocked);
   for (idx i = 0; i < 16; ++i) {
     EXPECT_NEAR(y_blk[i], y_seq[i], 1e-10);
-}
+  }
 }

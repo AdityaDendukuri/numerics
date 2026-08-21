@@ -34,30 +34,18 @@ struct DenseResolventSolver::Impl {
   bool factored = false;
 };
 
-namespace {
-
-Matrix dense_copy(const SparseMatrix& sparse) {
-  Matrix dense(sparse.n_rows(), sparse.n_cols(), 0.0);
-  for (idx row = 0; row < sparse.n_rows(); ++row) {
-    for (idx entry = sparse.row_ptr()[row]; entry < sparse.row_ptr()[row + 1]; ++entry) {
-      dense(row, sparse.col_idx()[entry]) = sparse.values()[entry];
-    }
-  }
-  return dense;
+DenseResolventSolver::DenseResolventSolver(const Matrix& matrix)
+    : impl_(std::make_unique<Impl>(matrix)) {
 }
 
-} // namespace
-
-DenseResolventSolver::DenseResolventSolver(const Matrix& matrix)
-    : impl_(std::make_unique<Impl>(matrix)) {}
-
 DenseResolventSolver::DenseResolventSolver(const SparseMatrix& matrix)
-    : impl_(std::make_unique<Impl>(dense_copy(matrix))) {}
+    : impl_(std::make_unique<Impl>(dense(matrix))) {
+}
 
 DenseResolventSolver::~DenseResolventSolver() = default;
 DenseResolventSolver::DenseResolventSolver(DenseResolventSolver&&) noexcept = default;
-DenseResolventSolver&
-DenseResolventSolver::operator=(DenseResolventSolver&&) noexcept = default;
+DenseResolventSolver& DenseResolventSolver::operator=(
+  DenseResolventSolver&&) noexcept = default;
 
 idx DenseResolventSolver::size() const noexcept {
   return impl_ ? impl_->matrix.rows() : 0;
@@ -68,7 +56,7 @@ void DenseResolventSolver::factorize(cplx shift) {
   for (idx row = 0; row < n; ++row) {
     for (idx column = 0; column < n; ++column) {
       impl_->lu[(row * n) + column] =
-          (row == column ? shift : cplx(0.0, 0.0)) - impl_->matrix(row, column);
+        (row == column ? shift : cplx(0.0, 0.0)) - impl_->matrix(row, column);
     }
   }
 
@@ -112,7 +100,7 @@ void DenseResolventSolver::factorize(cplx shift) {
       impl_->lu[(row * n) + column] /= impl_->lu[(column * n) + column];
       for (idx entry = column + 1; entry < n; ++entry) {
         impl_->lu[(row * n) + entry] -=
-            impl_->lu[(row * n) + column] * impl_->lu[(column * n) + entry];
+          impl_->lu[(row * n) + column] * impl_->lu[(column * n) + entry];
       }
     }
   }
@@ -120,8 +108,7 @@ void DenseResolventSolver::factorize(cplx shift) {
   impl_->factored = true;
 }
 
-std::vector<cplx>
-DenseResolventSolver::solve(const std::vector<cplx>& rhs) const {
+std::vector<cplx> DenseResolventSolver::solve(const std::vector<cplx>& rhs) const {
   std::vector<cplx> result;
   solve(rhs, result);
   return result;
@@ -132,7 +119,7 @@ void DenseResolventSolver::solve(const std::vector<cplx>& rhs,
   const idx n = impl_->matrix.rows();
   if (!impl_->factored || rhs.size() != n) {
     throw std::invalid_argument(
-        "DenseResolventSolver: factorization or matching right-hand side required");
+      "DenseResolventSolver: factorization or matching right-hand side required");
   }
   result = rhs;
 

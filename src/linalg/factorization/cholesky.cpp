@@ -150,4 +150,58 @@ void cholesky_solve(const CholeskyResult& f, const Matrix& B, Matrix& X) {
 #endif
 }
 
+void solve_in_place(const CholeskyResult& f, Vector& right_hand_side) {
+  Vector result(right_hand_side.size(), 0.0);
+  cholesky_solve(f, right_hand_side, result);
+  right_hand_side = std::move(result);
+}
+
+void solve_in_place(const CholeskyResult& f, Matrix& right_hand_sides) {
+  Matrix result;
+  cholesky_solve(f, right_hand_sides, result);
+  right_hand_sides = std::move(result);
+}
+
+void cholesky_update(CholeskyResult& factor, const Vector& update) {
+  if (!factor.success || factor.L.rows() != update.size()) {
+    throw std::invalid_argument("cholesky_update: invalid factor or update size");
+  }
+  Vector work = update;
+  for (idx column = 0; column < work.size(); ++column) {
+    const real diagonal = factor.L(column, column);
+    const real replacement = std::hypot(diagonal, work[column]);
+    const real cosine = replacement / diagonal;
+    const real sine = work[column] / diagonal;
+    factor.L(column, column) = replacement;
+    for (idx row = column + 1; row < work.size(); ++row) {
+      factor.L(row, column) = (factor.L(row, column) + (sine * work[row])) / cosine;
+      work[row] = (cosine * work[row]) - (sine * factor.L(row, column));
+    }
+  }
+}
+
+void cholesky_downdate(CholeskyResult& factor, const Vector& update) {
+  if (!factor.success || factor.L.rows() != update.size()) {
+    throw std::invalid_argument("cholesky_downdate: invalid factor or update size");
+  }
+  Matrix candidate = factor.L;
+  Vector work = update;
+  for (idx column = 0; column < work.size(); ++column) {
+    const real diagonal = candidate(column, column);
+    const real square = (diagonal * diagonal) - (work[column] * work[column]);
+    if (!(square > 0.0)) {
+      throw std::domain_error("cholesky_downdate: result is not positive definite");
+    }
+    const real replacement = std::sqrt(square);
+    const real cosine = replacement / diagonal;
+    const real sine = work[column] / diagonal;
+    candidate(column, column) = replacement;
+    for (idx row = column + 1; row < work.size(); ++row) {
+      candidate(row, column) = (candidate(row, column) - (sine * work[row])) / cosine;
+      work[row] = (cosine * work[row]) - (sine * candidate(row, column));
+    }
+  }
+  factor.L = std::move(candidate);
+}
+
 } // namespace num

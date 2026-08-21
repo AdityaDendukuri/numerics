@@ -10,5 +10,6 @@
 ///   rng.hpp   -- make_seeded_rng, make_rng
 #pragma once
 #include "stochastic/boltzmann_table.hpp"
+#include "stochastic/categorical.hpp"
 #include "stochastic/mcmc.hpp"
 #include "stochastic/rng.hpp"

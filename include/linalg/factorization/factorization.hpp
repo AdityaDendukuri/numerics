@@ -3,6 +3,7 @@
 #pragma once
 
 #include "linalg/factorization/cholesky.hpp"
+#include "linalg/factorization/inverse_diagonal.hpp"
 #include "linalg/factorization/lu.hpp"
 #include "linalg/factorization/qr.hpp"
 #include "linalg/factorization/thomas.hpp"
