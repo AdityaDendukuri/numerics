@@ -69,14 +69,14 @@ Vector expv(real t, const Op& A, const Vector& v, int m_max = 30, real tol = 1e-
     V.push_back(std::move(w));
   }
 
-  Matrix Hm(m_actual, m_actual, 0.0);
+  Matrix projected(m_actual, m_actual, 0.0);
   for (int i = 0; i < m_actual; i++) {
     for (int j = 0; j < m_actual; j++) {
-      Hm(i, j) = t * H(i, j);
+      projected(i, j) = t * H(i, j);
     }
   }
 
-  Matrix E = detail::dense_expm_pade6(Hm);
+  Matrix E = detail::dense_expm_pade6(projected);
 
   Vector result(n, 0.0);
   for (int j = 0; j < m_actual; j++) {

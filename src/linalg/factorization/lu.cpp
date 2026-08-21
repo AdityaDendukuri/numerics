@@ -141,18 +141,54 @@ void lu_solve(const LUResult& f, const Vector& b, Vector& x) {
 }
 
 void lu_solve(const LUResult& f, const Matrix& B, Matrix& X) {
-  const idx nrhs = B.cols();
   const idx n = B.rows();
-  Vector col(n), xcol(n);
-  for (idx j = 0; j < nrhs; ++j) {
-    for (idx i = 0; i < n; ++i) {
-      col[i] = B(i, j);
-    }
-    lu_solve(f, col, xcol);
-    for (idx i = 0; i < n; ++i) {
-      X(i, j) = xcol[i];
+  if (f.LU.rows() != n || f.LU.cols() != n) {
+    throw std::invalid_argument("lu_solve: dimension mismatch");
+  }
+  X = B;
+#if defined(NUMERICS_HAS_LAPACK)
+  std::vector<lapack_int> pivots(n);
+  for (idx index = 0; index < n; ++index) {
+    pivots[index] = static_cast<lapack_int>(f.piv[index] + 1);
+  }
+  const int info = LAPACKE_dgetrs(LAPACK_ROW_MAJOR,
+                                  'N',
+                                  static_cast<lapack_int>(n),
+                                  static_cast<lapack_int>(B.cols()),
+                                  f.LU.data(),
+                                  static_cast<lapack_int>(n),
+                                  pivots.data(),
+                                  X.data(),
+                                  static_cast<lapack_int>(B.cols()));
+  if (info != 0) {
+    throw std::runtime_error("lu_solve: LAPACK block solve failed");
+  }
+#else
+  for (idx k = 0; k < n; ++k) {
+    if (f.piv[k] != k) {
+      for (idx column = 0; column < B.cols(); ++column) {
+        std::swap(X(k, column), X(f.piv[k], column));
+      }
     }
   }
+  for (idx row = 1; row < n; ++row) {
+    for (idx k = 0; k < row; ++k) {
+      for (idx column = 0; column < B.cols(); ++column) {
+        X(row, column) -= f.LU(row, k) * X(k, column);
+      }
+    }
+  }
+  for (idx row = n; row-- > 0;) {
+    for (idx k = row + 1; k < n; ++k) {
+      for (idx column = 0; column < B.cols(); ++column) {
+        X(row, column) -= f.LU(row, k) * X(k, column);
+      }
+    }
+    for (idx column = 0; column < B.cols(); ++column) {
+      X(row, column) /= f.LU(row, row);
+    }
+  }
+#endif
 }
 
 real lu_det(const LUResult& f) {
@@ -172,16 +208,12 @@ real lu_det(const LUResult& f) {
 
 Matrix lu_inv(const LUResult& f) {
   const idx n = f.LU.rows();
-  Matrix inv(n, n, real(0));
-  Vector e(n, real(0)), col(n);
-  for (idx j = 0; j < n; ++j) {
-    e[j] = real(1);
-    lu_solve(f, e, col);
-    for (idx i = 0; i < n; ++i) {
-      inv(i, j) = col[i];
-    }
-    e[j] = real(0);
+  Matrix identity(n, n, real(0));
+  for (idx index = 0; index < n; ++index) {
+    identity(index, index) = real(1);
   }
+  Matrix inv;
+  lu_solve(f, identity, inv);
   return inv;
 }
 

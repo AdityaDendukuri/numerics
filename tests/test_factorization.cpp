@@ -246,20 +246,21 @@ TEST(LU, MultipleRHS) {
   B(1, 1) = 1;
   B(2, 1) = 0; // second column: e_1
 
-  auto f = lu(A);
-  Matrix X(3, 2, 0.0);
-  lu_solve(f, B, X);
+  for (const Backend backend : {Backend::seq, lapack_backend}) {
+    const auto factor = lu(A, backend);
+    Matrix X;
+    lu_solve(factor, B, X);
 
-  // Verify A * X[:,j] = B[:,j] for each column
-  for (idx j = 0; j < 2; ++j) {
-    for (idx i = 0; i < 3; ++i) {
-      real ax = 0;
-      for (idx k = 0; k < 3; ++k) {
-        ax += A(i, k) * X(k, j);
-}
-      EXPECT_NEAR(ax, B(i, j), 1e-12);
+    for (idx column = 0; column < B.cols(); ++column) {
+      for (idx row = 0; row < B.rows(); ++row) {
+        real value = 0.0;
+        for (idx k = 0; k < A.cols(); ++k) {
+          value += A(row, k) * X(k, column);
+        }
+        EXPECT_NEAR(value, B(row, column), 1e-12);
+      }
     }
-}
+  }
 }
 
 TEST(LU, SingularMatrix) {
@@ -490,6 +491,31 @@ TEST(Cholesky, SPDSolve) {
   matvec(A, x, Ax);
   for (idx i = 0; i < 3; ++i) {
     EXPECT_NEAR(Ax[i], b[i], 1e-10);
+  }
+}
+
+TEST(Cholesky, MultipleRHS) {
+  Matrix A(3, 3, 0.0);
+  A(0, 0) = 4.0;
+  A(0, 1) = A(1, 0) = 1.0;
+  A(1, 1) = 3.0;
+  A(1, 2) = A(2, 1) = 1.0;
+  A(2, 2) = 2.0;
+
+  Matrix B(3, 2, 0.0);
+  B(0, 0) = 1.0;
+  B(1, 1) = 1.0;
+  Matrix X;
+  const auto factor = cholesky(linalg::assume_spd(A));
+  ASSERT_TRUE(factor.success);
+  cholesky_solve(factor, B, X);
+
+  Matrix product(3, 2, 0.0);
+  matmul(A, X, product);
+  for (idx row = 0; row < B.rows(); ++row) {
+    for (idx column = 0; column < B.cols(); ++column) {
+      EXPECT_NEAR(product(row, column), B(row, column), 1e-12);
+    }
   }
 }
 

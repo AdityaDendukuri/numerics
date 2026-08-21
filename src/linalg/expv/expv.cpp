@@ -83,7 +83,6 @@ Matrix dense_expm_pade6(const Matrix& A) {
   for (int i = 0; i < s; i++) {
     Matrix E2(m, m, 0.0);
     matmul(E, E, E2);
-    matmul(E, E, E2);
     E = std::move(E2);
   }
 
