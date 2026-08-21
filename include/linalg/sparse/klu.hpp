@@ -15,6 +15,7 @@ namespace num {
 /// Reusable sparse LU factorization backed by SuiteSparse KLU.
 class KLUFactor {
 public:
+  /// Factor a square CSR matrix; throws when KLU is unavailable or factorization fails.
   explicit KLUFactor(const SparseMatrix& matrix);
   ~KLUFactor();
   KLUFactor(KLUFactor&&) noexcept;
@@ -22,10 +23,16 @@ public:
   KLUFactor(const KLUFactor&) = delete;
   KLUFactor& operator=(const KLUFactor&) = delete;
 
+  /// Return the order of the factored matrix.
   [[nodiscard]] idx size() const noexcept;
+  /// Solve Ax=B for one or more dense right-hand sides.
   void solve(const Vector& rhs, Vector& solution) const;
   void solve(const Matrix& rhs, Matrix& solution) const;
+  /// Solve A^T x=b.
   void solve_transpose(const Vector& rhs, Vector& solution) const;
+  /// Solve A^T X=B for several dense right-hand sides.
+  void solve_transpose(const Matrix& rhs, Matrix& solution) const;
+  /// Replace one or more right-hand sides with their solutions.
   void solve_in_place(Vector& right_hand_side) const;
   void solve_in_place(Matrix& right_hand_sides) const;
 

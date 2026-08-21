@@ -27,16 +27,16 @@ void laplacian_stencil_2d(const BasicVector<T>& x, BasicVector<T>& y, int N) {
       T val = T(-4) * x[k];
       if (i > 0) {
         val += x[k - N];
-}
+      }
       if (i < N - 1) {
         val += x[k + N];
-}
+      }
       if (j > 0) {
         val += x[k - 1];
-}
+      }
       if (j < N - 1) {
         val += x[k + 1];
-}
+      }
       y[k] = val;
     }
   }
@@ -113,6 +113,11 @@ void laplacian_stencil_2d_4th(const BasicVector<T>& x, BasicVector<T>& y, int N)
 /// field[i,j] is defined at physical position ((i + ox/h)*h, (j + oy/h)*h).
 /// Returns the interpolated field value at physical point (px, py).
 ///
+/// @param field Flattened grid samples.
+/// @param N Grid width and height.
+/// @param h Grid spacing.
+/// @param px Physical x coordinate.
+/// @param py Physical y coordinate.
 /// @param ox  x-axis origin offset in physical units (0 for unstaggered, h/2
 /// for v-face)
 /// @param oy  y-axis origin offset in physical units (0 for unstaggered, h/2
@@ -138,18 +143,19 @@ inline real sample_2d_periodic(const Vector& field,
   real fy = std::fmod((py - oy) / h, static_cast<real>(N));
   if (fx < 0.0) {
     fx += N;
-}
+  }
   if (fy < 0.0) {
     fy += N;
-}
+  }
   idx i0 = static_cast<idx>(fx) % N;
   idx i1 = (i0 + 1) % N;
   real fi = fx - std::floor(fx);
   idx j0 = static_cast<idx>(fy) % N;
   idx j1 = (j0 + 1) % N;
   real fj = fy - std::floor(fy);
-  return ((1 - fi) * (1 - fj) * field[(i0 * N) + j0]) + (fi * (1 - fj) * field[(i1 * N) + j0])
-         + ((1 - fi) * fj * field[(i0 * N) + j1]) + (fi * fj * field[(i1 * N) + j1]);
+  return ((1 - fi) * (1 - fj) * field[(i0 * N) + j0])
+         + (fi * (1 - fj) * field[(i1 * N) + j0]) + ((1 - fi) * fj * field[(i0 * N) + j1])
+         + (fi * fj * field[(i1 * N) + j1]);
 }
 
 /// @brief Apply a mutable 1D operation to each column fiber.
@@ -159,11 +165,11 @@ void col_fiber_sweep(BasicVector<T>& data, int N, F&& f) {
   for (int j = 0; j < N; ++j) {
     for (int i = 0; i < N; ++i) {
       fiber[i] = data[(i * N) + j];
-}
+    }
     f(fiber);
     for (int i = 0; i < N; ++i) {
       data[(i * N) + j] = fiber[i];
-}
+    }
   }
 }
 
@@ -174,11 +180,11 @@ void row_fiber_sweep(BasicVector<T>& data, int N, F&& f) {
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
       fiber[j] = data[(i * N) + j];
-}
+    }
     f(fiber);
     for (int j = 0; j < N; ++j) {
       data[(i * N) + j] = fiber[j];
-}
+    }
   }
 }
 
@@ -224,6 +230,12 @@ inline void neg_laplacian_3d(const Vector& x,
   auto flat = [&](int i, int j, int k) -> idx {
     return static_cast<idx>((k * ny * nx) + (j * nx) + i);
   };
+  auto interior_value = [&](int i, int j, int k) {
+    if (i == 0 || i == nx - 1 || j == 0 || j == ny - 1 || k == 0 || k == nz - 1) {
+      return 0.0;
+    }
+    return x[flat(i, j, k)];
+  };
   for (int k = 0; k < nz; ++k) {
     for (int j = 0; j < ny; ++j) {
       for (int i = 0; i < nx; ++i) {
@@ -231,14 +243,17 @@ inline void neg_laplacian_3d(const Vector& x,
         if (i == 0 || i == nx - 1 || j == 0 || j == ny - 1 || k == 0 || k == nz - 1) {
           y[id] = x[id];
         } else {
-          y[id] = inv_dx2
-                  * ((6.0 * x[id]) - x[flat(i + 1, j, k)] - x[flat(i - 1, j, k)]
-                     - x[flat(i, j + 1, k)] - x[flat(i, j - 1, k)] - x[flat(i, j, k + 1)]
-                     - x[flat(i, j, k - 1)]);
+          // Eliminate zero-Dirichlet boundary unknowns to keep the full operator
+          // symmetric.
+          y[id] =
+            inv_dx2
+            * ((6.0 * x[id]) - interior_value(i + 1, j, k) - interior_value(i - 1, j, k)
+               - interior_value(i, j + 1, k) - interior_value(i, j - 1, k)
+               - interior_value(i, j, k + 1) - interior_value(i, j, k - 1));
         }
       }
-}
-}
+    }
+  }
 }
 
 /// @brief Compute \f$\nabla\phi\f$ with central differences.
@@ -258,8 +273,8 @@ inline void gradient_3d(const ScalarField3D& phi,
         gy(i, j, k) = (phi(i, jp, k) - phi(i, jm, k)) * inv2dx;
         gz(i, j, k) = (phi(i, j, kp) - phi(i, j, km)) * inv2dx;
       }
-}
-}
+    }
+  }
 }
 
 /// @brief Compute \f$\nabla\cdot f\f$ with central differences.
@@ -279,8 +294,8 @@ inline void divergence_3d(const ScalarField3D& fx,
                         + (fz(i, j, kp) - fz(i, j, km)))
                        * inv2dx;
       }
-}
-}
+    }
+  }
 }
 
 /// @brief Compute \f$\nabla\times A\f$ with central differences.
@@ -305,8 +320,8 @@ inline void curl_3d(const ScalarField3D& ax,
         bz(i, j, k) =
           (ay(ip, j, k) - ay(im, j, k) - ax(i, jp, k) + ax(i, jm, k)) * inv2dx;
       }
-}
-}
+    }
+  }
 }
 
 } // namespace num

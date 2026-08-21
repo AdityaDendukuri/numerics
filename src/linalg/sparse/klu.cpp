@@ -174,6 +174,38 @@ void KLUFactor::solve_transpose(const Vector& rhs, Vector& solution) const {
 #endif
 }
 
+void KLUFactor::solve_transpose(const Matrix& rhs, Matrix& solution) const {
+#if defined(NUMERICS_HAS_KLU)
+  if (rhs.rows() != impl_->n) {
+    throw std::invalid_argument("KLU transpose block solve dimension mismatch");
+  }
+  std::vector<double> column_major(rhs.size());
+  for (idx column = 0; column < rhs.cols(); ++column) {
+    for (idx row = 0; row < rhs.rows(); ++row) {
+      column_major[(column * rhs.rows()) + row] = rhs(row, column);
+    }
+  }
+  if (!klu_tsolve(impl_->symbolic,
+                  impl_->numeric,
+                  static_cast<int>(impl_->n),
+                  static_cast<int>(rhs.cols()),
+                  column_major.data(),
+                  &impl_->common)) {
+    throw std::runtime_error("KLU transpose block solve failed");
+  }
+  solution = Matrix(rhs.rows(), rhs.cols(), 0.0);
+  for (idx column = 0; column < rhs.cols(); ++column) {
+    for (idx row = 0; row < rhs.rows(); ++row) {
+      solution(row, column) = column_major[(column * rhs.rows()) + row];
+    }
+  }
+#else
+  (void)rhs;
+  (void)solution;
+  throw std::runtime_error("Numerics was built without SuiteSparse KLU support");
+#endif
+}
+
 void KLUFactor::solve_in_place(Vector& right_hand_side) const {
   Vector result(right_hand_side.size(), 0.0);
   solve(right_hand_side, result);

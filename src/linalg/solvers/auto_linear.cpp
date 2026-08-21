@@ -60,6 +60,14 @@ void AutoLinearSolver::solve_transpose(const Vector& rhs, Vector& solution) cons
   }
 }
 
+void AutoLinearSolver::solve_transpose(const Matrix& rhs, Matrix& solution) const {
+  if (impl_->sparse_factor) {
+    impl_->sparse_factor->solve_transpose(rhs, solution);
+  } else {
+    lu_solve_transpose(*impl_->dense_factor, rhs, solution);
+  }
+}
+
 void AutoLinearSolver::solve_in_place(Vector& right_hand_side) const {
   Vector solution(right_hand_side.size(), 0.0);
   solve(right_hand_side, solution);

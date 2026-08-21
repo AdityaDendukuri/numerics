@@ -36,8 +36,8 @@ concept LinearOperator =
 
 Declared mathematical-property concepts:
 
-- `num::operators::SymmetricLinearOperator`
-- `num::operators::SPDLinearOperator`
+- `num::SymmetricLinearOperator`
+- `num::SPDLinearOperator`
 
 These concepts are satisfied by wrappers such as `assume_symmetric(Aop)` and
 `assume_spd(Aop)`. They do not prove the property; they make the numerical
@@ -50,7 +50,7 @@ num::Matrix A(3, 3, 0.0);
 fill_spd_matrix(A);
 
 num::operators::DenseOp Aop(A);
-static_assert(num::operators::LinearOperator<decltype(Aop)>);
+static_assert(num::LinearOperator<decltype(Aop)>);
 
 num::Vector x(3, 0.0);
 num::SolverResult info = num::cg(num::operators::assume_spd(Aop), b, x);

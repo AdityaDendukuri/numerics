@@ -16,6 +16,7 @@ struct RunningStats {
   real M2 = 0.0;
   idx count = 0;
 
+  /// Incorporate one observation without storing the sample history.
   void update(real x) {
     ++count;
     real delta = x - mean;
@@ -24,16 +25,20 @@ struct RunningStats {
     M2 += delta * delta2;
   }
 
+  /// Return the unbiased sample variance, or zero with fewer than two samples.
   [[nodiscard]] real variance() const {
     return (count < 2) ? 0.0 : M2 / static_cast<real>(count - 1);
   }
 
+  /// Return the sample standard deviation.
   [[nodiscard]] real std_dev() const { return std::sqrt(variance()); }
 
+  /// Return the uncorrelated standard error of the mean.
   [[nodiscard]] real stderr_mean() const {
     return (count < 2) ? 0.0 : std_dev() / std::sqrt(static_cast<real>(count));
   }
 
+  /// Discard all accumulated observations.
   void reset() {
     mean = M2 = 0.0;
     count = 0;
@@ -47,12 +52,14 @@ struct Histogram {
   real hi = 0.0;
   idx nbins = 0;
 
+  /// Divide [lo,hi) into equally sized bins.
   Histogram(idx nbins, real lo, real hi)
       : counts(nbins, 0.0),
         lo(lo),
         hi(hi),
         nbins(nbins) {}
 
+  /// Return the containing bin, or nbins when x lies outside the interval.
   [[nodiscard]] idx bin(real x) const {
     if (x < lo || x >= hi) {
       return nbins;
@@ -60,12 +67,14 @@ struct Histogram {
     return static_cast<idx>((x - lo) / (hi - lo) * static_cast<real>(nbins));
   }
 
+  /// Return the center coordinate of bin b.
   [[nodiscard]] real bin_centre(idx b) const {
     return lo + ((static_cast<real>(b) + 0.5) * (hi - lo) / static_cast<real>(nbins));
   }
 
   [[nodiscard]] real bin_width() const { return (hi - lo) / static_cast<real>(nbins); }
 
+  /// Accumulate a weighted observation when it lies inside the interval.
   void fill(real x, real weight = 1.0) {
     idx b = bin(x);
     if (b < nbins) {
@@ -75,6 +84,7 @@ struct Histogram {
 
   void reset() { std::fill(counts.begin(), counts.end(), 0.0); }
 
+  /// Return the total accumulated bin weight.
   [[nodiscard]] real total() const {
     real s = 0.0;
     for (real c : counts) {

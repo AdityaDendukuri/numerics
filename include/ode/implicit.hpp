@@ -4,7 +4,7 @@
 /// advance(u, solver, params)          -- fixed-step backward Euler, no
 /// observer advance(u, solver, params, obs)     -- same, with step callback
 ///
-/// The field type is constrained by the VecField concept (core/concepts.hpp):
+/// The field type is constrained by the VecField concept (ode/concepts.hpp):
 /// any object exposing .vec() -> Vector& works (Vector itself, ScalarField2D,
 /// ScalarField3D, ...). This keeps ode/ independent of the fields/ module while
 /// supporting all types.
@@ -12,9 +12,9 @@
 /// matrix/operator hooks.
 #pragma once
 
-#include "core/concepts.hpp"
 #include "core/vector.hpp"
 #include "linalg/solvers/linear_solver.hpp"
+#include "ode/concepts.hpp"
 
 namespace num {
 namespace ode {

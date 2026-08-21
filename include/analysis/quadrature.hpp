@@ -8,10 +8,18 @@
 namespace num {
 
 /// @brief Trapezoidal rule with n panels
+/// @param f Integrand
+/// @param a Lower bound
+/// @param b Upper bound
+/// @param n Number of panels
 /// @param backend  Backend::omp parallelises the panel sum
 real trapz(ScalarFn f, real a, real b, idx n = 100, Backend backend = Backend::seq);
 
 /// @brief Simpson's 1/3 rule with n panels (n must be even)
+/// @param f Integrand
+/// @param a Lower bound
+/// @param b Upper bound
+/// @param n Number of panels
 /// @param backend  Backend::omp parallelises the panel sum
 real simpson(ScalarFn f, real a, real b, idx n = 100, Backend backend = Backend::seq);
 

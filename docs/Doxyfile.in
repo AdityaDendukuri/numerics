@@ -5,8 +5,11 @@ OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
 # ── Sources ──────────────────────────────────────────────────────────────────
 # Include the library headers, the pages directory, and each app's README.md.
 INPUT                  = @CMAKE_SOURCE_DIR@/include        \
-                         @CMAKE_SOURCE_DIR@/docs/pages
-FILE_PATTERNS          = *.hpp *.h *.md
+                         @CMAKE_SOURCE_DIR@/docs/pages     \
+                         @CMAKE_SOURCE_DIR@/examples
+FILE_PATTERNS          = *.hpp *.h *.md *.cpp
+EXAMPLE_PATH           = @CMAKE_SOURCE_DIR@/examples
+EXAMPLE_RECURSIVE      = YES
 IMAGE_PATH             = @CMAKE_SOURCE_DIR@/docs/pages
 RECURSIVE              = YES
 # Exclude build artefacts and test/benchmark source files
@@ -42,5 +45,4 @@ MATHJAX_EXTENSIONS     = TeX/AMSmath TeX/AMSsymbols
 USE_MDFILE_AS_MAINPAGE = @CMAKE_SOURCE_DIR@/docs/pages/index.md
 
 # ── HTML theme (doxygen-awesome) ──────────────────────────────────────────────
-HTML_EXTRA_STYLESHEET  = @CMAKE_SOURCE_DIR@/docs/doxygen-awesome.css \
-                         @CMAKE_SOURCE_DIR@/docs/ucsb.css
+HTML_EXTRA_STYLESHEET  = @CMAKE_SOURCE_DIR@/docs/doxygen-awesome.css

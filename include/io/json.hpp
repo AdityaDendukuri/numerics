@@ -10,10 +10,13 @@
 
 namespace num::io {
 
+/// Parse a complete JSON document from disk.
 [[nodiscard]] boost::json::value read_json(const std::filesystem::path& path);
+/// Serialize a JSON value to disk.
 void write_json(const boost::json::value& value, const std::filesystem::path& path);
 
 template<typename T>
+/// Convert a JSON numeric array to an arithmetic vector.
 [[nodiscard]] std::vector<T> json_vector(const boost::json::value& value) {
   static_assert(std::is_arithmetic_v<T>);
   if (!value.is_array()) {
@@ -37,6 +40,7 @@ template<typename T>
 }
 
 template<typename T>
+/// Convert a JSON array of numeric arrays to a nested vector.
 [[nodiscard]] std::vector<std::vector<T>> json_matrix(const boost::json::value& value) {
   if (!value.is_array()) {
     throw std::invalid_argument("JSON matrix must be an array");

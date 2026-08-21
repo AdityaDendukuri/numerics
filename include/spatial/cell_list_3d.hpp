@@ -11,8 +11,10 @@
 namespace num {
 
 template<typename Scalar>
+/// Counting-sorted 3D spatial bins for local-neighbor iteration.
 class CellList3D {
 public:
+  /// Cover the bounding box with padded cubic cells.
   CellList3D(Scalar cell_size,
              Scalar xmin,
              Scalar xmax,
@@ -41,12 +43,12 @@ public:
     std::fill(count_.begin(), count_.end(), 0);
     for (int i = 0; i < n; ++i) {
       ++count_[cell_id_of(get_pos(i))];
-}
+    }
 
     start_[0] = 0;
     for (int c = 0; c < total; ++c) {
       start_[c + 1] = start_[c] + count_[c];
-}
+    }
 
     std::fill(count_.begin(), count_.end(), 0);
     for (int i = 0; i < n; ++i) {
@@ -66,21 +68,21 @@ public:
       const int qz = cz + dz;
       if (qz < 0 || qz >= nz_) {
         continue;
-}
+      }
       for (int dy = -1; dy <= 1; ++dy) {
         const int qy = cy + dy;
         if (qy < 0 || qy >= ny_) {
           continue;
-}
+        }
         for (int dx = -1; dx <= 1; ++dx) {
           const int qx = cx + dx;
           if (qx < 0 || qx >= nx_) {
             continue;
-}
+          }
           const int cid = (((qz * ny_) + qy) * nx_) + qx;
           for (int k = start_[cid]; k < start_[cid + 1]; ++k) {
             f(sorted_[k]);
-}
+          }
         }
       }
     }
@@ -102,14 +104,14 @@ public:
           const int end = start_[cid + 1];
           if (beg == end) {
             continue;
-}
+          }
 
           // Intra-cell pairs
           for (int a = beg; a < end; ++a) {
             for (int b = a + 1; b < end; ++b) {
               f(sorted_[a], sorted_[b]);
-}
-}
+            }
+          }
 
           // Inter-cell: self x 13 forward neighbours
           for (int d = 0; d < 13; ++d) {
@@ -118,28 +120,31 @@ public:
             const int ncz = cz + FDZ[d];
             if (ncx < 0 || ncx >= nx_ || ncy < 0 || ncy >= ny_ || ncz < 0 || ncz >= nz_) {
               continue;
-}
+            }
             const int ncid = (((ncz * ny_) + ncy) * nx_) + ncx;
             const int nbeg = start_[ncid];
             const int nend = start_[ncid + 1];
             if (nbeg == nend) {
               continue;
-}
+            }
             for (int a = beg; a < end; ++a) {
               for (int b = nbeg; b < nend; ++b) {
                 f(sorted_[a], sorted_[b]);
-}
-}
+              }
+            }
           }
         }
       }
     }
   }
 
+  /// Return cell-grid dimensions and stored particle count.
   [[nodiscard]] int nx() const noexcept { return nx_; }
   [[nodiscard]] int ny() const noexcept { return ny_; }
   [[nodiscard]] int nz() const noexcept { return nz_; }
-  [[nodiscard]] int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
+  [[nodiscard]] int n_particles() const noexcept {
+    return static_cast<int>(sorted_.size());
+  }
 
 private:
   Scalar cs_ = 0, xmin_ = 0, ymin_ = 0, zmin_ = 0;

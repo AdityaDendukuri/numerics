@@ -15,20 +15,24 @@
 namespace num {
 
 template<class M>
+/// Object supporting z=M^-1 r with square dimensions.
 concept Preconditioner = requires(const M& M_op, const Vector& r, Vector& z) {
   { M_op.rows() } -> std::convertible_to<idx>;
   { M_op.cols() } -> std::convertible_to<idx>;
   M_op.apply(r, z);
 };
 
+/// Diagonal inverse preconditioner.
 class JacobiPreconditioner final {
 public:
+  /// Take ownership of a precomputed inverse diagonal.
   explicit JacobiPreconditioner(Vector inv_diag)
       : inv_diag_(std::move(inv_diag)) {}
 
   [[nodiscard]] idx rows() const noexcept { return inv_diag_.size(); }
   [[nodiscard]] idx cols() const noexcept { return inv_diag_.size(); }
 
+  /// Compute z=D^-1 r.
   void apply(const Vector& r, Vector& z) const {
     const idx n = inv_diag_.size();
     if (r.size() != n) {
@@ -46,6 +50,7 @@ private:
   Vector inv_diag_;
 };
 
+/// Construct a Jacobi preconditioner from a dense matrix diagonal.
 [[nodiscard]] inline JacobiPreconditioner jacobi_preconditioner(const Matrix& A) {
   if (A.rows() != A.cols()) {
     throw std::invalid_argument("jacobi_preconditioner: matrix must be square");
@@ -60,6 +65,7 @@ private:
   return JacobiPreconditioner(std::move(inv));
 }
 
+/// Construct a Jacobi preconditioner from a sparse matrix diagonal.
 [[nodiscard]] inline JacobiPreconditioner jacobi_preconditioner(const SparseMatrix& A) {
   if (A.n_rows() != A.n_cols()) {
     throw std::invalid_argument("jacobi_preconditioner: matrix must be square");

@@ -18,6 +18,7 @@
 #include "kernel/kernel.hpp"
 #include "linalg/linalg.hpp"
 #include "ode/ode.hpp"
+#include "operator/concepts.hpp"
 #include "operator/operator.hpp"
 #include "pde/pde.hpp"
 #include "plot/plot.hpp"

@@ -9,12 +9,13 @@
 #include "core/vector.hpp"
 #include "linalg/matrix_properties.hpp"
 #include "linalg/solvers/solver_result.hpp"
-#include "core/concepts.hpp"
+#include "operator/concepts.hpp"
 #include <cmath>
 #include <stdexcept>
 
 namespace num {
 
+/// Solve a stored SPD dense system with conjugate gradients.
 SolverResult cg(const Matrix& A,
                 const Vector& b,
                 Vector& x,
@@ -22,6 +23,7 @@ SolverResult cg(const Matrix& A,
                 idx max_iter = 1000,
                 Backend backend = default_backend);
 
+/// Solve a dense system whose SPD property is represented in its type.
 inline SolverResult cg(const linalg::SPDMatrix<Matrix>& A,
                        const Vector& b,
                        Vector& x,
@@ -61,7 +63,7 @@ SolverResult cg_operator_impl(const Op& A,
     A.apply(p, Ap);
 
     const real pAp = dot(p, Ap, backend);
-    if (std::abs(pAp) < real(1e-15)) {
+    if (!(pAp > real(0)) || !std::isfinite(pAp)) {
       break;
     }
     const real alpha = rsold / pAp;

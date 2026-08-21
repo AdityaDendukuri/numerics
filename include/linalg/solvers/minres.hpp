@@ -8,7 +8,7 @@
 #include "core/vector.hpp"
 #include "linalg/factorization/qr.hpp"
 #include "linalg/solvers/solver_result.hpp"
-#include "core/concepts.hpp"
+#include "operator/concepts.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -45,6 +45,7 @@ inline Vector minres_projected_solve(const std::vector<real>& alpha,
 
 template<class Op>
   requires SymmetricLinearOperator<Op, Vector, Vector>
+/// Solve a symmetric operator system by minimum-residual projection.
 SolverResult minres(const Op& A,
                     const Vector& b,
                     Vector& x,

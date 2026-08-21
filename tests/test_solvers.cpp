@@ -8,6 +8,7 @@
 #include "linalg/solvers/sparse_resolvent.hpp"
 #include "linalg/sparse/sparse.hpp"
 #include "linalg/sparse/sparse_op.hpp"
+#include "operator/concepts.hpp"
 #include "operator/operator.hpp"
 
 #include "pde/diffusion.hpp"

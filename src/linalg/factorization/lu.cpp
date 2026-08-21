@@ -2,6 +2,7 @@
 /// @brief LU factorization dispatcher + implementations (sequential & LAPACK).
 
 #include "linalg/factorization/lu.hpp"
+#include "linalg/matrix_utils.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -219,6 +220,25 @@ void lu_solve_transpose(const LUResult& f, const Vector& b, Vector& x) {
   x = std::move(work);
 }
 
+void lu_solve_transpose(const LUResult& f, const Matrix& B, Matrix& X) {
+  const idx n = f.LU.rows();
+  if (f.LU.cols() != n || B.rows() != n) {
+    throw std::invalid_argument("lu_solve_transpose: dimension mismatch");
+  }
+  X = Matrix(n, B.cols(), 0.0);
+  Vector right_hand_side(n, 0.0);
+  Vector solution(n, 0.0);
+  for (idx column = 0; column < B.cols(); ++column) {
+    for (idx row = 0; row < n; ++row) {
+      right_hand_side[row] = B(row, column);
+    }
+    lu_solve_transpose(f, right_hand_side, solution);
+    for (idx row = 0; row < n; ++row) {
+      X(row, column) = solution[row];
+    }
+  }
+}
+
 void solve_in_place(const LUResult& f, Vector& right_hand_side) {
   Vector result(right_hand_side.size(), 0.0);
   lu_solve(f, right_hand_side, result);
@@ -248,12 +268,9 @@ real lu_det(const LUResult& f) {
 
 Matrix lu_inv(const LUResult& f) {
   const idx n = f.LU.rows();
-  Matrix identity(n, n, real(0));
-  for (idx index = 0; index < n; ++index) {
-    identity(index, index) = real(1);
-  }
+  const Matrix identity_matrix = identity(n);
   Matrix inv;
-  lu_solve(f, identity, inv);
+  lu_solve(f, identity_matrix, inv);
   return inv;
 }
 

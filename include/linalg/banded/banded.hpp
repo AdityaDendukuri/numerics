@@ -15,8 +15,10 @@ namespace num {
 /// \f$\max(0,j-k_u)\le i\le \min(n-1,j+k_l)\f$.
 class BandedMatrix {
 public:
+  /// Construct a zero-filled n-by-n matrix with lower/upper bandwidths kl/ku.
   BandedMatrix(idx n, idx kl, idx ku);
 
+  /// Construct a banded matrix with every stored entry initialized to val.
   BandedMatrix(idx n, idx kl, idx ku, real val);
 
   ~BandedMatrix();
@@ -26,27 +28,35 @@ public:
   BandedMatrix& operator=(const BandedMatrix&);
   BandedMatrix& operator=(BandedMatrix&&) noexcept;
 
+  /// Return the square matrix order.
   [[nodiscard]] idx size() const { return n_; }
   [[nodiscard]] idx rows() const { return n_; }
   [[nodiscard]] idx cols() const { return n_; }
 
+  /// Return the lower bandwidth.
   [[nodiscard]] idx kl() const { return kl_; }
 
+  /// Return the upper bandwidth.
   [[nodiscard]] idx ku() const { return ku_; }
 
+  /// Return the number of mathematical diagonals in the band.
   [[nodiscard]] idx bandwidth() const { return kl_ + ku_ + 1; }
 
+  /// Return the leading dimension of the LAPACK-compatible storage.
   [[nodiscard]] idx ldab() const { return ldab_; }
 
+  /// Access a mathematical matrix entry inside the stored band.
   real& operator()(idx i, idx j);
   real operator()(idx i, idx j) const;
 
+  /// Access an entry by physical band-storage coordinates.
   real& band(idx band_row, idx col);
   [[nodiscard]] real band(idx band_row, idx col) const;
 
   real* data() { return data_.get(); }
   [[nodiscard]] const real* data() const { return data_.get(); }
 
+  /// Test whether mathematical entry (i,j) is explicitly stored.
   [[nodiscard]] bool in_band(idx i, idx j) const;
 
   void to_gpu();
@@ -64,6 +74,7 @@ private:
   real* d_data_ = nullptr;
 };
 
+/// Status and diagnostics from a banded factorization or solve.
 struct BandedSolverResult {
   bool success = false;
   idx pivot_row = 0;

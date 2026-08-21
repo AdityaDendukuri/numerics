@@ -9,6 +9,7 @@
 namespace num {
 
 template<idx N>
+/// Stack-allocated fixed-size real vector with constexpr arithmetic.
 struct SmallVec {
   std::array<real, N> data{};
 
@@ -59,6 +60,7 @@ constexpr SmallVec<N> operator*(real s, SmallVec<N> v) noexcept {
 }
 
 template<idx M, idx N>
+/// Stack-allocated row-major real matrix with constexpr arithmetic.
 struct SmallMatrix {
   std::array<real, M * N> data{};
 
@@ -73,8 +75,10 @@ struct SmallMatrix {
 
   constexpr void fill(real v) noexcept { data.fill(v); }
 
+  /// Construct a zero-filled matrix.
   static constexpr SmallMatrix zeros() noexcept { return SmallMatrix{}; }
 
+  /// Construct an identity matrix; available only for square shapes.
   static constexpr SmallMatrix identity() noexcept {
     static_assert(M == N, "identity() requires a square matrix");
     SmallMatrix m{};
@@ -84,6 +88,7 @@ struct SmallMatrix {
     return m;
   }
 
+  /// Return a copy with rows and columns exchanged.
   constexpr SmallMatrix<N, M> transposed() const noexcept {
     SmallMatrix<N, M> t{};
     for (idx i = 0; i < M; ++i) {
@@ -132,6 +137,7 @@ struct SmallMatrix {
   }
 };
 
+/// Plane rotation used to eliminate one component of a two-vector.
 struct GivensRotation {
   real c = 1;
   real s = 0;
@@ -145,18 +151,21 @@ struct GivensRotation {
     return {a / r, b / r};
   }
 
+  /// Apply G to the pair (x,y) in place.
   constexpr void apply(real& x, real& y) const noexcept {
     const real tmp = (c * x) + (s * y);
     y = (-s * x) + (c * y);
     x = tmp;
   }
 
+  /// Apply G^T to the pair (x,y) in place.
   constexpr void apply_t(real& x, real& y) const noexcept {
     const real tmp = (c * x) - (s * y);
     y = (s * x) + (c * y);
     x = tmp;
   }
 
+  /// Materialize the rotation as a 2x2 matrix.
   constexpr SmallMatrix<2, 2> matrix() const noexcept {
     SmallMatrix<2, 2> G{};
     G(0, 0) = c;

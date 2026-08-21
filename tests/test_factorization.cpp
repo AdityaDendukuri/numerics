@@ -27,6 +27,23 @@ static real vec_norm_inf(const Vector& v) {
   return m;
 }
 
+static Matrix low_rank_update(const Matrix& matrix,
+                              const Matrix& vectors,
+                              const Matrix& weights) {
+  Matrix updated = matrix;
+  for (idx row = 0; row < matrix.rows(); ++row) {
+    for (idx column = 0; column < matrix.cols(); ++column) {
+      for (idx left = 0; left < vectors.cols(); ++left) {
+        for (idx right = 0; right < vectors.cols(); ++right) {
+          updated(row, column) +=
+            vectors(row, left) * weights(left, right) * vectors(column, right);
+        }
+      }
+    }
+  }
+  return updated;
+}
+
 // LU factorization
 
 TEST(KLU, SparseFactorAndBlockSolve) {
@@ -112,6 +129,179 @@ TEST(AutoLinear, SolveTransposeAndInverseDiagonal) {
   selected_inverse(factor, rows, columns, selected, workspace);
   EXPECT_NEAR(selected[0], -0.1, 1e-12);
   EXPECT_NEAR(selected[1], -0.2, 1e-12);
+
+  const std::vector<idx> indices{1, 0};
+  Matrix principal;
+  inverse_principal_block(factor, indices, principal, workspace);
+  EXPECT_NEAR(principal(0, 0), 0.4, 1e-12);
+  EXPECT_NEAR(principal(0, 1), -0.2, 1e-12);
+  EXPECT_NEAR(principal(1, 0), -0.1, 1e-12);
+  EXPECT_NEAR(principal(1, 1), 0.3, 1e-12);
+}
+
+TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
+  Matrix matrix(3, 3, 0.0);
+  matrix(0, 0) = 4.0;
+  matrix(0, 1) = 1.0;
+  matrix(1, 0) = 1.0;
+  matrix(1, 1) = 3.0;
+  matrix(1, 2) = 1.0;
+  matrix(2, 1) = 1.0;
+  matrix(2, 2) = 2.0;
+
+  const auto lu_factor = lu(matrix);
+  const auto cholesky_factor = cholesky(matrix);
+  const Matrix inverse = lu_inv(lu_factor);
+  const std::vector<idx> indices{2, 0};
+  InverseDiagonalWorkspace workspace;
+
+  for (const bool use_cholesky : {false, true}) {
+    Matrix principal;
+    if (use_cholesky) {
+      inverse_principal_block(cholesky_factor, indices, principal, workspace);
+    } else {
+      inverse_principal_block(lu_factor, indices, principal, workspace);
+    }
+    for (idx row = 0; row < indices.size(); ++row) {
+      for (idx column = 0; column < indices.size(); ++column) {
+        EXPECT_NEAR(principal(row, column),
+                    inverse(indices[row], indices[column]),
+                    1e-12);
+      }
+    }
+  }
+
+  Matrix principal;
+  EXPECT_THROW(
+    inverse_principal_block(lu_factor, std::vector<idx>{0, 0}, principal, workspace),
+    std::invalid_argument);
+  EXPECT_THROW(
+    inverse_principal_block(lu_factor, std::vector<idx>{3}, principal, workspace),
+    std::out_of_range);
+}
+
+TEST(InverseDiagonalUpdate, CholeskyWoodburyAndDirectFallback) {
+  Matrix matrix(3, 3, 0.0);
+  matrix(0, 0) = 4.0;
+  matrix(0, 1) = 1.0;
+  matrix(1, 0) = 1.0;
+  matrix(1, 1) = 3.0;
+  matrix(1, 2) = 0.5;
+  matrix(2, 1) = 0.5;
+  matrix(2, 2) = 2.0;
+  const auto factor = cholesky(matrix);
+
+  Matrix vectors(3, 2, 0.0);
+  vectors(0, 0) = 1.0;
+  vectors(0, 1) = 0.2;
+  vectors(1, 1) = 0.5;
+  vectors(2, 0) = 0.3;
+  vectors(2, 1) = -0.2;
+  Matrix weights(2, 2, 0.0);
+  weights(0, 0) = 0.2;
+  weights(0, 1) = 0.05;
+  weights(1, 0) = 0.05;
+  weights(1, 1) = 0.1;
+
+  const auto updated_factor = cholesky(low_rank_update(matrix, vectors, weights));
+  InverseDiagonalWorkspace workspace;
+  Vector diagonal(3, 0.0);
+  Vector expected(3, 0.0);
+  Vector result(3, 0.0);
+  inverse_diagonal(factor, diagonal, workspace);
+  inverse_diagonal(updated_factor, expected, workspace);
+  EXPECT_EQ(inverse_diagonal_after_update(factor,
+                                          updated_factor,
+                                          diagonal,
+                                          vectors,
+                                          weights,
+                                          result,
+                                          workspace),
+            InverseDiagonalUpdatePath::woodbury);
+  for (idx state = 0; state < result.size(); ++state) {
+    EXPECT_NEAR(result[state], expected[state], 1e-12);
+  }
+
+  Matrix downdate_vectors(3, 1, 0.0);
+  downdate_vectors(0, 0) = 0.5;
+  downdate_vectors(1, 0) = 0.25;
+  downdate_vectors(2, 0) = 0.1;
+  Matrix negative_weight(1, 1, -0.1);
+  const auto downdated_factor =
+    cholesky(low_rank_update(matrix, downdate_vectors, negative_weight));
+  inverse_diagonal(downdated_factor, expected, workspace);
+  EXPECT_EQ(inverse_diagonal_after_update(factor,
+                                          downdated_factor,
+                                          diagonal,
+                                          downdate_vectors,
+                                          negative_weight,
+                                          result,
+                                          workspace),
+            InverseDiagonalUpdatePath::direct);
+  for (idx state = 0; state < result.size(); ++state) {
+    EXPECT_NEAR(result[state], expected[state], 1e-12);
+  }
+}
+
+TEST(InverseDiagonalUpdate, NonsymmetricTwoSidedWoodbury) {
+  Matrix matrix(3, 3, 0.0);
+  matrix(0, 0) = 4.0;
+  matrix(0, 1) = -1.0;
+  matrix(1, 0) = -2.0;
+  matrix(1, 1) = 5.0;
+  matrix(1, 2) = -1.0;
+  matrix(2, 1) = -0.5;
+  matrix(2, 2) = 3.0;
+
+  Matrix vectors(3, 2, 0.0);
+  vectors(0, 0) = 1.0;
+  vectors(1, 1) = 0.5;
+  vectors(2, 0) = -0.2;
+  vectors(2, 1) = 0.3;
+  Matrix weights(2, 2, 0.0);
+  weights(0, 0) = 0.1;
+  weights(0, 1) = 0.03;
+  weights(1, 0) = -0.02;
+  weights(1, 1) = 0.08;
+
+  const auto factor = lu(matrix);
+  const auto updated_factor = lu(low_rank_update(matrix, vectors, weights));
+  InverseDiagonalWorkspace workspace;
+  Vector diagonal(3, 0.0);
+  Vector expected(3, 0.0);
+  Vector result(3, 0.0);
+  inverse_diagonal(factor, diagonal, workspace);
+  inverse_diagonal(updated_factor, expected, workspace);
+
+  EXPECT_EQ(inverse_diagonal_after_update(factor,
+                                          updated_factor,
+                                          diagonal,
+                                          vectors,
+                                          weights,
+                                          result,
+                                          workspace),
+            InverseDiagonalUpdatePath::woodbury);
+  for (idx state = 0; state < result.size(); ++state) {
+    EXPECT_NEAR(result[state], expected[state], 1e-12);
+  }
+
+  Matrix scalar(1, 1, 1.0);
+  Matrix scalar_vectors(1, 1, 1.0);
+  Matrix large_weight(1, 1, 1e16);
+  const auto scalar_factor = lu(scalar);
+  const auto updated_scalar_factor =
+    lu(low_rank_update(scalar, scalar_vectors, large_weight));
+  Vector scalar_diagonal{1.0};
+  Vector scalar_result(1, 0.0);
+  EXPECT_EQ(inverse_diagonal_after_update(scalar_factor,
+                                          updated_scalar_factor,
+                                          scalar_diagonal,
+                                          scalar_vectors,
+                                          large_weight,
+                                          scalar_result,
+                                          workspace),
+            InverseDiagonalUpdatePath::direct);
+  EXPECT_NEAR(scalar_result[0], 1e-16, 1e-28);
 }
 
 TEST(UMFPACK, SparseFactorAndSolve) {

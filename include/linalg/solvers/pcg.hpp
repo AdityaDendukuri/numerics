@@ -6,7 +6,7 @@
 #include "core/vector.hpp"
 #include "linalg/solvers/preconditioner.hpp"
 #include "linalg/solvers/solver_result.hpp"
-#include "core/concepts.hpp"
+#include "operator/concepts.hpp"
 #include <cmath>
 #include <stdexcept>
 
@@ -14,6 +14,7 @@ namespace num {
 
 template<class Op, class M>
   requires SPDLinearOperator<Op, Vector, Vector> && Preconditioner<M>
+/// Solve an SPD operator system with a supplied preconditioner.
 SolverResult pcg(const Op& A,
                  const M& M_op,
                  const Vector& b,

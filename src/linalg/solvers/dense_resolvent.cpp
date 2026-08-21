@@ -173,4 +173,13 @@ void DenseResolventSolver::solve(const std::vector<cplx>& rhs,
 #endif
 }
 
+std::vector<std::vector<cplx>> DenseResolventSolver::solve(
+  const std::vector<std::vector<cplx>>& right_hand_sides) const {
+  std::vector<std::vector<cplx>> result(right_hand_sides.size());
+  for (idx index = 0; index < right_hand_sides.size(); ++index) {
+    solve(right_hand_sides[index], result[index]);
+  }
+  return result;
+}
+
 } // namespace num

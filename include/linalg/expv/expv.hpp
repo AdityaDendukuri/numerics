@@ -12,7 +12,7 @@
 #include "core/vector.hpp"
 #include "kernel/subspace.hpp"
 #include "linalg/sparse/sparse.hpp"
-#include "core/concepts.hpp"
+#include "operator/concepts.hpp"
 #include <stdexcept>
 #include <utility>
 #include <vector>

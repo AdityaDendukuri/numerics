@@ -23,6 +23,7 @@ struct MultiIndex {
 
   MultiIndex() = default;
 
+  /// Construct from up to `k_max_dim` coordinate values.
   MultiIndex(std::initializer_list<int> il)
       : n_(static_cast<int8_t>(il.size())) {
     assert(il.size() <= k_max_dim);
@@ -32,6 +33,7 @@ struct MultiIndex {
     }
   }
 
+  /// Construct an n-dimensional index with every coordinate set to val.
   explicit MultiIndex(std::size_t n, int val = 0)
       : n_(static_cast<int8_t>(n)) {
     assert(n <= k_max_dim);
@@ -40,6 +42,7 @@ struct MultiIndex {
     }
   }
 
+  /// Return the active coordinate count.
   [[nodiscard]] std::size_t size() const noexcept { return static_cast<std::size_t>(n_); }
 
   int& operator[](std::size_t i) noexcept { return data_[i]; }
@@ -74,6 +77,7 @@ struct MultiIndex {
     return false;
   }
 
+  /// Add corresponding coordinates of equal-dimensional indices.
   MultiIndex operator+(const MultiIndex& o) const {
     MultiIndex r(size());
     for (int8_t i = 0; i < n_; ++i) {
@@ -82,6 +86,7 @@ struct MultiIndex {
     return r;
   }
 
+  /// Subtract corresponding coordinates of equal-dimensional indices.
   MultiIndex operator-(const MultiIndex& o) const {
     MultiIndex r(size());
     for (int8_t i = 0; i < n_; ++i) {

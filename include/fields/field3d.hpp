@@ -13,8 +13,10 @@
 
 namespace num {
 
+/// Scalar values stored on a uniform Cartesian grid.
 class ScalarField3D {
 public:
+  /// Allocate a zero-filled field with optional physical origin.
   ScalarField3D(int nx,
                 int ny,
                 int nz,
@@ -32,6 +34,7 @@ public:
         data_(static_cast<idx>(grid_.size())) {}
 
   template<typename F>
+  /// Sample f(i,j,k) at every grid node during construction.
   ScalarField3D(int nx,
                 int ny,
                 int nz,
@@ -44,6 +47,7 @@ public:
     fill(std::forward<F>(f));
   }
 
+  /// Return the field geometry.
   [[nodiscard]] const Grid3D& grid() const { return grid_; }
 
   [[nodiscard]] int nx() const { return grid_.nx; }
@@ -61,10 +65,11 @@ public:
     data_[grid_.flat(i, j, k)] = static_cast<real>(v);
   }
 
+  /// Fill every node with a constant value.
   void fill(double v) {
     for (idx n = 0; n < data_.size(); ++n) {
       data_[n] = static_cast<real>(v);
-}
+    }
   }
 
   /// Fill every node with f(i, j, k).
@@ -74,17 +79,19 @@ public:
       for (int j = 0; j < grid_.ny; ++j) {
         for (int i = 0; i < grid_.nx; ++i) {
           data_[grid_.flat(i, j, k)] = static_cast<real>(f(i, j, k));
-}
-}
-}
+        }
+      }
+    }
   }
 
+  /// Access the contiguous values in grid flattening order.
   Vector& vec() { return data_; }
   [[nodiscard]] const Vector& vec() const { return data_; }
   real* data() { return data_.data(); }
   [[nodiscard]] const real* data() const { return data_.data(); }
   [[nodiscard]] idx size() const { return data_.size(); }
 
+  /// Trilinearly interpolate the field at physical coordinates.
   [[nodiscard]] float sample(float x, float y, float z) const;
 
 private:
@@ -92,6 +99,7 @@ private:
   Vector data_;
 };
 
+/// Three-component vector field sharing a common 3D grid.
 struct VectorField3D {
   ScalarField3D x, y, z;
 
@@ -103,8 +111,10 @@ struct VectorField3D {
                 float oy = 0.0f,
                 float oz = 0.0f);
 
+  /// Trilinearly interpolate all components at a physical point.
   [[nodiscard]] std::array<float, 3> sample(float px, float py, float pz) const;
 
+  /// Scale all components in place.
   void scale(float s);
 };
 

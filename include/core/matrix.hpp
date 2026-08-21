@@ -16,16 +16,19 @@ namespace num {
 template<std::floating_point T>
 class BasicMatrix {
 public:
+  /// Construct an empty matrix.
   BasicMatrix()
       : rows_(0),
         cols_(0),
         data_(nullptr) {}
 
+  /// Construct a zero-initialized rows-by-cols matrix.
   BasicMatrix(idx rows, idx cols)
       : rows_(rows),
         cols_(cols),
         data_(new T[rows * cols]()) {}
 
+  /// Construct a rows-by-cols matrix filled with val.
   BasicMatrix(idx rows, idx cols, T val)
       : rows_(rows),
         cols_(cols),
@@ -84,16 +87,19 @@ public:
     return *this;
   }
 
+  /// Return the matrix dimensions and total element count.
   [[nodiscard]] constexpr idx rows() const noexcept { return rows_; }
   [[nodiscard]] constexpr idx cols() const noexcept { return cols_; }
   [[nodiscard]] constexpr idx size() const noexcept { return rows_ * cols_; }
 
+  /// Return contiguous row-major host storage.
   T* data() { return data_.get(); }
   [[nodiscard]] const T* data() const { return data_.get(); }
 
   T& operator()(idx i, idx j) { return data_[(i * cols_) + j]; }
   T operator()(idx i, idx j) const { return data_[(i * cols_) + j]; }
 
+  /// Copy host data to a lazily allocated device mirror.
   void to_gpu() {
     if constexpr (std::is_same_v<T, real>) {
       if (!d_data_) {
@@ -103,6 +109,7 @@ public:
     }
   }
 
+  /// Copy the device mirror back to host and release device storage.
   void to_cpu() {
     if constexpr (std::is_same_v<T, real>) {
       if (d_data_) {
@@ -113,6 +120,7 @@ public:
     }
   }
 
+  /// Return device storage, or null when no mirror exists.
   T* gpu_data() { return d_data_; }
   [[nodiscard]] const T* gpu_data() const { return d_data_; }
   [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
@@ -145,12 +153,18 @@ void matadd(real alpha,
 /// @brief C = A * B  (cache-blocked)
 ///
 /// Divides A, B, C into BLOCKxBLOCK tiles so the working set fits in L2 cache.
+/// @param A Left factor.
+/// @param B Right factor.
+/// @param C Output matrix.
 /// @param block_size  Tile edge length (default 64).
 void matmul_blocked(const Matrix& A, const Matrix& B, Matrix& C, idx block_size = 64);
 
 /// @brief C = A * B  (register-blocked)
 ///
 /// Extends cache blocking with a REGxREG register tile inside each cache tile.
+/// @param A Left factor.
+/// @param B Right factor.
+/// @param C Output matrix.
 /// @param block_size  Cache tile edge (default 64).
 /// @param reg_size    Register tile edge (default 4).
 void matmul_register_blocked(const Matrix& A,

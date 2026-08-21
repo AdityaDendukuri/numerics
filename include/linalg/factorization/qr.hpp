@@ -9,8 +9,8 @@ namespace num {
 
 /// @brief QR factorization \f$A=QR\f$.
 struct QRResult {
-  Matrix Q;
-  Matrix R;
+  Matrix Q; ///< Orthonormal factor.
+  Matrix R; ///< Upper-triangular factor.
 };
 
 /// @brief Factor \f$A\in\mathbb{R}^{m\times n}\f$ as \f$A=QR\f$.

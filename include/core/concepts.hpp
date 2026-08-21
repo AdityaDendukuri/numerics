@@ -1,11 +1,10 @@
 /// @file core/concepts.hpp
-/// @brief Storage and operator concepts for numerical routines.
+/// @brief Storage-shaped concepts shared by numerical modules.
 #pragma once
 
 #include "core/types.hpp"
 #include "core/vector.hpp"
 #include <concepts>
-#include <type_traits>
 
 namespace num {
 
@@ -15,15 +14,6 @@ concept VectorLike = requires(V v, const V cv, idx i) {
   { cv.size() } -> std::convertible_to<idx>;
   { cv[i] } -> std::convertible_to<real>;
   { v[i] } -> std::convertible_to<real>;
-};
-
-/// @brief Any object exposing its contiguous real storage as a Vector via
-/// .vec(). Satisfied by Vector itself, ScalarField2D, ScalarField3D, ... --
-/// lets time integrators and solvers operate on fields without depending on
-/// the fields/ module.
-template<class T>
-concept VecField = requires(T& f) {
-  { f.vec() } -> std::same_as<Vector&>;
 };
 
 /// @brief Mutable indexed real-valued vector interface.
@@ -60,27 +50,6 @@ template<class A>
 concept ContiguousDenseMatrixLike = DenseMatrixLike<A> && requires(A a, const A ca) {
   { ca.data() } -> std::convertible_to<const real*>;
   { a.data() } -> std::convertible_to<real*>;
-};
-
-/// @brief Compile-time contract for the matrix-free product y = A*x.
-template<class Op, class X = Vector, class Y = Vector>
-concept LinearOperator =
-  VectorLike<X> && MutableVectorLike<Y> && requires(const Op& A, const X& x, Y& y) {
-    { A.rows() } -> std::convertible_to<idx>;
-    { A.cols() } -> std::convertible_to<idx>;
-    { A.apply(x, y) };
-  };
-
-/// @brief Operator declared to satisfy \f$A=A^T\f$.
-template<class Op, class X = Vector, class Y = Vector>
-concept SymmetricLinearOperator = LinearOperator<Op, X, Y> && requires {
-  typename std::remove_cvref_t<Op>::symmetric_operator_tag;
-};
-
-/// @brief Operator declared to satisfy \f$x^T A x > 0\f$ for all nonzero \f$x\f$.
-template<class Op, class X = Vector, class Y = Vector>
-concept SPDLinearOperator = SymmetricLinearOperator<Op, X, Y> && requires {
-  typename std::remove_cvref_t<Op>::spd_operator_tag;
 };
 
 } // namespace num

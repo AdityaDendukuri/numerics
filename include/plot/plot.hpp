@@ -2,7 +2,7 @@
 /// @brief Matplotlib-style plotting via a gnuplot pipe with ASCII terminal support.
 #pragma once
 
-#include "core/vector.hpp"
+#include "plot/gnuplot.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <iomanip>
@@ -13,109 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace num {
-
-using Point = std::pair<double, double>;
-
-struct Series : std::vector<Point> {
-  using std::vector<Point>::vector;
-  void store(double x, double y) { emplace_back(x, y); }
-};
-
-/// @brief Extract one row as \f$(x_j,u_j)\f$ plot data.
-inline Series row_slice(const Vector& u, int N, double h, int row) {
-  Series s;
-  s.reserve(static_cast<std::size_t>(N));
-  for (int j = 0; j < N; ++j) {
-    s.store((j + 1) * h, u[(static_cast<std::size_t>(row) * N) + j]);
-  }
-  return s;
-}
-
-/// @brief Extract one column as \f$(y_i,u_i)\f$ plot data.
-inline Series col_slice(const Vector& u, int N, double h, int col) {
-  Series s;
-  s.reserve(static_cast<std::size_t>(N));
-  for (int i = 0; i < N; ++i) {
-    s.store((i + 1) * h, u[(static_cast<std::size_t>(i) * N) + col]);
-  }
-  return s;
-}
-
-template<class Field>
-inline Series row_slice(const Field& g, int row) {
-  return row_slice(g.vec(), g.N(), g.h(), row);
-}
-
-template<class Field>
-inline Series col_slice(const Field& g, int col) {
-  return col_slice(g.vec(), g.N(), g.h(), col);
-}
-
-
-class Gnuplot {
-public:
-  explicit Gnuplot(const std::string& args = "") {
-    std::string cmd = "gnuplot " + args;
-    pipe_ = popen(cmd.c_str(), "w");
-    if (!pipe_) {
-      throw std::runtime_error("could not open gnuplot -- is it installed?");
-}
-  }
-  ~Gnuplot() {
-    if (pipe_) {
-      pclose(pipe_);
-}
-  }
-  Gnuplot(const Gnuplot&) = delete;
-  Gnuplot& operator=(const Gnuplot&) = delete;
-
-  Gnuplot& operator<<(const std::string& cmd) {
-    fputs(cmd.c_str(), pipe_);
-    return *this;
-  }
-  void send1d(const Series& data) {
-    for (const auto& [x, y] : data) {
-      fprintf(pipe_, "%.15g %.15g\n", x, y);
-}
-    fputs("e\n", pipe_);
-    fflush(pipe_);
-  }
-  void flush() { fflush(pipe_); }
-
-private:
-  FILE* pipe_ = nullptr;
-};
-
-/// Apply SIAM-style theme to a raw Gnuplot pipe.
-inline void apply_siam_style(Gnuplot& gp) {
-  gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.8 lc rgb 'black'\n"
-     << "set style line 2 lt 2 lw 2 pt 5  ps 0.8 lc rgb 'black'\n"
-     << "set style line 3 lt 3 lw 2 pt 9  ps 0.8 lc rgb 'black'\n"
-     << "set style line 4 lt 4 lw 2 pt 13 ps 0.8 lc rgb 'black'\n"
-     << "set style line 5 lt 5 lw 2 pt 11 ps 0.8 lc rgb 'black'\n"
-     << "set style line 6 lt 6 lw 2 pt 15 ps 0.8 lc rgb 'black'\n"
-     << "set style line 100 lt 1 lw 0.5 lc rgb '#cccccc'\n"
-     << "set grid back ls 100\n"
-     << "set border 3 lw 1.5\n"
-     << "set tics nomirror\n"
-     << "set key top left Left reverse samplen 3 spacing 1.2\n"
-     << "set key box lt 1 lw 0.5\n";
-}
-
-inline void set_loglog(Gnuplot& gp) {
-  gp << "set logscale xy\nset format x '10^{%L}'\nset format y '10^{%L}'\n";
-}
-inline void set_logx(Gnuplot& gp) {
-  gp << "set logscale x\nset format x '10^{%L}'\n";
-}
-inline void save_png(Gnuplot& gp, const std::string& filename, int w = 900, int h = 600) {
-  gp << "set terminal pngcairo size " + std::to_string(w) + "," + std::to_string(h)
-          + " enhanced font 'Arial,11'\n"
-     << "set output '" + filename + "'\n";
-}
-
-namespace plt {
+namespace num::plt {
 namespace detail {
 
 struct SeriesEntry {
@@ -163,24 +61,24 @@ inline State& state() {
 inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
   if (p.series.empty() && p.heatmaps.empty()) {
     return;
-}
+  }
 
   // Common decorators
   if (!p.title_.empty()) {
     fprintf(pipe, "set title '%s'\n", p.title_.c_str());
   } else {
     fputs("unset title\n", pipe);
-}
+  }
   if (!p.xlabel_.empty()) {
     fprintf(pipe, "set xlabel '%s'\n", p.xlabel_.c_str());
   } else {
     fputs("unset xlabel\n", pipe);
-}
+  }
   if (!p.ylabel_.empty()) {
     fprintf(pipe, "set ylabel '%s'\n", p.ylabel_.c_str());
   } else {
     fputs("unset ylabel\n", pipe);
-}
+  }
 
   if (!p.heatmaps.empty()) {
     const auto& hm = p.heatmaps[0];
@@ -190,7 +88,7 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
       fputs("set palette defined "
             "(0 'white', 0.35 '#ffffb2', 0.65 '#fd8d3c', 1 '#bd0026')\n",
             pipe);
-}
+    }
     fprintf(pipe, "set cbrange [%g:%g]\n", hm.vmin, hm.vmax);
     fputs("set pm3d map\n", pipe);
     fputs("set size ratio 1\n", pipe);
@@ -198,12 +96,12 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
       fprintf(pipe, "set xrange %s\n", p.xrange_.c_str());
     } else {
       fputs("set xrange [*:*]\n", pipe);
-}
+    }
     if (!p.yrange_.empty()) {
       fprintf(pipe, "set yrange %s\n", p.yrange_.c_str());
     } else {
       fputs("set yrange [*:*]\n", pipe);
-}
+    }
     fputs("unset key\n", pipe);
     fprintf(pipe, "splot $d_%d with pm3d notitle\n", block_offset);
   } else {
@@ -213,12 +111,12 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
       fprintf(pipe, "set xrange %s\n", p.xrange_.c_str());
     } else {
       fputs("set xrange [*:*]\n", pipe);
-}
+    }
     if (!p.yrange_.empty()) {
       fprintf(pipe, "set yrange %s\n", p.yrange_.c_str());
     } else {
       fputs("set yrange [*:*]\n", pipe);
-}
+    }
 
     if (p.logx_ && p.logy_) {
       fputs("set logscale xy\nset format x '10^{%L}'\nset format y "
@@ -244,19 +142,25 @@ inline void write_panel(FILE* pipe, const Panel& p, int block_offset) {
     for (std::size_t i = 0; i < p.series.size(); ++i) {
       if (i) {
         fputs(", ", pipe);
-}
+      }
       const auto& e = p.series[i];
-      if (e.style.find("lw") != std::string::npos || e.style.find("lc") != std::string::npos || e.style.find("ps") != std::string::npos) {
+      if (e.style.find("lw") != std::string::npos
+          || e.style.find("lc") != std::string::npos
+          || e.style.find("ps") != std::string::npos) {
         fprintf(pipe, "$d_%d with %s", block_offset + (int)i, e.style.c_str());
       } else {
-        fprintf(pipe, "$d_%d with %s ls %zu", block_offset + (int)i, e.style.c_str(), i + 1);
+        fprintf(pipe,
+                "$d_%d with %s ls %zu",
+                block_offset + (int)i,
+                e.style.c_str(),
+                i + 1);
       }
 
       if (!e.label.empty()) {
         fprintf(pipe, " title '%s'", e.label.c_str());
       } else {
         fputs(" notitle", pipe);
-}
+      }
     }
     fputc('\n', pipe);
   }
@@ -308,7 +212,7 @@ inline void flush_to(FILE* pipe, const std::string& outfile) {
       fprintf(pipe, "$d_%d << EOD\n", block++);
       for (const auto& [x, y] : e.data) {
         fprintf(pipe, "%.15g %.15g\n", x, y);
-}
+      }
       fputs("EOD\n", pipe);
     }
     for (const auto& hm : p.heatmaps) {
@@ -321,7 +225,7 @@ inline void flush_to(FILE* pipe, const std::string& outfile) {
                   xi,
                   (j + 1) * hm.h,
                   hm.data[(static_cast<std::size_t>(i) * hm.N) + j]);
-}
+        }
         fputs("\n", pipe);
       }
       fputs("EOD\n", pipe);
@@ -357,8 +261,9 @@ inline void plot(const Series& data,
   detail::state().current.series.push_back({data, label, style});
 }
 
-/// Append parallel x and y vectors to the current panel (supports std::vector, num::Vector, etc.).
-template <typename ContainerX, typename ContainerY>
+/// Append parallel x and y vectors to the current panel (supports std::vector,
+/// num::Vector, etc.).
+template<typename ContainerX, typename ContainerY>
 inline void plot(const ContainerX& x,
                  const ContainerY& y,
                  const std::string& label = "",
@@ -367,37 +272,43 @@ inline void plot(const ContainerX& x,
   s.reserve(x.size());
   for (std::size_t i = 0; i < x.size() && i < y.size(); ++i) {
     s.emplace_back(static_cast<double>(x[i]), static_cast<double>(y[i]));
-}
+  }
   detail::state().current.series.push_back({std::move(s), label, style});
 }
 
 // -- Decorators ---------------------------------------------------------------
 
+/// Set the current panel title.
 inline void title(const std::string& t) {
   detail::state().current.title_ = t;
 }
+/// Set the current panel x-axis label.
 inline void xlabel(const std::string& l) {
   detail::state().current.xlabel_ = l;
 }
+/// Set the current panel y-axis label.
 inline void ylabel(const std::string& l) {
   detail::state().current.ylabel_ = l;
 }
 
+/// Set the current panel x-axis limits.
 inline void xlim(double lo, double hi) {
   detail::state().current.xrange_ =
     "[" + std::to_string(lo) + ":" + std::to_string(hi) + "]";
 }
+/// Set the current panel y-axis limits.
 inline void ylim(double lo, double hi) {
   detail::state().current.yrange_ =
     "[" + std::to_string(lo) + ":" + std::to_string(hi) + "]";
 }
 
+/// Enable the legend for the current panel.
 inline void legend() {
   detail::state().current.legend_ = true;
 }
 
 /// Plot component-wise path means and their min-max envelope.
-template <class Paths, class Labels, class Colors>
+template<class Paths, class Labels, class Colors>
 inline void plot_paths(const Paths& paths,
                        const Labels& labels,
                        const Colors& colors,
@@ -424,9 +335,11 @@ inline void plot_paths(const Paths& paths,
 
   const std::size_t components = labels.size();
   std::vector<std::vector<double>> lower(
-      components, std::vector<double>(samples, std::numeric_limits<double>::max()));
+    components,
+    std::vector<double>(samples, std::numeric_limits<double>::max()));
   std::vector<std::vector<double>> upper(
-      components, std::vector<double>(samples, std::numeric_limits<double>::lowest()));
+    components,
+    std::vector<double>(samples, std::numeric_limits<double>::lowest()));
   std::vector<std::vector<double>> mean(components, std::vector<double>(samples, 0.0));
 
   for (const auto& path : paths) {
@@ -456,8 +369,8 @@ inline void plot_paths(const Paths& paths,
       }
       plot(envelope,
            std::string{},
-           "filledcurves closed fs transparent solid 0.18 noborder lc rgb '" +
-               std::string(colors[component]) + "'");
+           "filledcurves closed fs transparent solid 0.18 noborder lc rgb '"
+             + std::string(colors[component]) + "'");
     }
   }
 
@@ -469,19 +382,23 @@ inline void plot_paths(const Paths& paths,
   }
 
   std::ostringstream endpoint;
-  endpoint << std::setprecision(3) << "  endpoint=[" << first_end << ", " << last_end << "]";
+  endpoint << std::setprecision(3) << "  endpoint=[" << first_end << ", " << last_end
+           << "]";
   title(plot_title + endpoint.str());
   xlabel("t");
   ylabel("count");
   legend();
 }
 
+/// Use logarithmic x and y axes on the current panel.
 inline void loglog() {
   detail::state().current.logx_ = detail::state().current.logy_ = true;
 }
+/// Use a logarithmic y axis on the current panel.
 inline void semilogy() {
   detail::state().current.logy_ = true;
 }
+/// Use a logarithmic x axis on the current panel.
 inline void semilogx() {
   detail::state().current.logx_ = true;
 }
@@ -504,6 +421,7 @@ inline void next() {
 // -- 2-D heatmap --------------------------------------------------------------
 
 template<typename Container>
+/// Add an N-by-N row-major scalar array as a heatmap.
 inline void heatmap(const Container& u,
                     int N,
                     double h,
@@ -519,10 +437,12 @@ inline void heatmap(const Container& u,
 }
 
 template<class Field>
+/// Add a square field exposing vec(), N(), and h() as a heatmap.
 inline void heatmap(const Field& g, double vmin = 0.0, double vmax = 1.0) {
   heatmap(g.vec(), g.N(), g.h(), vmin, vmax);
 }
 
+/// Set a gnuplot palette expression for the current panel.
 inline void colormap(const std::string& palette) {
   detail::state().current.palette_ = palette;
 }
@@ -542,7 +462,7 @@ inline void show_dumb(int width = 140, int height = 35) {
   FILE* pipe = popen("gnuplot", "w");
   if (!pipe) {
     throw std::runtime_error("could not open gnuplot -- is it installed?");
-}
+  }
   detail::flush_to(pipe, "");
   fflush(pipe);
   pclose(pipe);
@@ -551,11 +471,12 @@ inline void show_dumb(int width = 140, int height = 35) {
 
 // -- Output -------------------------------------------------------------------
 
+/// Render accumulated panels in an interactive gnuplot window and clear state.
 inline void show() {
   FILE* pipe = popen("gnuplot", "w");
   if (!pipe) {
     throw std::runtime_error("could not open gnuplot -- is it installed?");
-}
+  }
   detail::flush_to(pipe, "");
   if (detail::state().term_override_ != "dumb") {
     fputs("pause mouse close\n", pipe);
@@ -565,20 +486,21 @@ inline void show() {
   detail::state().reset();
 }
 
+/// Render accumulated panels to a file selected by its extension and clear state.
 inline void savefig(const std::string& filename) {
   FILE* pipe = popen("gnuplot", "w");
   if (!pipe) {
     throw std::runtime_error("could not open gnuplot -- is it installed?");
-}
+  }
   detail::flush_to(pipe, filename);
   fflush(pipe);
   pclose(pipe);
   detail::state().reset();
 }
 
+/// Clear all accumulated plot state without rendering.
 inline void clf() {
   detail::state().reset();
 }
 
-} // namespace plt
-} // namespace num
+} // namespace num::plt

@@ -3,25 +3,16 @@
 #pragma once
 
 #include "core/vector.hpp"
-#include "ode/ode.hpp"
-#include <concepts>
+#include "ode/concepts.hpp"
 
 namespace num {
 
+/// Initial-value problem y'=f(t,y) over [t0,tf].
 struct ODEProblem {
   ODERhsFn f;
   Vector u0;
   double t0 = 0.0;
   double tf = 1.0;
-};
-
-/// @brief Any type carrying an ODE right-hand side f(t,y,dy) and t0/tf/u0 data.
-template<typename P>
-concept IsODEProblem = requires(const P& p, double t, const Vector& y, Vector& dy) {
-  p.f(t, y, dy);
-  { p.u0 } -> std::convertible_to<const Vector&>;
-  { p.t0 } -> std::convertible_to<double>;
-  { p.tf } -> std::convertible_to<double>;
 };
 
 /// @brief Linear system A x = b. A is any matrix or LinearOperator; b the RHS.

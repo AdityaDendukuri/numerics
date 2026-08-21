@@ -52,11 +52,8 @@ void AutoResolventSolver::solve(const std::vector<cplx>& rhs,
 
 std::vector<std::vector<cplx>> AutoResolventSolver::solve(
   const std::vector<std::vector<cplx>>& right_hand_sides) const {
-  std::vector<std::vector<cplx>> result(right_hand_sides.size());
-  for (idx column = 0; column < right_hand_sides.size(); ++column) {
-    solve(right_hand_sides[column], result[column]);
-  }
-  return result;
+  return impl_->dense ? impl_->dense->solve(right_hand_sides)
+                      : impl_->sparse->solve(right_hand_sides);
 }
 
 } // namespace num

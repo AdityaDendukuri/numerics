@@ -6,7 +6,6 @@
 /// sampling (MCMC) lives in solve/sample.hpp as sample(model, sampler).
 #pragma once
 
-#include "core/concepts.hpp"
 #include "linalg/matrix_properties.hpp"
 #include "linalg/solvers/cg.hpp"
 #include "linalg/solvers/gmres.hpp"
@@ -14,6 +13,7 @@
 #include "linalg/solvers/pcg.hpp"
 #include "linalg/solvers/solver_result.hpp"
 #include "ode/ode.hpp"
+#include "operator/concepts.hpp"
 #include "solve/algorithms.hpp"
 #include "solve/problems.hpp"
 #include <utility>
@@ -22,13 +22,14 @@ namespace num {
 
 /// @brief Result of a linear solve: the solution vector plus convergence stats.
 struct LinearSolution {
-  Vector u;            ///< solution vector
-  idx iterations = 0;  ///< iterations performed
+  Vector u; ///< solution vector
+  idx iterations = 0; ///< iterations performed
   real residual = 0.0; ///< final residual norm ||b - A u||
   bool converged = false;
 };
 
 template<IsODEProblem P>
+/// Solve an ODE problem with adaptive Dormand-Prince integration.
 ODEResult solve(const P& prob, const RK45& alg, ObserverFn obs = nullptr) {
   ODEParams p{.t0 = prob.t0,
               .tf = prob.tf,
@@ -40,11 +41,13 @@ ODEResult solve(const P& prob, const RK45& alg, ObserverFn obs = nullptr) {
 }
 
 template<IsODEProblem P>
+/// Solve an ODE problem with fixed-step classical RK4 integration.
 ODEResult solve(const P& prob, const RK4& alg, ObserverFn obs = nullptr) {
   return ode_rk4(prob.f, prob.u0, {.t0 = prob.t0, .tf = prob.tf, .h = alg.h}, obs);
 }
 
 template<IsODEProblem P>
+/// Solve an ODE problem with fixed-step forward Euler integration.
 ODEResult solve(const P& prob, const Euler& alg, ObserverFn obs = nullptr) {
   return ode_euler(prob.f, prob.u0, {.t0 = prob.t0, .tf = prob.tf, .h = alg.h}, obs);
 }
@@ -56,8 +59,10 @@ namespace detail {
 // The (operator x algorithm) dispatch, run in place into u (warm-startable).
 // cg()/gmres()/minres()/pcg() are themselves overloaded on the operand type.
 
-inline SolverResult
-run(const linalg::SPDMatrix<Matrix>& A, const Vector& b, Vector& u, const CG& a) {
+inline SolverResult run(const linalg::SPDMatrix<Matrix>& A,
+                        const Vector& b,
+                        Vector& u,
+                        const CG& a) {
   return cg(A, b, u, a.tol, a.max_iter, a.backend);
 }
 
@@ -71,7 +76,10 @@ inline SolverResult run(const Matrix& A, const Vector& b, Vector& u, const GMRES
   return gmres(A, b, u, a.tol, a.max_iter, a.restart, a.backend);
 }
 
-inline SolverResult run(const SparseMatrix& A, const Vector& b, Vector& u, const GMRES& a) {
+inline SolverResult run(const SparseMatrix& A,
+                        const Vector& b,
+                        Vector& u,
+                        const GMRES& a) {
   return gmres(A, b, u, a.tol, a.max_iter, a.restart);
 }
 

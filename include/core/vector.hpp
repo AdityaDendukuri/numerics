@@ -18,26 +18,31 @@ namespace num {
 template<typename T>
 class BasicVector {
 public:
+  /// Construct an empty vector.
   BasicVector()
       : n_(0),
         data_(nullptr) {}
 
+  /// Construct n value-initialized elements.
   explicit BasicVector(idx n)
       : n_(n),
         data_(new T[n]()) {}
 
+  /// Construct n elements initialized to val.
   BasicVector(idx n, T val)
       : n_(n),
         data_(new T[n]) {
     std::fill_n(data_.get(), n_, val);
   }
 
+  /// Copy values from an initializer list.
   BasicVector(std::initializer_list<T> init)
       : n_(init.size()),
         data_(new T[n_]) {
     std::copy(init.begin(), init.end(), data_.get());
   }
 
+  /// Copy values from a non-owning span.
   explicit BasicVector(std::span<const T> values)
       : n_(values.size()),
         data_(new T[n_]) {
@@ -94,11 +99,14 @@ public:
     return *this;
   }
 
+  /// Return the element count.
   [[nodiscard]] constexpr idx size() const noexcept { return n_; }
 
+  /// Expose the vector itself for field-compatible generic code.
   BasicVector& vec() { return *this; }
   [[nodiscard]] const BasicVector& vec() const { return *this; }
 
+  /// Return contiguous host storage.
   T* data() { return data_.get(); }
   [[nodiscard]] const T* data() const { return data_.get(); }
 
@@ -110,6 +118,7 @@ public:
   [[nodiscard]] const T* begin() const { return data_.get(); }
   [[nodiscard]] const T* end() const { return data_.get() + n_; }
 
+  /// Copy host data to a lazily allocated device mirror.
   void to_gpu() {
     if constexpr (std::is_same_v<T, real>) {
       if (!d_data_) {
@@ -119,6 +128,7 @@ public:
     }
   }
 
+  /// Copy the device mirror back to host and release device storage.
   void to_cpu() {
     if constexpr (std::is_same_v<T, real>) {
       if (d_data_) {
@@ -129,6 +139,7 @@ public:
     }
   }
 
+  /// Return device storage, or null when no mirror exists.
   real* gpu_data() { return d_data_; }
   [[nodiscard]] const real* gpu_data() const { return d_data_; }
   [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
@@ -140,6 +151,7 @@ private:
 };
 
 template<typename T>
+/// Copy an owning vector into an equally sized span.
 void copy_to(const BasicVector<T>& source, std::span<T> destination) {
   if (source.size() != destination.size()) {
     throw std::invalid_argument("copy_to: vector sizes must match");
@@ -148,6 +160,7 @@ void copy_to(const BasicVector<T>& source, std::span<T> destination) {
 }
 
 template<typename T>
+/// Copy an owning vector into an equally sized std::vector.
 void copy_to(const BasicVector<T>& source, std::vector<T>& destination) {
   copy_to(source, std::span<T>(destination));
 }
@@ -191,6 +204,7 @@ real norm(const Vector& x, Backend b = default_backend);
 struct Vec2View {
   Vector& v;
 
+  /// Return the number of coordinate pairs.
   [[nodiscard]] idx size() const noexcept { return v.size() / 2; }
 
   real& x(idx i) noexcept { return v[2 * i]; }
@@ -199,6 +213,7 @@ struct Vec2View {
   [[nodiscard]] real y(idx i) const noexcept { return v[(2 * i) + 1]; }
 };
 
+/// Read-only view of a flat vector as interleaved (x_i,y_i) pairs.
 struct Vec2ConstView {
   const Vector& v;
 

@@ -11,7 +11,7 @@
 #include "kernel/subspace.hpp"
 #include "linalg/solvers/solver_result.hpp"
 #include "linalg/sparse/sparse.hpp"
-#include "core/concepts.hpp"
+#include "operator/concepts.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -148,6 +148,7 @@ SolverResult gmres(const Op& A,
   return result;
 }
 
+/// Solve a stored sparse general system with restarted GMRES.
 SolverResult gmres(const SparseMatrix& A,
                    const Vector& b,
                    Vector& x,
@@ -155,6 +156,7 @@ SolverResult gmres(const SparseMatrix& A,
                    idx max_iter = 1000,
                    idx restart = 30);
 
+/// Solve a stored dense general system with restarted GMRES.
 SolverResult gmres(const Matrix& A,
                    const Vector& b,
                    Vector& x,

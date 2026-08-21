@@ -10,6 +10,7 @@
 
 namespace num {
 
+/// Solve a tridiagonal system with lower a, diagonal b, upper c, and RHS d.
 void thomas(const Vector& a,
             const Vector& b,
             const Vector& c,

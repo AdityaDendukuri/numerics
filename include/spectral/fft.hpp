@@ -15,6 +15,7 @@
 namespace num {
 namespace spectral {
 
+/// Available implementations for Fourier transforms.
 enum class FFTBackend : std::uint8_t {
   seq,
   simd,
@@ -57,14 +58,19 @@ inline constexpr FFTBackend default_fft_backend =
         FFTBackend::seq;
 #endif
 
+/// Compute the unnormalized forward complex DFT.
 void fft(const CVector& in, CVector& out, FFTBackend b = default_fft_backend);
 
+/// Compute the unnormalized inverse complex DFT.
 void ifft(const CVector& in, CVector& out, FFTBackend b = default_fft_backend);
 
+/// Compute the nonredundant half-spectrum of a real input.
 void rfft(const Vector& in, CVector& out, FFTBackend b = default_fft_backend);
 
+/// Reconstruct an n-point real signal from its nonredundant half-spectrum.
 void irfft(const CVector& in, int n, Vector& out, FFTBackend b = default_fft_backend);
 
+/// Backend interface owned by FFTPlan.
 struct FFTPlanImpl {
   virtual ~FFTPlanImpl() = default;
   virtual void execute(const CVector& in, CVector& out) const = 0;
@@ -74,6 +80,7 @@ struct FFTPlanImpl {
 
 class FFTPlan {
 public:
+  /// Precompute an n-point forward or inverse complex transform.
   explicit FFTPlan(int n, bool forward = true, FFTBackend b = default_fft_backend);
   ~FFTPlan();
 
@@ -83,6 +90,7 @@ public:
   FFTPlan(FFTPlan&&) noexcept;
   FFTPlan& operator=(FFTPlan&&) noexcept;
 
+  /// Execute the planned transform; input and output must both have size n.
   void execute(const CVector& in, CVector& out) const;
 
   [[nodiscard]] int size() const { return n_; }
@@ -93,7 +101,6 @@ private:
   FFTBackend backend_;
   std::unique_ptr<FFTPlanImpl> impl_;
 };
-
 
 } // namespace spectral
 } // namespace num

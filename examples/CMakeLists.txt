@@ -14,6 +14,7 @@ endfunction()
 # Add your custom example target here!
 # ==============================================================================
 
+add_numerics_example(00_core_storage_and_helpers    00_core_storage_and_helpers.cpp)
 add_numerics_example(01_direct_factorizations        01_direct_factorizations.cpp)
 add_numerics_example(02_iterative_krylov_solvers      02_iterative_krylov_solvers.cpp)
 add_numerics_example(03_resolvent_and_expv           03_resolvent_and_expv.cpp)

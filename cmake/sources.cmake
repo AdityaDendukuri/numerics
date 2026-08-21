@@ -27,10 +27,12 @@ set(NUMERICS_CORE_SOURCES
 
     src/linalg/factorization/cholesky.cpp
     src/linalg/factorization/inverse_diagonal.cpp
+    src/linalg/factorization/inverse_diagonal_update.cpp
     src/linalg/factorization/lu.cpp
     src/linalg/factorization/qr.cpp
     src/linalg/factorization/thomas.cpp
     src/linalg/factorization/tridiag_complex.cpp
+    src/linalg/matrix_properties.cpp
     src/linalg/sparse/klu.cpp
     src/linalg/sparse/umfpack.cpp
 
@@ -43,6 +45,7 @@ set(NUMERICS_CORE_SOURCES
     src/linalg/solvers/cg.cpp
     src/linalg/solvers/auto_linear.cpp
     src/linalg/solvers/auto_resolvent.cpp
+    src/linalg/solvers/resolvent.cpp
     src/linalg/solvers/gauss_seidel.cpp
     src/linalg/solvers/jacobi.cpp
     src/linalg/solvers/gmres.cpp

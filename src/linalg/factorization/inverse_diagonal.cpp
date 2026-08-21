@@ -62,6 +62,42 @@ void compute_selected(idx n,
   }
 }
 
+template<typename Solve>
+void compute_principal_block(idx n,
+                             std::span<const idx> indices,
+                             Matrix& result,
+                             InverseDiagonalWorkspace& workspace,
+                             Solve&& solve) {
+  if (indices.empty()) {
+    workspace.right_hand_sides = Matrix(n, 0, 0.0);
+    workspace.solutions = Matrix(n, 0, 0.0);
+    result = Matrix(0, 0, 0.0);
+    return;
+  }
+  std::vector<bool> seen(n, false);
+  workspace.right_hand_sides = Matrix(n, indices.size(), 0.0);
+  for (idx column = 0; column < indices.size(); ++column) {
+    const idx index = indices[column];
+    if (index >= n) {
+      throw std::out_of_range("inverse_principal_block: index out of range");
+    }
+    if (seen[index]) {
+      throw std::invalid_argument("inverse_principal_block: indices must be unique");
+    }
+    seen[index] = true;
+    workspace.right_hand_sides(index, column) = 1.0;
+  }
+
+  workspace.solutions = Matrix(n, indices.size(), 0.0);
+  solve(workspace.right_hand_sides, workspace.solutions);
+  result = Matrix(indices.size(), indices.size(), 0.0);
+  for (idx row = 0; row < indices.size(); ++row) {
+    for (idx column = 0; column < indices.size(); ++column) {
+      result(row, column) = workspace.solutions(indices[row], column);
+    }
+  }
+}
+
 } // namespace
 
 void inverse_diagonal(const LUResult& factor,
@@ -168,6 +204,58 @@ void selected_inverse(const AutoLinearSolver& factor,
                    [&](const Matrix& rhs, Matrix& solution) {
                      factor.solve(rhs, solution);
                    });
+}
+
+void inverse_principal_block(const LUResult& factor,
+                             std::span<const idx> indices,
+                             Matrix& result,
+                             InverseDiagonalWorkspace& workspace) {
+  compute_principal_block(factor.LU.rows(),
+                          indices,
+                          result,
+                          workspace,
+                          [&](const Matrix& rhs, Matrix& solution) {
+                            lu_solve(factor, rhs, solution);
+                          });
+}
+
+void inverse_principal_block(const CholeskyResult& factor,
+                             std::span<const idx> indices,
+                             Matrix& result,
+                             InverseDiagonalWorkspace& workspace) {
+  compute_principal_block(factor.L.rows(),
+                          indices,
+                          result,
+                          workspace,
+                          [&](const Matrix& rhs, Matrix& solution) {
+                            cholesky_solve(factor, rhs, solution);
+                          });
+}
+
+void inverse_principal_block(const KLUFactor& factor,
+                             std::span<const idx> indices,
+                             Matrix& result,
+                             InverseDiagonalWorkspace& workspace) {
+  compute_principal_block(factor.size(),
+                          indices,
+                          result,
+                          workspace,
+                          [&](const Matrix& rhs, Matrix& solution) {
+                            factor.solve(rhs, solution);
+                          });
+}
+
+void inverse_principal_block(const AutoLinearSolver& factor,
+                             std::span<const idx> indices,
+                             Matrix& result,
+                             InverseDiagonalWorkspace& workspace) {
+  compute_principal_block(factor.size(),
+                          indices,
+                          result,
+                          workspace,
+                          [&](const Matrix& rhs, Matrix& solution) {
+                            factor.solve(rhs, solution);
+                          });
 }
 
 } // namespace num

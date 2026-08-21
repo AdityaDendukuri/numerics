@@ -84,9 +84,11 @@ A(1, 2) = 1.0;
 A(2, 1) = 1.0;
 A(2, 2) = 4.0;
 
-num::SparseMatrix S(100, 100);
-S.insert(0, 0, 2.0);
-S.finalize();
+auto S = num::SparseMatrix::from_triplets(
+    100, 100,
+    std::vector<num::idx>{0},
+    std::vector<num::idx>{0},
+    std::vector<num::real>{2.0});
 ```
 
 ### Resolvent solve

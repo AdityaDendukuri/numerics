@@ -12,18 +12,19 @@
 #include "kernel/subspace.hpp"
 #include "linalg/eigen/jacobi_eig.hpp"
 #include "linalg/sparse/sparse.hpp"
-#include "core/concepts.hpp"
+#include "operator/concepts.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
 namespace num {
 
+/// Largest Ritz pairs and residual-based convergence metadata.
 struct LanczosResult {
-  Vector ritz_values;
-  Matrix ritz_vectors;
-  idx steps = 0;
-  bool converged = false;
+  Vector ritz_values; ///< Requested Ritz values in ascending order.
+  Matrix ritz_vectors; ///< Ritz vectors stored as columns.
+  idx steps = 0; ///< Lanczos basis vectors generated.
+  bool converged = false; ///< Whether all returned Ritz pairs met tolerance.
 };
 
 namespace detail {
@@ -161,12 +162,14 @@ LanczosResult lanczos(const Op& A,
   return detail::lanczos_operator_impl(A, k, tol, max_steps, backend);
 }
 
+/// Compute the largest k Ritz pairs of a stored symmetric dense matrix.
 LanczosResult lanczos(const Matrix& A,
                       idx k,
                       real tol = 1e-10,
                       idx max_steps = 0,
                       Backend backend = Backend::seq);
 
+/// Compute the largest k Ritz pairs of a stored symmetric sparse matrix.
 LanczosResult lanczos(const SparseMatrix& A,
                       idx k,
                       real tol = 1e-10,

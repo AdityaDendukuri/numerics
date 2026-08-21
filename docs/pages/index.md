@@ -4,34 +4,7 @@ Modular C++20 numerical kernel and solver suite for dense and structured linear 
 
 ---
 
-## Table of Contents
-
-- [Three Layers & Target Dependencies](#three-layers--target-dependencies)
-- [Code Examples by Layer](#code-examples-by-layer)
-- [C++20 Concept Enforcement](#c20-concept-enforcement)
-- [Runtime Diagnostics](#runtime-diagnostics)
-- [Documentation Index](#documentation-index)
-  - [Core Module Guides](#core-module-guides)
-  - [Spatial & Domain Applications](#spatial--domain-applications)
-  - [Implementation & Developer Guides](#implementation--developer-guides)
-
----
-
 ## Three Layers & Target Dependencies
-
-```text
-                     numerics::kernel  (Layer 1 & 2: Vectors, Matrices, Fields, Operators)
-                      /      |      \
-                     /       |       \
-                    v        |        v
-   numerics::spectral        |       numerics::solvers (LU, QR, Cholesky, CG, GMRES, SVD)
-                             |        |
-                             |        v
-                             +---> numerics::ode (RK4, RK45, Verlet, Yoshida4)
-                                      |
-                                      v
-                                  numerics::pde (FieldSolver, Poisson DST-I)
-```
 
 | Layer | CMake Target | Components | Recommended Use |
 | :--- | :--- | :--- | :--- |
@@ -113,6 +86,7 @@ num::debug::set_level(num::debug::DiagnosticLevel::full);
 ## Documentation Index
 
 ### Core Module Guides
+- @subpage page_core "Core Storage, Matrix Helpers, Sparse Construction, and Selection"
 - @subpage page_linalg "Linear Algebra & Factorizations (LU, QR, Cholesky, SVD, Eigen, Arnoldi/expv)"
 - @subpage page_operators "Linear Operators & Matrix-Free Krylov Solvers (CG, PCG, MINRES, GMRES)"
 - @subpage page_solver_best_practices "Solver Selection Taxonomy & Best Practices Guide"

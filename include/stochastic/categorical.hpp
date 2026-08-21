@@ -10,6 +10,7 @@
 namespace num {
 
 template<typename RNG>
+/// Draw an index from nonnegative unnormalized weights in one pass.
 [[nodiscard]] idx sample_categorical(std::span<const real> weights, RNG& rng) {
   real total = 0.0;
   for (real weight : weights) {
@@ -34,6 +35,7 @@ template<typename RNG>
   return weights.size() - 1;
 }
 
+/// Reusable categorical distribution for repeated draws from fixed weights.
 class CategoricalSampler {
 public:
   explicit CategoricalSampler(std::span<const real> weights)

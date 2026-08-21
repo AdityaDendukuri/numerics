@@ -9,8 +9,10 @@
 
 namespace num {
 
+/// True when a sparse complex factorization backend is available.
 [[nodiscard]] bool sparse_resolvent_available() noexcept;
 
+/// Symbolic-analysis hints for sparse shifted systems.
 struct SparseResolventOptions {
   bool symmetric_pattern = false;
 };
@@ -21,6 +23,7 @@ struct SparseResolventOptions {
 /// is available rather than silently densifying a large matrix.
 class SparseResolventSolver {
 public:
+  /// Analyze A's sparsity pattern once for repeated numerical factorizations.
   explicit SparseResolventSolver(const SparseMatrix& A,
                                  SparseResolventOptions options = {});
   ~SparseResolventSolver();
@@ -29,8 +32,11 @@ public:
   SparseResolventSolver(const SparseResolventSolver&) = delete;
   SparseResolventSolver& operator=(const SparseResolventSolver&) = delete;
 
+  /// Return the order of A.
   [[nodiscard]] idx size() const noexcept;
+  /// Numerically factor sI-A while retaining symbolic analysis.
   void factorize(cplx shift);
+  /// Solve one or more right-hand sides against the current shift.
   [[nodiscard]] std::vector<cplx> solve(const std::vector<cplx>& rhs) const;
   void solve(const std::vector<cplx>& rhs, std::vector<cplx>& out) const;
   [[nodiscard]] std::vector<std::vector<cplx>> solve(
