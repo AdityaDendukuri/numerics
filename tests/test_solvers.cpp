@@ -1,7 +1,9 @@
 #include "analysis/talbot.hpp"
 #include "core/concepts.hpp"
 #include "core/util/math.hpp"
-#include "io/json.hpp"
+#ifdef NUMERICS_HAS_BOOST_JSON
+  #include "io/json.hpp"
+#endif
 #include "linalg/factorization/thomas.hpp"
 #include "linalg/solvers/dense_resolvent.hpp"
 #include "linalg/solvers/solvers.hpp"
@@ -706,6 +708,7 @@ TEST(Sequence, Logspace) {
   EXPECT_NEAR(values[2], 1.0, 1e-15);
 }
 
+#ifdef NUMERICS_HAS_BOOST_JSON
 TEST(Json, VectorAndMatrixConversion) {
   const boost::json::value value =
     boost::json::array{boost::json::array{1.0, 2.0}, boost::json::array{3.0, 4.0}};
@@ -716,6 +719,7 @@ TEST(Json, VectorAndMatrixConversion) {
     static_cast<void>(io::json_vector<double>(boost::json::value{"not an array"})),
     std::invalid_argument);
 }
+#endif
 
 TEST(Resolvent, ReusableFactorAndBatch) {
   Matrix A(2, 2);

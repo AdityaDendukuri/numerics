@@ -35,7 +35,20 @@ include(cmake/stdsimd.cmake)
 include(cmake/apple.cmake)
 include(cmake/suitesparse.cmake)
 
-find_package(Boost REQUIRED COMPONENTS json)
+set(NUMERICS_HAS_BOOST_JSON FALSE)
+if(NUMERICS_BUILD_IO)
+    # Prefer Boost's package config; fall back for distributions that only ship FindBoost metadata.
+    find_package(Boost CONFIG QUIET COMPONENTS json)
+    if(NOT TARGET Boost::json)
+        find_package(Boost QUIET COMPONENTS json)
+    endif()
+    if(TARGET Boost::json)
+        set(NUMERICS_HAS_BOOST_JSON TRUE)
+        message(STATUS "Boost.JSON: found; building numerics::io")
+    else()
+        message(STATUS "Boost.JSON: not found; optional numerics::io target disabled")
+    endif()
+endif()
 
 # 2. Level 1 + Level 2 Kernel Target (Data structures, matrices, fields, operators; 0 solver overhead)
 add_library(numerics_kernel ${NUMERICS_KERNEL_SOURCES})
@@ -100,14 +113,16 @@ target_include_directories(numerics PUBLIC
 target_link_libraries(numerics PUBLIC numerics_raw_kernel)
 
 # Optional file-I/O layer. Core numerical users do not depend on JSON.
-add_library(numerics_io ${NUMERICS_IO_SOURCES})
-add_library(numerics::io ALIAS numerics_io)
-target_compile_features(numerics_io PUBLIC cxx_std_20)
-target_include_directories(numerics_io PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(numerics_io PUBLIC numerics::kernel Boost::json)
+if(NUMERICS_HAS_BOOST_JSON)
+    add_library(numerics_io ${NUMERICS_IO_SOURCES})
+    add_library(numerics::io ALIAS numerics_io)
+    target_compile_features(numerics_io PUBLIC cxx_std_20)
+    target_include_directories(numerics_io PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    )
+    target_link_libraries(numerics_io PUBLIC numerics::kernel Boost::json)
+endif()
 
 add_custom_target(tags
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen-tags.sh

@@ -10,7 +10,14 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # Library artifacts + export set
-install(TARGETS numerics_raw_kernel numerics_kernel numerics_solvers numerics_ode numerics_pde numerics_spectral numerics numerics_io
+set(NUMERICS_INSTALL_TARGETS
+    numerics_raw_kernel numerics_kernel numerics_solvers numerics_ode
+    numerics_pde numerics_spectral numerics
+)
+if(TARGET numerics_io)
+    list(APPEND NUMERICS_INSTALL_TARGETS numerics_io)
+endif()
+install(TARGETS ${NUMERICS_INSTALL_TARGETS}
     EXPORT      NumericsTargets
     ARCHIVE     DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT full
     LIBRARY     DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT full

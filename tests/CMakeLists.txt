@@ -21,9 +21,12 @@ add_executable(numerics_tests
 
 target_link_libraries(numerics_tests PRIVATE
     numerics
-    numerics_io
     GTest::gtest_main
 )
+if(TARGET numerics_io)
+    target_link_libraries(numerics_tests PRIVATE numerics_io)
+    target_compile_definitions(numerics_tests PRIVATE NUMERICS_HAS_BOOST_JSON=1)
+endif()
 
 include(GoogleTest)
 gtest_discover_tests(numerics_tests)
