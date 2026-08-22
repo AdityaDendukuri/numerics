@@ -102,6 +102,14 @@ target_include_directories(numerics_spectral PUBLIC
 )
 target_link_libraries(numerics_spectral PUBLIC numerics_kernel)
 
+# 3e. Matplotlib-style gnuplot / terminal plotting (Header-only INTERFACE)
+add_library(numerics_plot INTERFACE)
+add_library(numerics::plot ALIAS numerics_plot)
+target_include_directories(numerics_plot INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
 # 4. Main Umbrella Target
 add_library(numerics ${NUMERICS_SOURCES})
 add_library(numerics::numerics ALIAS numerics)

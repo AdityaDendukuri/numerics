@@ -12,7 +12,7 @@ include(CMakePackageConfigHelpers)
 # Library artifacts + export set
 set(NUMERICS_INSTALL_TARGETS
     numerics_raw_kernel numerics_kernel numerics_solvers numerics_ode
-    numerics_pde numerics_spectral numerics
+    numerics_pde numerics_spectral numerics_plot numerics
 )
 if(TARGET numerics_io)
     list(APPEND NUMERICS_INSTALL_TARGETS numerics_io)
