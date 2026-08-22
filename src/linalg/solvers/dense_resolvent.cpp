@@ -1,4 +1,5 @@
 #include "linalg/solvers/dense_resolvent.hpp"
+#include "core/debug.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -12,14 +13,9 @@ namespace num {
 
 struct DenseResolventSolver::Impl {
     explicit Impl(Matrix input) : matrix(std::move(input)), lu(matrix.size()) {
-        if (matrix.rows() != matrix.cols()) {
-            throw std::invalid_argument("DenseResolventSolver requires a square matrix");
-        }
-#if defined(NUMERICS_HAS_LAPACK)
+        debug::check_dim(matrix.rows(), matrix.cols(), "DenseResolventSolver requires a square matrix");
+        debug::check_non_empty(matrix.rows(), "DenseResolventSolver matrix");
         pivots.resize(matrix.rows());
-#else
-        pivots.resize(matrix.rows());
-#endif
     }
 
     Matrix matrix;
@@ -108,10 +104,10 @@ std::vector<cplx> DenseResolventSolver::solve(const std::vector<cplx> &rhs) cons
 
 void DenseResolventSolver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &result) const {
     const idx n = impl_->matrix.rows();
-    if (!impl_->factored || rhs.size() != n) {
-        throw std::invalid_argument(
-            "DenseResolventSolver: factorization or matching right-hand side required");
+    if (!impl_->factored) {
+        throw std::invalid_argument("DenseResolventSolver: factorization required before solve");
     }
+    debug::check_dim(n, static_cast<idx>(rhs.size()), "DenseResolventSolver RHS");
     result = rhs;
 
 #if defined(NUMERICS_HAS_LAPACK)

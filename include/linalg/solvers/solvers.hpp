@@ -7,6 +7,7 @@
 #include "linalg/solvers/cg.hpp"
 #include "linalg/solvers/gauss_seidel.hpp"
 #include "linalg/solvers/gmres.hpp"
+#include "linalg/solvers/hessenberg_resolvent.hpp"
 #include "linalg/solvers/jacobi.hpp"
 #include "linalg/solvers/minres.hpp"
 #include "linalg/solvers/pcg.hpp"

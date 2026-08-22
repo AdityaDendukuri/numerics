@@ -794,3 +794,106 @@ TEST(DenseResolvent, ReusableFactorization) {
     EXPECT_NEAR(solution[1].real(), expected[1].real(), 1e-12);
     EXPECT_NEAR(solution[1].imag(), expected[1].imag(), 1e-12);
 }
+
+TEST(Hessenberg, DecompositionProperties) {
+    const idx n = 5;
+    Matrix A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            A(i, j) = std::sin(static_cast<double>(i * 3 + j * 7 + 1));
+        }
+    }
+
+    const auto decomp = hessenberg(A);
+    const auto &H = decomp.H();
+    const auto &Q = decomp.Q();
+
+    // 1. Verify H is upper Hessenberg: H(i, j) == 0 for i > j + 1
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            if (i > j + 1) {
+                EXPECT_NEAR(H(i, j), 0.0, 1e-14);
+            }
+        }
+    }
+
+    // 2. Verify Q is orthogonal: Q^T * Q == I
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            double dot = 0.0;
+            for (idx k = 0; k < n; ++k) {
+                dot += Q(k, i) * Q(k, j);
+            }
+            const double expected = (i == j) ? 1.0 : 0.0;
+            EXPECT_NEAR(dot, expected, 1e-13);
+        }
+    }
+
+    // 3. Verify Q * H * Q^T == A
+    Matrix QHQ(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            double sum = 0.0;
+            for (idx k = 0; k < n; ++k) {
+                for (idx l = 0; l < n; ++l) {
+                    sum += Q(i, k) * H(k, l) * Q(j, l);
+                }
+            }
+            QHQ(i, j) = sum;
+            EXPECT_NEAR(QHQ(i, j), A(i, j), 1e-12);
+        }
+    }
+}
+
+TEST(HessenbergResolvent, AccuracyAndBatchEquivalence) {
+    const idx n = 4;
+    Matrix A(n, n, 0.0);
+    A(0, 0) = 4.0; A(0, 1) = 1.0; A(0, 2) = 0.5; A(0, 3) = 0.1;
+    A(1, 0) = 1.0; A(1, 1) = 3.0; A(1, 2) = 0.2; A(1, 3) = 0.4;
+    A(2, 0) = 0.5; A(2, 1) = 0.2; A(2, 2) = 5.0; A(2, 3) = 1.0;
+    A(3, 0) = 0.1; A(3, 1) = 0.4; A(3, 2) = 1.0; A(3, 3) = 2.0;
+
+    Vector b{1.0, 2.0, 3.0, 4.0};
+
+    std::vector<cplx> shifts = {
+        cplx(10.0, 1.0),
+        cplx(8.0, -2.0),
+        cplx(0.0, 5.0),
+        cplx(-3.0, 4.0),
+        cplx(12.0, 0.0)
+    };
+
+    HessenbergResolventSolver solver(A);
+    const auto batch_results = solver.solve_batch(shifts, b);
+    ASSERT_EQ(batch_results.size(), shifts.size());
+
+    for (std::size_t k = 0; k < shifts.size(); ++k) {
+        const auto single_x = solver.solve(shifts[k], b);
+        const auto &batch_x = batch_results[k];
+
+        for (idx i = 0; i < n; ++i) {
+            EXPECT_NEAR(single_x[i].real(), batch_x[i].real(), 1e-13);
+            EXPECT_NEAR(single_x[i].imag(), batch_x[i].imag(), 1e-13);
+        }
+
+        // Verify residual: (sI - A) * x == b
+        for (idx i = 0; i < n; ++i) {
+            cplx Ax(0.0, 0.0);
+            for (idx j = 0; j < n; ++j) {
+                Ax += A(i, j) * batch_x[j];
+            }
+            cplx residual = shifts[k] * batch_x[i] - Ax - b[i];
+            EXPECT_NEAR(std::abs(residual), 0.0, 1e-11);
+        }
+    }
+
+    // Test convenience wrapper resolvent_solve_batch
+    const auto wrapper_batch = resolvent_solve_batch(shifts, A, b);
+    ASSERT_EQ(wrapper_batch.size(), shifts.size());
+    for (std::size_t k = 0; k < shifts.size(); ++k) {
+        for (idx i = 0; i < n; ++i) {
+            EXPECT_NEAR(wrapper_batch[k][i].real(), batch_results[k][i].real(), 1e-13);
+            EXPECT_NEAR(wrapper_batch[k][i].imag(), batch_results[k][i].imag(), 1e-13);
+        }
+    }
+}

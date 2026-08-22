@@ -5,6 +5,7 @@
 #include "core/matrix.hpp"
 #include "core/vector.hpp"
 #include "linalg/solvers/dense_resolvent.hpp"
+#include "linalg/solvers/hessenberg_resolvent.hpp"
 #include <vector>
 
 namespace num {
