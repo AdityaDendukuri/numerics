@@ -43,6 +43,12 @@ jobs:
           fi
           touch _site/.nojekyll
 
+      - name: Check documentation links
+        run: |
+          for page in index page_reference concepts annotated namespaces files; do
+            test -f "_site/${page}.html"
+          done
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
