@@ -20,6 +20,7 @@
       <tab type="globals" visible="yes" title="File Members" intro=""/>
     </tab>
     <tab type="examples" visible="yes" title="Programs"/>
+    <tab type="user" visible="yes" url="https://github.com/AdityaDendukuri/numerics" title="GitHub ↗"/>
     <tab type="topics" visible="no"/>
     <tab type="modules" visible="no"/>
   </navindex>
