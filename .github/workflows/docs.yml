@@ -45,9 +45,14 @@ jobs:
 
       - name: Check documentation links
         run: |
-          for page in index page_reference concepts annotated namespaces files; do
-            test -f "_site/${page}.html"
+          missing=0
+          for page in index page_reference concepts annotated namespaces files examples; do
+            if [ ! -f "_site/${page}.html" ]; then
+              echo "::error file=${page}.html::Doxygen did not generate ${page}.html"
+              missing=1
+            fi
           done
+          exit "$missing"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
