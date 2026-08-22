@@ -4,10 +4,21 @@
     <tab type="mainpage" visible="yes" title="Home"/>
     <tab type="pages" visible="yes" title="Learn" intro="Guides and feature examples"/>
     <tab type="user" visible="yes" url="page_reference.html" title="API Reference"/>
-    <tab type="namespaces" visible="yes" title="Namespaces"/>
+    <tab type="namespaces" visible="yes" title="Namespaces">
+      <tab type="namespacelist" visible="yes" title="Namespace List" intro=""/>
+      <tab type="namespacemembers" visible="yes" title="Namespace Members" intro=""/>
+    </tab>
     <tab type="concepts" visible="yes" title="Concepts"/>
-    <tab type="classes" visible="yes" title="Types"/>
-    <tab type="files" visible="yes" title="Files"/>
+    <tab type="classes" visible="yes" title="Types">
+      <tab type="classlist" visible="yes" title="Type List" intro=""/>
+      <tab type="classindex" visible="$ALPHABETICAL_INDEX" title="Type Index"/>
+      <tab type="hierarchy" visible="yes" title="Type Hierarchy" intro=""/>
+      <tab type="classmembers" visible="yes" title="Type Members" intro=""/>
+    </tab>
+    <tab type="files" visible="yes" title="Files">
+      <tab type="filelist" visible="yes" title="File List" intro=""/>
+      <tab type="globals" visible="yes" title="File Members" intro=""/>
+    </tab>
     <tab type="examples" visible="yes" title="Programs"/>
     <tab type="topics" visible="no"/>
     <tab type="modules" visible="no"/>
