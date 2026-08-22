@@ -39,5 +39,5 @@ subtract_pressure_gradient(u, v, pressure, dt);
 apply_boundary_conditions(u, v);
 ```
 
-This example is intentionally matrix-free: the pressure matrix is represented by
-the stencil application, not by assembled CSR storage.
+The pressure matrix is represented by the stencil application, not by
+assembled CSR storage.

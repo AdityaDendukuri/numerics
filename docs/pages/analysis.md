@@ -1,60 +1,90 @@
 # Analysis Examples {#page_analysis}
 
-Analysis routines provide scalar quadrature and root finding. They are intended
-for small numerical subproblems inside larger solvers and experiments.
+## Integrands
+
+```cpp
+#include <numerics.hpp>
+#include <cmath>
+
+num::ScalarFn gaussian = [](double x) {
+    return std::exp(-x * x); // Callable stored with a uniform scalar signature.
+};
+```
 
 ## Composite Quadrature
 
 ```cpp
-#include <numerics.hpp>
-
-auto f = [](double x) {
-    return std::exp(-x * x);
-};
-
-double q1 = num::trapz(f, 0.0, 1.0, 4096);
-double q2 = num::simpson(f, 0.0, 1.0, 4096);
-double q3 = num::romberg(f, 0.0, 1.0, 1e-12);
+double q = num::trapz(gaussian, 0.0, 1.0, 4096); // 4096 trapezoidal panels.
 ```
 
-`Backend::omp` parallelizes the panel sums in `trapz` and `simpson`.
-
 ```cpp
-double q = num::simpson(f, 0.0, 1.0, 1 << 20, num::Backend::omp);
+double q = num::simpson(gaussian, 0.0, 1.0, 4096); // Panel count must be even.
 ```
 
-## Gauss-Legendre Rule
-
 ```cpp
-auto p = [](double x) {
-    return x * x * x * x;
-};
-
-double exact_for_degree_4 = num::gauss_legendre(p, -1.0, 1.0, 3);
+double q = num::simpson(
+    gaussian, 0.0, 1.0, 1 << 20, num::Backend::omp); // Parallel panel sum.
 ```
 
-With `p` points, the rule is exact for polynomials through degree \(2p-1\).
-
-## Bracketed Roots
+## Gaussian Quadrature
 
 ```cpp
-auto g = [](double x) {
-    return std::cos(x) - x;
-};
-
-num::RootResult r = num::brent(g, 0.0, 1.0, 1e-12);
+auto quartic = [](double x) { return x * x * x * x; };
+double q = num::gauss_legendre(quartic, -1.0, 1.0, 3); // Exact through degree five.
 ```
 
-Use Brent's method when a sign-changing bracket is available.
+`gauss_legendre` accepts between one and five quadrature points.
 
-## Newton Iteration
+## Adaptive Quadrature
 
 ```cpp
-auto f0 = [](double x) { return x * x - 2.0; };
+double q = num::adaptive_simpson(gaussian, 0.0, 1.0, 1e-10); // Refine where needed.
+```
+
+```cpp
+double q = num::romberg(gaussian, 0.0, 1.0, 1e-12, 12); // At most 12 refinement levels.
+```
+
+## Bisection
+
+```cpp
+auto f = [](double x) { return std::cos(x) - x; };
+num::RootResult root = num::bisection(f, 0.0, 1.0, 1e-12); // Bracket must change sign.
+```
+
+## Brent's Method
+
+```cpp
+num::RootResult root = num::brent(f, 0.0, 1.0, 1e-12); // Bracketed superlinear solve.
+```
+
+## Secant Method
+
+```cpp
+num::RootResult root = num::secant(f, 0.0, 1.0, 1e-12); // Uses two initial values.
+```
+
+## Newton's Method
+
+```cpp
+auto f = [](double x) { return x * x - 2.0; };
 auto df = [](double x) { return 2.0 * x; };
 
-num::RootResult r = num::newton(f0, df, 1.0, 1e-12);
+num::RootResult root = num::newton(f, df, 1.0, 1e-12); // Derivative supplied explicitly.
 ```
 
-Newton iteration is appropriate when the derivative is available and the
-starting value is in the local basin of attraction.
+## Root Metadata
+
+```cpp
+if (!root.converged) {
+    throw std::runtime_error("root solve failed");
+}
+
+double x = root.root;            // Final root estimate.
+double error = root.residual;    // Absolute function residual.
+num::idx work = root.iterations; // Iterations performed.
+```
+
+## Complete Program
+
+@example 08_root_finding_and_quadrature.cpp

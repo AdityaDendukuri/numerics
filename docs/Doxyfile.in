@@ -43,6 +43,13 @@ MATHJAX_EXTENSIONS     = TeX/AMSmath TeX/AMSsymbols
 # ── Navigation ────────────────────────────────────────────────────────────────
 # Make index.md the Doxygen start page.
 USE_MDFILE_AS_MAINPAGE = @CMAKE_SOURCE_DIR@/docs/pages/index.md
+GENERATE_TREEVIEW       = YES
+DISABLE_INDEX           = NO
+FULL_SIDEBAR            = YES
+TREEVIEW_WIDTH          = 280
+TOC_INCLUDE_HEADINGS    = 2
+LAYOUT_FILE             = @CMAKE_SOURCE_DIR@/docs/DoxygenLayout.xml
+GENERATE_TODOLIST       = NO
 
 # ── HTML theme (doxygen-awesome) ──────────────────────────────────────────────
 HTML_EXTRA_STYLESHEET  = @CMAKE_SOURCE_DIR@/docs/doxygen-awesome.css

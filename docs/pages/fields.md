@@ -1,55 +1,160 @@
 # Field Examples {#page_fields}
 
-Field types provide grid storage for PDE and vector-calculus examples.
-
-## Scalar Field
+## Two-Dimensional Grid
 
 ```cpp
-const int nx = 64;
-const int ny = 64;
-const int nz = 64;
-const float dx = 1.0f / 63.0f;
+#include <numerics.hpp>
 
-num::ScalarField3D rho(nx, ny, nz, dx);
-rho.fill([&](int i, int j, int k) {
-    const double x = i * dx;
-    const double y = j * dx;
-    const double z = k * dx;
-    return std::exp(-40.0 * ((x - 0.5) * (x - 0.5)
-                           + (y - 0.5) * (y - 0.5)
-                           + (z - 0.5) * (z - 0.5)));
+num::Grid2D grid{64, 1.0 / 65.0}; // 64 interior nodes per axis.
+
+double x = grid.x(3);       // Physical x-coordinate.
+double y = grid.y(5);       // Physical y-coordinate.
+int flat = grid.flat(3, 5); // Row-major storage index.
+int count = grid.size();    // 64 * 64 nodes.
+```
+
+## Two-Dimensional Scalar Field
+
+```cpp
+num::ScalarField2D field(grid); // Allocate zero-filled contiguous storage.
+field(3, 5) = 2.0;              // Access by grid coordinates.
+```
+
+## Sampling a Function
+
+```cpp
+num::ScalarField2D field(grid, [](double x, double y) {
+    return std::sin(std::numbers::pi * x) * std::sin(std::numbers::pi * y);
 });
 ```
 
-## Vector Field
-
 ```cpp
-num::VectorField3D v(nx, ny, nz, dx);
-v.x.fill(0.0);
-v.y.fill(0.0);
-v.z.fill(1.0);
+field.fill([](double x, double y) {
+    return x + y; // Replace values using physical coordinates.
+});
 ```
 
-## Poisson Utility
+## Field Storage
 
 ```cpp
-num::ScalarField3D phi(nx, ny, nz, dx);
-
-num::SolverResult info =
-    num::FieldSolver::solve_poisson(phi, rho, 1e-8, 1000);
+num::Vector& values = field.vec(); // Mutable view of field-owned storage.
+const double* data = std::as_const(field).data();
+num::idx size = field.size();
 ```
 
-Internally this wraps the finite-difference operator with
-`num::operators::make_op` and solves with conjugate gradients.
+Changes through `values` are visible through `field(i, j)`.
 
-## Magnetic Field Utility
+## Three-Dimensional Grid
 
 ```cpp
-num::VectorField3D J(nx, ny, nz, dx);
-load_current_density(J);
+num::Grid3D grid{32, 24, 16, 0.1, -1.0, 0.0, 2.0};
 
-num::VectorField3D B = num::MagneticSolver::solve_magnetic_field(J);
+num::idx flat = grid.flat(3, 5, 7); // x varies fastest in storage.
+double x = grid.x(3);               // Origin plus i * dx.
+int count = grid.size();
 ```
 
-This computes vector potential components from Poisson solves and returns
-\f$\mathbf{B}=\nabla\times\mathbf{A}\f$.
+## Three-Dimensional Scalar Field
+
+```cpp
+num::ScalarField3D density(32, 24, 16, 0.1f); // Zero-filled field at the origin.
+density(3, 5, 7) = 4.0;
+density.set(3, 5, 7, 4.0);                    // Equivalent explicit setter.
+```
+
+## Field Origin
+
+```cpp
+num::ScalarField3D density(
+    32, 24, 16, 0.1f, -1.0f, 0.0f, 2.0f); // Set physical origin.
+```
+
+## Filling Three-Dimensional Fields
+
+```cpp
+density.fill(1.0); // Replace every value with a constant.
+```
+
+```cpp
+density.fill([](int i, int j, int k) {
+    return static_cast<double>(i + j + k); // Callable receives integer indices.
+});
+```
+
+## Trilinear Sampling
+
+```cpp
+float value = density.sample(0.15f, 0.25f, 0.35f); // Interpolate physical coordinates.
+```
+
+## Three-Dimensional Vector Field
+
+```cpp
+num::VectorField3D velocity(32, 24, 16, 0.1f);
+velocity.x.fill(1.0);
+velocity.y.fill(0.0);
+velocity.z.fill(-1.0);
+```
+
+```cpp
+std::array<float, 3> value = velocity.sample(0.15f, 0.25f, 0.35f);
+velocity.scale(0.5f); // Scale all three component fields.
+```
+
+## Gradient
+
+```cpp
+num::VectorField3D gradient = num::FieldSolver::gradient(density);
+```
+
+## Divergence
+
+```cpp
+num::ScalarField3D divergence = num::FieldSolver::divergence(velocity);
+```
+
+## Curl
+
+```cpp
+num::VectorField3D curl = num::FieldSolver::curl(velocity);
+```
+
+## Poisson Solve
+
+```cpp
+num::ScalarField3D potential(32, 24, 16, 0.1f);
+num::SolverResult result =
+    num::FieldSolver::solve_poisson(potential, density, 1e-8, 1000);
+```
+
+The source and destination must share the same grid geometry.
+
+## Variable-Coefficient Poisson Solve
+
+```cpp
+num::ScalarField3D coefficient(32, 24, 16, 0.1f);
+coefficient.fill(1.0);
+
+std::vector<num::FieldSolver::DirichletBC> boundaries{
+    {static_cast<int>(coefficient.grid().flat(0, 0, 0)), 1.0},
+};
+
+auto result = num::FieldSolver::solve_var_poisson(
+    potential, coefficient, boundaries, 1e-8, 1000);
+```
+
+## Current Density
+
+```cpp
+num::VectorField3D current =
+    num::MagneticSolver::current_density(coefficient, potential); // J = -sigma grad(phi).
+```
+
+## Magnetic Field
+
+```cpp
+num::VectorField3D magnetic =
+    num::MagneticSolver::solve_magnetic_field(current, 1e-8, 1000);
+```
+
+The 3D Poisson program is shown on @ref page_pde.

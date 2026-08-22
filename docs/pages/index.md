@@ -1,111 +1,29 @@
 # numerics {#mainpage}
 
-Modular C++20 numerical kernel and solver suite for dense and structured linear algebra, matrix-free Krylov methods, ODE/PDE integrators, and spectral transforms.
+Numerics is a modular C++20 library for dense and structured linear algebra,
+matrix-free solvers, ODE/PDE integration, spectral transforms, and stochastic
+methods.
 
----
-
-## Three Layers & Target Dependencies
-
-| Layer | CMake Target | Components | Recommended Use |
-| :--- | :--- | :--- | :--- |
-| **Layer 1** | `numerics::raw_kernel` | Header-only raw loops and memory routines | Use for zero-overhead inline memory loops without library compilation. |
-| **Layer 2** | `numerics::kernel` | Data structures & operators (`Vector`, `Matrix`, `SparseMatrix`, `BandedMatrix`, `Fields`, `LinearOperator`, `assume_spd()`) | Use when application requires arrays, grids, and operator abstractions without solver overhead or external dependencies. |
-| **Layer 3** | `numerics::numerics` | Full solver suite (`solve()`, LU/QR/SVD, CG, GMRES, RK45, PDE, FFT) | Use when complete linear, differential, or spectral solvers are required. |
-
----
-
-## Code Examples by Layer
-
-### 1. Storage & Core Data Structures (Layer 1 & 2)
 ```cpp
 #include <numerics.hpp>
 
-num::Vector x{1.0, 2.0, 3.0};
-num::Matrix A(3, 3, 0.0);
-A(0, 0) = 4.0; A(0, 1) = 1.0;
-A(1, 0) = 1.0; A(1, 1) = 4.0; A(1, 2) = 1.0;
-A(2, 1) = 1.0; A(2, 2) = 4.0;
+num::Matrix A(2, 2, 0.0); // Allocate a 2-by-2 matrix.
+A(0, 0) = 4.0;
+A(0, 1) = 1.0;
+A(1, 0) = 1.0;
+A(1, 1) = 3.0;
+
+num::Vector b{1.0, 2.0}; // Define the right-hand side.
+auto factor = num::cholesky(num::linalg::make_spd(A));
+
+num::Vector x;
+num::cholesky_solve(factor, b, x); // Solve A*x=b.
 ```
 
-### 2. Operators & Property Tags (Layer 2)
-```cpp
-#include <numerics.hpp>
+Choose where you want to start:
 
-num::operators::DenseOp Aop(A);
-auto spd_A = num::operators::assume_spd(Aop);
-```
-
-### 3. Solvers & Numerical Integrators (Layer 3)
-```cpp
-#include <numerics.hpp>
-
-// Direct LU Factorization
-auto fact = num::lu(A);
-num::Vector sol;
-num::lu_solve(fact, b, sol);
-
-// Iterative Krylov Solver
-num::LinearSolution s = num::solve(num::LinearProblem{spd_A, b}, num::CG{});
-
-// Adaptive ODE Integration (RK45)
-auto rhs = [](double t, const num::Vector& y, num::Vector& dy) {
-    dy[0] = y[1];
-    dy[1] = -y[0];
-};
-auto ode_res = num::solve(num::ODEProblem{rhs, {1.0, 0.0}, 0.0, 10.0}, num::RK45{});
-```
-
----
-
-## C++20 Concept Enforcement
-
-```cpp
-static_assert(num::LinearOperator<decltype(Aop)>);
-
-// CG requires an SPD operator concept guard
-auto spd_A = num::operators::assume_spd(Aop);
-static_assert(num::SPDLinearOperator<decltype(spd_A)>);
-
-num::LinearSolution s = num::solve(num::LinearProblem{spd_A, b}, num::CG{});
-```
-
----
-
-## Runtime Diagnostics
-
-```cpp
-num::debug::set_level(num::debug::DiagnosticLevel::full);
-
-// Catches dimension mismatches, non-finite values, and invalid mathematical assertions:
-// [PropertyError] Error at main.cpp:14 in main:
-//   assume_spd() assertion failed: sampled inner product x^T A x = -4.000000 <= 0.
-```
-
----
-
-## Documentation Index
-
-### Core Module Guides
-- @subpage page_core "Core Storage, Matrix Helpers, Sparse Construction, and Selection"
-- @subpage page_linalg "Linear Algebra & Factorizations (LU, QR, Cholesky, SVD, Eigen, Arnoldi/expv)"
-- @subpage page_operators "Linear Operators & Matrix-Free Krylov Solvers (CG, PCG, MINRES, GMRES)"
-- @subpage page_solver_best_practices "Solver Selection Taxonomy & Best Practices Guide"
-- @subpage page_fft "Spectral Transforms & Reusable FFT Plans (Cooley-Tukey, SIMD, FFTW3)"
-- @subpage page_ode "ODE Steppers & Integrators (RK4, Adaptive RK45, Symplectic Verlet/Yoshida4)"
-- @subpage page_pde "PDE Discretizations & ADI Diffusion Operators"
-- @subpage page_poisson "Dirichlet Poisson Solve via Discrete Sine Transform (DST-I)"
-- @subpage page_analysis "Numerical Quadrature & Root Finding"
-- @subpage page_stochastic "Stochastic Methods, MCMC & Statistical Analysis"
-
-### Spatial & Domain Applications
-- @subpage page_fields "3D Spatial Fields & Vector Differential Operators"
-- @subpage page_stencil_hof "Higher-Order Stencil Operators"
-- @subpage page_sph_kernel "Smoothed Particle Hydrodynamics (SPH) Density & Pressure Kernels"
-- @subpage page_pbc_lattice "Periodic Square & Cubic Lattice Indexing"
-- @subpage page_connected_components "Grid Connected Component Labeling"
-
-### Implementation & Developer Guides
-- @subpage page_parallel "Parallel Backend Boundaries (OpenMP, CUDA, MPI)"
-- @subpage page_performance "Benchmarking & Performance Methodology"
-- @subpage page_ns_perf "Navier-Stokes Projection Solver Pattern"
-- @subpage page_developer_workflow "Developer Setup, Tag Generation & Local API Search"
+- @subpage page_getting_started "Getting Started"
+- @subpage page_examples "Feature Examples"
+- @subpage page_guides "Guides"
+- @subpage page_reference "API Reference"
+- @subpage page_developer "Developer Documentation"
