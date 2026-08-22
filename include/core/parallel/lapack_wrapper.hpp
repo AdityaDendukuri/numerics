@@ -3,8 +3,8 @@
 #pragma once
 
 #include "core/policy.hpp"
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 #if defined(NUMERICS_HAS_LAPACK)
 
@@ -15,13 +15,15 @@ using lapack_int = int;
 #define LAPACK_ROW_MAJOR 101
 #define LAPACK_COL_MAJOR 102
 
-inline int LAPACKE_dgetrf(int matrix_layout, lapack_int m, lapack_int n, double* a, lapack_int lda, lapack_int* ipiv) {
+inline int LAPACKE_dgetrf(int matrix_layout, lapack_int m, lapack_int n, double *a, lapack_int lda,
+                          lapack_int *ipiv) {
     int info = 0;
     dgetrf_(&n, &m, a, &lda, ipiv, &info);
     return info;
 }
 
-inline int LAPACKE_dgeqrf(int matrix_layout, lapack_int m, lapack_int n, double* a, lapack_int lda, double* tau) {
+inline int LAPACKE_dgeqrf(int matrix_layout, lapack_int m, lapack_int n, double *a, lapack_int lda,
+                          double *tau) {
     int info = 0;
     int lwork = -1;
     double work_query = 0.0;
@@ -32,7 +34,8 @@ inline int LAPACKE_dgeqrf(int matrix_layout, lapack_int m, lapack_int n, double*
     return info;
 }
 
-inline int LAPACKE_dorgqr(int matrix_layout, lapack_int m, lapack_int n, lapack_int k, double* a, lapack_int lda, const double* tau) {
+inline int LAPACKE_dorgqr(int matrix_layout, lapack_int m, lapack_int n, lapack_int k, double *a,
+                          lapack_int lda, const double *tau) {
     int info = 0;
     int lwork = -1;
     double work_query = 0.0;
@@ -43,19 +46,24 @@ inline int LAPACKE_dorgqr(int matrix_layout, lapack_int m, lapack_int n, lapack_
     return info;
 }
 
-inline int LAPACKE_dgesdd(int matrix_layout, char jobz, lapack_int m, lapack_int n, double* a, lapack_int ldu, double* s, double* u, lapack_int ldu_unused, double* vt, lapack_int ldvt) {
+inline int LAPACKE_dgesdd(int matrix_layout, char jobz, lapack_int m, lapack_int n, double *a,
+                          lapack_int ldu, double *s, double *u, lapack_int ldu_unused, double *vt,
+                          lapack_int ldvt) {
     int info = 0;
     int lwork = -1;
     double work_query = 0.0;
     std::vector<int> iwork(8 * std::min(m, n));
-    dgesdd_(&jobz, &n, &m, a, &ldu, s, vt, &ldvt, u, &ldu, &work_query, &lwork, iwork.data(), &info);
+    dgesdd_(&jobz, &n, &m, a, &ldu, s, vt, &ldvt, u, &ldu, &work_query, &lwork, iwork.data(),
+            &info);
     lwork = static_cast<int>(work_query);
     std::vector<double> work(std::max(1, lwork));
-    dgesdd_(&jobz, &n, &m, a, &ldu, s, vt, &ldvt, u, &ldu, work.data(), &lwork, iwork.data(), &info);
+    dgesdd_(&jobz, &n, &m, a, &ldu, s, vt, &ldvt, u, &ldu, work.data(), &lwork, iwork.data(),
+            &info);
     return info;
 }
 
-inline int LAPACKE_dsyevd(int matrix_layout, char jobz, char uplo, lapack_int n, double* a, lapack_int lda, double* w) {
+inline int LAPACKE_dsyevd(int matrix_layout, char jobz, char uplo, lapack_int n, double *a,
+                          lapack_int lda, double *w) {
     int info = 0;
     int lwork = -1;
     int liwork = -1;
@@ -70,19 +78,21 @@ inline int LAPACKE_dsyevd(int matrix_layout, char jobz, char uplo, lapack_int n,
     return info;
 }
 
-inline int LAPACKE_dgtsv(int matrix_layout, lapack_int n, lapack_int nrhs, double* dl, double* d, double* du, double* b, lapack_int ldb) {
+inline int LAPACKE_dgtsv(int matrix_layout, lapack_int n, lapack_int nrhs, double *dl, double *d,
+                         double *du, double *b, lapack_int ldb) {
     int info = 0;
     dgtsv_(&n, &nrhs, dl, d, du, b, &ldb, &info);
     return info;
 }
 
-inline int LAPACKE_dpotrf(int matrix_layout, char uplo, lapack_int n, double* a, lapack_int lda) {
+inline int LAPACKE_dpotrf(int matrix_layout, char uplo, lapack_int n, double *a, lapack_int lda) {
     int info = 0;
     dpotrf_(&uplo, &n, a, &lda, &info);
     return info;
 }
 
-inline int LAPACKE_dpotrs(int matrix_layout, char uplo, lapack_int n, lapack_int nrhs, const double* a, lapack_int lda, double* b, lapack_int ldb) {
+inline int LAPACKE_dpotrs(int matrix_layout, char uplo, lapack_int n, lapack_int nrhs,
+                          const double *a, lapack_int lda, double *b, lapack_int ldb) {
     int info = 0;
     dpotrs_(&uplo, &n, &nrhs, a, &lda, b, &ldb, &info);
     return info;

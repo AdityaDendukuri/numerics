@@ -25,7 +25,7 @@ target_link_libraries(numerics_tests PRIVATE
 )
 if(TARGET numerics_io)
     target_link_libraries(numerics_tests PRIVATE numerics_io)
-    target_compile_definitions(numerics_tests PRIVATE NUMERICS_HAS_BOOST_JSON=1)
+    target_compile_definitions(numerics_tests PRIVATE NUMERICS_HAS_JSON=1)
 endif()
 
 include(GoogleTest)

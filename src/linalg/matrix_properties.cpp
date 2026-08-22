@@ -3,8 +3,8 @@
 
 namespace num::linalg {
 
-bool is_spd(const Matrix& A, real tol) {
-  return is_symmetric(A, tol) && cholesky(A).success;
+bool is_spd(const Matrix &A, real tol) {
+    return is_symmetric(A, tol) && cholesky(A).success;
 }
 
 } // namespace num::linalg

@@ -7,10 +7,10 @@
 namespace num {
 
 struct RootResult {
-  real root;
-  idx iterations;
-  real residual; ///< |f(root)|
-  bool converged;
+    real root;
+    idx iterations;
+    real residual; ///< |f(root)|
+    bool converged;
 };
 
 /// @brief Bisection method
@@ -26,11 +26,7 @@ RootResult bisection(ScalarFn f, real a, real b, real tol = 1e-10, idx max_iter 
 /// @param x0  Initial guess
 /// @param tol Convergence tolerance
 /// @param max_iter Maximum iterations
-RootResult newton(ScalarFn f,
-                  ScalarFn df,
-                  real x0,
-                  real tol = 1e-10,
-                  idx max_iter = 1000);
+RootResult newton(ScalarFn f, ScalarFn df, real x0, real tol = 1e-10, idx max_iter = 1000);
 
 /// @brief Secant method (Newton without derivative)
 /// @param f     Function

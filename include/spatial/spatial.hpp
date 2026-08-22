@@ -8,4 +8,3 @@
 #include "spatial/pbc_lattice.hpp"
 #include "spatial/sph_kernel.hpp"
 #include "spatial/verlet_list.hpp"
-

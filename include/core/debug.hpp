@@ -15,143 +15,132 @@
 namespace num::debug {
 
 enum class DiagnosticLevel {
-  off = 0,
-  basic = 1, ///< Dimension matching, non-empty, finite checks
-  full = 2 ///< Includes sampled symmetry and positive-definiteness testing
+    off = 0,
+    basic = 1, ///< Dimension matching, non-empty, finite checks
+    full = 2   ///< Includes sampled symmetry and positive-definiteness testing
 };
 
 inline DiagnosticLevel g_level = DiagnosticLevel::full;
 
 inline void set_level(DiagnosticLevel lvl) noexcept {
-  g_level = lvl;
+    g_level = lvl;
 }
 
 inline DiagnosticLevel get_level() noexcept {
-  return g_level;
+    return g_level;
 }
 
 /// @brief Raise a descriptive diagnostic exception with source location info.
-[[noreturn]] inline void panic(
-  std::string_view category,
-  std::string_view message,
-  std::source_location loc = std::source_location::current()) {
-  std::string err = "[" + std::string(category) + "] Error at " + loc.file_name() + ":"
-                    + std::to_string(loc.line()) + " in " + loc.function_name() + ":\n  "
-                    + std::string(message);
-  throw std::invalid_argument(err);
+[[noreturn]] inline void panic(std::string_view category, std::string_view message,
+                               std::source_location loc = std::source_location::current()) {
+    std::string err = "[" + std::string(category) + "] Error at " + loc.file_name() + ":" +
+                      std::to_string(loc.line()) + " in " + loc.function_name() + ":\n  " +
+                      std::string(message);
+    throw std::invalid_argument(err);
 }
 
 /// @brief Verify dimension equality (e.g. A.rows() == b.size())
-inline void check_dim(idx expected,
-                      idx actual,
-                      std::string_view label,
+inline void check_dim(idx expected, idx actual, std::string_view label,
                       std::source_location loc = std::source_location::current()) {
-  if (g_level == DiagnosticLevel::off) {
-    return;
-  }
-  if (expected != actual) {
-    std::string msg = "Dimension mismatch for " + std::string(label) + ": expected "
-                      + std::to_string(expected) + ", got " + std::to_string(actual);
-    panic("DimensionError", msg, loc);
-  }
+    if (g_level == DiagnosticLevel::off) {
+        return;
+    }
+    if (expected != actual) {
+        std::string msg = "Dimension mismatch for " + std::string(label) + ": expected " +
+                          std::to_string(expected) + ", got " + std::to_string(actual);
+        panic("DimensionError", msg, loc);
+    }
 }
 
 /// @brief Verify a container is non-empty
-inline void check_non_empty(idx size,
-                            std::string_view label,
+inline void check_non_empty(idx size, std::string_view label,
                             std::source_location loc = std::source_location::current()) {
-  if (g_level == DiagnosticLevel::off) {
-    return;
-  }
-  if (size == 0) {
-    panic("ValueError", std::string(label) + " cannot be empty (size is 0)", loc);
-  }
+    if (g_level == DiagnosticLevel::off) {
+        return;
+    }
+    if (size == 0) {
+        panic("ValueError", std::string(label) + " cannot be empty (size is 0)", loc);
+    }
 }
 
 /// @brief Verify all values in array are finite (not NaN or Inf)
-template<typename T>
-inline void check_finite(const T* data,
-                         idx n,
-                         std::string_view label,
+template <typename T>
+inline void check_finite(const T *data, idx n, std::string_view label,
                          std::source_location loc = std::source_location::current()) {
-  if (g_level == DiagnosticLevel::off) {
-    return;
-  }
-  for (idx i = 0; i < n; ++i) {
-    if (!std::isfinite(data[i])) {
-      panic("ValueError",
-            std::string(label) + " contains non-finite value (NaN or Inf) at index "
-              + std::to_string(i),
-            loc);
+    if (g_level == DiagnosticLevel::off) {
+        return;
     }
-  }
+    for (idx i = 0; i < n; ++i) {
+        if (!std::isfinite(data[i])) {
+            panic("ValueError",
+                  std::string(label) + " contains non-finite value (NaN or Inf) at index " +
+                      std::to_string(i),
+                  loc);
+        }
+    }
 }
 
 /// @brief Sampled runtime test for operator positive-definiteness (x^T A x > 0)
-template<class Op, class VectorType>
-inline void verify_spd_sample(
-  const Op& A,
-  idx n,
-  std::source_location loc = std::source_location::current()) {
-  if (g_level != DiagnosticLevel::full) {
-    return;
-  }
+template <class Op, class VectorType>
+inline void verify_spd_sample(const Op &A, idx n,
+                              std::source_location loc = std::source_location::current()) {
+    if (g_level != DiagnosticLevel::full) {
+        return;
+    }
 
-  if (n == 0) {
-    return;
-  }
-  VectorType x(n, real(1.0));
-  VectorType ax(n, real(0.0));
-  A.apply(x, ax);
+    if (n == 0) {
+        return;
+    }
+    VectorType x(n, real(1.0));
+    VectorType ax(n, real(0.0));
+    A.apply(x, ax);
 
-  real dot_val = 0.0;
-  for (idx i = 0; i < n; ++i) {
-    dot_val += x[i] * ax[i];
-  }
+    real dot_val = 0.0;
+    for (idx i = 0; i < n; ++i) {
+        dot_val += x[i] * ax[i];
+    }
 
-  if (dot_val <= 0.0) {
-    panic("PropertyError",
-          "assume_spd() assertion failed: sampled inner product x^T A x = "
-            + std::to_string(dot_val) + " <= 0. The operator is NOT positive definite!",
-          loc);
-  }
+    if (dot_val <= 0.0) {
+        panic("PropertyError",
+              "assume_spd() assertion failed: sampled inner product x^T A x = " +
+                  std::to_string(dot_val) + " <= 0. The operator is NOT positive definite!",
+              loc);
+    }
 }
 
 /// @brief Sampled runtime test for operator symmetry (x^T A y approx y^T A x)
-template<class Op, class VectorType>
-inline void verify_symmetry_sample(
-  const Op& A,
-  idx n,
-  std::source_location loc = std::source_location::current()) {
-  if (g_level != DiagnosticLevel::full) {
-    return;
-  }
+template <class Op, class VectorType>
+inline void verify_symmetry_sample(const Op &A, idx n,
+                                   std::source_location loc = std::source_location::current()) {
+    if (g_level != DiagnosticLevel::full) {
+        return;
+    }
 
-  if (n <= 1) {
-    return;
-  }
-  VectorType x(n), y(n), Ax(n), Ay(n);
-  for (idx i = 0; i < n; ++i) {
-    x[i] = (i % 2 == 0) ? real(1.0) : real(0.5);
-    y[i] = (i % 3 == 0) ? real(0.7) : real(1.3);
-  }
-  A.apply(x, Ax);
-  A.apply(y, Ay);
+    if (n <= 1) {
+        return;
+    }
+    VectorType x(n), y(n), Ax(n), Ay(n);
+    for (idx i = 0; i < n; ++i) {
+        x[i] = (i % 2 == 0) ? real(1.0) : real(0.5);
+        y[i] = (i % 3 == 0) ? real(0.7) : real(1.3);
+    }
+    A.apply(x, Ax);
+    A.apply(y, Ay);
 
-  real xAy = 0.0, yAx = 0.0;
-  for (idx i = 0; i < n; ++i) {
-    xAy += x[i] * Ay[i];
-    yAx += y[i] * Ax[i];
-  }
+    real xAy = 0.0, yAx = 0.0;
+    for (idx i = 0; i < n; ++i) {
+        xAy += x[i] * Ay[i];
+        yAx += y[i] * Ax[i];
+    }
 
-  real diff = std::abs(xAy - yAx);
-  real scale = std::max(std::abs(xAy), std::abs(yAx)) + 1e-12;
-  if (diff / scale > 1e-3) {
-    panic("PropertyError",
-          "assume_symmetric() assertion failed: sampled |x^T A y - y^T A x| = "
-            + std::to_string(diff) + ". The operator is NOT symmetric!",
-          loc);
-  }
+    real diff = std::abs(xAy - yAx);
+    real scale = std::max(std::abs(xAy), std::abs(yAx)) + 1e-12;
+    if (diff / scale > 1e-3) {
+        panic("PropertyError",
+              "assume_symmetric() assertion failed: sampled |x^T A y - y^T A x| = " +
+                  std::to_string(diff) + ". The operator is NOT symmetric!",
+              loc);
+    }
 }
 
 } // namespace num::debug

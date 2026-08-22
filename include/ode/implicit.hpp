@@ -21,29 +21,29 @@ namespace ode {
 
 /// Parameters for fixed-step implicit integration.
 struct ImplicitParams {
-  int nstep; ///< number of time steps
-  double dt; ///< step size (reported to observer as t)
+    int nstep; ///< number of time steps
+    double dt; ///< step size (reported to observer as t)
 };
 
 /// Advance u by nstep implicit steps using solver.
 /// obs(step, t, u) is called at step 0 (initial) and after each solve.
-template<VecField Field, typename Observer>
-void advance(Field& u, const LinearSolver& solver, ImplicitParams p, Observer&& obs) {
-  obs(0, 0.0, u);
-  for (int s = 0; s < p.nstep; ++s) {
-    Vector rhs = u.vec();
-    solver(rhs, u.vec());
-    obs(s + 1, (s + 1) * p.dt, u);
-  }
+template <VecField Field, typename Observer>
+void advance(Field &u, const LinearSolver &solver, ImplicitParams p, Observer &&obs) {
+    obs(0, 0.0, u);
+    for (int s = 0; s < p.nstep; ++s) {
+        Vector rhs = u.vec();
+        solver(rhs, u.vec());
+        obs(s + 1, (s + 1) * p.dt, u);
+    }
 }
 
 /// Overload without observer.
-template<VecField Field>
-void advance(Field& u, const LinearSolver& solver, ImplicitParams p) {
-  for (int s = 0; s < p.nstep; ++s) {
-    Vector rhs = u.vec();
-    solver(rhs, u.vec());
-  }
+template <VecField Field>
+void advance(Field &u, const LinearSolver &solver, ImplicitParams p) {
+    for (int s = 0; s < p.nstep; ++s) {
+        Vector rhs = u.vec();
+        solver(rhs, u.vec());
+    }
 }
 
 } // namespace ode

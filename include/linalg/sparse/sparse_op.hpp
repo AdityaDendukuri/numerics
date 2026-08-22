@@ -13,17 +13,16 @@ namespace num::operators {
 
 /// @brief Adapt a SparseMatrix to the operator protocol.
 struct SparseOp final {
-  /// Store a non-owning reference to a CSR matrix.
-  explicit SparseOp(const SparseMatrix& A)
-      : A_(A) {}
+    /// Store a non-owning reference to a CSR matrix.
+    explicit SparseOp(const SparseMatrix &A) : A_(A) {}
 
-  /// Compute y=A*x.
-  void apply(const Vector& x, Vector& y) const;
-  [[nodiscard]] idx rows() const noexcept { return A_.n_rows(); }
-  [[nodiscard]] idx cols() const noexcept { return A_.n_cols(); }
+    /// Compute y=A*x.
+    void apply(const Vector &x, Vector &y) const;
+    [[nodiscard]] idx rows() const noexcept { return A_.n_rows(); }
+    [[nodiscard]] idx cols() const noexcept { return A_.n_cols(); }
 
-private:
-  const SparseMatrix& A_;
+  private:
+    const SparseMatrix &A_;
 };
 
 static_assert(LinearOperator<SparseOp>);

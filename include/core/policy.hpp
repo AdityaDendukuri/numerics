@@ -7,13 +7,13 @@
 namespace num {
 
 enum class Backend : std::uint8_t {
-  seq,
-  blocked,
-  simd,
-  blas,
-  omp,
-  gpu,
-  lapack,
+    seq,
+    blocked,
+    simd,
+    blas,
+    omp,
+    gpu,
+    lapack,
 };
 
 inline constexpr Backend seq = Backend::seq;
@@ -26,52 +26,52 @@ inline constexpr Backend lapack = Backend::lapack;
 
 inline constexpr bool has_blas =
 #if defined(NUMERICS_HAS_BLAS)
-  true;
+    true;
 #else
-  false;
+    false;
 #endif
 
 inline constexpr bool has_lapack =
 #if defined(NUMERICS_HAS_LAPACK)
-  true;
+    true;
 #else
-  false;
+    false;
 #endif
 
 inline constexpr bool has_omp =
 #if defined(NUMERICS_HAS_OMP)
-  true;
+    true;
 #else
-  false;
+    false;
 #endif
 
 inline constexpr bool has_simd =
 #if defined(NUMERICS_HAS_SIMD)
-  true;
+    true;
 #else
-  false;
+    false;
 #endif
 
 inline constexpr Backend default_backend =
 #if defined(NUMERICS_HAS_BLAS)
-  Backend::blas;
+    Backend::blas;
 #elif defined(NUMERICS_HAS_OMP)
-  Backend::omp;
+    Backend::omp;
 #elif defined(NUMERICS_HAS_SIMD)
-          Backend::simd;
+                    Backend::simd;
 #else
-          Backend::blocked;
+                    Backend::blocked;
 #endif
 
 inline constexpr Backend best_backend = default_backend;
 
 inline constexpr Backend lapack_backend =
 #if defined(NUMERICS_HAS_LAPACK)
-  Backend::lapack;
+    Backend::lapack;
 #elif defined(NUMERICS_HAS_OMP)
-  Backend::omp;
+    Backend::omp;
 #else
-  Backend::seq;
+    Backend::seq;
 #endif
 
 } // namespace num

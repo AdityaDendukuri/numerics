@@ -23,26 +23,26 @@ namespace num {
 
 /// @brief Result of a single-eigenvalue iteration
 struct PowerResult {
-  real eigenvalue = 0.0; ///< Converged eigenvalue (Rayleigh quotient)
-  Vector eigenvector; ///< Corresponding unit eigenvector
-  idx iterations = 0; ///< Iterations performed
-  bool converged = false; ///< Whether tolerance was met
+    real eigenvalue = 0.0;  ///< Converged eigenvalue (Rayleigh quotient)
+    Vector eigenvector;     ///< Corresponding unit eigenvector
+    idx iterations = 0;     ///< Iterations performed
+    bool converged = false; ///< Whether tolerance was met
 };
 
 namespace detail {
 /// Normalise v in-place; returns the old norm.
-inline real normalise(Vector& v) {
-  real nrm = 0;
-  for (idx i = 0; i < v.size(); ++i) {
-    nrm += v[i] * v[i];
-}
-  nrm = std::sqrt(nrm);
-  if (nrm > 1e-300) {
+inline real normalise(Vector &v) {
+    real nrm = 0;
     for (idx i = 0; i < v.size(); ++i) {
-      v[i] /= nrm;
-}
-}
-  return nrm;
+        nrm += v[i] * v[i];
+    }
+    nrm = std::sqrt(nrm);
+    if (nrm > 1e-300) {
+        for (idx i = 0; i < v.size(); ++i) {
+            v[i] /= nrm;
+        }
+    }
+    return nrm;
 }
 } // namespace detail
 
@@ -52,9 +52,7 @@ inline real normalise(Vector& v) {
 /// @param tol      Tolerance on eigenvalue change between iterations
 /// @param max_iter Maximum iterations
 /// @param backend  Backend forwarded to matvec and dot
-PowerResult power_iteration(const Matrix& A,
-                            real tol = 1e-10,
-                            idx max_iter = 1000,
+PowerResult power_iteration(const Matrix &A, real tol = 1e-10, idx max_iter = 1000,
                             Backend backend = default_backend);
 
 /// @brief Inverse iteration  -- finds the eigenvalue closest to a shift sigma.
@@ -66,10 +64,7 @@ PowerResult power_iteration(const Matrix& A,
 /// @param tol      Tolerance on eigenvalue change between iterations
 /// @param max_iter Maximum iterations
 /// @param backend  Backend forwarded to matvec and dot
-PowerResult inverse_iteration(const Matrix& A,
-                              real sigma,
-                              real tol = 1e-10,
-                              idx max_iter = 1000,
+PowerResult inverse_iteration(const Matrix &A, real sigma, real tol = 1e-10, idx max_iter = 1000,
                               Backend backend = default_backend);
 
 /// @brief Rayleigh quotient iteration  -- cubically convergent.
@@ -81,10 +76,7 @@ PowerResult inverse_iteration(const Matrix& A,
 /// @param tol      Tolerance on residual ||A*v - lambda*v||
 /// @param max_iter Maximum iterations
 /// @param backend  Backend forwarded to matvec, dot, axpy, norm
-PowerResult rayleigh_iteration(const Matrix& A,
-                               const Vector& x0,
-                               real tol = 1e-10,
-                               idx max_iter = 50,
-                               Backend backend = default_backend);
+PowerResult rayleigh_iteration(const Matrix &A, const Vector &x0, real tol = 1e-10,
+                               idx max_iter = 50, Backend backend = default_backend);
 
 } // namespace num

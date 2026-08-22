@@ -7,37 +7,37 @@ namespace num::cuda {
     throw std::runtime_error("CUDA not available");
 }
 
-real* alloc(idx) {
+real *alloc(idx) {
     no_cuda();
 }
-void free(real*) {
+void free(real *) {
     no_cuda();
 }
-void to_device(real*, const real*, idx) {
+void to_device(real *, const real *, idx) {
     no_cuda();
 }
-void to_host(real*, const real*, idx) {
+void to_host(real *, const real *, idx) {
     no_cuda();
 }
-void scale(real*, idx, real) {
+void scale(real *, idx, real) {
     no_cuda();
 }
-void add(const real*, const real*, real*, idx) {
+void add(const real *, const real *, real *, idx) {
     no_cuda();
 }
-void axpy(real, const real*, real*, idx) {
+void axpy(real, const real *, real *, idx) {
     no_cuda();
 }
-real dot(const real*, const real*, idx) {
+real dot(const real *, const real *, idx) {
     no_cuda();
 }
-void matvec(const real*, const real*, real*, idx, idx) {
+void matvec(const real *, const real *, real *, idx, idx) {
     no_cuda();
 }
-void matmul(const real*, const real*, real*, idx, idx, idx) {
+void matmul(const real *, const real *, real *, idx, idx, idx) {
     no_cuda();
 }
-void thomas_batched(const real*, const real*, const real*, const real*, real*, idx, idx) {
+void thomas_batched(const real *, const real *, const real *, const real *, real *, idx, idx) {
     no_cuda();
 }
 

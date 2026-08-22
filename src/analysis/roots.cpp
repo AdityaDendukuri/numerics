@@ -9,14 +9,14 @@ RootResult bisection(ScalarFn f, real a, real b, real tol, idx max_iter) {
     real fa = f(a), fb = f(b);
     if (fa * fb > 0.0) {
         throw std::invalid_argument("bisection: f(a) and f(b) must have opposite signs");
-}
+    }
 
     for (idx i = 0; i < max_iter; ++i) {
         real mid = 0.5 * (a + b);
         real fm = f(mid);
         if (std::abs(fm) < tol || 0.5 * (b - a) < tol) {
             return {mid, i + 1, std::abs(fm), true};
-}
+        }
         if (fa * fm < 0.0) {
             b = mid;
             fb = fm;
@@ -35,11 +35,11 @@ RootResult newton(ScalarFn f, ScalarFn df, real x0, real tol, idx max_iter) {
         real fx = f(x);
         if (std::abs(fx) < tol) {
             return {x, i + 1, std::abs(fx), true};
-}
+        }
         real dfx = df(x);
         if (std::abs(dfx) < 1e-14) {
             return {x, i + 1, std::abs(fx), false}; // near-zero derivative
-}
+        }
         x -= fx / dfx;
     }
     return {x, max_iter, std::abs(f(x)), false};
@@ -50,11 +50,11 @@ RootResult secant(ScalarFn f, real x0, real x1, real tol, idx max_iter) {
     for (idx i = 0; i < max_iter; ++i) {
         if (std::abs(f1) < tol) {
             return {x1, i + 1, std::abs(f1), true};
-}
+        }
         real df = f1 - f0;
         if (std::abs(df) < 1e-14) {
             return {x1, i + 1, std::abs(f1), false}; // stagnation
-}
+        }
         real x2 = x1 - (f1 * (x1 - x0) / df);
         x0 = x1;
         f0 = f1;
@@ -68,7 +68,7 @@ RootResult brent(ScalarFn f, real a, real b, real tol, idx max_iter) {
     real fa = f(a), fb = f(b);
     if (fa * fb > 0.0) {
         throw std::invalid_argument("brent: f(a) and f(b) must have opposite signs");
-}
+    }
 
     // c is the point such that [b,c] is always a valid bracket
     real c = a, fc = fa;
@@ -95,7 +95,7 @@ RootResult brent(ScalarFn f, real a, real b, real tol, idx max_iter) {
 
         if (std::abs(mid) <= tol1 || std::abs(fb) < tol) {
             return {b, i + 1, std::abs(fb), true};
-}
+        }
 
         if (std::abs(e) >= tol1 && std::abs(fa) > std::abs(fb)) {
             // attempt interpolation
@@ -116,12 +116,11 @@ RootResult brent(ScalarFn f, real a, real b, real tol, idx max_iter) {
                 q = -q;
             } else {
                 p = -p;
-}
+            }
 
             // accept interpolation only if step is smaller than previous
             real e_prev = e;
-            if (2.0 * p
-                < std::min((3.0 * mid * q) - std::abs(tol1 * q), std::abs(e_prev * q))) {
+            if (2.0 * p < std::min((3.0 * mid * q) - std::abs(tol1 * q), std::abs(e_prev * q))) {
                 e = d;
                 d = p / q;
             } else {

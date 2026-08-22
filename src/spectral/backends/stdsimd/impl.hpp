@@ -17,9 +17,7 @@ struct FFTPlanImpl : public num::spectral::FFTPlanImpl {
     bool invert;
     std::vector<std::vector<num::cplx>> twiddles;
 
-    FFTPlanImpl(int n_, bool inv)
-        : n(n_),
-          invert(inv) {
+    FFTPlanImpl(int n_, bool inv) : n(n_), invert(inv) {
         if (n_ == 0 || (n_ & (n_ - 1)))
             throw std::invalid_argument("FFTPlan: length must be a power of two");
         for (int len = 2; len <= n_; len <<= 1) {
@@ -35,23 +33,23 @@ struct FFTPlanImpl : public num::spectral::FFTPlanImpl {
         }
     }
 
-    void execute(const num::CVector& in, num::CVector& out) const override {
+    void execute(const num::CVector &in, num::CVector &out) const override {
         using vd = stdx::simd<double, stdx::simd_abi::native<double>>;
         constexpr int W = static_cast<int>(vd::size());
 
         for (num::idx i = 0; i < static_cast<num::idx>(n); ++i)
             out[i] = in[i];
         backends::seq::bit_reverse(out);
-        num::cplx* data = out.data();
+        num::cplx *data = out.data();
 
         int stage = 0;
         for (int len = 2; len <= n; len <<= 1, ++stage) {
             int hlen = len / 2;
-            const num::cplx* tw = twiddles[stage].data();
+            const num::cplx *tw = twiddles[stage].data();
 
             for (int i = 0; i < n; i += len) {
-                num::cplx* up = data + i;
-                num::cplx* vp = data + i + hlen;
+                num::cplx *up = data + i;
+                num::cplx *vp = data + i + hlen;
 
                 int j = 0;
                 for (; j + W <= hlen; j += W) {
@@ -81,19 +79,19 @@ struct FFTPlanImpl : public num::spectral::FFTPlanImpl {
     }
 };
 
-inline void fft(const num::CVector& in, num::CVector& out) {
+inline void fft(const num::CVector &in, num::CVector &out) {
     int n = static_cast<int>(in.size());
     FFTPlanImpl plan(n, false);
     plan.execute(in, out);
 }
 
-inline void ifft(const num::CVector& in, num::CVector& out) {
+inline void ifft(const num::CVector &in, num::CVector &out) {
     int n = static_cast<int>(in.size());
     FFTPlanImpl plan(n, true);
     plan.execute(in, out);
 }
 
-inline void rfft(const num::Vector& in, num::CVector& out) {
+inline void rfft(const num::Vector &in, num::CVector &out) {
     int n = static_cast<int>(in.size());
     num::CVector tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (int i = 0; i < n; ++i)
@@ -105,7 +103,7 @@ inline void rfft(const num::Vector& in, num::CVector& out) {
         out[k] = tmp_out[k];
 }
 
-inline void irfft(const num::CVector& in, int n, num::Vector& out) {
+inline void irfft(const num::CVector &in, int n, num::Vector &out) {
     num::CVector tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (int k = 0; k < n / 2 + 1; ++k)
         tmp[k] = in[k];

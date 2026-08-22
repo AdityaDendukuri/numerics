@@ -11,89 +11,89 @@
 namespace num {
 namespace detail {
 
-Matrix dense_expm_pade6(const Matrix& A) {
-  const idx m = A.rows();
+Matrix dense_expm_pade6(const Matrix &A) {
+    const idx m = A.rows();
 
-  static constexpr double c[7] =
-    {1.0, 0.5, 5.0 / 44.0, 1.0 / 66.0, 1.0 / 792.0, 1.0 / 15840.0, 1.0 / 665280.0};
+    static constexpr double c[7] = {1.0,         0.5,           5.0 / 44.0,    1.0 / 66.0,
+                                    1.0 / 792.0, 1.0 / 15840.0, 1.0 / 665280.0};
 
-  double norm_inf = 0.0;
-  for (idx i = 0; i < m; i++) {
-    double row_sum = 0.0;
-    for (idx j = 0; j < m; j++) {
-      row_sum += std::abs(A(i, j));
+    double norm_inf = 0.0;
+    for (idx i = 0; i < m; i++) {
+        double row_sum = 0.0;
+        for (idx j = 0; j < m; j++) {
+            row_sum += std::abs(A(i, j));
+        }
+        norm_inf = std::max(norm_inf, row_sum);
     }
-    norm_inf = std::max(norm_inf, row_sum);
-  }
 
-  int s = 0;
-  if (norm_inf > 0.5) {
-    s = (int)std::max(0.0, std::ceil(std::log2(norm_inf / 0.5)));
-  }
-
-  double scale = std::ldexp(1.0, -s);
-  Matrix as(m, m, 0.0);
-  for (idx i = 0; i < m; i++) {
-    for (idx j = 0; j < m; j++) {
-      as(i, j) = A(i, j) * scale;
+    int s = 0;
+    if (norm_inf > 0.5) {
+        s = (int)std::max(0.0, std::ceil(std::log2(norm_inf / 0.5)));
     }
-  }
 
-  Matrix B(m, m, 0.0);
-  matmul(as, as, B);
-
-  Matrix B2(m, m, 0.0);
-  matmul(B, B, B2);
-
-  Matrix B3(m, m, 0.0);
-  matmul(B2, B, B3);
-
-  Matrix v_mat(m, m, 0.0);
-  for (idx i = 0; i < m; i++) {
-    for (idx j = 0; j < m; j++) {
-      v_mat(i, j) = (c[6] * B3(i, j)) + (c[4] * B2(i, j)) + (c[2] * B(i, j));
+    double scale = std::ldexp(1.0, -s);
+    Matrix as(m, m, 0.0);
+    for (idx i = 0; i < m; i++) {
+        for (idx j = 0; j < m; j++) {
+            as(i, j) = A(i, j) * scale;
+        }
     }
-    v_mat(i, i) += c[0];
-  }
 
-  Matrix W(m, m, 0.0);
-  for (idx i = 0; i < m; i++) {
-    for (idx j = 0; j < m; j++) {
-      W(i, j) = (c[5] * B2(i, j)) + (c[3] * B(i, j));
+    Matrix B(m, m, 0.0);
+    matmul(as, as, B);
+
+    Matrix B2(m, m, 0.0);
+    matmul(B, B, B2);
+
+    Matrix B3(m, m, 0.0);
+    matmul(B2, B, B3);
+
+    Matrix v_mat(m, m, 0.0);
+    for (idx i = 0; i < m; i++) {
+        for (idx j = 0; j < m; j++) {
+            v_mat(i, j) = (c[6] * B3(i, j)) + (c[4] * B2(i, j)) + (c[2] * B(i, j));
+        }
+        v_mat(i, i) += c[0];
     }
-    W(i, i) += c[1];
-  }
 
-  Matrix U(m, m, 0.0);
-  matmul(as, W, U);
-
-  Matrix vp_u(m, m, 0.0);
-  Matrix vm_u(m, m, 0.0);
-  for (idx i = 0; i < m; i++) {
-    for (idx j = 0; j < m; j++) {
-      vp_u(i, j) = v_mat(i, j) + U(i, j);
-      vm_u(i, j) = v_mat(i, j) - U(i, j);
+    Matrix W(m, m, 0.0);
+    for (idx i = 0; i < m; i++) {
+        for (idx j = 0; j < m; j++) {
+            W(i, j) = (c[5] * B2(i, j)) + (c[3] * B(i, j));
+        }
+        W(i, i) += c[1];
     }
-  }
 
-  LUResult fac = lu(vm_u);
-  Matrix E(m, m, 0.0);
-  lu_solve(fac, vp_u, E);
+    Matrix U(m, m, 0.0);
+    matmul(as, W, U);
 
-  for (int i = 0; i < s; i++) {
-    Matrix E2(m, m, 0.0);
-    matmul(E, E, E2);
-    E = std::move(E2);
-  }
+    Matrix vp_u(m, m, 0.0);
+    Matrix vm_u(m, m, 0.0);
+    for (idx i = 0; i < m; i++) {
+        for (idx j = 0; j < m; j++) {
+            vp_u(i, j) = v_mat(i, j) + U(i, j);
+            vm_u(i, j) = v_mat(i, j) - U(i, j);
+        }
+    }
 
-  return E;
+    LUResult fac = lu(vm_u);
+    Matrix E(m, m, 0.0);
+    lu_solve(fac, vp_u, E);
+
+    for (int i = 0; i < s; i++) {
+        Matrix E2(m, m, 0.0);
+        matmul(E, E, E2);
+        E = std::move(E2);
+    }
+
+    return E;
 }
 
 } // namespace detail
 
-Vector expv(real t, const SparseMatrix& A, const Vector& v, int m_max, real tol) {
-  operators::SparseOp op(A);
-  return expv(t, op, v, m_max, tol);
+Vector expv(real t, const SparseMatrix &A, const Vector &v, int m_max, real tol) {
+    operators::SparseOp op(A);
+    return expv(t, op, v, m_max, tol);
 }
 
 } // namespace num

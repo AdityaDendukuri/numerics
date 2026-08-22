@@ -5,24 +5,24 @@
 #include <numerics.hpp>
 
 int main() {
-  using namespace num;
+    using namespace num;
 
-  // Generate sample sine wave data
-  std::vector<double> x, y;
-  for (int i = 0; i <= 60; ++i) {
-    double xi = i * 0.1;
-    x.push_back(xi);
-    y.push_back(std::sin(xi));
-  }
+    // Generate sample sine wave data
+    std::vector<double> x, y;
+    for (int i = 0; i <= 60; ++i) {
+        double xi = i * 0.1;
+        x.push_back(xi);
+        y.push_back(std::sin(xi));
+    }
 
-  std::cout << "Rendering In-Terminal ASCII Plot (set terminal dumb size 120, 30)...\n\n";
+    std::cout << "Rendering In-Terminal ASCII Plot (set terminal dumb size 120, 30)...\n\n";
 
-  // 1. Matplotlib-style plotting API rendered directly in terminal ASCII
-  plt::plot(x, y, "sin(x)", "lines");
-  plt::title("In-Terminal ASCII Waveform Plot");
-  plt::xlabel("Time (x)");
-  plt::ylabel("Amplitude sin(x)");
-  plt::show_dumb(120, 25);
+    // 1. Matplotlib-style plotting API rendered directly in terminal ASCII
+    plt::plot(x, y, "sin(x)", "lines");
+    plt::title("In-Terminal ASCII Waveform Plot");
+    plt::xlabel("Time (x)");
+    plt::ylabel("Amplitude sin(x)");
+    plt::show_dumb(120, 25);
 
-  return 0;
+    return 0;
 }

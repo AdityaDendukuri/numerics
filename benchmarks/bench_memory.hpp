@@ -35,10 +35,10 @@ namespace mem {
 /// other TUs that include this header can read them (via mem::install).
 namespace detail {
 extern std::atomic<int64_t> g_allocs; ///< allocation count since last reset
-extern std::atomic<int64_t> g_bytes; ///< total bytes allocated since last reset
-extern std::atomic<int64_t> g_live; ///< current live bytes (alloc - freed)
-extern std::atomic<int64_t> g_peak; ///< max live bytes seen since last reset
-extern std::atomic<bool> g_active; ///< gate: counters only increment when true
+extern std::atomic<int64_t> g_bytes;  ///< total bytes allocated since last reset
+extern std::atomic<int64_t> g_live;   ///< current live bytes (alloc - freed)
+extern std::atomic<int64_t> g_peak;   ///< max live bytes seen since last reset
+extern std::atomic<bool> g_active;    ///< gate: counters only increment when true
 
 void reset() noexcept;
 } // namespace detail
@@ -61,7 +61,6 @@ void install();
 ///
 /// @param results  Vector of Run objects from CollectingReporter::results()
 /// @param out      Output stream (default std::cout)
-void print_report(const std::vector<benchmark::BenchmarkReporter::Run>& results,
-                  std::ostream& out);
+void print_report(const std::vector<benchmark::BenchmarkReporter::Run> &results, std::ostream &out);
 
 } // namespace mem

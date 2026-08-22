@@ -32,10 +32,10 @@ namespace num {
 namespace pde {
 
 /// Solve \f$-\Delta u=f\f$ using finite-difference eigenvalues.
-[[nodiscard]] Matrix poisson2d_fd(const Matrix& f, int N);
+[[nodiscard]] Matrix poisson2d_fd(const Matrix &f, int N);
 
 /// Solve \f$-\Delta u=f\f$ using continuous eigenvalues \f$(k\pi)^2\f$.
-[[nodiscard]] Matrix poisson2d(const Matrix& f, int N);
+[[nodiscard]] Matrix poisson2d(const Matrix &f, int N);
 
 } // namespace pde
 } // namespace num

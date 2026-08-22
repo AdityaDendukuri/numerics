@@ -19,38 +19,34 @@
 using namespace num;
 
 static Matrix make_sym(idx n) {
-  Matrix A(n, n, 0.0);
-  for (idx i = 0; i < n; ++i)
-    for (idx j = i; j < n; ++j) {
-      real v = static_cast<real>(1) / static_cast<real>(1 + i + j);
-      A(i, j) = A(j, i) = v;
-    }
-  // ensure positive eigenvalues
-  for (idx i = 0; i < n; ++i)
-    A(i, i) += static_cast<real>(n);
-  return A;
+    Matrix A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i)
+        for (idx j = i; j < n; ++j) {
+            real v = static_cast<real>(1) / static_cast<real>(1 + i + j);
+            A(i, j) = A(j, i) = v;
+        }
+    // ensure positive eigenvalues
+    for (idx i = 0; i < n; ++i)
+        A(i, i) += static_cast<real>(n);
+    return A;
 }
 
 // ── Full symmetric eigendecomposition ────────────────────────────────────────
 
-template<Backend B>
-static void BM_EigSym(benchmark::State& state) {
-  idx n = static_cast<idx>(state.range(0));
-  Matrix A = make_sym(n);
-  for (auto _ : state) {
-    auto r = eig_sym(A, 1e-12, 100, B);
-    benchmark::DoNotOptimize(r.values.data());
-  }
-  state.counters["GFLOP/s"] = benchmark::Counter(
-    4.0 / 3.0 * static_cast<double>(n) * static_cast<double>(n) * static_cast<double>(n),
-    benchmark::Counter::kIsIterationInvariantRate,
-    benchmark::Counter::kIs1000);
-  state.SetComplexityN(static_cast<int64_t>(n));
+template <Backend B>
+static void BM_EigSym(benchmark::State &state) {
+    idx n = static_cast<idx>(state.range(0));
+    Matrix A = make_sym(n);
+    for (auto _ : state) {
+        auto r = eig_sym(A, 1e-12, 100, B);
+        benchmark::DoNotOptimize(r.values.data());
+    }
+    state.counters["GFLOP/s"] = benchmark::Counter(
+        4.0 / 3.0 * static_cast<double>(n) * static_cast<double>(n) * static_cast<double>(n),
+        benchmark::Counter::kIsIterationInvariantRate, benchmark::Counter::kIs1000);
+    state.SetComplexityN(static_cast<int64_t>(n));
 }
-BENCHMARK_TEMPLATE(BM_EigSym, Backend::seq)
-  ->RangeMultiplier(2)
-  ->Range(32, 512)
-  ->Complexity();
+BENCHMARK_TEMPLATE(BM_EigSym, Backend::seq)->RangeMultiplier(2)->Range(32, 512)->Complexity();
 // NOTE: Backend::omp Jacobi is intentionally excluded from the benchmark.
 // Cyclic Jacobi applies one OpenMP parallel region per rotation, meaning
 // O(n^2) team launches per sweep × O(n) sweeps = O(n^3) launches total.
@@ -61,24 +57,20 @@ BENCHMARK_TEMPLATE(BM_EigSym, Backend::seq)
 // rotations at once — a future improvement.  The OMP backend remains correct
 // and available; it just should not be benchmarked against seq this way.
 #if defined(NUMERICS_HAS_LAPACK)
-BENCHMARK_TEMPLATE(BM_EigSym, Backend::lapack)
-  ->RangeMultiplier(2)
-  ->Range(32, 512)
-  ->Complexity();
+BENCHMARK_TEMPLATE(BM_EigSym, Backend::lapack)->RangeMultiplier(2)->Range(32, 512)->Complexity();
 #endif
 
-static void BM_Lanczos(benchmark::State& state) {
-  idx n = static_cast<idx>(state.range(0));
-  constexpr idx k = 10;
-  Matrix A = make_sym(n);
-  auto op =
-    operators::make_op([&](const Vector& v, Vector& w) { matvec(A, v, w, best_backend); },
-                       n);
-  auto Aop = operators::assume_symmetric(op);
-  for (auto _ : state) {
-    auto r = lanczos(Aop, k, 1e-10, 0, Backend::seq);
-    benchmark::DoNotOptimize(r.ritz_values.data());
-  }
-  state.SetComplexityN(static_cast<int64_t>(n));
+static void BM_Lanczos(benchmark::State &state) {
+    idx n = static_cast<idx>(state.range(0));
+    constexpr idx k = 10;
+    Matrix A = make_sym(n);
+    auto op =
+        operators::make_op([&](const Vector &v, Vector &w) { matvec(A, v, w, best_backend); }, n);
+    auto Aop = operators::assume_symmetric(op);
+    for (auto _ : state) {
+        auto r = lanczos(Aop, k, 1e-10, 0, Backend::seq);
+        benchmark::DoNotOptimize(r.ritz_values.data());
+    }
+    state.SetComplexityN(static_cast<int64_t>(n));
 }
 BENCHMARK(BM_Lanczos)->RangeMultiplier(2)->Range(64, 2048)->Complexity();

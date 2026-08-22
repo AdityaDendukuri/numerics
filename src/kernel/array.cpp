@@ -6,16 +6,16 @@
 
 namespace num::kernel::array {
 
-void axpby(real a, const Vector& x, real b, Vector& y, seq_t) noexcept {
+void axpby(real a, const Vector &x, real b, Vector &y, seq_t) noexcept {
     raw::axpby(y.data(), x.data(), a, b, x.size());
 }
 
-void axpby(real a, const Vector& x, real b, Vector& y, par_t) {
+void axpby(real a, const Vector &x, real b, Vector &y, par_t) {
 #ifdef NUMERICS_HAS_OMP
     const idx n = x.size();
-    const real* xd = x.data();
-    real* yd = y.data();
-    #pragma omp parallel for schedule(static)
+    const real *xd = x.data();
+    real *yd = y.data();
+#pragma omp parallel for schedule(static)
     for (idx i = 0; i < n; ++i) {
         yd[i] = (a * xd[i]) + (b * yd[i]);
     }
@@ -24,17 +24,17 @@ void axpby(real a, const Vector& x, real b, Vector& y, par_t) {
 #endif
 }
 
-void axpbyz(real a, const Vector& x, real b, const Vector& y, Vector& z, seq_t) noexcept {
+void axpbyz(real a, const Vector &x, real b, const Vector &y, Vector &z, seq_t) noexcept {
     raw::axpbyz(z.data(), x.data(), y.data(), a, b, x.size());
 }
 
-void axpbyz(real a, const Vector& x, real b, const Vector& y, Vector& z, par_t) {
+void axpbyz(real a, const Vector &x, real b, const Vector &y, Vector &z, par_t) {
 #ifdef NUMERICS_HAS_OMP
     const idx n = x.size();
-    const real* xd = x.data();
-    const real* yd = y.data();
-    real* zd = z.data();
-    #pragma omp parallel for schedule(static)
+    const real *xd = x.data();
+    const real *yd = y.data();
+    real *zd = z.data();
+#pragma omp parallel for schedule(static)
     for (idx i = 0; i < n; ++i) {
         zd[i] = (a * xd[i]) + (b * yd[i]);
     }
