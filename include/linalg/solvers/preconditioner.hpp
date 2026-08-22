@@ -6,6 +6,7 @@
 
 #include "core/matrix.hpp"
 #include "core/vector.hpp"
+#include "linalg/concepts.hpp"
 #include "linalg/sparse/sparse.hpp"
 #include <cmath>
 #include <concepts>
@@ -13,14 +14,6 @@
 #include <utility>
 
 namespace num {
-
-template <class M>
-/// Object supporting z=M^-1 r with square dimensions.
-concept Preconditioner = requires(const M &M_op, const Vector &r, Vector &z) {
-    {M_op.rows()}->std::convertible_to<idx>;
-    {M_op.cols()}->std::convertible_to<idx>;
-    M_op.apply(r, z);
-};
 
 /// Diagonal inverse preconditioner.
 class JacobiPreconditioner final {

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "linalg/banded/banded.hpp"
+#include "linalg/concepts.hpp"
 #include "linalg/eigen/eigen.hpp"
 #include "linalg/expv/expv.hpp"
 #include "linalg/factorization/factorization.hpp"

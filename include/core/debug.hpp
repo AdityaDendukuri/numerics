@@ -17,7 +17,7 @@ namespace num::debug {
 enum class DiagnosticLevel {
     off = 0,
     basic = 1, ///< Dimension matching, non-empty, finite checks
-    full = 2   ///< Includes sampled symmetry and positive-definiteness testing
+    full = 2   ///< Includes sampled symmetry, adjoint, and positive-definiteness testing
 };
 
 inline DiagnosticLevel g_level = DiagnosticLevel::full;
@@ -140,6 +140,79 @@ inline void verify_symmetry_sample(const Op &A, idx n,
               "assume_symmetric() assertion failed: sampled |x^T A y - y^T A x| = " +
                   std::to_string(diff) + ". The operator is NOT symmetric!",
               loc);
+    }
+}
+
+/// @brief Sampled runtime test for adjoint consistency: <A x, y> approx <x, A* y>
+template <class Op, class VectorType>
+inline void verify_adjoint_sample(const Op &A, idx m, idx n,
+                                  std::source_location loc = std::source_location::current()) {
+    if (g_level != DiagnosticLevel::full) {
+        return;
+    }
+    if (m == 0 || n == 0) {
+        return;
+    }
+    VectorType x(n), y(m), Ax(m), Aty(n);
+    for (idx i = 0; i < n; ++i) {
+        x[i] = (i % 2 == 0) ? real(1.0) : real(-0.5);
+    }
+    for (idx i = 0; i < m; ++i) {
+        y[i] = (i % 3 == 0) ? real(0.8) : real(1.2);
+    }
+    A.apply(x, Ax);
+    A.apply_adjoint(y, Aty);
+
+    real dot_ax_y = 0.0, dot_x_aty = 0.0;
+    for (idx i = 0; i < m; ++i) {
+        dot_ax_y += Ax[i] * y[i];
+    }
+    for (idx i = 0; i < n; ++i) {
+        dot_x_aty += x[i] * Aty[i];
+    }
+
+    real diff = std::abs(dot_ax_y - dot_x_aty);
+    real scale = std::max(std::abs(dot_ax_y), std::abs(dot_x_aty)) + 1e-12;
+    if (diff / scale > 1e-3) {
+        panic("PropertyError",
+              "Adjoint consistency check failed: |<Ax, y> - <x, A*y>| = " + std::to_string(diff),
+              loc);
+    }
+}
+
+/// @brief Validate structural invariants of CSR sparse storage.
+template <class SparseType>
+inline void verify_sparse_structure(const SparseType &A,
+                                    std::source_location loc = std::source_location::current()) {
+    if (g_level == DiagnosticLevel::off) {
+        return;
+    }
+    const idx nrows = A.n_rows();
+    const idx ncols = A.n_cols();
+    const idx *row_ptr = A.row_ptr();
+    const idx *col_idx = A.col_idx();
+    const real *values = A.values();
+
+    if (row_ptr[0] != 0) {
+        panic("SparseStructureError", "row_ptr[0] must be 0", loc);
+    }
+    for (idx i = 0; i < nrows; ++i) {
+        if (row_ptr[i] > row_ptr[i + 1]) {
+            panic("SparseStructureError",
+                  "row_ptr is not monotonic at row " + std::to_string(i), loc);
+        }
+        for (idx k = row_ptr[i]; k < row_ptr[i + 1]; ++k) {
+            if (col_idx[k] >= ncols) {
+                panic("SparseStructureError",
+                      "col_idx[" + std::to_string(k) + "] = " + std::to_string(col_idx[k]) +
+                          " exceeds n_cols (" + std::to_string(ncols) + ")",
+                      loc);
+            }
+            if (!std::isfinite(values[k])) {
+                panic("SparseStructureError",
+                      "non-finite sparse value at index " + std::to_string(k), loc);
+            }
+        }
     }
 }
 
