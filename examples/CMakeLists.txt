@@ -27,3 +27,4 @@ add_numerics_example(09_mcmc_bayesian_sampling       09_mcmc_bayesian_sampling.c
 add_numerics_example(10_banded_and_spd_operators     10_banded_and_spd_operators.cpp)
 add_numerics_example(11_terminal_ascii_plot         11_terminal_ascii_plot.cpp)
 add_numerics_example(12_hessenberg_resolvent_benchmark 12_hessenberg_resolvent_benchmark.cpp)
+add_numerics_example(13_talbot_spectral_validation   13_talbot_spectral_validation.cpp)
