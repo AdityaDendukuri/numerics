@@ -1,30 +1,147 @@
 #include "linalg/solvers/dense_resolvent.hpp"
 #include "core/debug.hpp"
+#include "linalg/factorization/hessenberg.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <utility>
 
-#if defined(NUMERICS_HAS_LAPACK)
-#include "core/parallel/lapack_wrapper.hpp"
-#endif
-
 namespace num {
 
-struct DenseResolventSolver::Impl {
-    explicit Impl(Matrix input) : matrix(std::move(input)), lu(matrix.size()) {
-        debug::check_dim(matrix.rows(), matrix.cols(), "DenseResolventSolver requires a square matrix");
-        debug::check_non_empty(matrix.rows(), "DenseResolventSolver matrix");
-        pivots.resize(matrix.rows());
+namespace {
+
+void solve_hessenberg_system(const Matrix &H, cplx shift, const std::vector<cplx> &b_tilde,
+                             std::vector<cplx> &y, std::vector<cplx> &M_buf,
+                             std::vector<idx> &pivots) {
+    const idx n = H.rows();
+    if (b_tilde.size() != n) {
+        throw std::invalid_argument("solve_hessenberg_system: dimension mismatch");
     }
 
-    Matrix matrix;
-    std::vector<cplx> lu;
-#if defined(NUMERICS_HAS_LAPACK)
-    std::vector<lapack_int> pivots;
-#else
+    if (M_buf.size() < n * n) {
+        M_buf.resize(n * n);
+    }
+    if (pivots.size() < n) {
+        pivots.resize(n);
+    }
+    if (y.size() != n) {
+        y.resize(n);
+    }
+
+    const double *H_data = H.data();
+
+    // 1. Form M = sI - H in M_buf
+    for (idx i = 0; i < n; ++i) {
+        const double *H_row = &H_data[i * n];
+        cplx *M_row = &M_buf[i * n];
+        for (idx j = 0; j < n; ++j) {
+            M_row[j] = (i == j ? shift : cplx(0.0, 0.0)) - H_row[j];
+        }
+    }
+
+    // 2. Hessenberg Gaussian elimination with partial pivoting in O(n^2)
+    for (idx i = 0; i + 1 < n; ++i) {
+        cplx *row_i = &M_buf[i * n];
+        cplx *row_next = &M_buf[(i + 1) * n];
+
+        const double diag_abs = std::abs(row_i[i]);
+        const double subdiag_abs = std::abs(row_next[i]);
+
+        if (subdiag_abs > diag_abs) {
+            for (idx j = i; j < n; ++j) {
+                std::swap(row_i[j], row_next[j]);
+            }
+            pivots[i] = i + 1;
+        } else {
+            pivots[i] = i;
+        }
+
+        const cplx pivot_val = row_i[i];
+        if (std::abs(pivot_val) > 1e-30) {
+            const cplx mult = row_next[i] / pivot_val;
+            row_next[i] = mult;
+            for (idx j = i + 1; j < n; ++j) {
+                row_next[j] -= mult * row_i[j];
+            }
+        }
+    }
+
+    // 3. Forward substitution on RHS
+    for (idx i = 0; i < n; ++i) {
+        y[i] = b_tilde[i];
+    }
+    for (idx i = 0; i + 1 < n; ++i) {
+        if (pivots[i] != i) {
+            std::swap(y[i], y[i + 1]);
+        }
+        const cplx mult = M_buf[((i + 1) * n) + i];
+        y[i + 1] -= mult * y[i];
+    }
+
+    // 4. Backward substitution on upper triangular factor
+    for (idx step = 0; step < n; ++step) {
+        const idx i = n - 1 - step;
+        const cplx *row_i = &M_buf[i * n];
+        cplx sum = y[i];
+        for (idx j = i + 1; j < n; ++j) {
+            sum -= row_i[j] * y[j];
+        }
+        const cplx diag = row_i[i];
+        if (std::abs(diag) < 1e-30) {
+            y[i] = cplx(0.0, 0.0);
+        } else {
+            y[i] = sum / diag;
+        }
+    }
+}
+
+void project_rhs(const Matrix &Q, const std::vector<cplx> &b, std::vector<cplx> &b_tilde) {
+    const idx n = Q.rows();
+    if (b_tilde.size() != n) {
+        b_tilde.resize(n);
+    }
+    for (idx i = 0; i < n; ++i) {
+        b_tilde[i] = cplx(0.0, 0.0);
+    }
+    const double *Q_data = Q.data();
+    for (idx j = 0; j < n; ++j) {
+        const double *row_j = &Q_data[j * n];
+        const cplx bj = b[j];
+        for (idx i = 0; i < n; ++i) {
+            b_tilde[i] += row_j[i] * bj;
+        }
+    }
+}
+
+void back_project(const Matrix &Q, const std::vector<cplx> &y, std::vector<cplx> &x) {
+    const idx n = Q.rows();
+    if (x.size() != n) {
+        x.resize(n);
+    }
+    const double *Q_data = Q.data();
+    for (idx i = 0; i < n; ++i) {
+        const double *row_i = &Q_data[i * n];
+        cplx sum(0.0, 0.0);
+        for (idx j = 0; j < n; ++j) {
+            sum += row_i[j] * y[j];
+        }
+        x[i] = sum;
+    }
+}
+
+} // namespace
+
+struct DenseResolventSolver::Impl {
+    explicit Impl(Matrix input)
+        : decomp(input), M_buf(input.rows() * input.rows()), pivots(input.rows()) {
+        debug::check_dim(input.rows(), input.cols(), "DenseResolventSolver requires a square matrix");
+        debug::check_non_empty(input.rows(), "DenseResolventSolver matrix");
+    }
+
+    HessenbergDecomposition decomp;
+    cplx current_shift{0.0, 0.0};
+    std::vector<cplx> M_buf;
     std::vector<idx> pivots;
-#endif
     bool factored = false;
 };
 
@@ -39,60 +156,51 @@ DenseResolventSolver::DenseResolventSolver(DenseResolventSolver &&) noexcept = d
 DenseResolventSolver &DenseResolventSolver::operator=(DenseResolventSolver &&) noexcept = default;
 
 idx DenseResolventSolver::size() const noexcept {
-    return impl_ ? impl_->matrix.rows() : 0;
+    return impl_ ? impl_->decomp.size() : 0;
 }
 
 void DenseResolventSolver::factorize(cplx shift) {
-    const idx n = impl_->matrix.rows();
-    for (idx row = 0; row < n; ++row) {
-        for (idx column = 0; column < n; ++column) {
-            impl_->lu[(row * n) + column] =
-                (row == column ? shift : cplx(0.0, 0.0)) - impl_->matrix(row, column);
+    const idx n = impl_->decomp.size();
+    impl_->current_shift = shift;
+
+    // 1. Form M = sI - H in M_buf
+    const auto &H = impl_->decomp.H();
+    const double *H_data = H.data();
+    for (idx i = 0; i < n; ++i) {
+        const double *H_row = &H_data[i * n];
+        cplx *M_row = &impl_->M_buf[i * n];
+        for (idx j = 0; j < n; ++j) {
+            M_row[j] = (i == j ? shift : cplx(0.0, 0.0)) - H_row[j];
         }
     }
 
-#if defined(NUMERICS_HAS_LAPACK)
-    int info = 0;
-    const auto lapack_n = static_cast<lapack_int>(n);
-#if defined(NUMERICS_LAPACK_ACCELERATE)
-    zgetrf_(&lapack_n, &lapack_n, impl_->lu.data(), &lapack_n, impl_->pivots.data(), &info);
-#else
-    info = LAPACKE_zgetrf(LAPACK_ROW_MAJOR, lapack_n, lapack_n,
-                          reinterpret_cast<lapack_complex_double *>(impl_->lu.data()), lapack_n,
-                          impl_->pivots.data());
-#endif
-    if (info != 0) {
-        throw std::runtime_error("DenseResolventSolver LU factorization failed");
-    }
-#else
-    for (idx column = 0; column < n; ++column) {
-        idx pivot = column;
-        double largest = std::abs(impl_->lu[(column * n) + column]);
-        for (idx row = column + 1; row < n; ++row) {
-            const double candidate = std::abs(impl_->lu[(row * n) + column]);
-            if (candidate > largest) {
-                largest = candidate;
-                pivot = row;
+    // 2. Hessenberg Gaussian elimination with partial pivoting in O(n^2)
+    for (idx i = 0; i + 1 < n; ++i) {
+        cplx *row_i = &impl_->M_buf[i * n];
+        cplx *row_next = &impl_->M_buf[(i + 1) * n];
+
+        const double diag_abs = std::abs(row_i[i]);
+        const double subdiag_abs = std::abs(row_next[i]);
+
+        if (subdiag_abs > diag_abs) {
+            for (idx j = i; j < n; ++j) {
+                std::swap(row_i[j], row_next[j]);
             }
+            impl_->pivots[i] = i + 1;
+        } else {
+            impl_->pivots[i] = i;
         }
-        if (largest == 0.0) {
-            throw std::runtime_error("DenseResolventSolver encountered a singular matrix");
-        }
-        impl_->pivots[column] = pivot;
-        if (pivot != column) {
-            for (idx entry = 0; entry < n; ++entry) {
-                std::swap(impl_->lu[(column * n) + entry], impl_->lu[(pivot * n) + entry]);
-            }
-        }
-        for (idx row = column + 1; row < n; ++row) {
-            impl_->lu[(row * n) + column] /= impl_->lu[(column * n) + column];
-            for (idx entry = column + 1; entry < n; ++entry) {
-                impl_->lu[(row * n) + entry] -=
-                    impl_->lu[(row * n) + column] * impl_->lu[(column * n) + entry];
+
+        const cplx pivot_val = row_i[i];
+        if (std::abs(pivot_val) > 1e-30) {
+            const cplx mult = row_next[i] / pivot_val;
+            row_next[i] = mult;
+            for (idx j = i + 1; j < n; ++j) {
+                row_next[j] -= mult * row_i[j];
             }
         }
     }
-#endif
+
     impl_->factored = true;
 }
 
@@ -103,49 +211,44 @@ std::vector<cplx> DenseResolventSolver::solve(const std::vector<cplx> &rhs) cons
 }
 
 void DenseResolventSolver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &result) const {
-    const idx n = impl_->matrix.rows();
+    const idx n = impl_->decomp.size();
     if (!impl_->factored) {
         throw std::invalid_argument("DenseResolventSolver: factorization required before solve");
     }
     debug::check_dim(n, static_cast<idx>(rhs.size()), "DenseResolventSolver RHS");
-    result = rhs;
 
-#if defined(NUMERICS_HAS_LAPACK)
-    int info = 0;
-    const auto lapack_n = static_cast<lapack_int>(n);
-    constexpr lapack_int one = 1;
-#if defined(NUMERICS_LAPACK_ACCELERATE)
-    // Row-major storage is interpreted by Fortran as the transpose.
-    constexpr char transpose = 'T';
-    zgetrs_(&transpose, &lapack_n, &one, impl_->lu.data(), &lapack_n, impl_->pivots.data(),
-            result.data(), &lapack_n, &info);
-#else
-    info = LAPACKE_zgetrs(LAPACK_ROW_MAJOR, 'N', lapack_n, one,
-                          reinterpret_cast<const lapack_complex_double *>(impl_->lu.data()),
-                          lapack_n, impl_->pivots.data(),
-                          reinterpret_cast<lapack_complex_double *>(result.data()), one);
-#endif
-    if (info != 0) {
-        throw std::runtime_error("DenseResolventSolver solve failed");
+    // 1. Project RHS to Hessenberg coordinates: b_tilde = Q^T * rhs (O(n^2))
+    std::vector<cplx> b_tilde(n);
+    project_rhs(impl_->decomp.Q(), rhs, b_tilde);
+
+    // 2. Forward substitution on b_tilde (O(n))
+    std::vector<cplx> y = b_tilde;
+    for (idx i = 0; i + 1 < n; ++i) {
+        if (impl_->pivots[i] != i) {
+            std::swap(y[i], y[i + 1]);
+        }
+        const cplx mult = impl_->M_buf[((i + 1) * n) + i];
+        y[i + 1] -= mult * y[i];
     }
-#else
-    for (idx column = 0; column < n; ++column) {
-        if (impl_->pivots[column] != column) {
-            std::swap(result[column], result[impl_->pivots[column]]);
+
+    // 3. Backward substitution on upper triangular factor (O(n^2))
+    for (idx step = 0; step < n; ++step) {
+        const idx i = n - 1 - step;
+        const cplx *row_i = &impl_->M_buf[i * n];
+        cplx sum = y[i];
+        for (idx j = i + 1; j < n; ++j) {
+            sum -= row_i[j] * y[j];
+        }
+        const cplx diag = row_i[i];
+        if (std::abs(diag) < 1e-30) {
+            y[i] = cplx(0.0, 0.0);
+        } else {
+            y[i] = sum / diag;
         }
     }
-    for (idx row = 0; row < n; ++row) {
-        for (idx column = 0; column < row; ++column) {
-            result[row] -= impl_->lu[(row * n) + column] * result[column];
-        }
-    }
-    for (idx row = n; row-- > 0;) {
-        for (idx column = row + 1; column < n; ++column) {
-            result[row] -= impl_->lu[(row * n) + column] * result[column];
-        }
-        result[row] /= impl_->lu[(row * n) + row];
-    }
-#endif
+
+    // 4. Back-project solution: result = Q * y (O(n^2))
+    back_project(impl_->decomp.Q(), y, result);
 }
 
 std::vector<std::vector<cplx>>

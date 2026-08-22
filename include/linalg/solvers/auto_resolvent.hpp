@@ -12,7 +12,7 @@ namespace num {
 
 /// Dense/sparse cutoff and optional sparse symbolic symmetry hint.
 struct AutoResolventOptions {
-    idx dense_limit = 128;
+    idx dense_limit = 512;
     bool symmetric_pattern = false;
 };
 

@@ -1,5 +1,5 @@
 /// @file src/linalg/factorization/hessenberg.cpp
-/// @brief Implementation of Householder upper Hessenberg decomposition.
+/// @brief High-performance cache-contiguous Householder upper Hessenberg decomposition.
 #include "linalg/factorization/hessenberg.hpp"
 #include <cmath>
 #include <stdexcept>
@@ -22,6 +22,9 @@ HessenbergDecomposition::HessenbergDecomposition(const Matrix &A) : H_(A), Q_(A.
     }
 
     std::vector<double> v(n);
+    std::vector<double> w(n);
+    double *H_raw = H_.data();
+    double *Q_raw = Q_.data();
 
     // Eliminate below subdiagonal column by column
     for (idx k = 0; k < n - 2; ++k) {
@@ -30,7 +33,7 @@ HessenbergDecomposition::HessenbergDecomposition(const Matrix &A) : H_(A), Q_(A.
         // Compute 2-norm of H(k+1:n-1, k)
         double norm_sq = 0.0;
         for (idx i = k + 1; i < n; ++i) {
-            const double val = H_(i, k);
+            const double val = H_raw[(i * n) + k];
             norm_sq += val * val;
         }
         const double norm_x = std::sqrt(norm_sq);
@@ -38,7 +41,7 @@ HessenbergDecomposition::HessenbergDecomposition(const Matrix &A) : H_(A), Q_(A.
             continue;
         }
 
-        const double x0 = H_(k + 1, k);
+        const double x0 = H_raw[((k + 1) * n) + k];
         const double sign = (x0 >= 0.0) ? 1.0 : -1.0;
         const double mu = x0 + sign * norm_x;
 
@@ -46,53 +49,65 @@ HessenbergDecomposition::HessenbergDecomposition(const Matrix &A) : H_(A), Q_(A.
         v[0] = 1.0;
         double v_norm_sq = 1.0;
         for (idx i = 1; i < m; ++i) {
-            v[i] = H_(k + 1 + i, k) / mu;
+            v[i] = H_raw[((k + 1 + i) * n) + k] / mu;
             v_norm_sq += v[i] * v[i];
         }
         const double beta = 2.0 / v_norm_sq;
 
         // 1. Left multiplication: H <- (I - beta * v * v^T) * H
-        // Applies to rows k+1:n-1 and columns k:n-1
+        // Cache-friendly contiguous row accumulation
         for (idx j = k; j < n; ++j) {
-            double dot = 0.0;
-            for (idx i = 0; i < m; ++i) {
-                dot += v[i] * H_(k + 1 + i, j);
+            w[j] = 0.0;
+        }
+        for (idx i = 0; i < m; ++i) {
+            const double vi = v[i];
+            const double *row_ptr = &H_raw[(k + 1 + i) * n];
+            for (idx j = k; j < n; ++j) {
+                w[j] += vi * row_ptr[j];
             }
-            const double factor = beta * dot;
-            for (idx i = 0; i < m; ++i) {
-                H_(k + 1 + i, j) -= factor * v[i];
+        }
+        for (idx j = k; j < n; ++j) {
+            w[j] *= beta;
+        }
+        for (idx i = 0; i < m; ++i) {
+            const double vi = v[i];
+            double *row_ptr = &H_raw[(k + 1 + i) * n];
+            for (idx j = k; j < n; ++j) {
+                row_ptr[j] -= vi * w[j];
             }
         }
 
         // 2. Right multiplication: H <- H * (I - beta * v * v^T)
-        // Applies to rows 0:n-1 and columns k+1:n-1
+        // Stride-1 contiguous column dot-products
         for (idx i = 0; i < n; ++i) {
+            double *row_ptr = &H_raw[i * n];
             double dot = 0.0;
             for (idx j = 0; j < m; ++j) {
-                dot += H_(i, k + 1 + j) * v[j];
+                dot += row_ptr[k + 1 + j] * v[j];
             }
             const double factor = beta * dot;
             for (idx j = 0; j < m; ++j) {
-                H_(i, k + 1 + j) -= factor * v[j];
+                row_ptr[k + 1 + j] -= factor * v[j];
             }
         }
 
         // 3. Accumulate into Q: Q <- Q * (I - beta * v * v^T)
-        // Applies to rows 0:n-1 and columns k+1:n-1
+        // Stride-1 contiguous updates
         for (idx i = 0; i < n; ++i) {
+            double *row_ptr = &Q_raw[i * n];
             double dot = 0.0;
             for (idx j = 0; j < m; ++j) {
-                dot += Q_(i, k + 1 + j) * v[j];
+                dot += row_ptr[k + 1 + j] * v[j];
             }
             const double factor = beta * dot;
             for (idx j = 0; j < m; ++j) {
-                Q_(i, k + 1 + j) -= factor * v[j];
+                row_ptr[k + 1 + j] -= factor * v[j];
             }
         }
 
         // Set strictly zero entries below subdiagonal
         for (idx i = k + 2; i < n; ++i) {
-            H_(i, k) = 0.0;
+            H_raw[(i * n) + k] = 0.0;
         }
     }
 }
