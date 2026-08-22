@@ -119,15 +119,13 @@ inline void write_panel(FILE *pipe, const Panel &p, int block_offset) {
         }
 
         if (p.logx_ && p.logy_) {
-            fputs("set logscale xy\nset format x '10^{%L}'\nset format y "
-                  "'10^{%L}'\n",
-                  pipe);
+            fputs("set logscale xy\nset format x '10^{%L}'\nset format y '10^{%L}'\n", pipe);
         } else if (p.logx_) {
-            fputs("set logscale x\nset format x '10^{%L}'\n", pipe);
+            fputs("unset logscale y\nset logscale x\nset format x '10^{%L}'\nset format y '%g'\n", pipe);
         } else if (p.logy_) {
-            fputs("set logscale y\nset format y '10^{%L}'\n", pipe);
+            fputs("unset logscale x\nset logscale y\nset format y '10^{%L}'\nset format x '%g'\n", pipe);
         } else {
-            fputs("unset logscale\n", pipe);
+            fputs("unset logscale\nset format x '%g'\nset format y '%g'\n", pipe);
         }
 
         if (p.legend_) {
