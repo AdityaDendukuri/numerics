@@ -1,5 +1,5 @@
 PROJECT_NAME           = "numerics"
-PROJECT_BRIEF          = "Parallel Numerical Methods Library"
+PROJECT_BRIEF          =
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
 
 # ── Sources ──────────────────────────────────────────────────────────────────

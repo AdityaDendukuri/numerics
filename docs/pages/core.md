@@ -341,6 +341,50 @@ auto spd = num::linalg::assume_spd(A_dense);
 // No numerical validation is performed.
 ```
 
+## Concepts and Runtime Diagnostics
+
+### Check storage interfaces at compile time
+
+```cpp
+static_assert(num::VectorLike<num::Vector>);
+static_assert(num::MutableVectorLike<num::Vector>);
+static_assert(num::ContiguousVectorLike<num::Vector>);
+static_assert(num::DenseMatrixLike<num::Matrix>);
+```
+
+Concepts inspect available operations and property tags. They do not inspect
+the numerical values stored in an object.
+
+### Check runtime dimensions and values
+
+```cpp
+num::debug::check_dim(A.rows(), x.size(), "A*x"); // Throws on a size mismatch.
+num::debug::check_non_empty(x.size(), "x");       // Throws for an empty vector.
+num::debug::check_finite(x.data(), x.size(), "x"); // Throws on NaN or infinity.
+```
+
+### Select the diagnostic level
+
+```cpp
+num::debug::set_level(num::debug::DiagnosticLevel::full);  // Basic and property checks.
+num::debug::set_level(num::debug::DiagnosticLevel::basic); // Dimensions and values only.
+num::debug::set_level(num::debug::DiagnosticLevel::off);   // Skip debug checks.
+```
+
+### Validate an operator before tagging it
+
+```cpp
+num::operators::DenseOp op(A_dense);
+static_assert(num::LinearOperator<decltype(op)>);
+
+auto spd = num::operators::assume_spd(op); // Sample x^T*A*x when diagnostics are full.
+static_assert(num::SPDLinearOperator<decltype(spd)>);
+```
+
+`assume_symmetric` similarly samples `x^T*A*y` against `y^T*A*x`. Once the wrapper
+adds the property tag, constrained solvers can reject incompatible operators at
+compile time.
+
 ## Selection and Probability
 
 ### Find the first maximum
