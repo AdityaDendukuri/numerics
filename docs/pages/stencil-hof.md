@@ -36,7 +36,7 @@ The operator represents
 
 ```cpp
 double coeff = kappa * dt / (h * h);
-num::pde::diffusion_step_2d(u, N, coeff, num::best_backend);
+num::pde::diffusion_step_2d(u, N, coeff, num::backend::dflt);
 ```
 
 ## Fourth-Order Dirichlet Laplacian

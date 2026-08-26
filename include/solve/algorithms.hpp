@@ -35,7 +35,7 @@ struct RK45 {
 struct CG {
     real tol = 1e-10;
     idx max_iter = 1000;
-    Backend backend = default_backend;
+    Backend backend = backend::dflt;
 };
 
 /// Restarted GMRES convergence and backend options.
@@ -43,14 +43,14 @@ struct GMRES {
     real tol = 1e-6;
     idx max_iter = 1000;
     idx restart = 30;
-    Backend backend = default_backend;
+    Backend backend = backend::dflt;
 };
 
 /// MINRES convergence and backend options.
 struct MINRES {
     real tol = 1e-10;
     idx max_iter = 1000;
-    Backend backend = default_backend;
+    Backend backend = backend::dflt;
 };
 
 template <class M>
@@ -59,11 +59,23 @@ struct PCG {
     const M &preconditioner;
     real tol = 1e-10;
     idx max_iter = 1000;
-    Backend backend = default_backend;
+    Backend backend = backend::dflt;
 };
 
 template <class M>
 PCG(const M &) -> PCG<M>;
+
+template <class M, class Subspace>
+/// PCG configuration for an operator and preconditioner certified on Subspace.
+struct PCGOn {
+    const M &preconditioner;
+    Subspace subspace;
+    real tol = 1e-10;
+    idx max_iter = 1000;
+};
+
+template <class M, class Subspace>
+PCGOn(const M &, Subspace) -> PCGOn<M, Subspace>;
 
 // -- MCMC samplers --
 

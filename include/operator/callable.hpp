@@ -2,7 +2,9 @@
 /// @brief Callable adapter for matrix-free linear operators.
 #pragma once
 
-#include "core/vector.hpp"
+#include "container/vector.hpp"
+#include "core/math/associated.hpp"
+#include "core/math/models.hpp"
 #include <utility>
 
 namespace num::operators {
@@ -11,6 +13,9 @@ namespace num::operators {
 /// protocol.
 template <class F>
 struct CallableOp final {
+    using domain_type = Vector;
+    using codomain_type = Vector;
+
     /// Adapt a callable to a rectangular operator with explicit dimensions.
     CallableOp(F f, idx rows, idx cols) : f_(std::move(f)), rows_(rows), cols_(cols) {}
 
@@ -47,3 +52,12 @@ template <class F>
 }
 
 } // namespace num::operators
+
+namespace num::math {
+
+template<class F>
+struct model_of<operators::CallableOp<F>> {
+    using laws = type_list<law::linear_map>;
+};
+
+} // namespace num::math

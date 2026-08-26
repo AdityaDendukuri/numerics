@@ -1,6 +1,16 @@
-# PDE Examples {#page_pde}
+# Partial Differential Equations {#page_pde}
 
-## Grid and Initial Field
+The `pde` module provides finite difference stencils, matrix-free grid operators, sparse Laplacian assembly, implicit parabolic steppers, and fast direct Poisson solvers.
+
+---
+
+## 1. 2D Diffusion & Parabolic Systems
+
+Models transient heat conduction and mass diffusion:
+
+\f[
+\frac{\partial u}{\partial t} = D \nabla^2 u = D \left( \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2} \right)
+\f]
 
 ```cpp
 #include <numerics.hpp>
@@ -14,136 +24,119 @@ num::ScalarField2D temperature(grid, [](double x, double y) {
 });
 ```
 
-## Periodic Diffusion Step
+### Explicit Finite-Difference Stencils
+
+#### 2nd-Order 5-Point Centered Stencil
+
+\f[
+(\nabla^2 u)_{i,j} \approx \frac{u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} - 4 u_{i,j}}{h^2} + \mathcal{O}(h^2)
+\f]
 
 ```cpp
 double coefficient = diffusivity * dt / (h * h);
-num::pde::diffusion_step_2d(temperature.vec(), n, coefficient); // Periodic stencil.
+num::pde::diffusion_step_2d(temperature.vec(), n, coefficient);           // Periodic boundaries
+num::pde::diffusion_step_2d_dirichlet(temperature, coefficient);          // Homogeneous Dirichlet boundaries (u = 0)
 ```
 
-## Dirichlet Diffusion Step
+#### 4th-Order Centered Stencil
+
+\f[
+\left(\frac{\partial^2 u}{\partial x^2}\right)_i \approx \frac{-u_{i+2} + 16u_{i+1} - 30u_i + 16u_{i-1} - u_{i-2}}{12 h^2} + \mathcal{O}(h^4)
+\f]
 
 ```cpp
-num::pde::diffusion_step_2d_dirichlet(temperature, coefficient); // Zero boundary values.
+num::pde::diffusion_step_2d_4th_dirichlet(temperature, coefficient, num::backend::dflt);
 ```
 
-## Fourth-Order Diffusion Step
+---
+
+## 2. Sparse Discrete Laplacian & Backward Euler
+
+### 5-Point Sparse Laplacian Matrix (\f$L\f$)
+
+Assembles the negative-definite 2D discrete Laplacian \f$L \in \mathbb{R}^{n^2 \times n^2}\f$ with pentadiagonal Kronecker structure \f$L = I \otimes T + T \otimes I\f$:
+
+\f[
+L = \frac{1}{h^2} \begin{bmatrix}
+T & I & & \\
+I & T & \ddots & \\
+& \ddots & \ddots & I \\
+& & I & T
+\end{bmatrix}, \qquad T = \begin{bmatrix}
+-4 & 1 & & \\
+1 & -4 & \ddots & \\
+& \ddots & \ddots & 1 \\
+& & 1 & -4
+\end{bmatrix}
+\f]
 
 ```cpp
-num::pde::diffusion_step_2d_4th_dirichlet(
-    temperature, coefficient, num::best_backend); // Fourth-order interior stencil.
+num::SparseMatrix laplacian = num::pde::laplacian_sparse_2d(n); // CSR sparse matrix of size n^2 x n^2
 ```
 
-## Sparse Laplacian
+### Implicit Backward Euler System (\f$I - c L\f$)
+
+Unconditionally stable implicit stepping \f$(I - c L) u^{n+1} = u^n\f$ where \f$c = \frac{D \Delta t}{h^2}\f$:
 
 ```cpp
-num::SparseMatrix laplacian = num::pde::laplacian_sparse_2d(n); // Five-point operator.
+num::SparseMatrix system = num::pde::backward_euler_matrix(grid, coefficient); // I - c*L
 ```
 
-The matrix acts on a row-major vector of `n * n` interior values.
+### Matrix-Free Backward Euler Operator
 
-## Backward Euler Matrix
-
-```cpp
-num::SparseMatrix system =
-    num::pde::backward_euler_matrix(grid, coefficient); // I - coefficient * L.
-```
-
-## Backward Euler Operator
+Evaluates \f$y = (I - c L) x\f$ on the fly with \f$\mathcal{O}(1)\f$ memory overhead, carrying compile-time Symmetric Positive Definite (`SPDOperator`) tags:
 
 ```cpp
-auto system = num::pde::backward_euler_operator(grid, coefficient); // Owns its sparse matrix.
-num::idx rows = system.rows();
-const num::SparseMatrix& matrix = system.matrix();
-```
-
-The operator carries symmetric and positive-definite properties for CG dispatch.
-
-## Reusable CG Solver
-
-```cpp
-num::SparseMatrix system = num::pde::backward_euler_matrix(grid, coefficient);
-num::LinearSolver solve_step = num::pde::make_cg_solver(system, 1e-8); // Captures system by reference.
+auto system = num::pde::backward_euler_operator(grid, coefficient); // Zero memory allocation
+num::LinearSolver solve_step = num::pde::make_cg_solver(system.matrix(), 1e-8);
 
 num::ode::advance(temperature, solve_step, {.nstep = 100, .dt = dt});
 ```
 
-`system` must outlive `solve_step`.
+---
 
-## Custom Implicit Solver
+## 3. Fast Poisson Solvers (FFT / DST-I)
 
-```cpp
-auto system = num::pde::backward_euler_operator(grid, coefficient);
+Solves the elliptic Poisson equation with homogeneous Dirichlet boundary conditions on \f$[0, 1]^2\f$:
 
-num::LinearSolver solve_step = [&](const num::Vector& rhs, num::Vector& x) {
-    return num::cg(system, rhs, x, 1e-8, 500);
-};
-```
+\f[
+-\nabla^2 \phi = \rho, \qquad \phi|_{\partial \Omega} = 0
+\f]
 
-## Applying a Laplacian Stencil
+Using Discrete Sine Transforms (DST-I), the exact modal decoupling solves in \f$\mathcal{O}(n^2 \log n)\f$:
 
-```cpp
-num::Vector laplacian(temperature.size());
-num::laplacian_stencil_2d(temperature.vec(), laplacian, n); // Zero exterior values.
-```
-
-```cpp
-num::laplacian_stencil_2d_periodic(
-    temperature.vec(), laplacian, n); // Wrap both grid axes.
-```
-
-```cpp
-num::laplacian_stencil_2d_4th(
-    temperature.vec(), laplacian, n); // Fourth-order centered stencil.
-```
-
-## Periodic Interpolation
-
-```cpp
-double value = num::sample_2d_periodic(
-    temperature, -0.1, 0.3, 0.0, 0.0); // Coordinates wrap into the grid domain.
-```
-
-## Fiber Sweeps
-
-```cpp
-num::row_fiber_sweep(temperature.vec(), n, [](std::vector<double>& row) {
-    filter(row); // Receives one copied row and writes it back.
-});
-```
-
-```cpp
-num::col_fiber_sweep(temperature.vec(), n, [](std::vector<double>& column) {
-    filter(column); // Receives one copied column and writes it back.
-});
-```
-
-## Crank-Nicolson ADI Sweeps
-
-```cpp
-num::CrankNicolsonADI adi(n, dt, h); // Pre-factor half-step and full-step systems.
-num::CVector wavefunction(n * n);
-
-adi.sweep(wavefunction, true, dt);  // Sweep columns.
-adi.sweep(wavefunction, false, dt); // Sweep rows.
-```
-
-## Discrete Poisson Solve
+\f[
+\hat{\phi}_{m,n} = \frac{\hat{\rho}_{m,n}}{\lambda_{m,n}}, \qquad \lambda_{m,n} = \frac{4}{h^2} \left[ \sin^2\left(\frac{m \pi}{2(n+1)}\right) + \sin^2\left(\frac{n \pi}{2(n+1)}\right) \right]
+\f]
 
 ```cpp
 num::Matrix source(n, n, 0.0);
-num::Matrix potential = num::pde::poisson2d_fd(source, n); // Finite-difference eigenvalues.
+// Fill source density rho...
+
+num::Matrix potential_fd = num::pde::poisson2d_fd(source, n); // Exact 5-point stencil eigenvalues
+num::Matrix potential_spectral = num::pde::poisson2d(source, n); // Continuous Laplacian eigenvalues
 ```
 
-## Spectral Poisson Solve
+---
+
+## 4. Alternating Direction Implicit (ADI) Sweeps
+
+Crank–Nicolson ADI splits the 2D operator into sequential 1D tridiagonal sweeps:
+
+\f[
+\left(I - \frac{\Delta t}{2} \mathcal{L}_x\right) u^{n+1/2} = \left(I + \frac{\Delta t}{2} \mathcal{L}_y\right) u^n, \qquad \left(I - \frac{\Delta t}{2} \mathcal{L}_y\right) u^{n+1} = \left(I + \frac{\Delta t}{2} \mathcal{L}_x\right) u^{n+1/2}
+\f]
 
 ```cpp
-num::Matrix potential = num::pde::poisson2d(source, n); // Continuous sine-mode eigenvalues.
+num::CrankNicolsonADI adi(n, dt, h);
+num::CVector wavefunction(n * n);
+
+adi.sweep(wavefunction, /*column_sweep=*/true, dt);
+adi.sweep(wavefunction, /*column_sweep=*/false, dt);
 ```
 
-Both Poisson solvers use homogeneous Dirichlet boundaries on the unit square.
-See @ref page_poisson for the full derivation.
+---
 
-## Complete Program
+## Complete Example
 
 @example 06_pde_poisson_solver.cpp

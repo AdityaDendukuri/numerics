@@ -2,14 +2,14 @@
 /// @brief 3-way benchmark: one-sided Jacobi vs randomized SVD vs LAPACK dgesdd.
 ///
 /// Variants:
-///   Backend::seq    -- our one-sided Jacobi (full SVD, O(mn*min(m,n)) sweeps)
-///   randomized      -- svd_truncated with Backend::blas sketch (top-k only)
-///   Backend::lapack -- LAPACKE_dgesdd divide-and-conquer (full SVD)
+///   backend::seq    -- our one-sided Jacobi (full SVD, O(mn*min(m,n)) sweeps)
+///   randomized      -- svd_truncated with backend::blas sketch (top-k only)
+///   backend::lapack -- LAPACKE_dgesdd divide-and-conquer (full SVD)
 ///
 /// Run with:
 ///   ./numerics_bench --benchmark_filter=BM_SVD
 
-#include "linalg/svd/svd.hpp"
+#include "linear/svd/svd.hpp"
 #include "numerics.hpp"
 #include <benchmark/benchmark.h>
 
@@ -39,9 +39,9 @@ static void BM_SVD(benchmark::State &state) {
         benchmark::Counter::kIsIterationInvariantRate, benchmark::Counter::kIs1000);
     state.SetComplexityN(static_cast<int64_t>(n));
 }
-BENCHMARK_TEMPLATE(BM_SVD, Backend::seq)->RangeMultiplier(2)->Range(32, 256)->Complexity();
+BENCHMARK_TEMPLATE(BM_SVD, backend::seq)->RangeMultiplier(2)->Range(32, 256)->Complexity();
 #if defined(NUMERICS_HAS_LAPACK)
-BENCHMARK_TEMPLATE(BM_SVD, Backend::lapack)->RangeMultiplier(2)->Range(32, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_SVD, backend::lapack)->RangeMultiplier(2)->Range(32, 512)->Complexity();
 #endif
 
 // ── Randomized truncated SVD
@@ -54,7 +54,7 @@ static void BM_SVD_Randomized(benchmark::State &state) {
     idx k = std::max(idx(1), n / 8); // top 12.5% singular values
     Matrix A = make_rect(n, n);
     for (auto _ : state) {
-        auto r = svd_truncated(A, k, default_backend);
+        auto r = svd_truncated(A, k, backend::dflt);
         benchmark::DoNotOptimize(r.S.data());
     }
     state.SetComplexityN(static_cast<int64_t>(n));

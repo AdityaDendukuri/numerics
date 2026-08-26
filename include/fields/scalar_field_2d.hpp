@@ -2,7 +2,7 @@
 /// @brief Scalar field on a 2D uniform interior grid.
 #pragma once
 
-#include "core/vector.hpp"
+#include "container/vector.hpp"
 #include "fields/grid2d.hpp"
 
 namespace num {

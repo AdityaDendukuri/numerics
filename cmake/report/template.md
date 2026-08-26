@@ -22,6 +22,9 @@ industry-standard LAPACK/BLAS reference. Sections without data show `[not availa
   - [Thomas Tridiagonal Solver](#thomas-tridiagonal-solver)
 - [Iterative Solvers](#iterative-solvers)
   - [Conjugate Gradient](#conjugate-gradient)
+  - [Convergence Dynamics](#convergence-dynamics)
+- [Resolvent & Matrix Exponential](#resolvent--matrix-exponential)
+  - [Talbot Spectral Quadrature](#talbot-spectral-quadrature)
 - [Banded Matrices](#banded-matrices)
 - [Eigensolvers](#eigensolvers)
   - [Full Symmetric Eigensolver](#full-symmetric-eigensolver)
@@ -29,6 +32,8 @@ industry-standard LAPACK/BLAS reference. Sections without data show `[not availa
 - [Singular Value Decomposition](#singular-value-decomposition)
   - [Full SVD](#full-svd)
   - [Randomized Truncated SVD](#randomized-truncated-svd)
+- [Dynamical Systems & Symplectic ODEs](#dynamical-systems--symplectic-odes)
+  - [Hamiltonian Energy Conservation](#hamiltonian-energy-conservation)
 - [Analysis](#analysis)
 - [Spectral — FFT](#spectral--fft)
 
@@ -146,6 +151,28 @@ CG inner-product and axpy calls dispatch to `best_backend` (BLAS when available)
 
 {{BENCH_CG_TABLE}}
 
+### Convergence Dynamics
+
+Relative residual reduction $\frac{\|r_k\|}{\|b\|}$ across iterations on anisotropic 2D Poisson ($N = 1024$ nodes):
+
+![Iterative Solvers Convergence](plots/iterative_convergence.png)
+
+### MINRES vs Conjugate Gradient (Error & Residual Comparison)
+
+Comparison of monotonicity in residual 2-norm versus $A$-norm energy minimization between MINRES and CG:
+
+![MINRES vs CG](plots/cg_vs_minres.png)
+
+---
+
+## Resolvent & Matrix Exponential
+
+### Talbot Spectral Quadrature
+
+Evaluation of matrix exponential action $e^{t Q} p_0$ via Weideman-Talbot shifted resolvent contour solves $(s_k I - Q)^{-1} p_0$ accelerated by Upper Hessenberg reduction ($O(N^3 + k N^2)$):
+
+![Talbot Quadrature Convergence](plots/talbot_convergence.png)
+
 ---
 
 ## Banded Matrices
@@ -204,6 +231,16 @@ Three variants: **our one-sided Jacobi**, **randomized truncated SVD** (top k = 
 ### Randomized Truncated SVD
 
 {{BENCH_SVD_RAND_TABLE}}
+
+---
+
+## Dynamical Systems & Symplectic ODEs
+
+### Hamiltonian Energy Conservation
+
+Long-term energy error $|E(t) - E(0)|$ over $2 \times 10^3$ steps ($h = 0.05$):
+
+![Symplectic Energy Preservation](plots/symplectic_energy.png)
 
 ---
 

@@ -9,6 +9,8 @@
 ///       bench_plot::plot_all(rep.results(), "plots");
 #pragma once
 
+#include "container/matrix_ops.hpp"
+
 #include "plot/plot.hpp"
 #include <benchmark/benchmark.h>
 
@@ -138,9 +140,9 @@ static void plot_matmul(Gnuplot &gp, const std::vector<Run> &runs, const std::st
         {"Matmul_Naive", "naive", 1},
         {"Matmul_Blocked", "blocked", 2},
         {"Matmul_RegBlocked", "reg-blocked", 3},
-        {"BM_Matmul<Backend::simd", "simd", 4},
-        {"BM_Matmul<Backend::blas", "blas", 5},
-        {"BM_Matmul<Backend::omp", "omp", 6},
+        {"BM_Matmul<backend::simd", "simd", 4},
+        {"BM_Matmul<backend::blas", "blas", 5},
+        {"BM_Matmul<backend::omp", "omp", 6},
     };
 
     // collect non-empty series first
@@ -177,11 +179,11 @@ static void plot_matvec(Gnuplot &gp, const std::vector<Run> &runs, const std::st
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_Matvec<num::Backend::seq", "seq", 1},
-        {"BM_Matvec<num::Backend::blocked", "blocked", 2},
-        {"BM_Matvec<num::Backend::simd", "simd", 3},
-        {"BM_Matvec<num::Backend::blas", "blas", 4},
-        {"BM_Matvec<num::Backend::omp", "omp", 5},
+        {"BM_Matvec<backend::seq", "seq", 1},
+        {"BM_Matvec<backend::blocked", "blocked", 2},
+        {"BM_Matvec<backend::simd", "simd", 3},
+        {"BM_Matvec<backend::blas", "blas", 4},
+        {"BM_Matvec<backend::omp", "omp", 5},
     };
 
     std::vector<std::pair<Variant, Series>> data;
@@ -230,9 +232,9 @@ static void plot_dot_axpy(Gnuplot &gp, const std::vector<Run> &runs, const std::
             int ls;
         };
         std::vector<V> variants = {
-            {"BM_" + op.op_key + "<num::Backend::seq", "seq", 1},
-            {"BM_" + op.op_key + "<num::Backend::blas", "blas", 2},
-            {"BM_" + op.op_key + "<num::Backend::omp", "omp", 3},
+            {"BM_" + op.op_key + "<backend::seq", "seq", 1},
+            {"BM_" + op.op_key + "<backend::blas", "blas", 2},
+            {"BM_" + op.op_key + "<backend::omp", "omp", 3},
         };
 
         std::vector<std::pair<V, Series>> data;
@@ -492,9 +494,9 @@ static void plot_lu(Gnuplot &gp, const std::vector<Run> &runs, const std::string
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_LU<num::Backend::seq", "our (seq)", 1},
-        {"BM_LU<num::Backend::omp", "our (omp)", 2},
-        {"BM_LU<num::Backend::lapack", "LAPACK dgetrf", 3},
+        {"BM_LU<backend::seq", "our (seq)", 1},
+        {"BM_LU<backend::omp", "our (omp)", 2},
+        {"BM_LU<backend::lapack", "LAPACK dgetrf", 3},
     };
     std::vector<std::pair<Variant, Series>> data;
     for (auto &v : variants) {
@@ -526,9 +528,9 @@ static void plot_qr(Gnuplot &gp, const std::vector<Run> &runs, const std::string
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_QR<num::Backend::seq", "our (seq)", 1},
-        {"BM_QR<num::Backend::omp", "our (omp)", 2},
-        {"BM_QR<num::Backend::lapack", "LAPACK dgeqrf", 3},
+        {"BM_QR<backend::seq", "our (seq)", 1},
+        {"BM_QR<backend::omp", "our (omp)", 2},
+        {"BM_QR<backend::lapack", "LAPACK dgeqrf", 3},
     };
     std::vector<std::pair<Variant, Series>> data;
     for (auto &v : variants) {
@@ -560,9 +562,9 @@ static void plot_svd(Gnuplot &gp, const std::vector<Run> &runs, const std::strin
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_SVD<num::Backend::seq", "our Jacobi", 1},
+        {"BM_SVD<backend::seq", "our Jacobi", 1},
         {"BM_SVD_Randomized", "randomized (k=n/8)", 2},
-        {"BM_SVD<num::Backend::lapack", "LAPACK dgesdd", 3},
+        {"BM_SVD<backend::lapack", "LAPACK dgesdd", 3},
     };
     std::vector<std::pair<Variant, Series>> data;
     for (auto &v : variants) {
@@ -597,9 +599,9 @@ static void plot_eigen(Gnuplot &gp, const std::vector<Run> &runs, const std::str
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_EigSym<num::Backend::seq", "our Jacobi", 1},
+        {"BM_EigSym<backend::seq", "our Jacobi", 1},
         {"BM_Lanczos", "Lanczos (k=10)", 2},
-        {"BM_EigSym<num::Backend::lapack", "LAPACK dsyevd", 3},
+        {"BM_EigSym<backend::lapack", "LAPACK dsyevd", 3},
     };
     std::vector<std::pair<Variant, Series>> data;
     for (auto &v : variants) {
@@ -802,9 +804,9 @@ inline void plot_all_ascii(const std::vector<Run> &runs,
             {"Matmul_Naive", "naive"},
             {"Matmul_Blocked", "blocked"},
             {"Matmul_RegBlocked", "reg-blocked"},
-            {"Backend::simd", "simd"},
-            {"Backend::blas", "blas"},
-            {"Backend::omp", "omp"},
+            {"backend::simd", "simd"},
+            {"backend::blas", "blas"},
+            {"backend::omp", "omp"},
         };
         std::vector<std::pair<std::string, Series>> data;
         for (auto &[key, label] : v) {
@@ -832,20 +834,20 @@ inline void plot_all_ascii(const std::vector<Run> &runs,
 
     ascii_throughput(runs, outdir + "/matvec.txt", "Matrix-Vector Multiply: GB/s vs n", "GB/s",
                      {
-                         {"BM_Matvec<num::Backend::seq", "seq"},
-                         {"BM_Matvec<num::Backend::blocked", "blocked"},
-                         {"BM_Matvec<num::Backend::simd", "simd"},
-                         {"BM_Matvec<num::Backend::blas", "blas"},
-                         {"BM_Matvec<num::Backend::omp", "omp"},
+                         {"BM_Matvec<backend::seq", "seq"},
+                         {"BM_Matvec<backend::blocked", "blocked"},
+                         {"BM_Matvec<backend::simd", "simd"},
+                         {"BM_Matvec<backend::blas", "blas"},
+                         {"BM_Matvec<backend::omp", "omp"},
                      });
 
     for (auto &op :
          std::vector<std::pair<std::string, std::string>>{{"Dot", "dot"}, {"Axpy", "axpy"}})
         ascii_throughput(runs, outdir + "/" + op.second + ".txt", op.second + ": GB/s vs n", "GB/s",
                          {
-                             {"BM_" + op.first + "<num::Backend::seq", "seq"},
-                             {"BM_" + op.first + "<num::Backend::blas", "blas"},
-                             {"BM_" + op.first + "<num::Backend::omp", "omp"},
+                             {"BM_" + op.first + "<backend::seq", "seq"},
+                             {"BM_" + op.first + "<backend::blas", "blas"},
+                             {"BM_" + op.first + "<backend::omp", "omp"},
                          });
 
     ascii_time(runs, outdir + "/cg.txt", "Conjugate Gradient: time vs n", {{"BM_CG/", "CG"}});

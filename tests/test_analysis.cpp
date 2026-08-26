@@ -1,7 +1,7 @@
 /// @file test_analysis.cpp
 /// @brief Tests for root finding and quadrature
-#include "analysis/quadrature.hpp"
-#include "analysis/roots.hpp"
+#include "quadrature/quadrature.hpp"
+#include "roots/roots.hpp"
 #include "core/policy.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
@@ -150,19 +150,19 @@ TEST(Quadrature, AllMethodsAgree) {
     EXPECT_NEAR(r, 1.0, 1e-10);
 }
 
-// Backend::omp variants must produce the same result as the sequential version.
+// backend::omp variants must produce the same result as the sequential version.
 // (If OMP is not available the omp backend falls back to serial internally.)
 
 TEST(Quadrature, TrapzOmpMatchesSeq) {
     auto f = [](real x) { return x * x; };
     real seq_result = trapz(f, 0.0, 1.0, 10000);
-    real omp_result = trapz(f, 0.0, 1.0, 10000, Backend::omp);
+    real omp_result = trapz(f, 0.0, 1.0, 10000, backend::omp);
     EXPECT_NEAR(omp_result, seq_result, 1e-12);
 }
 
 TEST(Quadrature, SimpsonOmpMatchesSeq) {
     auto f = [](real x) { return x * x * x; };
     real seq_result = simpson(f, 0.0, 1.0, 1000);
-    real omp_result = simpson(f, 0.0, 1.0, 1000, Backend::omp);
+    real omp_result = simpson(f, 0.0, 1.0, 1000, backend::omp);
     EXPECT_NEAR(omp_result, seq_result, 1e-12);
 }

@@ -22,9 +22,37 @@ namespace ks = num::kernel::subspace;
 namespace ka = num::kernel::array;
 namespace kr = num::kernel::reduce;
 
-// ============================================================================
-// Tier-2: array::axpby  (y = a*x + b*y)
-// ============================================================================
+namespace benchmark_math {
+
+struct DiagonalOperator {
+    using domain_type = num::Vector;
+    using codomain_type = num::Vector;
+    using math_propositions = num::math::type_list<num::axiom::positive_definite>;
+
+    num::idx dimension;
+
+    [[nodiscard]] num::idx rows() const noexcept { return dimension; }
+    [[nodiscard]] num::idx cols() const noexcept { return dimension; }
+
+    void apply(const num::Vector &x, num::Vector &y) const {
+        for (num::idx i = 0; i < dimension; ++i) {
+            y[i] = (1.0 + (0.01 * static_cast<double>(i % 32))) * x[i];
+        }
+    }
+};
+
+} // namespace benchmark_math
+
+namespace num::math {
+
+template <>
+struct model_of<benchmark_math::DiagonalOperator> {
+    using laws = type_list<law::linear_map>;
+};
+
+} // namespace num::math
+
+// Tier-2: array::axpby (y = a*x + b*y)
 
 static void BM_Kernel_Axpby_Manual(benchmark::State &state) {
     idx n = state.range(0);
@@ -64,9 +92,7 @@ static void BM_Kernel_Axpby_Par(benchmark::State &state) {
 }
 BENCHMARK(BM_Kernel_Axpby_Par)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
-// ============================================================================
 // Tier-2: reduce::l1_norm
-// ============================================================================
 
 static void BM_Kernel_L1Norm_Manual(benchmark::State &state) {
     idx n = state.range(0);
@@ -105,10 +131,93 @@ static void BM_Kernel_L1Norm_Par(benchmark::State &state) {
 }
 BENCHMARK(BM_Kernel_L1Norm_Par)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
-// ============================================================================
-// Tier-3 subspace: mgs_orthogonalize  (vector-basis, the GMRES inner path)
+// Tier-0 raw fusion: quantify memory-pass elimination independently of the
+// container adapters.  These pairs intentionally perform identical arithmetic.
+
+static void BM_Raw_Dot2_Separate(benchmark::State &state) {
+    const idx n = state.range(0);
+    Vector x(n, 1.0), y(n, 2.0), z(n, 3.0);
+    for (auto _ : state) {
+        real xy = kernel::raw::dot(x.data(), y.data(), n);
+        real xz = kernel::raw::dot(x.data(), z.data(), n);
+        benchmark::DoNotOptimize(xy);
+        benchmark::DoNotOptimize(xz);
+    }
+    state.SetBytesProcessed(state.iterations() * 4 * n * sizeof(real));
+}
+BENCHMARK(BM_Raw_Dot2_Separate)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
+
+static void BM_Raw_Dot2_Fused(benchmark::State &state) {
+    const idx n = state.range(0);
+    Vector x(n, 1.0), y(n, 2.0), z(n, 3.0);
+    for (auto _ : state) {
+        auto result = kernel::raw::dot2(x.data(), y.data(), z.data(), n);
+        benchmark::DoNotOptimize(result);
+    }
+    state.SetBytesProcessed(state.iterations() * 3 * n * sizeof(real));
+}
+BENCHMARK(BM_Raw_Dot2_Fused)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
+
+static void BM_Raw_AxpyNorm_Separate(benchmark::State &state) {
+    const idx n = state.range(0);
+    Vector x(n, 1.0), y(n, 2.0);
+    const real alpha = -1e-12;
+    for (auto _ : state) {
+        kernel::raw::axpy(y.data(), x.data(), alpha, n);
+        real norm_sq = kernel::raw::norm_sq(y.data(), n);
+        benchmark::DoNotOptimize(norm_sq);
+    }
+    state.SetBytesProcessed(state.iterations() * 4 * n * sizeof(real));
+}
+BENCHMARK(BM_Raw_AxpyNorm_Separate)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
+
+static void BM_Raw_AxpyNorm_Fused(benchmark::State &state) {
+    const idx n = state.range(0);
+    Vector x(n, 1.0), y(n, 2.0);
+    const real alpha = -1e-12;
+    for (auto _ : state) {
+        real norm_sq = kernel::raw::axpy_norm_sq(y.data(), x.data(), alpha, n);
+        benchmark::DoNotOptimize(norm_sq);
+    }
+    state.SetBytesProcessed(state.iterations() * 3 * n * sizeof(real));
+}
+BENCHMARK(BM_Raw_AxpyNorm_Fused)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
+
+static void BM_Raw_BlockProjection_SeparateColumns(benchmark::State &state) {
+    const idx n = state.range(0);
+    constexpr idx columns = 30;
+    Matrix basis(n, columns, 1.0);
+    Vector vector(n, 2.0), coefficients(columns, 0.0);
+    for (auto _ : state) {
+        for (idx column = 0; column < columns; ++column) {
+            real projection = 0.0;
+            for (idx row = 0; row < n; ++row) {
+                projection += basis(row, column) * vector[row];
+            }
+            coefficients[column] = projection;
+        }
+        benchmark::DoNotOptimize(coefficients.data());
+    }
+    state.SetBytesProcessed(state.iterations() * (columns + 1) * n * sizeof(real));
+}
+BENCHMARK(BM_Raw_BlockProjection_SeparateColumns)->RangeMultiplier(4)->Range(1 << 10, 1 << 16);
+
+static void BM_Raw_BlockProjection_RowMajor(benchmark::State &state) {
+    const idx n = state.range(0);
+    constexpr idx columns = 30;
+    Matrix basis(n, columns, 1.0);
+    Vector vector(n, 2.0), coefficients(columns, 0.0);
+    for (auto _ : state) {
+        kernel::raw::project_columns(coefficients.data(), basis.data(), basis.cols(), vector.data(),
+                                     n, columns);
+        benchmark::DoNotOptimize(coefficients.data());
+    }
+    state.SetBytesProcessed(state.iterations() * (columns + 1) * n * sizeof(real));
+}
+BENCHMARK(BM_Raw_BlockProjection_RowMajor)->RangeMultiplier(4)->Range(1 << 10, 1 << 16);
+
+// Tier-3 subspace: mgs_orthogonalize (vector-basis, the GMRES inner path)
 // k vectors of length n, orthogonalize a new vector against all of them.
-// ============================================================================
 
 static void BM_Kernel_MgsVec_Manual(benchmark::State &state) {
     idx n = state.range(0);
@@ -166,10 +275,8 @@ static void BM_Kernel_MgsVec_Kernel(benchmark::State &state) {
 }
 BENCHMARK(BM_Kernel_MgsVec_Kernel)->RangeMultiplier(4)->Range(1 << 10, 1 << 16);
 
-// ============================================================================
-// Tier-3 subspace: mgs_orthogonalize  (matrix-basis, the Lanczos inner path)
+// Tier-3 subspace: mgs_orthogonalize (matrix-basis, the Lanczos inner path)
 // Basis stored as columns of a row-major Matrix.
-// ============================================================================
 
 static void BM_Kernel_MgsMat_Manual(benchmark::State &state) {
     idx n = state.range(0);
@@ -300,3 +407,39 @@ static void BM_Kernel_Arnoldi_Kernel(benchmark::State &state) {
     }
 }
 BENCHMARK(BM_Kernel_Arnoldi_Kernel)->RangeMultiplier(4)->Range(1 << 8, 1 << 14);
+
+// End-to-end abstraction check: the certified generic entrance and raw kernel
+// solve the same system.  The generic measurement includes its three workspace
+// allocations; the raw measurement uses explicitly caller-owned workspace.
+
+static void BM_MathSpine_CG_Generic(benchmark::State &state) {
+    const idx n = state.range(0);
+    const benchmark_math::DiagonalOperator A{n};
+    Vector b(n, 1.0), x(n, 0.0);
+
+    for (auto _ : state) {
+        std::fill(x.begin(), x.end(), 0.0);
+        auto result = cg(A, b, x, CGOptions{.tolerance = 1e-10, .max_iterations = 100});
+        benchmark::DoNotOptimize(result);
+        benchmark::ClobberMemory();
+    }
+}
+BENCHMARK(BM_MathSpine_CG_Generic)->RangeMultiplier(4)->Range(1 << 8, 1 << 14);
+
+static void BM_MathSpine_CG_Raw(benchmark::State &state) {
+    const idx n = state.range(0);
+    Vector b(n, 1.0), x(n, 0.0), work(3 * n, 0.0);
+    const auto apply = [n](const real *input, real *output) {
+        for (idx i = 0; i < n; ++i) {
+            output[i] = (1.0 + (0.01 * static_cast<double>(i % 32))) * input[i];
+        }
+    };
+
+    for (auto _ : state) {
+        std::fill(x.begin(), x.end(), 0.0);
+        auto result = kernel::raw::cg(apply, x.data(), b.data(), n, work.data(), 1e-10, 100);
+        benchmark::DoNotOptimize(result);
+        benchmark::ClobberMemory();
+    }
+}
+BENCHMARK(BM_MathSpine_CG_Raw)->RangeMultiplier(4)->Range(1 << 8, 1 << 14);

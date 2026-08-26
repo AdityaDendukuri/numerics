@@ -38,6 +38,7 @@ struct Panel {
     std::string xrange_, yrange_;
     std::string palette_; // gnuplot palette string; empty = hot/fire
     bool legend_ = false;
+    std::string legend_pos_ = "top right";
     bool logx_ = false;
     bool logy_ = false;
 };
@@ -129,9 +130,9 @@ inline void write_panel(FILE *pipe, const Panel &p, int block_offset) {
         }
 
         if (p.legend_) {
-            fputs("set key top right Left reverse samplen 3 spacing 1.2\n"
-                  "set key box lt 1 lw 0.5\n",
-                  pipe);
+            fprintf(pipe, "set key %s Left reverse samplen 3 spacing 1.2\n"
+                          "set key box lt 1 lw 0.5\n",
+                    p.legend_pos_.c_str());
         } else {
             fputs("unset key\n", pipe);
         }
@@ -287,11 +288,16 @@ inline void ylim(double lo, double hi) {
 }
 
 /// Enable the legend for the current panel.
-inline void legend() {
+inline void legend(const std::string &pos = "top right") {
     detail::state().current.legend_ = true;
+    detail::state().current.legend_pos_ = pos;
 }
 
-/// Plot component-wise path means and their min-max envelope.
+/// Plot component-wise available-path means and their min-max envelope.
+///
+/// The sampling grid extends to the latest path endpoint. A path contributes
+/// only through its own endpoint, so the active sample count may decrease near
+/// the right edge instead of holding shorter paths at their final states.
 template <class Paths, class Labels, class Colors>
 inline void plot_paths(const Paths &paths, const Labels &labels, const Colors &colors,
                        const std::string &plot_title, std::size_t samples = 1000) {
@@ -311,7 +317,7 @@ inline void plot_paths(const Paths &paths, const Labels &labels, const Colors &c
 
     std::vector<double> times(samples);
     for (std::size_t i = 0; i < samples; ++i) {
-        times[i] = first_end * static_cast<double>(i) / static_cast<double>(samples - 1);
+        times[i] = last_end * static_cast<double>(i) / static_cast<double>(samples - 1);
     }
 
     const std::size_t components = labels.size();
@@ -320,19 +326,33 @@ inline void plot_paths(const Paths &paths, const Labels &labels, const Colors &c
     std::vector<std::vector<double>> upper(
         components, std::vector<double>(samples, std::numeric_limits<double>::lowest()));
     std::vector<std::vector<double>> mean(components, std::vector<double>(samples, 0.0));
+    std::vector<std::size_t> active(samples, 0);
 
     for (const auto &path : paths) {
         std::size_t state = 0;
         for (std::size_t i = 0; i < samples; ++i) {
+            if (times[i] > path.times.back()) {
+                continue;
+            }
             while (state + 1 < path.times.size() && path.times[state + 1] <= times[i]) {
                 ++state;
             }
+            ++active[i];
             for (std::size_t component = 0; component < components; ++component) {
                 const double value = path.states[state][component];
                 lower[component][i] = std::min(lower[component][i], value);
                 upper[component][i] = std::max(upper[component][i], value);
-                mean[component][i] += value / static_cast<double>(paths.size());
+                mean[component][i] += value;
             }
+        }
+    }
+
+    for (std::size_t i = 0; i < samples; ++i) {
+        if (active[i] == 0) {
+            throw std::runtime_error("path plot has no active trajectory at a sample time");
+        }
+        for (std::size_t component = 0; component < components; ++component) {
+            mean[component][i] /= static_cast<double>(active[i]);
         }
     }
 
@@ -359,6 +379,9 @@ inline void plot_paths(const Paths &paths, const Labels &labels, const Colors &c
 
     std::ostringstream endpoint;
     endpoint << std::setprecision(3) << "  endpoint=[" << first_end << ", " << last_end << "]";
+    if (paths.size() > 1) {
+        endpoint << "  active=" << paths.size() << "->" << active.back();
+    }
     title(plot_title + endpoint.str());
     xlabel("t");
     ylabel("count");

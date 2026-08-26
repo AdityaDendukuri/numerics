@@ -3,6 +3,7 @@
 Use the code-first examples to discover features, then use these generated
 indexes for exact declarations and overloads.
 
+- @ref page_concepts "Mathematical Concepts & Diagnostics Framework"
 - [Concepts](concepts.html)
 - [Classes and structures](annotated.html)
 - [Namespaces and free functions](namespaces.html)

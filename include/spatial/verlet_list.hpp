@@ -2,6 +2,8 @@
 /// @brief Verlet neighbour list with skin-radius temporal caching
 #pragma once
 
+#include "spatial/concepts.hpp"
+
 #include "cell_list.hpp"
 #include <cmath>
 #include <utility>
@@ -9,7 +11,7 @@
 
 namespace num {
 
-template <typename Scalar>
+template <scalars::Field Scalar>
 /// Cached 2D neighbor lists valid until motion consumes half the skin distance.
 class VerletList2D {
   public:
@@ -18,7 +20,7 @@ class VerletList2D {
         : cutoff_(cutoff), skin_(skin), ext_sq_((cutoff + skin) * (cutoff + skin)) {}
 
     /// @brief Build the neighbour list using a pre-built CellList2D.
-    template <typename PosAccessor>
+    template <PositionAccessor2D<Scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n, const CellList2D<Scalar> &cl) {
         starts_.resize(n + 1);
         flat_.clear();
@@ -47,7 +49,7 @@ class VerletList2D {
     }
 
     /// @brief Return true if a particle moved more than half the skin.
-    template <typename PosAccessor>
+    template <PositionAccessor2D<Scalar> PosAccessor>
     bool needs_rebuild(PosAccessor &&get_pos, int n) const {
         if (ref_x_.empty()) {
             return true;

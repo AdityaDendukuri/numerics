@@ -1,29 +1,52 @@
 /// @file pde/diffusion.hpp
 /// @brief Diffusion operators and implicit system builders for 2D grids.
-/// @todo Add structured SPD operators for periodic diffusion, 3D grids, and
-/// matrix-free stencil application.
 #pragma once
 
+#include "algebra/properties.hpp"
+
+#include "container/vector_ops.hpp"
+
+#include "container/vector.hpp"
 #include "core/policy.hpp"
-#include "core/vector.hpp"
 #include "fields/grid2d.hpp"
-#include "linalg/solvers/cg.hpp"
-#include "linalg/solvers/linear_solver.hpp"
-#include "linalg/sparse/sparse.hpp"
-#include "linalg/sparse/sparse_op.hpp"
+#include "linear/solvers/cg.hpp"
+#include "linear/solvers/linear_solver.hpp"
+#include "linear/sparse/sparse.hpp"
+#include "linear/sparse/sparse_op.hpp"
 #include "operator/properties.hpp"
+#include "pde/grid_operators.hpp"
 #include "pde/stencil.hpp"
+#include <stdexcept>
 
 namespace num::pde {
 
-inline SparseMatrix backward_euler_matrix(int N, double coeff);
+/// @brief Aliases to operator module grid/stencil definitions.
+using MatrixFreeLaplacian2D = operators::Laplacian2D;
+using MatrixFreeBackwardEuler2D = operators::BackwardEuler2D;
 
+/// @brief Materialize the 5-point discrete Laplacian as an assembled CSR SparseMatrix.
+inline SparseMatrix laplacian_sparse_2d(int N) {
+    return operators::Laplacian2D(N).to_sparse();
+}
+
+/// @brief Materialize the 2D Backward Euler system matrix as an assembled CSR SparseMatrix.
+inline SparseMatrix backward_euler_matrix(int N, double coeff) {
+    return operators::BackwardEuler2D(N, coeff).to_sparse();
+}
+
+inline SparseMatrix backward_euler_matrix(const Grid2D &grid, double coeff) {
+    return backward_euler_matrix(grid.N, coeff);
+}
+
+/// @brief Pre-assembled SparseMatrix wrapper for 2D Backward Euler diffusion.
 class BackwardEulerOperator2D final {
   public:
-    using symmetric_operator_tag = void;
-    using spd_operator_tag = void;
+    using properties = property::spd;
+    using domain_type = Vector;
+    using codomain_type = Vector;
+    using math_propositions = math::type_list<axiom::positive_definite>;
 
-    BackwardEulerOperator2D(int N, double coeff) : A_(backward_euler_matrix(N, coeff)) {}
+    BackwardEulerOperator2D(int N, double coeff) : A_(validated_matrix(N, coeff)) {}
 
     void apply(const Vector &x, Vector &y) const { sparse_matvec(A_, x, y); }
     [[nodiscard]] idx rows() const noexcept { return A_.n_rows(); }
@@ -31,115 +54,43 @@ class BackwardEulerOperator2D final {
     [[nodiscard]] const SparseMatrix &matrix() const noexcept { return A_; }
 
   private:
+    [[nodiscard]] static SparseMatrix validated_matrix(int N, double coeff) {
+        if (coeff < 0.0) {
+            throw std::invalid_argument(
+                "BackwardEulerOperator2D: SPD construction requires nonnegative coefficient");
+        }
+        return backward_euler_matrix(N, coeff);
+    }
+
     SparseMatrix A_;
 };
 
-inline void diffusion_step_2d(Vector &u, int N, double coeff, Backend b = best_backend) {
+inline void diffusion_step_2d(Vector &u, int N, double coeff, Backend b = backend::dflt) {
     Vector lap(u.size());
     laplacian_stencil_2d_periodic(u, lap, N);
     axpy(coeff, lap, u, b);
 }
 
-inline void diffusion_step_2d_dirichlet(Vector &u, int N, double coeff, Backend b = best_backend) {
+inline void diffusion_step_2d_dirichlet(Vector &u, int N, double coeff, Backend b = backend::dflt) {
     Vector lap(u.size());
     laplacian_stencil_2d(u, lap, N);
     axpy(coeff, lap, u, b);
 }
 
 inline void diffusion_step_2d_4th_dirichlet(Vector &u, int N, double coeff,
-                                            Backend b = best_backend) {
+                                            Backend b = backend::dflt) {
     Vector lap(u.size());
     laplacian_stencil_2d_4th(u, lap, N);
     axpy(coeff, lap, u, b);
 }
 
-inline void diffusion_step_2d_dirichlet(ScalarField2D &g, double coeff, Backend b = best_backend) {
+inline void diffusion_step_2d_dirichlet(ScalarField2D &g, double coeff, Backend b = backend::dflt) {
     diffusion_step_2d_dirichlet(g.vec(), g.N(), coeff, b);
 }
 
 inline void diffusion_step_2d_4th_dirichlet(ScalarField2D &g, double coeff,
-                                            Backend b = best_backend) {
+                                            Backend b = backend::dflt) {
     diffusion_step_2d_4th_dirichlet(g.vec(), g.N(), coeff, b);
-}
-
-inline SparseMatrix laplacian_sparse_2d(int N) {
-    const int n = N * N;
-    std::vector<idx> rows, cols;
-    std::vector<real> vals;
-    rows.reserve(5 * n);
-    cols.reserve(5 * n);
-    vals.reserve(5 * n);
-    for (int i = 0; i < N; ++i) {
-        for (int j = 0; j < N; ++j) {
-            int k = (i * N) + j;
-            rows.push_back(k);
-            cols.push_back(k);
-            vals.push_back(-4.0);
-            if (i > 0) {
-                rows.push_back(k);
-                cols.push_back(((i - 1) * N) + j);
-                vals.push_back(1.0);
-            }
-            if (i < N - 1) {
-                rows.push_back(k);
-                cols.push_back(((i + 1) * N) + j);
-                vals.push_back(1.0);
-            }
-            if (j > 0) {
-                rows.push_back(k);
-                cols.push_back((i * N) + (j - 1));
-                vals.push_back(1.0);
-            }
-            if (j < N - 1) {
-                rows.push_back(k);
-                cols.push_back((i * N) + (j + 1));
-                vals.push_back(1.0);
-            }
-        }
-    }
-    return SparseMatrix::from_triplets(n, n, rows, cols, vals);
-}
-
-inline SparseMatrix backward_euler_matrix(int N, double coeff) {
-    const int n = N * N;
-    std::vector<idx> rows, cols;
-    std::vector<real> vals;
-    rows.reserve(5 * n);
-    cols.reserve(5 * n);
-    vals.reserve(5 * n);
-    for (int i = 0; i < N; ++i) {
-        for (int j = 0; j < N; ++j) {
-            int k = (i * N) + j;
-            rows.push_back(k);
-            cols.push_back(k);
-            vals.push_back(1.0 + (4.0 * coeff));
-            if (i > 0) {
-                rows.push_back(k);
-                cols.push_back(((i - 1) * N) + j);
-                vals.push_back(-coeff);
-            }
-            if (i < N - 1) {
-                rows.push_back(k);
-                cols.push_back(((i + 1) * N) + j);
-                vals.push_back(-coeff);
-            }
-            if (j > 0) {
-                rows.push_back(k);
-                cols.push_back((i * N) + (j - 1));
-                vals.push_back(-coeff);
-            }
-            if (j < N - 1) {
-                rows.push_back(k);
-                cols.push_back((i * N) + (j + 1));
-                vals.push_back(-coeff);
-            }
-        }
-    }
-    return SparseMatrix::from_triplets(n, n, rows, cols, vals);
-}
-
-inline SparseMatrix backward_euler_matrix(const Grid2D &grid, double coeff) {
-    return backward_euler_matrix(grid.N, coeff);
 }
 
 inline BackwardEulerOperator2D backward_euler_operator(int N, double coeff) {
@@ -158,6 +109,15 @@ inline LinearSolver make_cg_solver(const SparseMatrix &A, real tol = 1e-6) {
 }
 
 } // namespace num::pde
+
+namespace num::math {
+
+template <>
+struct model_of<pde::BackwardEulerOperator2D> {
+    using laws = type_list<law::linear_map>;
+};
+
+} // namespace num::math
 
 namespace num {
 using pde::make_cg_solver;

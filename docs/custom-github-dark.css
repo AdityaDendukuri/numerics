@@ -1,0 +1,181 @@
+/* GitHub Primer Theme for Doxygen Awesome (Supports Light & Dark Themes) */
+
+/* ==========================================================================
+   1. GitHub Light Theme (Primer Light)
+   ========================================================================== */
+html.light-mode, html:not(.dark-mode) {
+    color-scheme: light;
+
+    /* GitHub Primer Light Primary & Accents */
+    --primary-color: #0969da;
+    --primary-dark-color: #0550ae;
+    --primary-light-color: #54aeff;
+    --on-primary-color: #ffffff;
+    --link-color: #0969da;
+
+    /* GitHub Light base canvas & panels */
+    --page-background-color: #ffffff;
+    --page-foreground-color: #1f2328;
+    --page-secondary-foreground-color: #656d76;
+    --separator-color: #d0d7de;
+    --side-nav-background: #f6f8fa;
+
+    --box-shadow: 0 1px 3px rgba(31, 35, 40, 0.12), 0 8px 24px rgba(66, 74, 83, 0.12);
+    --odd-color: rgba(234, 238, 242, 0.6);
+    --menu-selected-background: #ddf4ff;
+
+    /* Code blocks & listings */
+    --code-background: #f6f8fa;
+    --section-code-background: rgba(175, 184, 193, 0.2);
+    --section-code-border: #d0d7de;
+
+    --tablehead-background: #f6f8fa;
+    --blockquote-background: #f6f8fa;
+    --blockquote-foreground: #656d76;
+
+    /* GitHub Alerts & Badges */
+    --warning-color: #fff8c5;
+    --warning-color-dark: #9a6700;
+    --warning-color-darker: #4d3800;
+    --note-color: #ddf4ff;
+    --note-color-dark: #0969da;
+    --note-color-darker: #0550ae;
+    --todo-color: #fbefff;
+    --todo-color-dark: #8250df;
+    --todo-color-darker: #5a32a3;
+    --bug-color: #ffebe9;
+    --bug-color-dark: #cf222e;
+    --bug-color-darker: #82071e;
+    --invariant-color: #dafbe1;
+    --invariant-color-dark: #1a7f37;
+    --invariant-color-darker: #116329;
+
+    /* Syntax Highlighting matching GitHub Light (PrettyLights) */
+    --fragment-background: #f6f8fa;
+    --fragment-foreground: #1f2328;
+    --fragment-keyword: #cf222e;
+    --fragment-keywordtype: #cf222e;
+    --fragment-keywordflow: #cf222e;
+    --fragment-token: #1a7f37;
+    --fragment-comment: #6e7781;
+    --fragment-link: #0969da;
+    --fragment-preprocessor: #cf222e;
+    --fragment-linenumber-color: #8c959f;
+    --fragment-linenumber-background: #f6f8fa;
+    --fragment-linenumber-border: #d0d7de;
+
+    /* Search and Navigation Bar */
+    --search-background: #ffffff;
+    --search-border: #d0d7de;
+    --search-text: #1f2328;
+}
+
+/* ==========================================================================
+   2. GitHub Dark Theme (Primer Dark)
+   ========================================================================== */
+html.dark-mode {
+    color-scheme: dark;
+
+    --primary-color: #58a6ff;
+    --primary-dark-color: #1f6feb;
+    --primary-light-color: #79c0ff;
+    --on-primary-color: #ffffff;
+    --link-color: #58a6ff;
+
+    /* GitHub Dark base canvas & panels */
+    --page-background-color: #0d1117;
+    --page-foreground-color: #c9d1d9;
+    --page-secondary-foreground-color: #8b949e;
+    --separator-color: #30363d;
+    --side-nav-background: #161b22;
+
+    --box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+    --odd-color: rgba(110, 118, 129, 0.08);
+    --menu-selected-background: #1f6feb33;
+
+    /* Code blocks & listings */
+    --code-background: #161b22;
+    --section-code-background: rgba(110, 118, 129, 0.15);
+    --section-code-border: #30363d;
+
+    --tablehead-background: #161b22;
+    --blockquote-background: #161b22;
+    --blockquote-foreground: #8b949e;
+
+    /* GitHub Alerts & Badges */
+    --warning-color: #3b2300;
+    --warning-color-dark: #d29922;
+    --warning-color-darker: #e3b341;
+    --note-color: #0c2d6b;
+    --note-color-dark: #58a6ff;
+    --note-color-darker: #79c0ff;
+    --todo-color: #271052;
+    --todo-color-dark: #bc8cff;
+    --todo-color-darker: #d2a8ff;
+    --bug-color: #490202;
+    --bug-color-dark: #ff7b72;
+    --bug-color-darker: #ffa198;
+    --invariant-color: #04260f;
+    --invariant-color-dark: #3fb950;
+    --invariant-color-darker: #56d364;
+
+    /* Syntax Highlighting matching GitHub Dark */
+    --fragment-background: #161b22;
+    --fragment-foreground: #c9d1d9;
+    --fragment-keyword: #ff7b72;
+    --fragment-keywordtype: #ff7b72;
+    --fragment-keywordflow: #ff7b72;
+    --fragment-token: #7ee787;
+    --fragment-comment: #8b949e;
+    --fragment-link: #58a6ff;
+    --fragment-preprocessor: #ff7b72;
+    --fragment-linenumber-color: #6e7681;
+    --fragment-linenumber-background: #161b22;
+    --fragment-linenumber-border: #30363d;
+
+    /* Search and Navigation Bar */
+    --search-background: #0d1117;
+    --search-border: #30363d;
+    --search-text: #c9d1d9;
+}
+
+/* ==========================================================================
+   3. Theme Component Rules
+   ========================================================================== */
+#nav-tree {
+    background-color: var(--side-nav-background);
+    border-right: 1px solid var(--separator-color);
+}
+
+#top {
+    border-bottom: 1px solid var(--separator-color);
+}
+
+.memtitle {
+    background: var(--side-nav-background) !important;
+    border-color: var(--separator-color) !important;
+    color: var(--page-foreground-color) !important;
+}
+
+.memitem {
+    background: var(--page-background-color) !important;
+    border-color: var(--separator-color) !important;
+}
+
+.memdoc {
+    background: var(--page-background-color) !important;
+    border-color: var(--separator-color) !important;
+}
+
+div.fragment {
+    background-color: var(--code-background) !important;
+    border: 1px solid var(--separator-color) !important;
+}
+
+table.memberdecls {
+    border-color: var(--separator-color);
+}
+
+tr.heading {
+    background-color: var(--side-nav-background) !important;
+}

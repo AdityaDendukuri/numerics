@@ -1,6 +1,6 @@
-#include "core/matrix.hpp"
-#include "core/vector.hpp"
-#include "linalg/svd/svd.hpp"
+#include "container/matrix.hpp"
+#include "container/vector.hpp"
+#include "linear/svd/svd.hpp"
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
@@ -65,7 +65,7 @@ static bool sv_descending(const Vector &S) {
 
 TEST(SVD_Jacobi, Reconstruct3x3) {
     Matrix A = make_rect(3, 3);
-    auto r = svd(A, Backend::seq);
+    auto r = svd(A, backend::seq);
     EXPECT_TRUE(r.converged);
     EXPECT_LT(reconstruction_error(A, r), 1e-10);
     EXPECT_LT(col_ortho_error(r.U), 1e-10);
@@ -74,14 +74,14 @@ TEST(SVD_Jacobi, Reconstruct3x3) {
 
 TEST(SVD_Jacobi, ReconstructRectangular) {
     Matrix A = make_rect(8, 4);
-    auto r = svd(A, Backend::seq);
+    auto r = svd(A, backend::seq);
     EXPECT_LT(reconstruction_error(A, r), 1e-10);
     EXPECT_LT(col_ortho_error(r.U), 1e-10);
 }
 
 TEST(SVD_Jacobi, ReconstructN32) {
     Matrix A = make_rect(32, 32);
-    auto r = svd(A, Backend::seq);
+    auto r = svd(A, backend::seq);
     EXPECT_LT(reconstruction_error(A, r), 1e-8);
     EXPECT_LT(col_ortho_error(r.U), 1e-8);
     EXPECT_TRUE(sv_descending(r.S));
@@ -93,7 +93,7 @@ TEST(SVD_Jacobi, ReconstructN32) {
 
 TEST(SVD_LAPACK, Reconstruct3x3) {
     Matrix A = make_rect(3, 3);
-    auto r = svd(A, Backend::lapack);
+    auto r = svd(A, backend::lapack);
     EXPECT_TRUE(r.converged);
     EXPECT_LT(reconstruction_error(A, r), 1e-10);
     EXPECT_LT(col_ortho_error(r.U), 1e-10);
@@ -102,8 +102,8 @@ TEST(SVD_LAPACK, Reconstruct3x3) {
 
 TEST(SVD_LAPACK, MatchesJacobi) {
     Matrix A = make_rect(16, 16);
-    auto rj = svd(A, Backend::seq);
-    auto rl = svd(A, Backend::lapack);
+    auto rj = svd(A, backend::seq);
+    auto rl = svd(A, backend::lapack);
     ASSERT_EQ(rj.S.size(), rl.S.size());
     for (idx i = 0; i < rj.S.size(); ++i) {
         EXPECT_NEAR(rj.S[i], rl.S[i], 1e-8);
@@ -112,7 +112,7 @@ TEST(SVD_LAPACK, MatchesJacobi) {
 
 TEST(SVD_LAPACK, ReconstructN64) {
     Matrix A = make_rect(64, 64);
-    auto r = svd(A, Backend::lapack);
+    auto r = svd(A, backend::lapack);
     EXPECT_LT(reconstruction_error(A, r), 1e-8);
     EXPECT_LT(col_ortho_error(r.U), 1e-8);
     EXPECT_TRUE(sv_descending(r.S));
@@ -120,7 +120,7 @@ TEST(SVD_LAPACK, ReconstructN64) {
 
 TEST(SVD_LAPACK, ReconstructRectangular) {
     Matrix A = make_rect(32, 16);
-    auto r = svd(A, Backend::lapack);
+    auto r = svd(A, backend::lapack);
     EXPECT_LT(reconstruction_error(A, r), 1e-8);
 }
 
@@ -146,8 +146,8 @@ TEST(SVD_Randomized, TopKSingularValues) {
     // designed to recover singular values that lie above the tail noise floor.
     constexpr idx k = 5;
     Matrix A = make_lowrank(32, k);
-    auto rfull = svd(A, Backend::seq);
-    auto rrand = svd_truncated(A, k, default_backend);
+    auto rfull = svd(A, backend::seq);
+    auto rrand = svd_truncated(A, k, backend::dflt);
     // top-k singular values should match to within 0.1% of the dominant S[0]
     for (idx i = 0; i < k; ++i) {
         EXPECT_NEAR(rrand.S[i], rfull.S[i], rfull.S[0] * 1e-3);
@@ -156,6 +156,6 @@ TEST(SVD_Randomized, TopKSingularValues) {
 
 TEST(SVD_Randomized, ColumnOrthonormality) {
     Matrix A = make_rect(20, 20);
-    auto r = svd_truncated(A, 8, default_backend);
+    auto r = svd_truncated(A, 8, backend::dflt);
     EXPECT_LT(col_ortho_error(r.U), 1e-8);
 }

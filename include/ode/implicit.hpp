@@ -12,8 +12,8 @@
 /// matrix/operator hooks.
 #pragma once
 
-#include "core/vector.hpp"
-#include "linalg/solvers/linear_solver.hpp"
+#include "container/vector.hpp"
+#include "linear/solvers/linear_solver.hpp"
 #include "ode/concepts.hpp"
 
 namespace num {

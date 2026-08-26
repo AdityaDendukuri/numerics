@@ -1,15 +1,17 @@
-#include "analysis/talbot.hpp"
-#include "core/concepts.hpp"
-#include "core/util/math.hpp"
+#include "container/concepts.hpp"
+#include "container/matrix_ops.hpp"
+#include "container/util/math.hpp"
+#include "container/vector_ops.hpp"
+#include "quadrature/talbot.hpp"
 #ifdef NUMERICS_HAS_JSON
 #include "io/json.hpp"
 #endif
-#include "linalg/factorization/thomas.hpp"
-#include "linalg/solvers/dense_resolvent.hpp"
-#include "linalg/solvers/solvers.hpp"
-#include "linalg/solvers/sparse_resolvent.hpp"
-#include "linalg/sparse/sparse.hpp"
-#include "linalg/sparse/sparse_op.hpp"
+#include "linear/factorization/thomas.hpp"
+#include "linear/solvers/dense_resolvent.hpp"
+#include "linear/solvers/solvers.hpp"
+#include "linear/solvers/sparse_resolvent.hpp"
+#include "linear/sparse/sparse.hpp"
+#include "linear/sparse/sparse_op.hpp"
 #include "operator/concepts.hpp"
 #include "operator/operator.hpp"
 
@@ -67,7 +69,7 @@ TEST(CG, Small3x3) {
 
     Vector b{1.0, 2.0, 3.0};
     Vector x(3, 0.0);
-    SolverResult r = cg(A, b, x);
+    SolverResult r = cg(assume_spd(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -89,7 +91,7 @@ TEST(CG, DiagonalDominant5x5) {
         }
     }
     Vector b(n, 1.0), x(n, 0.0);
-    SolverResult r = cg(A, b, x);
+    SolverResult r = cg(assume_spd(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -115,7 +117,7 @@ TEST(CG, ConvergesWithinN) {
         b[i] = static_cast<real>(i + 1);
     }
 
-    SolverResult r = cg(A, b, x);
+    SolverResult r = cg(assume_spd(A), b, x);
     EXPECT_TRUE(r.converged);
     EXPECT_LE(r.iterations, n);
     for (idx i = 0; i < n; ++i) {
@@ -130,11 +132,11 @@ TEST(MatrixProperties, CheckedSymmetricAndSPD) {
     A(1, 0) = -1.0;
     A(1, 1) = 2.0;
 
-    EXPECT_TRUE(linalg::is_symmetric(A));
-    EXPECT_TRUE(linalg::is_spd(A));
+    EXPECT_TRUE(linear::is_symmetric(A));
+    EXPECT_TRUE(linear::is_spd(A));
 
-    auto S = linalg::make_symmetric(A);
-    auto P = linalg::make_spd(A);
+    auto S = linear::make_symmetric(A);
+    auto P = linear::make_spd(A);
     EXPECT_EQ(S.rows(), 2);
     EXPECT_EQ(P.cols(), 2);
 }
@@ -150,18 +152,18 @@ TEST(MatrixProperties, CheckedConstructorsRejectInvalidInput) {
     indefinite(0, 0) = 1.0;
     indefinite(1, 1) = -1.0;
 
-    EXPECT_FALSE(linalg::is_symmetric(nonsym));
-    EXPECT_FALSE(linalg::is_spd(indefinite));
-    EXPECT_THROW((void)linalg::make_symmetric(nonsym), std::invalid_argument);
-    EXPECT_THROW((void)linalg::make_spd(indefinite), std::invalid_argument);
+    EXPECT_FALSE(linear::is_symmetric(nonsym));
+    EXPECT_FALSE(linear::is_spd(indefinite));
+    EXPECT_THROW((void)linear::make_symmetric(nonsym), std::invalid_argument);
+    EXPECT_THROW((void)linear::make_spd(indefinite), std::invalid_argument);
 }
 
-static_assert(VectorLike<Vector>);
-static_assert(MutableVectorLike<Vector>);
-static_assert(ContiguousVectorLike<Vector>);
-static_assert(DenseMatrixLike<Matrix>);
-static_assert(MutableDenseMatrixLike<Matrix>);
-static_assert(ContiguousDenseMatrixLike<Matrix>);
+static_assert(VectorSpace<Vector>);
+static_assert(MutableVectorSpace<Vector>);
+static_assert(repr::Contiguous<Vector>);
+static_assert(MatrixSpace<Matrix>);
+static_assert(MutableMatrixSpace<Matrix>);
+static_assert(repr::DenseRowMajor<Matrix>);
 
 TEST(CG, DenseOperator) {
     Matrix A(3, 3, 0.0);
@@ -175,8 +177,8 @@ TEST(CG, DenseOperator) {
 
     operators::DenseOp op(A);
     static_assert(LinearOperator<operators::DenseOp>);
-    static_assert(SymmetricLinearOperator<decltype(operators::assume_symmetric(op))>);
-    static_assert(SPDLinearOperator<decltype(operators::assume_spd(op))>);
+    static_assert(SelfAdjointOperator<decltype(operators::assume_symmetric(op))>);
+    static_assert(SPDOperator<decltype(operators::assume_spd(op))>);
 
     Vector b{1.0, 2.0, 3.0};
     Vector x(3, 0.0);
@@ -200,7 +202,7 @@ TEST(SolveDispatch, MatrixCGWithCheckedSPD) {
     A(2, 2) = 4;
 
     Vector b{1.0, 2.0, 3.0};
-    const LinearSolution r = solve(LinearProblem{linalg::make_spd(A), b}, CG{});
+    const LinearSolution r = solve(LinearProblem{linear::make_spd(A), b}, CG{});
 
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(r.u[0], 5.0 / 28.0, 1e-6);
@@ -229,11 +231,11 @@ TEST(CG, SparseOperator) {
 
     operators::SparseOp op(A);
     static_assert(LinearOperator<operators::SparseOp>);
-    static_assert(SPDLinearOperator<decltype(operators::assume_spd(op))>);
+    static_assert(SPDOperator<decltype(operators::assume_spd(op))>);
 
     Vector b{1.0, 2.0, 3.0};
     Vector x(3, 0.0);
-    SolverResult r = cg(operators::assume_spd(op), b, x, 1e-10, 100, Backend::seq);
+    SolverResult r = cg(operators::assume_spd(op), b, x, 1e-10, 100, backend::seq);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -281,6 +283,11 @@ TEST(PCG, JacobiPreconditioner) {
     }
 }
 
+TEST(PCG, JacobiPreconditionerRejectsNonPositiveDiagonal) {
+    EXPECT_THROW((void)JacobiPreconditioner(Vector{1.0, -0.5}), std::invalid_argument);
+    EXPECT_THROW((void)JacobiPreconditioner(Vector{1.0, 0.0}), std::invalid_argument);
+}
+
 TEST(MINRES, SymmetricIndefiniteOperator) {
     Matrix A(3, 3, 0.0);
     A(0, 0) = 2.0;
@@ -300,11 +307,11 @@ TEST(MINRES, SymmetricIndefiniteOperator) {
 
 TEST(PDEOperators, BackwardEulerOperatorIsSPD) {
     auto A = pde::backward_euler_operator(4, 0.1);
-    static_assert(SPDLinearOperator<decltype(A)>);
+    static_assert(SPDOperator<decltype(A)>);
 
     Vector b(A.rows(), 1.0);
     Vector x(A.rows(), 0.0);
-    SolverResult r = cg(A, b, x, 1e-10, 100);
+    SolverResult r = cg(A, b, x, 1e-10, 100); // A is already an SPD-tagged operator
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -845,23 +852,122 @@ TEST(Hessenberg, DecompositionProperties) {
     }
 }
 
+#if defined(NUMERICS_HAS_LAPACK)
+TEST(Hessenberg, DecompositionPropertiesLAPACK) {
+    const idx n = 6;
+    Matrix A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            A(i, j) = std::sin(static_cast<double>(i * 3 + j * 7 + 1));
+        }
+    }
+
+    const auto decomp = hessenberg(A, backend::lapack);
+    const auto &H = decomp.H();
+    const auto &Q = decomp.Q();
+
+    // 1. Verify H is upper Hessenberg
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            if (i > j + 1) {
+                EXPECT_NEAR(H(i, j), 0.0, 1e-14);
+            }
+        }
+    }
+
+    // 2. Verify Q is orthogonal: Q^T * Q == I
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            double dot = 0.0;
+            for (idx k = 0; k < n; ++k) {
+                dot += Q(k, i) * Q(k, j);
+            }
+            const double expected = (i == j) ? 1.0 : 0.0;
+            EXPECT_NEAR(dot, expected, 1e-13);
+        }
+    }
+
+    // 3. Verify Q * H * Q^T == A
+    Matrix QHQ(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            double sum = 0.0;
+            for (idx k = 0; k < n; ++k) {
+                for (idx l = 0; l < n; ++l) {
+                    sum += Q(i, k) * H(k, l) * Q(j, l);
+                }
+            }
+            QHQ(i, j) = sum;
+            EXPECT_NEAR(QHQ(i, j), A(i, j), 1e-12);
+        }
+    }
+}
+#endif
+
+TEST(KernelRaw, HouseholderAndMicroKernels) {
+    // 1. Test householder_vector: eliminates tail of vector
+    std::vector<double> x = {3.0, 4.0, 0.0, 0.0};
+    std::vector<double> v(4);
+    double beta = 0.0;
+    kernel::raw::householder_vector(v.data(), beta, x.data(), 4);
+    EXPECT_GT(beta, 0.0);
+    EXPECT_DOUBLE_EQ(v[0], 1.0);
+
+    // Apply reflector to x: (I - beta * v * v^T) * x
+    double dot_vx = 0.0;
+    for (idx i = 0; i < 4; ++i)
+        dot_vx += v[i] * x[i];
+    std::vector<double> Px(4);
+    for (idx i = 0; i < 4; ++i)
+        Px[i] = x[i] - (beta * dot_vx * v[i]);
+    EXPECT_NEAR(Px[0], -5.0, 1e-14); // norm([3, 4]) = 5, sign is -
+    EXPECT_NEAR(Px[1], 0.0, 1e-14);
+    EXPECT_NEAR(Px[2], 0.0, 1e-14);
+    EXPECT_NEAR(Px[3], 0.0, 1e-14);
+
+    // 2. Test jacobi_rotation
+    double c = 0.0, s = 0.0;
+    kernel::raw::jacobi_rotation(2.0, 2.0, 1.0, c, s);
+    EXPECT_NEAR(c * c + s * s, 1.0, 1e-15);
+    EXPECT_NEAR(std::abs(c), std::abs(s), 1e-15); // tau = 0 => 45 deg
+
+    // 3. Test argmax_abs and swap_rows
+    std::vector<double> vals = {-1.0, 3.5, -9.2, 4.0};
+    EXPECT_EQ(kernel::raw::argmax_abs(vals.data(), 4), 2);
+
+    Matrix mat(3, 3, 0.0);
+    mat(0, 0) = 1.0;
+    mat(1, 1) = 2.0;
+    mat(2, 2) = 3.0;
+    kernel::raw::swap_rows(mat.data(), 3, 0, 2, 3);
+    EXPECT_DOUBLE_EQ(mat(0, 2), 3.0);
+    EXPECT_DOUBLE_EQ(mat(2, 0), 1.0);
+}
+
 TEST(HessenbergResolvent, AccuracyAndBatchEquivalence) {
     const idx n = 4;
     Matrix A(n, n, 0.0);
-    A(0, 0) = 4.0; A(0, 1) = 1.0; A(0, 2) = 0.5; A(0, 3) = 0.1;
-    A(1, 0) = 1.0; A(1, 1) = 3.0; A(1, 2) = 0.2; A(1, 3) = 0.4;
-    A(2, 0) = 0.5; A(2, 1) = 0.2; A(2, 2) = 5.0; A(2, 3) = 1.0;
-    A(3, 0) = 0.1; A(3, 1) = 0.4; A(3, 2) = 1.0; A(3, 3) = 2.0;
+    A(0, 0) = 4.0;
+    A(0, 1) = 1.0;
+    A(0, 2) = 0.5;
+    A(0, 3) = 0.1;
+    A(1, 0) = 1.0;
+    A(1, 1) = 3.0;
+    A(1, 2) = 0.2;
+    A(1, 3) = 0.4;
+    A(2, 0) = 0.5;
+    A(2, 1) = 0.2;
+    A(2, 2) = 5.0;
+    A(2, 3) = 1.0;
+    A(3, 0) = 0.1;
+    A(3, 1) = 0.4;
+    A(3, 2) = 1.0;
+    A(3, 3) = 2.0;
 
     Vector b{1.0, 2.0, 3.0, 4.0};
 
-    std::vector<cplx> shifts = {
-        cplx(10.0, 1.0),
-        cplx(8.0, -2.0),
-        cplx(0.0, 5.0),
-        cplx(-3.0, 4.0),
-        cplx(12.0, 0.0)
-    };
+    std::vector<cplx> shifts = {cplx(10.0, 1.0), cplx(8.0, -2.0), cplx(0.0, 5.0), cplx(-3.0, 4.0),
+                                cplx(12.0, 0.0)};
 
     HessenbergResolventSolver solver(A);
     const auto batch_results = solver.solve_batch(shifts, b);
@@ -895,5 +1001,64 @@ TEST(HessenbergResolvent, AccuracyAndBatchEquivalence) {
             EXPECT_NEAR(wrapper_batch[k][i].real(), batch_results[k][i].real(), 1e-13);
             EXPECT_NEAR(wrapper_batch[k][i].imag(), batch_results[k][i].imag(), 1e-13);
         }
+    }
+}
+
+TEST(PDEOperators, MatrixFreeLaplacianAndBackwardEulerMatchesSparseMatrix) {
+    const int N = 8;
+    const idx n = N * N;
+    const double coeff = 0.05;
+
+    pde::MatrixFreeLaplacian2D lap_op(N);
+    pde::MatrixFreeBackwardEuler2D be_op(N, coeff);
+
+    static_assert(LinearOperator<pde::MatrixFreeLaplacian2D>);
+    static_assert(SelfAdjointOperator<pde::MatrixFreeLaplacian2D>);
+    static_assert(LinearOperator<pde::MatrixFreeBackwardEuler2D>);
+    static_assert(SPDOperator<pde::MatrixFreeBackwardEuler2D>);
+
+    EXPECT_EQ(lap_op.rows(), n);
+    EXPECT_EQ(lap_op.cols(), n);
+    EXPECT_EQ(be_op.rows(), n);
+    EXPECT_EQ(be_op.cols(), n);
+
+    SparseMatrix lap_sparse = pde::laplacian_sparse_2d(N);
+    SparseMatrix be_sparse = pde::backward_euler_matrix(N, coeff);
+
+    Vector x(n);
+    for (idx i = 0; i < n; ++i) {
+        x[i] = std::sin(static_cast<double>(i + 1));
+    }
+
+    Vector y_lap_free(n), y_lap_sparse(n);
+    lap_op.apply(x, y_lap_free);
+    sparse_matvec(lap_sparse, x, y_lap_sparse);
+
+    for (idx i = 0; i < n; ++i) {
+        EXPECT_NEAR(y_lap_free[i], y_lap_sparse[i], 1e-14);
+    }
+
+    Vector y_be_free(n), y_be_sparse(n);
+    be_op.apply(x, y_be_free);
+    sparse_matvec(be_sparse, x, y_be_sparse);
+
+    for (idx i = 0; i < n; ++i) {
+        EXPECT_NEAR(y_be_free[i], y_be_sparse[i], 1e-14);
+    }
+
+    // Solve (I - coeff * \nabla^2) u = b using matrix-free CG
+    Vector b(n, 1.0);
+    Vector u_free(n, 0.0), u_sparse(n, 0.0);
+
+    auto res_free = cg(be_op, b, u_free, 1e-10, 500);
+    pde::BackwardEulerOperator2D be_assembled_op(N, coeff);
+    auto res_sparse = cg(be_assembled_op, b, u_sparse, 1e-10, 500);
+
+    EXPECT_TRUE(res_free.converged);
+    EXPECT_TRUE(res_sparse.converged);
+    EXPECT_EQ(res_free.iterations, res_sparse.iterations);
+
+    for (idx i = 0; i < n; ++i) {
+        EXPECT_NEAR(u_free[i], u_sparse[i], 1e-12);
     }
 }

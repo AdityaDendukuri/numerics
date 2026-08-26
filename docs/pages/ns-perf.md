@@ -17,14 +17,14 @@ auto A = num::operators::make_op(
 ```cpp
 num::Vector pressure(nx * ny, 0.0);
 num::SolverResult info =
-    num::cg(num::operators::assume_spd(A), rhs, pressure, 1e-8, 1000, num::Backend::blas);
+    num::cg(num::operators::assume_spd(A), rhs, pressure, 1e-8, 1000, num::backend::blas);
 ```
 
 The same code can switch to the sequential backend for diagnostics:
 
 ```cpp
 num::SolverResult ref =
-    num::cg(num::operators::assume_spd(A), rhs, pressure, 1e-10, 2000, num::Backend::seq);
+    num::cg(num::operators::assume_spd(A), rhs, pressure, 1e-10, 2000, num::backend::seq);
 ```
 
 ## Projection Skeleton
@@ -33,7 +33,7 @@ num::SolverResult ref =
 advect_velocity(u, v, dt);
 build_divergence_rhs(u, v, rhs);
 
-num::cg(num::operators::assume_spd(A), rhs, pressure, 1e-8, 1000, num::best_backend);
+num::cg(num::operators::assume_spd(A), rhs, pressure, 1e-8, 1000, num::backend::dflt);
 
 subtract_pressure_gradient(u, v, pressure, dt);
 apply_boundary_conditions(u, v);

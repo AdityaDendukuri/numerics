@@ -7,9 +7,9 @@
 ///   - Memory bandwidth utilization
 ///   - Comparison with tridiagonal solver
 
-#include "linalg/banded/banded.hpp"
-#include "linalg/factorization/thomas.hpp"
-#include "linalg/solvers/solvers.hpp"
+#include "linear/banded/banded.hpp"
+#include "linear/factorization/thomas.hpp"
+#include "linear/solvers/solvers.hpp"
 #include <benchmark/benchmark.h>
 #include <cmath>
 #include <cstring>

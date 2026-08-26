@@ -102,3 +102,10 @@ det = num::connected_components(n_nodes,
         for (int nb : adj[i]) visit(nb);
     });
 ```
+
+---
+
+## See Also
+
+* **`num::structures::connected_components` (@ref page_structures):** Graph topology partitioning on `num::Graph` using Union-Find.
+* **`num::DisjointSet` (@ref page_structures):** General $O(\alpha(N))$ disjoint set data structure with path compression.

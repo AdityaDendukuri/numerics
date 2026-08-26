@@ -18,11 +18,15 @@ if(NOT DEFINED NUMERICS_HAS_CUDA)
     message(STATUS "CUDA support:  ${NUMERICS_HAS_CUDA}")
 endif()
 
-# Phase 2: Target configuration
-if(TARGET numerics_raw_kernel AND NUMERICS_HAS_CUDA)
-    target_link_libraries(numerics_raw_kernel INTERFACE CUDA::cudart)
-    target_compile_definitions(numerics_raw_kernel INTERFACE NUMERICS_HAS_CUDA)
-    set_target_properties(numerics PROPERTIES
+# Phase 2: Device target configuration. CUDA is an opt-in compiled capability;
+# it never changes the kernel, core, or host-container target interfaces.
+# The .cu sources live in numerics_cuda,
+# so the device build properties belong there and this has to wait until that
+# target has been created.
+if(TARGET numerics_cuda)
+    target_link_libraries(numerics_cuda PUBLIC CUDA::cudart)
+    target_compile_definitions(numerics_cuda PUBLIC NUMERICS_HAS_CUDA)
+    set_target_properties(numerics_cuda PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
         POSITION_INDEPENDENT_CODE  ON
     )

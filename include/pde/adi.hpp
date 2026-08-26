@@ -4,8 +4,8 @@
 /// boundary-condition parameterization.
 #pragma once
 
-#include "core/vector.hpp"
-#include "linalg/factorization/tridiag_complex.hpp"
+#include "container/vector.hpp"
+#include "linear/factorization/tridiag_complex.hpp"
 #include "pde/stencil.hpp"
 #include <complex>
 #include <vector>

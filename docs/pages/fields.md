@@ -101,25 +101,37 @@ std::array<float, 3> value = velocity.sample(0.15f, 0.25f, 0.35f);
 velocity.scale(0.5f); // Scale all three component fields.
 ```
 
-## Gradient
+## Gradient (\f$\nabla \phi\f$)
+
+\f[
+\nabla \phi = \left( \frac{\partial \phi}{\partial x}, \frac{\partial \phi}{\partial y}, \frac{\partial \phi}{\partial z} \right)
+\f]
 
 ```cpp
 num::VectorField3D gradient = num::FieldSolver::gradient(density);
 ```
 
-## Divergence
+## Divergence (\f$\nabla \cdot \mathbf{v}\f$)
+
+\f[
+\nabla \cdot \mathbf{v} = \frac{\partial v_x}{\partial x} + \frac{\partial v_y}{\partial y} + \frac{\partial v_z}{\partial z}
+\f]
 
 ```cpp
 num::ScalarField3D divergence = num::FieldSolver::divergence(velocity);
 ```
 
-## Curl
+## Curl (\f$\nabla \times \mathbf{v}\f$)
+
+\f[
+\nabla \times \mathbf{v} = \left( \frac{\partial v_z}{\partial y} - \frac{\partial v_y}{\partial z},\; \frac{\partial v_x}{\partial z} - \frac{\partial v_z}{\partial x},\; \frac{\partial v_y}{\partial x} - \frac{\partial v_x}{\partial y} \right)
+\f]
 
 ```cpp
 num::VectorField3D curl = num::FieldSolver::curl(velocity);
 ```
 
-## Poisson Solve
+## 3D Poisson Solve (\f$-\nabla^2 \phi = \rho\f$)
 
 ```cpp
 num::ScalarField3D potential(32, 24, 16, 0.1f);
@@ -129,7 +141,7 @@ num::SolverResult result =
 
 The source and destination must share the same grid geometry.
 
-## Variable-Coefficient Poisson Solve
+## Variable-Coefficient Poisson Solve (\f$-\nabla \cdot (\sigma \nabla \phi) = \rho\f$)
 
 ```cpp
 num::ScalarField3D coefficient(32, 24, 16, 0.1f);
@@ -143,14 +155,14 @@ auto result = num::FieldSolver::solve_var_poisson(
     potential, coefficient, boundaries, 1e-8, 1000);
 ```
 
-## Current Density
+## Current Density (\f$\mathbf{J} = -\sigma \nabla \phi\f$)
 
 ```cpp
 num::VectorField3D current =
-    num::MagneticSolver::current_density(coefficient, potential); // J = -sigma grad(phi).
+    num::MagneticSolver::current_density(coefficient, potential); // J = -sigma * grad(phi)
 ```
 
-## Magnetic Field
+## Magnetic Field (\f$\nabla^2 \mathbf{A} = -\mu_0 \mathbf{J}, \quad \mathbf{B} = \nabla \times \mathbf{A}\f$)
 
 ```cpp
 num::VectorField3D magnetic =

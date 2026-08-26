@@ -1,5 +1,6 @@
 # Fields, Grids, and Spatial Utilities {#page_examples_spatial}
 
+- @subpage page_spatial "Cell lists, Verlet lists, and neighbour queries"
 - @subpage page_fields "Scalar and vector fields"
 - @subpage page_stencil_hof "Stencil and matrix-free operators"
 - @subpage page_connected_components "Connected-component labeling"

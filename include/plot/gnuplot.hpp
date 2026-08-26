@@ -2,7 +2,7 @@
 /// @brief Plot data helpers and a low-level owning gnuplot pipe.
 #pragma once
 
-#include "core/vector.hpp"
+#include "container/vector.hpp"
 #include <cstdio>
 #include <stdexcept>
 #include <string>
@@ -109,6 +109,44 @@ inline void apply_siam_style(Gnuplot &gp) {
        << "set tics nomirror\n"
        << "set key top left Left reverse samplen 3 spacing 1.2\n"
        << "set key box lt 1 lw 0.5\n";
+}
+
+/// Apply GitHub Primer Light style (clean white canvas, primer borders and accents).
+inline void apply_github_light_style(Gnuplot &gp) {
+    gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.75 lc rgb '#0969da'\n"
+       << "set style line 2 lt 2 lw 2 pt 5  ps 0.75 lc rgb '#1a7f37'\n"
+       << "set style line 3 lt 3 lw 2 pt 9  ps 0.75 lc rgb '#cf222e'\n"
+       << "set style line 4 lt 4 lw 2 pt 13 ps 0.75 lc rgb '#8250df'\n"
+       << "set style line 5 lt 5 lw 2 pt 11 ps 0.75 lc rgb '#bf8700'\n"
+       << "set style line 6 lt 6 lw 2 pt 15 ps 0.75 lc rgb '#0598bc'\n"
+       << "set style line 7 lt 7 lw 2 pt 4  ps 0.75 lc rgb '#bf3989'\n"
+       << "set style line 8 lt 8 lw 2 pt 6  ps 0.75 lc rgb '#656d76'\n"
+       << "set style line 100 lt 1 lw 0.5 lc rgb '#eaeef2'\n"
+       << "set grid back ls 100\n"
+       << "set border 3 lw 1.2 lc rgb '#d0d7de'\n"
+       << "set tics nomirror textcolor rgb '#1f2328'\n"
+       << "set key top left Left reverse samplen 3 spacing 1.2\n"
+       << "set key box lt 1 lc rgb '#d0d7de' lw 0.8\n"
+       << "set key textcolor rgb '#1f2328'\n";
+}
+
+/// Apply GitHub Primer Dark style.
+inline void apply_github_dark_style(Gnuplot &gp) {
+    gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.75 lc rgb '#58a6ff'\n"
+       << "set style line 2 lt 2 lw 2 pt 5  ps 0.75 lc rgb '#3fb950'\n"
+       << "set style line 3 lt 3 lw 2 pt 9  ps 0.75 lc rgb '#f85149'\n"
+       << "set style line 4 lt 4 lw 2 pt 13 ps 0.75 lc rgb '#bc8cff'\n"
+       << "set style line 5 lt 5 lw 2 pt 11 ps 0.75 lc rgb '#d29922'\n"
+       << "set style line 6 lt 6 lw 2 pt 15 ps 0.75 lc rgb '#39c5cf'\n"
+       << "set style line 7 lt 7 lw 2 pt 4  ps 0.75 lc rgb '#f778ba'\n"
+       << "set style line 8 lt 8 lw 2 pt 6  ps 0.75 lc rgb '#8b949e'\n"
+       << "set style line 100 lt 1 lw 0.5 lc rgb '#30363d'\n"
+       << "set grid back ls 100\n"
+       << "set border 3 lw 1.2 lc rgb '#30363d'\n"
+       << "set tics nomirror textcolor rgb '#e6edf3'\n"
+       << "set key top left Left reverse samplen 3 spacing 1.2\n"
+       << "set key box lt 1 lc rgb '#30363d' lw 0.8\n"
+       << "set key textcolor rgb '#e6edf3'\n";
 }
 
 /// Configure logarithmic x and y axes on a raw pipe.

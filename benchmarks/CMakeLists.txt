@@ -1,5 +1,17 @@
 FetchContent_MakeAvailable(benchmark)
 
+# Google Benchmark 1.8.3 uses __COUNTER__ in a preprocessor expression.  New
+# Clang versions diagnose that as a C2y extension, while the dependency enables
+# -pedantic-errors unconditionally.  Keep the workaround on the third-party
+# target rather than weakening diagnostics for numerics.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    foreach(_benchmark_target benchmark benchmark_main)
+        if(TARGET ${_benchmark_target})
+            target_compile_options(${_benchmark_target} PRIVATE -Wno-c2y-extensions)
+        endif()
+    endforeach()
+endif()
+
 find_program(GNUPLOT_EXECUTABLE gnuplot)
 
 add_executable(numerics_bench
@@ -14,6 +26,9 @@ add_executable(numerics_bench
     bench_svd.cpp
     bench_kernel.cpp
 )
+
+add_executable(bench_convergence bench_convergence.cpp)
+target_link_libraries(bench_convergence PRIVATE numerics)
 
 target_link_libraries(numerics_bench PRIVATE
     numerics

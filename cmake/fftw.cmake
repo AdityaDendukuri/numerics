@@ -13,6 +13,6 @@ if(NOT FFTW3_FOUND)
     return()
 endif()
 
-target_link_libraries(numerics_raw_kernel INTERFACE FFTW3::FFTW3)
-target_compile_definitions(numerics_raw_kernel INTERFACE NUMERICS_HAS_FFTW)
+target_link_libraries(numerics_backend_fftw INTERFACE FFTW3::FFTW3)
+target_compile_definitions(numerics_backend_fftw INTERFACE NUMERICS_HAS_FFTW)
 message(STATUS "FFTW3: found  (${FFTW3_LIBRARY})")

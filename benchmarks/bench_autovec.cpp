@@ -19,18 +19,18 @@
 ///           Shows how much the compiler can do on its own with good loop
 ///           order.
 ///
-///   Tier 3  BM_Matmul<Backend::simd>                      (bench_linalg.cpp)
+///   Tier 3  BM_Matmul<backend::simd>                      (bench_linalg.cpp)
 ///           Explicit AVX2 intrinsics + cache tiling written by hand.
 ///           Shows the ceiling of CPU matmul without a tuned BLAS.
 ///
-///   Tier 4  BM_Matmul<Backend::blas>                      (bench_linalg.cpp)
+///   Tier 4  BM_Matmul<backend::blas>                      (bench_linalg.cpp)
 ///           OpenBLAS: hand-written assembly kernels, runtime CPU dispatch.
 ///           Maintained externally; the practical production ceiling.
 ///
 /// Run just these:
 ///   ./build/benchmarks/numerics_bench --benchmark_filter=Scalar
 
-#include "core/matrix.hpp"
+#include "container/matrix.hpp"
 #include <algorithm>
 #include <benchmark/benchmark.h>
 

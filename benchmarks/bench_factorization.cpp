@@ -2,9 +2,9 @@
 /// @brief 3-way benchmark: our seq vs our omp vs LAPACK for LU and QR.
 ///
 /// For each factorization we register three variants:
-///   Backend::seq    -- our implementation, no parallelism
-///   Backend::omp    -- our implementation, OpenMP rotation loops
-///   Backend::lapack -- LAPACKE_dgetrf / LAPACKE_dgeqrf (industry standard)
+///   backend::seq    -- our implementation, no parallelism
+///   backend::omp    -- our implementation, OpenMP rotation loops
+///   backend::lapack -- LAPACKE_dgetrf / LAPACKE_dgeqrf (industry standard)
 ///
 /// Run with:
 ///   ./numerics_bench --benchmark_filter=BM_LU
@@ -35,7 +35,7 @@ static void BM_LU(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
     Matrix A = make_spd(n);
     for (auto _ : state) {
-        auto f = lu(A, B);
+        auto f = lu(assume_square(A), B);
         benchmark::DoNotOptimize(f.LU.data());
     }
     // O(2/3 n^3) flops
@@ -44,10 +44,10 @@ static void BM_LU(benchmark::State &state) {
         benchmark::Counter::kIsIterationInvariantRate, benchmark::Counter::kIs1000);
     state.SetComplexityN(static_cast<int64_t>(n));
 }
-BENCHMARK_TEMPLATE(BM_LU, Backend::seq)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
-BENCHMARK_TEMPLATE(BM_LU, Backend::omp)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
+BENCHMARK_TEMPLATE(BM_LU, backend::seq)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
+BENCHMARK_TEMPLATE(BM_LU, backend::omp)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
 #if defined(NUMERICS_HAS_LAPACK)
-BENCHMARK_TEMPLATE(BM_LU, Backend::lapack)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
+BENCHMARK_TEMPLATE(BM_LU, backend::lapack)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
 #endif
 
 // ── QR factorization ─────────────────────────────────────────────────────────
@@ -66,8 +66,8 @@ static void BM_QR(benchmark::State &state) {
         benchmark::Counter::kIsIterationInvariantRate, benchmark::Counter::kIs1000);
     state.SetComplexityN(static_cast<int64_t>(n));
 }
-BENCHMARK_TEMPLATE(BM_QR, Backend::seq)->RangeMultiplier(2)->Range(64, 512)->Complexity();
-BENCHMARK_TEMPLATE(BM_QR, Backend::omp)->RangeMultiplier(2)->Range(64, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_QR, backend::seq)->RangeMultiplier(2)->Range(64, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_QR, backend::omp)->RangeMultiplier(2)->Range(64, 512)->Complexity();
 #if defined(NUMERICS_HAS_LAPACK)
-BENCHMARK_TEMPLATE(BM_QR, Backend::lapack)->RangeMultiplier(2)->Range(64, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_QR, backend::lapack)->RangeMultiplier(2)->Range(64, 512)->Complexity();
 #endif

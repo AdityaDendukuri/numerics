@@ -2,6 +2,8 @@
 /// @brief Cache-coherent 2D cell list for O(1) amortized neighbour queries
 #pragma once
 
+#include "spatial/concepts.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -20,7 +22,7 @@ struct IntRange {
     [[nodiscard]] bool empty() const noexcept { return first == last; }
 };
 
-template <typename Scalar>
+template <scalars::Field Scalar>
 /// Counting-sorted 2D spatial bins for local-neighbor iteration.
 class CellList2D {
   public:
@@ -36,7 +38,7 @@ class CellList2D {
     }
 
     /// @brief Rebuild by counting-sort over cell ids.
-    template <typename PosAccessor>
+    template <PositionAccessor2D<Scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n) {
         sorted_.resize(n);
         const int total = nx_ * ny_;

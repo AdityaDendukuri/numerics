@@ -21,21 +21,21 @@ int main() {
 
     // Check concepts
     static_assert(num::LinearOperator<decltype(Aop)>);
-    static_assert(!num::SPDLinearOperator<decltype(Aop)>);
+    static_assert(!num::SPDOperator<decltype(Aop)>);
 
     std::cout << "[1] Raw DenseOp created.\n";
     std::cout << "    - Satisfies LinearOperator?    YES\n";
-    std::cout << "    - Satisfies SPDLinearOperator? NO\n\n";
+    std::cout << "    - Satisfies SPDOperator? NO\n\n";
 
     // UNCOMMENTING THE LINE BELOW FAILS TO COMPILE:
     // num::LinearSolution s_fail = num::solve(num::LinearProblem{Aop, b}, num::CG{});
 
     // 3. Attach the SPD property tag using assume_spd()
     auto spd_A = num::operators::assume_spd(Aop);
-    static_assert(num::SPDLinearOperator<decltype(spd_A)>);
+    static_assert(num::SPDOperator<decltype(spd_A)>);
 
     std::cout << "[2] Wrapped with assume_spd().\n";
-    std::cout << "    - Satisfies SPDLinearOperator? YES!\n\n";
+    std::cout << "    - Satisfies SPDOperator? YES!\n\n";
 
     // 4. Solve Ax = b using Conjugate Gradient (CG)
     num::LinearSolution s = num::solve(num::LinearProblem{spd_A, b}, num::CG{});

@@ -2,13 +2,19 @@
 <doxygenlayout version="2.0">
   <navindex>
     <tab type="mainpage" visible="yes" title="Home"/>
-    <tab type="pages" visible="yes" title="Learn" intro="Guides and feature examples"/>
+    <tab type="user" visible="yes" url="page_getting_started.html" title="Getting Started"/>
+    <tab type="user" visible="yes" url="page_architecture.html" title="Library Layout"/>
+    <tab type="user" visible="yes" url="page_concepts.html" title="Concepts &amp; Invariants"/>
+    <tab type="user" visible="yes" url="page_examples.html" title="Examples"/>
+    <tab type="user" visible="yes" url="page_guides.html" title="Guides"/>
     <tab type="user" visible="yes" url="page_reference.html" title="API Reference"/>
+    <tab type="user" visible="yes" url="page_report.html" title="Report"/>
     <tab type="namespaces" visible="yes" title="Namespaces">
       <tab type="namespacelist" visible="yes" title="Namespace List" intro=""/>
       <tab type="namespacemembers" visible="yes" title="Namespace Members" intro=""/>
     </tab>
-    <tab type="concepts" visible="yes" title="Concepts"/>
+    <tab type="concepts" visible="no"/>
+    <tab type="pages" visible="no"/>
     <tab type="classes" visible="yes" title="Types">
       <tab type="classlist" visible="yes" title="Type List" intro=""/>
       <tab type="classindex" visible="$ALPHABETICAL_INDEX" title="Type Index"/>

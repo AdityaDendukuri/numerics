@@ -2,44 +2,94 @@
 
 include(CMakeFindDependencyMacro)
 
-# Re-find optional dependencies that were compiled into the library.
-# Each block mirrors the detection logic in cmake/*.cmake so that the
-# imported targets referenced in NumericsTargets.cmake are recreated.
-
-if(@BLAS_FOUND@)
-    find_dependency(BLAS)
+# No component means the historical full umbrella. Requesting `kernel` or
+# `core` alone performs no optional dependency discovery.
+set(_numerics_components ${numerics_FIND_COMPONENTS})
+if(NOT _numerics_components)
+    set(_numerics_components numerics)
 endif()
 
-if(@NUMERICS_HAS_LAPACK@)
-    find_dependency(LAPACK)
+set(_numerics_need_full FALSE)
+if("numerics" IN_LIST _numerics_components OR "backends" IN_LIST _numerics_components)
+    set(_numerics_need_full TRUE)
 endif()
 
-if(@OpenMP_CXX_FOUND@)
-    find_dependency(OpenMP)
+foreach(_component kernel core raw_kernel numerics backends blas lapack openmp fftw suitesparse mpi cuda)
+    set(numerics_${_component}_FOUND TRUE)
+endforeach()
+
+if(_numerics_need_full OR "blas" IN_LIST _numerics_components)
+    if(@BLAS_FOUND@)
+        find_dependency(BLAS)
+    else()
+        set(numerics_blas_FOUND FALSE)
+    endif()
 endif()
 
-if(@NUMERICS_HAS_MPI@)
-    find_dependency(MPI)
+if(_numerics_need_full OR "lapack" IN_LIST _numerics_components)
+    if(@NUMERICS_HAS_LAPACK@)
+        find_dependency(LAPACK)
+    else()
+        set(numerics_lapack_FOUND FALSE)
+    endif()
 endif()
 
-if(@NUMERICS_HAS_KLU@)
-    find_dependency(PkgConfig)
-    pkg_check_modules(KLU REQUIRED IMPORTED_TARGET klu)
+if(_numerics_need_full OR "openmp" IN_LIST _numerics_components)
+    if(@OpenMP_CXX_FOUND@)
+        find_dependency(OpenMP)
+    else()
+        set(numerics_openmp_FOUND FALSE)
+    endif()
 endif()
 
-if(@NUMERICS_HAS_UMFPACK@)
-    find_dependency(PkgConfig)
-    pkg_check_modules(UMFPACK REQUIRED IMPORTED_TARGET umfpack)
+if("mpi" IN_LIST _numerics_components)
+    if(@NUMERICS_HAS_MPI@)
+        find_dependency(MPI)
+    else()
+        set(numerics_mpi_FOUND FALSE)
+    endif()
 endif()
 
-if(@FFTW3_FOUND@)
-    # FindFFTW3.cmake is installed alongside this file.
-    list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
-    find_dependency(FFTW3)
+if(_numerics_need_full OR "suitesparse" IN_LIST _numerics_components)
+    if(@NUMERICS_HAS_KLU@ OR @NUMERICS_HAS_UMFPACK@)
+        find_dependency(PkgConfig)
+        if(@NUMERICS_HAS_KLU@)
+            pkg_check_modules(KLU REQUIRED IMPORTED_TARGET klu)
+        endif()
+        if(@NUMERICS_HAS_UMFPACK@)
+            pkg_check_modules(UMFPACK REQUIRED IMPORTED_TARGET umfpack)
+        endif()
+    else()
+        set(numerics_suitesparse_FOUND FALSE)
+    endif()
 endif()
 
-# Optional file I/O layer
+if(_numerics_need_full OR "fftw" IN_LIST _numerics_components)
+    if(@FFTW3_FOUND@)
+        list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+        find_dependency(FFTW3)
+    else()
+        set(numerics_fftw_FOUND FALSE)
+    endif()
+endif()
+
+if("cuda" IN_LIST _numerics_components)
+    if(@NUMERICS_HAS_CUDA@)
+        find_dependency(CUDAToolkit)
+    else()
+        set(numerics_cuda_FOUND FALSE)
+    endif()
+endif()
 
 
 include("${CMAKE_CURRENT_LIST_DIR}/NumericsTargets.cmake")
+
+# Nested backend spellings are convenient build-tree aliases; recreate them for
+# installed packages without changing the exported target names.
+foreach(_backend blas lapack openmp fftw suitesparse simd)
+    if(TARGET numerics::${_backend} AND NOT TARGET numerics::backend::${_backend})
+        add_library(numerics::backend::${_backend} ALIAS numerics::${_backend})
+    endif()
+endforeach()
+
 check_required_components(numerics)

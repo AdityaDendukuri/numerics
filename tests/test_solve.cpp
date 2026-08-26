@@ -1,8 +1,8 @@
 /// @file tests/test_solve.cpp
 /// @brief Coverage for the solve(problem, algorithm) and sample(model, sampler)
 /// verbs: ODE returns an ODEResult; MCMC samples a model carrying its observable.
-#include "linalg/sparse/sparse.hpp"
-#include "linalg/sparse/sparse_op.hpp"
+#include "linear/sparse/sparse.hpp"
+#include "linear/sparse/sparse_op.hpp"
 #include "operator/properties.hpp"
 #include "solve/sample.hpp"
 #include "solve/solve.hpp"
@@ -69,4 +69,26 @@ TEST(Solve, LinearCacheWarmStart) {
     EXPECT_NEAR(s1.u[0], one.u[0], 1e-9);
     EXPECT_NEAR(s1.u[1], one.u[1], 1e-9);
     EXPECT_NEAR(s1.u[2], one.u[2], 1e-9);
+}
+
+TEST(Solve, RestrictedPcgPreservesZeroSumProblemInvariant) {
+    Matrix laplacian(2, 2, 0.0);
+    laplacian(0, 0) = 1.0;
+    laplacian(0, 1) = -1.0;
+    laplacian(1, 0) = -1.0;
+    laplacian(1, 1) = 1.0;
+    Matrix identity(2, 2, 0.0);
+    identity(0, 0) = 1.0;
+    identity(1, 1) = 1.0;
+    const auto restricted_A = num::assume<axiom::positive_definite_on<space::zero_sum>>(laplacian);
+    const auto restricted_M = num::assume<axiom::positive_definite_on<space::zero_sum>>(identity);
+    const Vector b{1.0, -1.0};
+
+    const auto solution =
+        solve(LinearProblem{restricted_A, b}, PCGOn{restricted_M, space::zero_sum{}});
+
+    EXPECT_TRUE(solution.converged);
+    EXPECT_TRUE(math::contains(space::zero_sum{}, solution.u));
+    EXPECT_NEAR(solution.u[0], 0.5, 1e-12);
+    EXPECT_NEAR(solution.u[1], -0.5, 1e-12);
 }

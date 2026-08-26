@@ -6,12 +6,12 @@
 /// sampling (MCMC) lives in solve/sample.hpp as sample(model, sampler).
 #pragma once
 
-#include "linalg/matrix_properties.hpp"
-#include "linalg/solvers/cg.hpp"
-#include "linalg/solvers/gmres.hpp"
-#include "linalg/solvers/minres.hpp"
-#include "linalg/solvers/pcg.hpp"
-#include "linalg/solvers/solver_result.hpp"
+#include "linear/matrix_properties.hpp"
+#include "linear/solvers/cg.hpp"
+#include "linear/solvers/gmres.hpp"
+#include "linear/solvers/minres.hpp"
+#include "linear/solvers/pcg.hpp"
+#include "linear/solvers/solver_result.hpp"
 #include "ode/ode.hpp"
 #include "operator/concepts.hpp"
 #include "solve/algorithms.hpp"
@@ -22,9 +22,9 @@ namespace num {
 
 /// @brief Result of a linear solve: the solution vector plus convergence stats.
 struct LinearSolution {
-    Vector u;            ///< solution vector
+    Vector u;            ///< solution vector \f$\mathbf{u}\f$
     idx iterations = 0;  ///< iterations performed
-    real residual = 0.0; ///< final residual norm ||b - A u||
+    real residual = 0.0; ///< final residual norm \f$\|\mathbf{b} - A \mathbf{u}\|_2\f$
     bool converged = false;
 };
 
@@ -59,14 +59,14 @@ namespace detail {
 // The (operator x algorithm) dispatch, run in place into u (warm-startable).
 // cg()/gmres()/minres()/pcg() are themselves overloaded on the operand type.
 
-inline SolverResult run(const linalg::SPDMatrix<Matrix> &A, const Vector &b, Vector &u,
+inline SolverResult run(const linear::SPDMatrix<Matrix> &A, const Vector &b, Vector &u,
                         const CG &a) {
     return cg(A, b, u, a.tol, a.max_iter, a.backend);
 }
 
 template <class Op>
-requires SPDLinearOperator<Op, Vector, Vector> SolverResult run(const Op &A, const Vector &b,
-                                                                Vector &u, const CG &a) {
+requires SPDOperator<Op, Vector, Vector> SolverResult run(const Op &A, const Vector &b, Vector &u,
+                                                          const CG &a) {
     return cg(A, b, u, a.tol, a.max_iter, a.backend);
 }
 
@@ -79,21 +79,31 @@ inline SolverResult run(const SparseMatrix &A, const Vector &b, Vector &u, const
 }
 
 template <class Op>
-requires LinearOperator<Op, Vector, Vector> SolverResult run(const Op &A, const Vector &b,
-                                                             Vector &u, const GMRES &a) {
+requires math::EndomorphismOn<Op, Vector> SolverResult run(const Op &A, const Vector &b, Vector &u,
+                                                           const GMRES &a) {
     return gmres(A, b, u, a.tol, a.max_iter, a.restart);
 }
 
 template <class Op>
-requires SymmetricLinearOperator<Op, Vector, Vector> SolverResult run(const Op &A, const Vector &b,
-                                                                      Vector &u, const MINRES &a) {
+requires math::EndomorphismOn<Op, Vector> &&math::Carries<Op, axiom::self_adjoint>
+    SolverResult run(const Op &A, const Vector &b, Vector &u, const MINRES &a) {
     return minres(A, b, u, a.tol, a.max_iter, a.backend);
 }
 
 template <class Op, class M>
-requires SPDLinearOperator<Op, Vector, Vector> &&Preconditioner<M>
-    SolverResult run(const Op &A, const Vector &b, Vector &u, const PCG<M> &a) {
+requires math::EndomorphismOn<Op, Vector> &&math::EndomorphismOn<M, Vector> &&
+    math::Carries<Op, axiom::positive_definite> &&math::Carries<M, axiom::positive_definite>
+        SolverResult run(const Op &A, const Vector &b, Vector &u, const PCG<M> &a) {
     return pcg(A, a.preconditioner, b, u, a.tol, a.max_iter, a.backend);
+}
+
+template <class Op, class M, class Subspace>
+requires math::LinearSubspaceOf<Subspace, Vector> &&math::EndomorphismOn<Op, Vector> &&
+    math::EndomorphismOn<M, Vector> &&math::Carries<Op, axiom::positive_definite_on<Subspace>> &&
+        math::Carries<M, axiom::positive_definite_on<Subspace>>
+            SolverResult run(const Op &A, const Vector &b, Vector &u, const PCGOn<M, Subspace> &a) {
+    return pcg(A, a.preconditioner, b, u, a.subspace,
+               PCGOptions{.tolerance = a.tol, .max_iterations = a.max_iter});
 }
 
 } // namespace detail

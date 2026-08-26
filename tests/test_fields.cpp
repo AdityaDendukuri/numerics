@@ -1,6 +1,7 @@
 /// @file tests/test_fields.cpp
 /// @brief 3D field container + FieldSolver coverage (Phase 3 rewrite).
 #include "fields/field3d.hpp"
+#include "container/vector_ops.hpp"
 #include "pde/field_solver.hpp"
 #include <cmath>
 #include <gtest/gtest.h>

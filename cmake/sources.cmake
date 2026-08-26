@@ -1,101 +1,48 @@
-# NUMERICS_SOURCES -- numerics library source list
+# Compiled sources for the numerics library.
 #
-# NUMERICS_HAS_CUDA and NUMERICS_HAS_MPI must be set before
-# this file is included (see cmake/cuda.cmake, cmake/mpi.cmake).
+# numerics is header-only apart from what is listed here. A file earns a place
+# in this list for one of two reasons: it binds an external library whose
+# headers should not reach every consumer (KLU, UMFPACK, MPI, CUDA), or it is a
+# translation unit whose file-local helpers are specific enough to the algorithm
+# that inlining them into a header would export detail without buying anything.
+#
+# NUMERICS_HAS_CUDA and NUMERICS_HAS_MPI must be set before this file is
+# included (see cmake/cuda.cmake, cmake/mpi.cmake).
 
-# Level 1 + Level 2 Kernel Sources (Data structures, operators, 0 solver overhead)
-set(NUMERICS_KERNEL_SOURCES
-    src/kernel/array.cpp
-    src/kernel/reduce.cpp
-    src/kernel/dense.cpp
-    src/kernel/subspace.cpp
-    src/core/vector.cpp
-    src/core/matrix.cpp
-    src/linalg/sparse/sparse.cpp
-    src/linalg/sparse/sparse_op.cpp
-    src/linalg/banded/banded.cpp
-    src/operator/operator.cpp
-    src/fields/fields.cpp
-)
-
-# Level 3 Core & Solver Module Sources
 set(NUMERICS_CORE_SOURCES
-    src/analysis/roots.cpp
-    src/analysis/quadrature.cpp
+    # Containers. Compiled so the build shares one instantiation of the common
+    # element types across translation units (see NUMERICS_EXTERN_TEMPLATES).
+    src/container/matrix.cpp
+    src/container/vector.cpp
 
-    src/stats/stats.cpp
+    # External bindings.
+    src/linear/sparse/klu.cpp
+    src/spectral/fft.cpp
+    src/linear/sparse/umfpack.cpp
 
-    src/linalg/factorization/cholesky.cpp
-    src/linalg/factorization/hessenberg.cpp
-    src/linalg/factorization/inverse_diagonal.cpp
-    src/linalg/factorization/inverse_diagonal_update.cpp
-    src/linalg/factorization/lu.cpp
-    src/linalg/factorization/qr.cpp
-    src/linalg/factorization/thomas.cpp
-    src/linalg/factorization/tridiag_complex.cpp
-    src/linalg/matrix_properties.cpp
-    src/linalg/sparse/klu.cpp
-    src/linalg/sparse/umfpack.cpp
-
-    src/linalg/eigen/power.cpp
-    src/linalg/eigen/eig.cpp
-    src/linalg/eigen/lanczos.cpp
-
-    src/linalg/svd/svd.cpp
-
-    src/linalg/solvers/cg.cpp
-    src/linalg/solvers/auto_linear.cpp
-    src/linalg/solvers/auto_resolvent.cpp
-    src/linalg/solvers/resolvent.cpp
-    src/linalg/solvers/hessenberg_resolvent.cpp
-    src/linalg/solvers/gauss_seidel.cpp
-    src/linalg/solvers/jacobi.cpp
-    src/linalg/solvers/gmres.cpp
-    src/linalg/expv/expv.cpp
-    src/linalg/solvers/sparse_resolvent.cpp
-    src/linalg/solvers/dense_resolvent.cpp
-)
-
-if(NUMERICS_HAS_CUDA)
-    list(APPEND NUMERICS_CORE_SOURCES src/core/parallel/cuda_ops.cu)
-else()
-    list(APPEND NUMERICS_CORE_SOURCES src/core/parallel/cuda_stubs.cpp)
-endif()
-
-if(NUMERICS_HAS_MPI)
-    list(APPEND NUMERICS_CORE_SOURCES src/core/parallel/mpi_ops.cpp)
-else()
-    list(APPEND NUMERICS_CORE_SOURCES src/core/parallel/mpi_stubs.cpp)
-endif()
-
-# Additional Domain Sources
-set(NUMERICS_PDE_SOURCES
-    src/pde/field_solver.cpp
+    # Algorithm-local translation units.
+    src/linear/eigen/eig.cpp
+    src/linear/factorization/inverse_diagonal.cpp
+    src/linear/solvers/auto_linear.cpp
+    src/linear/solvers/dense_resolvent.cpp
+    src/linear/solvers/hessenberg_resolvent.cpp
+    src/linear/solvers/resolvent.cpp
+    src/linear/solvers/sparse_resolvent.cpp
     src/pde/poisson.cpp
 )
 
-set(NUMERICS_STOCHASTIC_SOURCES
+# Explicit instantiations of the container templates. Kept separate so a
+# consumer copying headers out of the tree is never linked against them.
+set(NUMERICS_INSTANTIATION_SOURCES
 )
 
-set(NUMERICS_SPECTRAL_SOURCES
-    src/spectral/fft.cpp
+# Distributed-memory bindings. Built as numerics::mpi, never folded into the
+# main library, so linking numerics does not pull in an MPI dependency.
+set(NUMERICS_MPI_SOURCES
+    src/container/parallel/mpi_ops.cpp
 )
 
-set(NUMERICS_ODE_SOURCES
-    src/ode/ode.cpp
-)
-
-# Combined source list for umbrella library target (numerics::numerics)
-set(NUMERICS_SOURCES
-    ${NUMERICS_KERNEL_SOURCES}
-    ${NUMERICS_CORE_SOURCES}
-    ${NUMERICS_PDE_SOURCES}
-    ${NUMERICS_STOCHASTIC_SOURCES}
-    ${NUMERICS_SPECTRAL_SOURCES}
-    ${NUMERICS_ODE_SOURCES}
-)
-
-set(NUMERICS_IO_SOURCES
-    src/io/json.cpp
-    src/io/sparse_json.cpp
+# Device bindings. Built as numerics::cuda only when a toolkit was found.
+set(NUMERICS_CUDA_SOURCES
+    src/container/parallel/cuda_ops.cu
 )

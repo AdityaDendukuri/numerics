@@ -1,6 +1,8 @@
 /// @file 00_core_storage_and_helpers.cpp
 /// @brief Core vector, matrix, sparse, selection, and construction helpers.
 #include <array>
+#include "container/matrix_ops.hpp"
+#include "container/vector_ops.hpp"
 #include <iostream>
 #include <numerics.hpp>
 #include <span>
@@ -78,10 +80,10 @@ int main() {
     const Matrix similar = diagonal_similarity(sparse, weights);
 
     // Property wrappers distinguish checked and construction-guaranteed claims.
-    const bool symmetric = linalg::is_symmetric(A);
-    const bool positive_definite = linalg::is_spd(A);
-    const auto checked_spd = linalg::make_spd(A);
-    const auto assumed_spd = linalg::assume_spd(A);
+    const bool symmetric = linear::is_symmetric(A);
+    const bool positive_definite = linear::is_spd(A);
+    const auto checked_spd = linear::make_spd(A);
+    const auto assumed_spd = linear::assume_spd(A);
 
     // Selection and probability helpers replace common application loops.
     const idx largest = argmax(std::span<const real>(diag.data(), diag.size()));

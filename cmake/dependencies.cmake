@@ -23,6 +23,10 @@ FetchContent_Declare(
 )
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+# Newer Clang releases diagnose constructs in older Google Benchmark headers
+# (notably __COUNTER__ in a preprocessor expression) under -pedantic.  Third-party
+# warnings must not make the numerics benchmark target unbuildable.
+set(BENCHMARK_ENABLE_WERROR OFF CACHE BOOL "" FORCE)
 
 # Raylib — only needed if an external app build defines one of these app options
 # before including this dependency declaration file.

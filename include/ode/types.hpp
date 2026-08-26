@@ -2,7 +2,7 @@
 /// @brief Shared callbacks, parameters, snapshots, and results for ODE solvers.
 #pragma once
 
-#include "core/vector.hpp"
+#include "container/vector.hpp"
 #include <functional>
 
 namespace num {

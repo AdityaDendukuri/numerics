@@ -1,6 +1,8 @@
-/// @file include/viz/viz.hpp
+/// @file viz/viz.hpp
 /// @brief Lightweight real-time visualization layer for numerics apps.
 #pragma once
+
+#include "container/vector_ops.hpp"
 
 #include <algorithm>
 #include <cstdarg>

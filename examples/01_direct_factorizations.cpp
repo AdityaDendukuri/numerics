@@ -19,7 +19,7 @@ int main() {
     A(2, 2) = 4.0;
     Vector b{5.0, 6.0, 5.0};
 
-    auto lu_fact = lu(A);
+    auto lu_fact = lu(assume_square(A));
     Vector x_lu;
     lu_solve(lu_fact, b, x_lu);
     std::cout << "LU Solve x = [" << x_lu[0] << ", " << x_lu[1] << ", " << x_lu[2] << "]\n";
@@ -29,10 +29,11 @@ int main() {
     Vector x_qr;
     qr_solve(qr_fact, b, x_qr);
 
-    // 3. Cholesky Factorization (A = L L^T)
-    auto chol_fact = cholesky(A);
+    // 3. Cholesky Factorization (A = L L^T) with compile-time SPD concept tagging
+    auto chol_fact = cholesky(assume_spd(A));
     Vector x_chol(3, 0.0);
     cholesky_solve(chol_fact, b, x_chol);
+    std::cout << "Cholesky Solve x = [" << x_chol[0] << ", " << x_chol[1] << ", " << x_chol[2] << "]\n";
 
     // 4. Thomas Tridiagonal Algorithm (O(n) solve)
     Vector dl{1.0, 1.0};

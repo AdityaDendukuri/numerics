@@ -9,7 +9,7 @@
 /// order derivative operators for gradient, divergence, curl, and Laplacian.
 #pragma once
 
-#include "core/vector.hpp"
+#include "container/vector.hpp"
 #include "fields/field3d.hpp"
 #include "fields/grid2d.hpp"
 #include "fields/scalar_field_2d.hpp"

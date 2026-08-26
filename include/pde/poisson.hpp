@@ -26,7 +26,7 @@
 /// Helmholtz shifted Poisson solves.
 #pragma once
 
-#include "core/matrix.hpp"
+#include "container/matrix.hpp"
 
 namespace num {
 namespace pde {

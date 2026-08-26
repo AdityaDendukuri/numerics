@@ -2,9 +2,18 @@ cmake_minimum_required(VERSION 3.20)
 project(numerics VERSION 1.0.0 LANGUAGES CXX)
 
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Symlink compile_commands.json to project root for clangd / Neovim LSP
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    file(CREATE_LINK
+        "${CMAKE_BINARY_DIR}/compile_commands.json"
+        "${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json"
+        SYMBOLIC COPY_ON_ERROR
+    )
+endif()
 
 include(cmake/options.cmake)
 include(cmake/sanitize.cmake)    # must come before any add_library/add_executable
@@ -15,18 +24,58 @@ include(cmake/mpi.cmake)        # Phase 1: MPI detection
 include(cmake/sources.cmake)    # defines NUMERICS_*_SOURCES
 
 # --- Target Definitions ---
+#
+# The library is header-only. Everything below is an INTERFACE target that
+# carries include paths and, for a backend, a compile definition and the external
+# library to link. Two compiled targets exist and both are optional.
 
-# 1. Tier-0 Raw Kernel (Header-only INTERFACE)
-add_library(numerics_raw_kernel INTERFACE)
-add_library(numerics::raw_kernel ALIAS numerics_raw_kernel)
-target_include_directories(numerics_raw_kernel INTERFACE
+# 1. Foundational targets. These stay dependency-free even when every optional
+#    backend is present on the configuring machine.
+add_library(numerics_kernel INTERFACE)
+add_library(numerics::kernel ALIAS numerics_kernel)
+set_target_properties(numerics_kernel PROPERTIES EXPORT_NAME kernel)
+target_include_directories(numerics_kernel INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+target_compile_features(numerics_kernel INTERFACE cxx_std_20)
 
-# Backend configurations (attaches definitions and libraries to numerics_raw_kernel)
-include(cmake/cuda.cmake)       # Phase 2: target properties
-include(cmake/mpi.cmake)        # Phase 2: target properties
+add_library(numerics_core INTERFACE)
+add_library(numerics::core ALIAS numerics_core)
+set_target_properties(numerics_core PROPERTIES EXPORT_NAME core)
+target_link_libraries(numerics_core INTERFACE numerics_kernel)
+
+# Kept for source compatibility with builds that named the old target.
+add_library(numerics_raw_kernel INTERFACE)
+add_library(numerics::raw_kernel ALIAS numerics_raw_kernel)
+set_target_properties(numerics_raw_kernel PROPERTIES EXPORT_NAME raw_kernel)
+target_link_libraries(numerics_raw_kernel INTERFACE numerics_kernel)
+
+# 2. Optional capabilities. Detection modules configure only these targets; the
+#    kernel and core above never receive vendor headers, libraries, definitions,
+#    or architecture flags.
+foreach(_backend blas lapack openmp fftw suitesparse simd)
+    add_library(numerics_backend_${_backend} INTERFACE)
+    add_library(numerics::${_backend} ALIAS numerics_backend_${_backend})
+    add_library(numerics::backend::${_backend} ALIAS numerics_backend_${_backend})
+    set_target_properties(numerics_backend_${_backend} PROPERTIES EXPORT_NAME ${_backend})
+    target_link_libraries(numerics_backend_${_backend} INTERFACE numerics_core)
+endforeach()
+
+add_library(numerics_backends INTERFACE)
+add_library(numerics::backends ALIAS numerics_backends)
+set_target_properties(numerics_backends PROPERTIES EXPORT_NAME backends)
+target_link_libraries(numerics_backends INTERFACE
+    numerics_backend_blas
+    numerics_backend_lapack
+    numerics_backend_openmp
+    numerics_backend_fftw
+    numerics_backend_suitesparse
+    numerics_backend_simd
+)
+
+include(cmake/cuda.cmake)
+include(cmake/mpi.cmake)
 include(cmake/fftw.cmake)
 include(cmake/blas.cmake)
 include(cmake/openmp.cmake)
@@ -45,87 +94,55 @@ if(NUMERICS_BUILD_IO)
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
-# 2. Level 1 + Level 2 Kernel Target (Data structures, matrices, fields, operators; 0 solver overhead)
-add_library(numerics_kernel ${NUMERICS_KERNEL_SOURCES})
-add_library(numerics::kernel ALIAS numerics_kernel)
-target_compile_features(numerics_kernel PUBLIC cxx_std_20)
-target_include_directories(numerics_kernel PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(numerics_kernel PUBLIC numerics_raw_kernel)
-
-# 3. Component Solver Targets (Layered Level 3 Targets)
-
-# 3a. Linear Solvers, Factorizations & Eigensolvers (Depends on kernel)
-add_library(numerics_solvers ${NUMERICS_CORE_SOURCES})
-add_library(numerics::solvers ALIAS numerics_solvers)
-target_compile_features(numerics_solvers PUBLIC cxx_std_20)
-target_include_directories(numerics_solvers PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(numerics_solvers PUBLIC numerics_kernel)
-
-# 3b. ODE Steppers & Integrators (Depends on solvers)
-add_library(numerics_ode ${NUMERICS_ODE_SOURCES})
-add_library(numerics::ode ALIAS numerics_ode)
-target_compile_features(numerics_ode PUBLIC cxx_std_20)
-target_include_directories(numerics_ode PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(numerics_ode PUBLIC numerics_solvers)
-
-# 3c. PDE Field Solvers & Stencils (Depends on ode)
-add_library(numerics_pde ${NUMERICS_PDE_SOURCES})
-add_library(numerics::pde ALIAS numerics_pde)
-target_compile_features(numerics_pde PUBLIC cxx_std_20)
-target_include_directories(numerics_pde PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(numerics_pde PUBLIC numerics_ode)
-
-# 3d. Spectral FFT Transforms (Depends on kernel)
-add_library(numerics_spectral ${NUMERICS_SPECTRAL_SOURCES})
-add_library(numerics::spectral ALIAS numerics_spectral)
-target_compile_features(numerics_spectral PUBLIC cxx_std_20)
-target_include_directories(numerics_spectral PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(numerics_spectral PUBLIC numerics_kernel)
-
-# 3e. Matplotlib-style gnuplot / terminal plotting (Header-only INTERFACE)
-add_library(numerics_plot INTERFACE)
-add_library(numerics::plot ALIAS numerics_plot)
-target_include_directories(numerics_plot INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-
-# 4. Main Umbrella Target
-add_library(numerics ${NUMERICS_SOURCES})
+# 3. The compatibility umbrella. Mostly headers; what remains compiled is listed in
+#    cmake/sources.cmake and is either an external binding or a translation unit
+#    whose file-local helpers are not worth inlining.
+add_library(numerics ${NUMERICS_CORE_SOURCES} ${NUMERICS_INSTANTIATION_SOURCES})
 add_library(numerics::numerics ALIAS numerics)
+set_target_properties(numerics PROPERTIES EXPORT_NAME numerics)
+target_link_libraries(numerics PUBLIC numerics_core numerics_backends)
 target_compile_features(numerics PUBLIC cxx_std_20)
-target_include_directories(numerics PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(numerics PUBLIC numerics_raw_kernel)
 
-# Optional file-I/O layer. Core numerical users do not depend on JSON.
+# The numerics build shares one instantiation of the common container types
+# across its translation units. Deliberately not part of the public interface:
+# headers copied out of this tree must instantiate implicitly.
+target_compile_definitions(numerics PUBLIC
+    $<BUILD_INTERFACE:NUMERICS_EXTERN_TEMPLATES>
+)
+
+# 4. Optional compiled capabilities.
+
+# Distributed-memory bindings.
+if(NUMERICS_HAS_MPI)
+    add_library(numerics_mpi ${NUMERICS_MPI_SOURCES})
+    target_link_libraries(numerics_mpi PUBLIC numerics)
+else()
+    add_library(numerics_mpi INTERFACE)
+    target_link_libraries(numerics_mpi INTERFACE numerics)
+endif()
+add_library(numerics::mpi ALIAS numerics_mpi)
+set_target_properties(numerics_mpi PROPERTIES EXPORT_NAME mpi)
+
+if(NUMERICS_HAS_CUDA)
+    add_library(numerics_cuda ${NUMERICS_CUDA_SOURCES})
+    add_library(numerics::cuda ALIAS numerics_cuda)
+    set_target_properties(numerics_cuda PROPERTIES EXPORT_NAME cuda)
+    target_link_libraries(numerics_cuda PUBLIC numerics)
+endif()
+
+# 4. Compatibility aliases for the previous per-domain targets. All header-only
+#    now, so each simply forwards to numerics.
+foreach(_alias solvers ode pde spectral plot)
+    add_library(numerics_${_alias} INTERFACE)
+    add_library(numerics::${_alias} ALIAS numerics_${_alias})
+    target_link_libraries(numerics_${_alias} INTERFACE numerics)
+endforeach()
+
 if(NUMERICS_BUILD_IO)
-    add_library(numerics_io ${NUMERICS_IO_SOURCES})
+    add_library(numerics_io INTERFACE)
     add_library(numerics::io ALIAS numerics_io)
-    target_compile_features(numerics_io PUBLIC cxx_std_20)
-    target_include_directories(numerics_io PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${nlohmann_json_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-    )
-    target_link_libraries(numerics_io PUBLIC numerics::kernel)
+    target_link_libraries(numerics_io INTERFACE numerics
+        $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>)
 endif()
 
 add_custom_target(tags
@@ -133,6 +150,12 @@ add_custom_target(tags
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generate editor tags"
 )
+
+# Phase 2 of the toolchain modules: attach settings to numerics' own targets now
+# that they exist. The earlier includes above run before they are created.
+include(cmake/apple.cmake)
+include(cmake/cuda.cmake)
+include(cmake/mpi.cmake)
 
 include(cmake/install.cmake)
 

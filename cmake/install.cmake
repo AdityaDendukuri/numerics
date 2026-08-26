@@ -11,9 +11,16 @@ include(CMakePackageConfigHelpers)
 
 # Library artifacts + export set
 set(NUMERICS_INSTALL_TARGETS
-    numerics_raw_kernel numerics_kernel numerics_solvers numerics_ode
-    numerics_pde numerics_spectral numerics_plot numerics
+    numerics_kernel numerics_core numerics_raw_kernel
+    numerics_backend_blas numerics_backend_lapack numerics_backend_openmp
+    numerics_backend_fftw numerics_backend_suitesparse numerics_backend_simd
+    numerics_backends numerics
+    numerics_mpi
+    numerics_solvers numerics_ode numerics_pde numerics_spectral numerics_plot
 )
+if(TARGET numerics_cuda)
+    list(APPEND NUMERICS_INSTALL_TARGETS numerics_cuda)
+endif()
 if(TARGET numerics_io)
     list(APPEND NUMERICS_INSTALL_TARGETS numerics_io)
 endif()
@@ -28,7 +35,6 @@ install(TARGETS ${NUMERICS_INSTALL_TARGETS}
 # Header-only Raw Kernel headers component
 install(FILES
     include/kernel/raw.hpp
-    include/core/types.hpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/kernel
     COMPONENT kernel-raw
 )

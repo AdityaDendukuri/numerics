@@ -2,6 +2,7 @@
 /// @brief Unit tests for num::spectral FFT module.
 
 #include "core/types.hpp"
+#include "container/vector_ops.hpp"
 #include "spectral/fft.hpp"
 #include <cmath>
 #include <complex>

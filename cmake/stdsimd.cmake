@@ -1,6 +1,6 @@
 # std::experimental::simd detection (GCC 11+ / libstdc++)
 # Sets NUMERICS_HAS_STD_SIMD and the matching compile definition on the
-# numerics_raw_kernel target when <experimental/simd> is available and usable.
+# numerics::simd capability when <experimental/simd> is available and usable.
 include(CheckCXXSourceCompiles)
 
 # Save/restore flags: the test must compile at the project standard.
@@ -28,7 +28,7 @@ set(CMAKE_CXX_STANDARD          ${_saved_std})
 set(CMAKE_CXX_STANDARD_REQUIRED ${_saved_required})
 
 if(NUMERICS_HAS_STD_SIMD)
-    target_compile_definitions(numerics_raw_kernel INTERFACE NUMERICS_HAS_STD_SIMD)
+    target_compile_definitions(numerics_backend_simd INTERFACE NUMERICS_HAS_STD_SIMD)
     message(STATUS "std::simd: <experimental/simd> available")
 else()
     message(STATUS "std::simd: not available (needs GCC 11+ with libstdc++)")

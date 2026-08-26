@@ -1,7 +1,7 @@
 /// @file test_banded.cpp
 /// @brief Tests for banded matrix solver
 
-#include "linalg/banded/banded.hpp"
+#include "linear/banded/banded.hpp"
 #include <cmath>
 #include <cstring>
 #include <gtest/gtest.h>

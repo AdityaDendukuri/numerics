@@ -54,7 +54,7 @@ Stored dense matrices can also carry declared structure:
 
 ```cpp
 num::Matrix A = assemble_dense_spd_matrix();
-auto Aspd = num::linalg::make_spd(A);
+auto Aspd = num::linear::make_spd(A);
 
 auto F = num::cholesky(Aspd);
 num::cholesky_solve(F, b, x);

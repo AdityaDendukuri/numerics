@@ -2,7 +2,7 @@
 /// @brief Problem types: carry the mathematics, not the numerics.
 #pragma once
 
-#include "core/vector.hpp"
+#include "container/vector.hpp"
 #include "ode/concepts.hpp"
 
 namespace num {
@@ -15,8 +15,8 @@ struct ODEProblem {
     double tf = 1.0;
 };
 
-/// @brief Linear system A x = b. A is any matrix or LinearOperator; b the RHS.
-/// Non-owning view over A and b (bind at the call site for an immediate solve).
+/// @brief Linear system \f$A \mathbf{x} = \mathbf{b}\f$. \f$A\f$ is any matrix or `LinearOperator`; \f$\mathbf{b}\f$ is the right-hand side.
+/// Non-owning view over \f$A\f$ and \f$\mathbf{b}\f$ (bind at the call site for an immediate solve).
 template <class Op>
 struct LinearProblem {
     const Op &A;

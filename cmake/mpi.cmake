@@ -12,8 +12,8 @@ if(NOT DEFINED NUMERICS_HAS_MPI)
     message(STATUS "MPI support:   ${NUMERICS_HAS_MPI}")
 endif()
 
-# Phase 2: Target configuration
-if(TARGET numerics_raw_kernel AND NUMERICS_HAS_MPI)
-    target_link_libraries(numerics_raw_kernel INTERFACE MPI::MPI_CXX)
-    target_compile_definitions(numerics_raw_kernel INTERFACE NUMERICS_HAS_MPI)
+# Phase 2: Target configuration. MPI belongs only to numerics::mpi.
+if(TARGET numerics_mpi AND NUMERICS_HAS_MPI)
+    target_link_libraries(numerics_mpi PUBLIC MPI::MPI_CXX)
+    target_compile_definitions(numerics_mpi PUBLIC NUMERICS_HAS_MPI)
 endif()

@@ -97,6 +97,10 @@ add_custom_target(report
             --benchmark_min_time=0.1s
             --report=${PLOTS_DIR}
 
+    # 3b. Run convergence and dynamical diagnostics (PNG plots)
+    COMMAND ${CMAKE_COMMAND} -E echo "-- Generating convergence & dynamical diagnostics..."
+    COMMAND $<TARGET_FILE:bench_convergence> ${PLOTS_DIR}
+
     # 4. Assemble report
     COMMAND ${CMAKE_COMMAND} -E echo "-- Assembling report..."
     COMMAND $<TARGET_FILE:gen_report>
@@ -120,6 +124,6 @@ add_custom_target(report
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PLOTS_DIR} ${CMAKE_SOURCE_DIR}/docs/report/plots
     COMMAND ${CMAKE_COMMAND} -E echo "==> Docs updated: docs/report/"
 
-    DEPENDS gen_report numerics_tests numerics_bench
+    DEPENDS gen_report numerics_tests numerics_bench bench_convergence
     VERBATIM
 )

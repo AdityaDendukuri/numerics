@@ -1,12 +1,17 @@
 /// @file core/debug.hpp
-/// @brief Runtime contract validation and Julia/NumPy-style diagnostic checks.
+/// @brief Diagnostic presets, failure reporting, and dimension checks.
+///
+/// The scaffolding every module reports through. Sampling of mathematical
+/// properties builds on this and lives in `algebra/debug.hpp`.
 #pragma once
 
 #include "core/types.hpp"
 #include <algorithm>
 #include <cmath>
 #include <concepts>
+#include <cstdint>
 #include <iostream>
+#include <limits>
 #include <source_location>
 #include <stdexcept>
 #include <string>
@@ -20,6 +25,22 @@ enum class DiagnosticLevel {
     full = 2   ///< Includes sampled symmetry, adjoint, and positive-definiteness testing
 };
 
+/// @brief High-level execution and diagnostic presets for mathematical invariant enforcement.
+enum class Preset : std::uint8_t {
+    strict,     ///< Full runtime property sampling (x^T A x > 0, symmetry), loud warnings on untagged inputs.
+    balanced,   ///< Dimension matching, structure bounds, warnings on untagged inputs (skips randomized sampling).
+    unsafe,     ///< Prototyping mode: completely silences unverified invariant warnings and property checks.
+    production, ///< Maximum throughput: all diagnostics disabled.
+};
+
+namespace preset {
+inline constexpr Preset strict = Preset::strict;
+inline constexpr Preset balanced = Preset::balanced;
+inline constexpr Preset unsafe = Preset::unsafe;
+inline constexpr Preset prototype = Preset::unsafe;
+inline constexpr Preset production = Preset::production;
+} // namespace preset
+
 inline DiagnosticLevel g_level = DiagnosticLevel::full;
 
 inline void set_level(DiagnosticLevel lvl) noexcept {
@@ -30,6 +51,56 @@ inline DiagnosticLevel get_level() noexcept {
     return g_level;
 }
 
+/// @brief Configure the global execution preset.
+inline void set_preset(Preset p) noexcept {
+    switch (p) {
+    case Preset::strict:
+        g_level = DiagnosticLevel::full;
+        break;
+    case Preset::balanced:
+        g_level = DiagnosticLevel::basic;
+        break;
+    case Preset::unsafe:
+    case Preset::production:
+        g_level = DiagnosticLevel::off;
+        break;
+    }
+}
+
+/// @brief Get the current global execution preset.
+inline Preset get_preset() noexcept {
+    switch (g_level) {
+    case DiagnosticLevel::full:
+        return Preset::strict;
+    case DiagnosticLevel::basic:
+        return Preset::balanced;
+    case DiagnosticLevel::off:
+    default:
+        return Preset::unsafe;
+    }
+}
+
+/// @brief RAII guard to temporarily apply an execution preset within a scope.
+class ScopedPreset {
+  public:
+    explicit ScopedPreset(Preset temp_preset) noexcept
+        : previous_preset_(get_preset()) {
+        set_preset(temp_preset);
+    }
+
+    ~ScopedPreset() noexcept {
+        set_preset(previous_preset_);
+    }
+
+    ScopedPreset(const ScopedPreset &) = delete;
+    ScopedPreset &operator=(const ScopedPreset &) = delete;
+    ScopedPreset(ScopedPreset &&) = delete;
+    ScopedPreset &operator=(ScopedPreset &&) = delete;
+
+  private:
+    Preset previous_preset_;
+};
+
 /// @brief Raise a descriptive diagnostic exception with source location info.
 [[noreturn]] inline void panic(std::string_view category, std::string_view message,
                                std::source_location loc = std::source_location::current()) {
@@ -38,6 +109,7 @@ inline DiagnosticLevel get_level() noexcept {
                       std::string(message);
     throw std::invalid_argument(err);
 }
+
 
 /// @brief Verify dimension equality (e.g. A.rows() == b.size())
 inline void check_dim(idx expected, idx actual, std::string_view label,
@@ -79,141 +151,14 @@ inline void check_finite(const T *data, idx n, std::string_view label,
         }
     }
 }
-
-/// @brief Sampled runtime test for operator positive-definiteness (x^T A x > 0)
-template <class Op, class VectorType>
-inline void verify_spd_sample(const Op &A, idx n,
-                              std::source_location loc = std::source_location::current()) {
-    if (g_level != DiagnosticLevel::full) {
-        return;
-    }
-
-    if (n == 0) {
-        return;
-    }
-    VectorType x(n, real(1.0));
-    VectorType ax(n, real(0.0));
-    A.apply(x, ax);
-
-    real dot_val = 0.0;
-    for (idx i = 0; i < n; ++i) {
-        dot_val += x[i] * ax[i];
-    }
-
-    if (dot_val <= 0.0) {
-        panic("PropertyError",
-              "assume_spd() assertion failed: sampled inner product x^T A x = " +
-                  std::to_string(dot_val) + " <= 0. The operator is NOT positive definite!",
-              loc);
-    }
-}
-
-/// @brief Sampled runtime test for operator symmetry (x^T A y approx y^T A x)
-template <class Op, class VectorType>
-inline void verify_symmetry_sample(const Op &A, idx n,
-                                   std::source_location loc = std::source_location::current()) {
-    if (g_level != DiagnosticLevel::full) {
-        return;
-    }
-
-    if (n <= 1) {
-        return;
-    }
-    VectorType x(n), y(n), Ax(n), Ay(n);
-    for (idx i = 0; i < n; ++i) {
-        x[i] = (i % 2 == 0) ? real(1.0) : real(0.5);
-        y[i] = (i % 3 == 0) ? real(0.7) : real(1.3);
-    }
-    A.apply(x, Ax);
-    A.apply(y, Ay);
-
-    real xAy = 0.0, yAx = 0.0;
-    for (idx i = 0; i < n; ++i) {
-        xAy += x[i] * Ay[i];
-        yAx += y[i] * Ax[i];
-    }
-
-    real diff = std::abs(xAy - yAx);
-    real scale = std::max(std::abs(xAy), std::abs(yAx)) + 1e-12;
-    if (diff / scale > 1e-3) {
-        panic("PropertyError",
-              "assume_symmetric() assertion failed: sampled |x^T A y - y^T A x| = " +
-                  std::to_string(diff) + ". The operator is NOT symmetric!",
-              loc);
-    }
-}
-
-/// @brief Sampled runtime test for adjoint consistency: <A x, y> approx <x, A* y>
-template <class Op, class VectorType>
-inline void verify_adjoint_sample(const Op &A, idx m, idx n,
-                                  std::source_location loc = std::source_location::current()) {
-    if (g_level != DiagnosticLevel::full) {
-        return;
-    }
-    if (m == 0 || n == 0) {
-        return;
-    }
-    VectorType x(n), y(m), Ax(m), Aty(n);
-    for (idx i = 0; i < n; ++i) {
-        x[i] = (i % 2 == 0) ? real(1.0) : real(-0.5);
-    }
-    for (idx i = 0; i < m; ++i) {
-        y[i] = (i % 3 == 0) ? real(0.8) : real(1.2);
-    }
-    A.apply(x, Ax);
-    A.apply_adjoint(y, Aty);
-
-    real dot_ax_y = 0.0, dot_x_aty = 0.0;
-    for (idx i = 0; i < m; ++i) {
-        dot_ax_y += Ax[i] * y[i];
-    }
-    for (idx i = 0; i < n; ++i) {
-        dot_x_aty += x[i] * Aty[i];
-    }
-
-    real diff = std::abs(dot_ax_y - dot_x_aty);
-    real scale = std::max(std::abs(dot_ax_y), std::abs(dot_x_aty)) + 1e-12;
-    if (diff / scale > 1e-3) {
-        panic("PropertyError",
-              "Adjoint consistency check failed: |<Ax, y> - <x, A*y>| = " + std::to_string(diff),
-              loc);
-    }
-}
-
-/// @brief Validate structural invariants of CSR sparse storage.
-template <class SparseType>
-inline void verify_sparse_structure(const SparseType &A,
-                                    std::source_location loc = std::source_location::current()) {
-    if (g_level == DiagnosticLevel::off) {
-        return;
-    }
-    const idx nrows = A.n_rows();
-    const idx ncols = A.n_cols();
-    const idx *row_ptr = A.row_ptr();
-    const idx *col_idx = A.col_idx();
-    const real *values = A.values();
-
-    if (row_ptr[0] != 0) {
-        panic("SparseStructureError", "row_ptr[0] must be 0", loc);
-    }
-    for (idx i = 0; i < nrows; ++i) {
-        if (row_ptr[i] > row_ptr[i + 1]) {
-            panic("SparseStructureError",
-                  "row_ptr is not monotonic at row " + std::to_string(i), loc);
-        }
-        for (idx k = row_ptr[i]; k < row_ptr[i + 1]; ++k) {
-            if (col_idx[k] >= ncols) {
-                panic("SparseStructureError",
-                      "col_idx[" + std::to_string(k) + "] = " + std::to_string(col_idx[k]) +
-                          " exceeds n_cols (" + std::to_string(ncols) + ")",
-                      loc);
-            }
-            if (!std::isfinite(values[k])) {
-                panic("SparseStructureError",
-                      "non-finite sparse value at index " + std::to_string(k), loc);
-            }
-        }
-    }
-}
-
 } // namespace num::debug
+
+namespace num {
+
+using debug::get_preset;
+using debug::Preset;
+using debug::ScopedPreset;
+using debug::set_preset;
+namespace preset = debug::preset;
+
+} // namespace num

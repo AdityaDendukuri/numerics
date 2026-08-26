@@ -2,9 +2,9 @@
 /// @brief 3-way benchmark: Jacobi eig vs Lanczos vs LAPACK dsyevd.
 ///
 /// Variants:
-///   Backend::seq    -- our cyclic Jacobi (full spectrum, O(n^3))
-///   Backend::omp    -- our Jacobi with OpenMP rotation loops
-///   Backend::lapack -- LAPACKE_dsyevd divide-and-conquer (full spectrum)
+///   backend::seq    -- our cyclic Jacobi (full spectrum, O(n^3))
+///   backend::omp    -- our Jacobi with OpenMP rotation loops
+///   backend::lapack -- LAPACKE_dsyevd divide-and-conquer (full spectrum)
 ///
 /// Lanczos uses the operator protocol and targets only a few eigenvalues
 /// (k=10), so it is on its own benchmark rather than the 3-way template.
@@ -12,7 +12,8 @@
 /// Run with:
 ///   ./numerics_bench --benchmark_filter=BM_Eig
 
-#include "linalg/eigen/eigen.hpp"
+#include "linear/eigen/eigen.hpp"
+#include "container/matrix_ops.hpp"
 #include "numerics.hpp"
 #include <benchmark/benchmark.h>
 
@@ -38,7 +39,7 @@ static void BM_EigSym(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
     Matrix A = make_sym(n);
     for (auto _ : state) {
-        auto r = eig_sym(A, 1e-12, 100, B);
+        auto r = eig_sym(assume_symmetric(A), 1e-12, 100, B);
         benchmark::DoNotOptimize(r.values.data());
     }
     state.counters["GFLOP/s"] = benchmark::Counter(
@@ -46,8 +47,8 @@ static void BM_EigSym(benchmark::State &state) {
         benchmark::Counter::kIsIterationInvariantRate, benchmark::Counter::kIs1000);
     state.SetComplexityN(static_cast<int64_t>(n));
 }
-BENCHMARK_TEMPLATE(BM_EigSym, Backend::seq)->RangeMultiplier(2)->Range(32, 512)->Complexity();
-// NOTE: Backend::omp Jacobi is intentionally excluded from the benchmark.
+BENCHMARK_TEMPLATE(BM_EigSym, backend::seq)->RangeMultiplier(2)->Range(32, 512)->Complexity();
+// NOTE: backend::omp Jacobi is intentionally excluded from the benchmark.
 // Cyclic Jacobi applies one OpenMP parallel region per rotation, meaning
 // O(n^2) team launches per sweep × O(n) sweeps = O(n^3) launches total.
 // At n=128 this is ~800K launches; thread overhead (~10µs each) dwarfs the
@@ -57,7 +58,7 @@ BENCHMARK_TEMPLATE(BM_EigSym, Backend::seq)->RangeMultiplier(2)->Range(32, 512)-
 // rotations at once — a future improvement.  The OMP backend remains correct
 // and available; it just should not be benchmarked against seq this way.
 #if defined(NUMERICS_HAS_LAPACK)
-BENCHMARK_TEMPLATE(BM_EigSym, Backend::lapack)->RangeMultiplier(2)->Range(32, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_EigSym, backend::lapack)->RangeMultiplier(2)->Range(32, 512)->Complexity();
 #endif
 
 static void BM_Lanczos(benchmark::State &state) {
@@ -65,10 +66,10 @@ static void BM_Lanczos(benchmark::State &state) {
     constexpr idx k = 10;
     Matrix A = make_sym(n);
     auto op =
-        operators::make_op([&](const Vector &v, Vector &w) { matvec(A, v, w, best_backend); }, n);
+        operators::make_op([&](const Vector &v, Vector &w) { matvec(A, v, w, backend::dflt); }, n);
     auto Aop = operators::assume_symmetric(op);
     for (auto _ : state) {
-        auto r = lanczos(Aop, k, 1e-10, 0, Backend::seq);
+        auto r = lanczos(Aop, k, 1e-10, 0, backend::seq);
         benchmark::DoNotOptimize(r.ritz_values.data());
     }
     state.SetComplexityN(static_cast<int64_t>(n));

@@ -51,5 +51,8 @@ TOC_INCLUDE_HEADINGS    = 2
 LAYOUT_FILE             = @CMAKE_SOURCE_DIR@/docs/DoxygenLayout.xml
 GENERATE_TODOLIST       = NO
 
-# ── HTML theme (doxygen-awesome) ──────────────────────────────────────────────
-HTML_EXTRA_STYLESHEET  = @CMAKE_SOURCE_DIR@/docs/doxygen-awesome.css
+# ── HTML theme (doxygen-awesome + github primer light & dark) ──────────────────
+HTML_HEADER            = @CMAKE_SOURCE_DIR@/docs/header.html
+HTML_EXTRA_STYLESHEET  = @CMAKE_SOURCE_DIR@/docs/doxygen-awesome.css \
+                         @CMAKE_SOURCE_DIR@/docs/custom-github-dark.css
+HTML_EXTRA_FILES       = @CMAKE_SOURCE_DIR@/docs/doxygen-awesome-darkmode-toggle.js

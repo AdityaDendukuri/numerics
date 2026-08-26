@@ -28,3 +28,5 @@ add_numerics_example(10_banded_and_spd_operators     10_banded_and_spd_operators
 add_numerics_example(11_terminal_ascii_plot         11_terminal_ascii_plot.cpp)
 add_numerics_example(12_hessenberg_resolvent_benchmark 12_hessenberg_resolvent_benchmark.cpp)
 add_numerics_example(13_talbot_spectral_validation   13_talbot_spectral_validation.cpp)
+add_numerics_example(14_concepts_and_property_invariants 14_concepts_and_property_invariants.cpp)
+add_numerics_example(15_diffusion_evidence_cg       15_diffusion_evidence_cg.cpp)

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "core/types.hpp"
-#include "core/vector.hpp"
+#include "container/vector.hpp"
 #include <cstdint>
 
 namespace num {

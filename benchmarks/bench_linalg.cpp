@@ -19,6 +19,8 @@
 /// to illustrate the progression of techniques.
 
 #include "numerics.hpp"
+#include "container/matrix_ops.hpp"
+#include "container/vector_ops.hpp"
 #include <benchmark/benchmark.h>
 
 #ifdef NUMERICS_HAS_CUDA
@@ -48,7 +50,7 @@ static void BM_Matmul_Naive(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
     Matrix A(n, n, 1.0), B(n, n, 1.0), C(n, n);
     for (auto _ : state) {
-        matmul(A, B, C, seq);
+        matmul(A, B, C, backend::seq);
         benchmark::DoNotOptimize(C.data());
     }
     state.counters["GFLOP/s"] =
@@ -99,10 +101,10 @@ static void BM_Matmul(benchmark::State &state) {
                            benchmark::Counter::kIs1000);
     state.SetComplexityN(static_cast<int64_t>(n));
 }
-BENCHMARK_TEMPLATE(BM_Matmul, Backend::blocked)->RangeMultiplier(2)->Range(64, 512)->Complexity();
-BENCHMARK_TEMPLATE(BM_Matmul, Backend::simd)->RangeMultiplier(2)->Range(64, 512)->Complexity();
-BENCHMARK_TEMPLATE(BM_Matmul, Backend::blas)->RangeMultiplier(2)->Range(64, 512)->Complexity();
-BENCHMARK_TEMPLATE(BM_Matmul, Backend::omp)->RangeMultiplier(2)->Range(64, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_Matmul, backend::blocked)->RangeMultiplier(2)->Range(64, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_Matmul, backend::simd)->RangeMultiplier(2)->Range(64, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_Matmul, backend::blas)->RangeMultiplier(2)->Range(64, 512)->Complexity();
+BENCHMARK_TEMPLATE(BM_Matmul, backend::omp)->RangeMultiplier(2)->Range(64, 512)->Complexity();
 
 #ifdef NUMERICS_HAS_CUDA
 static void BM_Matmul_GPU(benchmark::State &state) {
@@ -113,7 +115,7 @@ static void BM_Matmul_GPU(benchmark::State &state) {
     C.to_gpu();
     cudaDeviceSynchronize();
     for (auto _ : state) {
-        matmul(A, B, C, gpu);
+        matmul(A, B, C, backend::gpu);
         cudaDeviceSynchronize();
         benchmark::DoNotOptimize(C.gpu_data());
     }
@@ -140,11 +142,11 @@ static void BM_Matvec(benchmark::State &state) {
     state.SetBytesProcessed(state.iterations() * static_cast<int64_t>(n * n + 2 * n) *
                             sizeof(real));
 }
-BENCHMARK_TEMPLATE(BM_Matvec, Backend::seq)->RangeMultiplier(2)->Range(64, 2048);
-BENCHMARK_TEMPLATE(BM_Matvec, Backend::blocked)->RangeMultiplier(2)->Range(64, 2048);
-BENCHMARK_TEMPLATE(BM_Matvec, Backend::simd)->RangeMultiplier(2)->Range(64, 2048);
-BENCHMARK_TEMPLATE(BM_Matvec, Backend::blas)->RangeMultiplier(2)->Range(64, 2048);
-BENCHMARK_TEMPLATE(BM_Matvec, Backend::omp)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK_TEMPLATE(BM_Matvec, backend::seq)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK_TEMPLATE(BM_Matvec, backend::blocked)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK_TEMPLATE(BM_Matvec, backend::simd)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK_TEMPLATE(BM_Matvec, backend::blas)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK_TEMPLATE(BM_Matvec, backend::omp)->RangeMultiplier(2)->Range(64, 2048);
 
 #ifdef NUMERICS_HAS_CUDA
 static void BM_Matvec_GPU(benchmark::State &state) {
@@ -156,7 +158,7 @@ static void BM_Matvec_GPU(benchmark::State &state) {
     y.to_gpu();
     cudaDeviceSynchronize();
     for (auto _ : state) {
-        matvec(A, x, y, gpu);
+        matvec(A, x, y, backend::gpu);
         cudaDeviceSynchronize();
         benchmark::DoNotOptimize(y.gpu_data());
     }
@@ -178,9 +180,9 @@ static void BM_Dot(benchmark::State &state) {
     // reads 2n doubles
     state.SetBytesProcessed(state.iterations() * state.range(0) * 2 * sizeof(real));
 }
-BENCHMARK_TEMPLATE(BM_Dot, Backend::seq)->RangeMultiplier(4)->Range(1024, 1 << 20);
-BENCHMARK_TEMPLATE(BM_Dot, Backend::blas)->RangeMultiplier(4)->Range(1024, 1 << 20);
-BENCHMARK_TEMPLATE(BM_Dot, Backend::omp)->RangeMultiplier(4)->Range(1024, 1 << 20);
+BENCHMARK_TEMPLATE(BM_Dot, backend::seq)->RangeMultiplier(4)->Range(1024, 1 << 20);
+BENCHMARK_TEMPLATE(BM_Dot, backend::blas)->RangeMultiplier(4)->Range(1024, 1 << 20);
+BENCHMARK_TEMPLATE(BM_Dot, backend::omp)->RangeMultiplier(4)->Range(1024, 1 << 20);
 
 #ifdef NUMERICS_HAS_CUDA
 static void BM_Dot_GPU(benchmark::State &state) {
@@ -190,7 +192,7 @@ static void BM_Dot_GPU(benchmark::State &state) {
     y.to_gpu();
     cudaDeviceSynchronize();
     for (auto _ : state) {
-        benchmark::DoNotOptimize(dot(x, y, gpu));
+        benchmark::DoNotOptimize(dot(x, y, backend::gpu));
         cudaDeviceSynchronize();
     }
     state.SetBytesProcessed(state.iterations() * state.range(0) * 2 * sizeof(real));
@@ -211,9 +213,9 @@ static void BM_Axpy(benchmark::State &state) {
     // reads 2n, writes n doubles
     state.SetBytesProcessed(state.iterations() * state.range(0) * 3 * sizeof(real));
 }
-BENCHMARK_TEMPLATE(BM_Axpy, Backend::seq)->RangeMultiplier(4)->Range(1024, 1 << 20);
-BENCHMARK_TEMPLATE(BM_Axpy, Backend::blas)->RangeMultiplier(4)->Range(1024, 1 << 20);
-BENCHMARK_TEMPLATE(BM_Axpy, Backend::omp)->RangeMultiplier(4)->Range(1024, 1 << 20);
+BENCHMARK_TEMPLATE(BM_Axpy, backend::seq)->RangeMultiplier(4)->Range(1024, 1 << 20);
+BENCHMARK_TEMPLATE(BM_Axpy, backend::blas)->RangeMultiplier(4)->Range(1024, 1 << 20);
+BENCHMARK_TEMPLATE(BM_Axpy, backend::omp)->RangeMultiplier(4)->Range(1024, 1 << 20);
 
 #ifdef NUMERICS_HAS_CUDA
 static void BM_Axpy_GPU(benchmark::State &state) {
@@ -223,7 +225,7 @@ static void BM_Axpy_GPU(benchmark::State &state) {
     y.to_gpu();
     cudaDeviceSynchronize();
     for (auto _ : state) {
-        axpy(2.0, x, y, gpu);
+        axpy(2.0, x, y, backend::gpu);
         cudaDeviceSynchronize();
         benchmark::DoNotOptimize(y.gpu_data());
     }
@@ -250,7 +252,7 @@ static void BM_CG(benchmark::State &state) {
         for (idx i = 0; i < n; ++i)
             x[i] = 0.0;
         state.ResumeTiming();
-        auto r = cg(A, b, x);
+        auto r = cg(assume_spd(A), b, x);
         benchmark::DoNotOptimize(x.data());
         state.counters["iters"] = static_cast<double>(r.iterations);
     }
@@ -275,7 +277,7 @@ static void BM_CG_GPU(benchmark::State &state) {
         for (idx i = 0; i < n; ++i)
             x[i] = 0.0;
         state.ResumeTiming();
-        auto r = cg(A, b, x, 1e-10, 1000, gpu);
+        auto r = cg(assume_spd(A), b, x, 1e-10, 1000, gpu);
         cudaDeviceSynchronize();
         benchmark::DoNotOptimize(x.data());
         state.counters["iters"] = static_cast<double>(r.iterations);

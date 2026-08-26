@@ -1,17 +1,30 @@
-# ODE Examples {#page_ode}
+# Ordinary Differential Equations {#page_ode}
 
-## First-Order System
+The `ode` module provides explicit, adaptive, and symplectic integrators for initial value problems (IVPs).
+
+---
+
+## 1. First-Order Initial Value Problems
+
+Integrates systems of first-order differential equations:
+
+\f[
+\frac{d\mathbf{y}}{dt} = \mathbf{f}(t, \mathbf{y}), \qquad \mathbf{y}(t_0) = \mathbf{y}_0
+\f]
 
 ```cpp
 #include <numerics.hpp>
 
+// Harmonic oscillator: q' = v, v' = -q
 num::ODERhsFn oscillator = [](double, const num::Vector& y, num::Vector& dy) {
-    dy[0] = y[1];  // q' = v.
-    dy[1] = -y[0]; // v' = -q.
+    dy[0] = y[1];  // dq/dt = v
+    dy[1] = -y[0]; // dv/dt = -q
 };
 ```
 
-## Integration Parameters
+---
+
+## 2. Integration Parameters & Solvers
 
 ```cpp
 num::ODEParams params{
@@ -23,78 +36,65 @@ num::ODEParams params{
 };
 ```
 
-Fixed-step solvers use `t0`, `tf`, and `h`. RK45 also uses the tolerances and
-`max_steps`.
+### Forward Euler (\f$\mathcal{O}(h)\f$)
 
-## Forward Euler
+\f[
+\mathbf{y}_{n+1} = \mathbf{y}_n + h\,\mathbf{f}(t_n, \mathbf{y}_n)
+\f]
 
 ```cpp
 num::ODEResult result = num::ode_euler(oscillator, {1.0, 0.0}, params);
 ```
 
-## Classical RK4
+### Classical Runge–Kutta 4th-Order (\f$\mathcal{O}(h^4)\f$)
+
+\f[
+\begin{aligned}
+\mathbf{k}_1 &= \mathbf{f}(t_n, \mathbf{y}_n), \\
+\mathbf{k}_2 &= \mathbf{f}\left(t_n + \tfrac{h}{2}, \mathbf{y}_n + \tfrac{h}{2}\mathbf{k}_1\right), \\
+\mathbf{k}_3 &= \mathbf{f}\left(t_n + \tfrac{h}{2}, \mathbf{y}_n + \tfrac{h}{2}\mathbf{k}_2\right), \\
+\mathbf{k}_4 &= \mathbf{f}(t_n + h, \mathbf{y}_n + h\mathbf{k}_3), \\
+\mathbf{y}_{n+1} &= \mathbf{y}_n + \frac{h}{6}\left(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4\right)
+\end{aligned}
+\f]
 
 ```cpp
 num::ODEResult result = num::ode_rk4(oscillator, {1.0, 0.0}, params);
 ```
 
-## Adaptive RK45
+### Adaptive Dormand–Prince RK45
+
+Computes 5th-order accurate trajectories with embedded 4th-order error estimation:
+
+\f[
+e_n = \|\mathbf{y}^{(5)}_{n+1} - \mathbf{y}^{(4)}_{n+1}\|_\infty, \qquad h_{\text{new}} = h \cdot \min\left(2.0, \max\left(0.2, 0.9 \left(\frac{\text{tol}}{e_n}\right)^{1/5}\right)\right)
+\f]
 
 ```cpp
 num::ODEResult result = num::ode_rk45(oscillator, {1.0, 0.0}, params);
 ```
 
-## Observing Accepted Steps
+### Step Observers & Telemetry
 
 ```cpp
 num::ObserverFn observe = [](double t, const num::Vector& state) {
-    record(t, state); // Called after each accepted step.
+    record(t, state); // Invoked after each accepted step
 };
 
 num::ODEResult result = num::ode_rk45(oscillator, {1.0, 0.0}, params, observe);
 ```
 
-## Result Metadata
+---
 
-```cpp
-num::Vector final_state = result.u; // Result owns the final state.
-double final_time = result.t;
-num::idx accepted = result.steps;
-bool reached_end = result.converged;
-```
+## 3. Second-Order Hamiltonian & Symplectic Systems
 
-## Problem and Algorithm Objects
+For separable mechanical systems governed by accelerations \f$\mathbf{a}(\mathbf{q})\f$:
 
-```cpp
-num::ODEProblem problem{oscillator, {1.0, 0.0}, 0.0, 20.0};
-num::RK45 method{.h = 1e-2, .rtol = 1e-8, .atol = 1e-10};
+\f[
+\frac{d^2\mathbf{q}}{dt^2} = \mathbf{a}(\mathbf{q}), \qquad \frac{d\mathbf{q}}{dt} = \mathbf{v}, \quad \frac{d\mathbf{v}}{dt} = \mathbf{a}(\mathbf{q})
+\f]
 
-num::ODEResult result = num::solve(problem, method);
-```
-
-```cpp
-auto euler_result = num::solve(problem, num::Euler{.h = 1e-3});
-auto rk4_result = num::solve(problem, num::RK4{.h = 1e-2});
-```
-
-## Lazy First-Order Steps
-
-```cpp
-auto trajectory = num::rk4(oscillator, {1.0, 0.0}, params);
-
-for (const num::Step& step : trajectory) {
-    record(step.t, step.u); // Each snapshot owns its state.
-}
-```
-
-```cpp
-auto trajectory = num::rk45(oscillator, {1.0, 0.0}, params);
-num::ODEResult final = trajectory.run(); // Consume the range and keep only the result.
-```
-
-`num::euler`, `num::rk4`, and `num::rk45` provide the same lazy interface.
-
-## Second-Order System
+Symplectic integrators preserve phase-space volume (\f$d\mathbf{p} \wedge d\mathbf{q}\f$) and prevent secular energy drift over astronomical time horizons.
 
 ```cpp
 num::AccelFn gravity = [](const num::Vector& q, num::Vector& acceleration) {
@@ -106,25 +106,29 @@ num::Vector q0{1.0, 0.0};
 num::Vector v0{0.0, 1.0};
 ```
 
-## Velocity Verlet
+### Velocity Verlet (2nd-Order Symplectic)
+
+\f[
+\mathbf{v}_{n+1/2} = \mathbf{v}_n + \frac{h}{2}\mathbf{a}(\mathbf{q}_n), \qquad \mathbf{q}_{n+1} = \mathbf{q}_n + h\,\mathbf{v}_{n+1/2}, \qquad \mathbf{v}_{n+1} = \mathbf{v}_{n+1/2} + \frac{h}{2}\mathbf{a}(\mathbf{q}_{n+1})
+\f]
 
 ```cpp
-auto result = num::ode_verlet(gravity, q0, v0, params); // Second-order symplectic update.
+auto result = num::ode_verlet(gravity, q0, v0, params); // 2nd-order symplectic Verlet
 ```
 
-## Fourth-Order Yoshida
+### Yoshida 4th-Order Symplectic
+
+Constructed by symmetric composition of three Verlet substeps with weights \f$w_1 = w_3 = \frac{1}{2 - 2^{1/3}}\f$, \f$w_2 = -\frac{2^{1/3}}{2 - 2^{1/3}}\f$:
 
 ```cpp
-auto result = num::ode_yoshida4(gravity, q0, v0, params); // Fourth-order symplectic update.
+auto result = num::ode_yoshida4(gravity, q0, v0, params); // 4th-order symplectic energy conservation
 ```
 
-## Fourth-Order Nystrom RK
+---
 
-```cpp
-auto result = num::ode_rk4_2nd(gravity, q0, v0, params); // Fourth-order non-symplectic update.
-```
+## 4. Lazy Range Trajectories
 
-## Lazy Symplectic Steps
+Iterators provide memory-efficient step streaming without materializing the full orbit array in RAM:
 
 ```cpp
 for (const num::SymplecticStep& step : num::verlet(gravity, q0, v0, params)) {
@@ -132,31 +136,25 @@ for (const num::SymplecticStep& step : num::verlet(gravity, q0, v0, params)) {
 }
 ```
 
-`num::verlet`, `num::yoshida4`, and `num::rk4_2nd` provide lazy trajectories.
+---
 
-## Implicit Field Updates
+## 5. Implicit PDE Steppers (Method of Lines)
+
+Advances parabolic PDE fields \f$\frac{\partial u}{\partial t} = \mathcal{L}(u)\f$ via implicit Backward Euler solves \f$(I - \Delta t \mathcal{L}) u^{n+1} = u^n\f$:
 
 ```cpp
 num::operators::SparseOp op(A);
+auto spd = num::operators::assume_spd(op);
 
 num::LinearSolver solver = [&](const num::Vector& rhs, num::Vector& x) {
-    return num::cg(num::operators::assume_spd(op), rhs, x, 1e-8, 1000);
+    return num::cg(spd, rhs, x, 1e-8, 1000);
 };
 
 num::ode::advance(field, solver, {.nstep = 100, .dt = 1e-3});
 ```
 
-## Observing Implicit Updates
+---
 
-```cpp
-num::ode::advance(field, solver, {.nstep = 100, .dt = 1e-3},
-    [](int step, double time, const auto& current) {
-        save(step, time, current); // Includes the initial field at step zero.
-    });
-```
-
-Any field exposing `vec()` satisfies the implicit stepper interface.
-
-## Complete Program
+## Complete Example
 
 @example 05_symplectic_nbody_ode.cpp

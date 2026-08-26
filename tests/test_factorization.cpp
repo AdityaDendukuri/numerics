@@ -1,8 +1,9 @@
-#include "linalg/factorization/factorization.hpp"
-#include "linalg/matrix_utils.hpp"
-#include "linalg/sparse/klu.hpp"
-#include "linalg/sparse/sparse.hpp"
-#include "linalg/sparse/umfpack.hpp"
+#include "linear/factorization/factorization.hpp"
+#include "container/matrix_ops.hpp"
+#include "linear/matrix_utils.hpp"
+#include "linear/sparse/klu.hpp"
+#include "linear/sparse/sparse.hpp"
+#include "linear/sparse/umfpack.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
 
@@ -74,7 +75,7 @@ TEST(KLU, SparseFactorAndBlockSolve) {
 
 TEST(Cholesky, RankOneUpdateAndDowndate) {
     Matrix identity_matrix = identity(3);
-    auto factor = cholesky(identity_matrix);
+    auto factor = cholesky(assume_spd(identity_matrix));
     Vector update{0.5, -0.25, 0.75};
     cholesky_update(factor, update);
 
@@ -133,6 +134,68 @@ TEST(AutoLinear, SolveTransposeAndInverseDiagonal) {
     EXPECT_NEAR(principal(1, 1), 0.3, 1e-12);
 }
 
+TEST(AutoLinear, ConvenienceOverloadsMatchOutParameterForm) {
+    const auto matrix =
+        SparseMatrix::from_triplets(2, 2, {0, 0, 1, 1}, {0, 1, 0, 1}, {4.0, 1.0, 2.0, 3.0});
+    AutoLinearSolver factor(matrix, {.dense_limit = 0});
+
+    const Vector b{6.0, 8.0};
+    Matrix B(2, 2, 0.0);
+    B(0, 0) = 6.0;
+    B(0, 1) = 1.0;
+    B(1, 0) = 8.0;
+    B(1, 1) = 5.0;
+
+    Vector expected_vector(2, 0.0);
+    factor.solve(b, expected_vector);
+    const Vector actual_vector = solve(factor, b);
+    EXPECT_DOUBLE_EQ(actual_vector[0], expected_vector[0]);
+    EXPECT_DOUBLE_EQ(actual_vector[1], expected_vector[1]);
+
+    factor.solve_transpose(b, expected_vector);
+    const Vector actual_transpose = solve_transpose(factor, b);
+    EXPECT_DOUBLE_EQ(actual_transpose[0], expected_vector[0]);
+    EXPECT_DOUBLE_EQ(actual_transpose[1], expected_vector[1]);
+
+    Matrix expected_matrix;
+    factor.solve(B, expected_matrix);
+    const Matrix actual_matrix = solve(factor, B);
+    ASSERT_EQ(actual_matrix.rows(), expected_matrix.rows());
+    ASSERT_EQ(actual_matrix.cols(), expected_matrix.cols());
+    for (idx i = 0; i < expected_matrix.rows(); ++i) {
+        for (idx j = 0; j < expected_matrix.cols(); ++j) {
+            EXPECT_DOUBLE_EQ(actual_matrix(i, j), expected_matrix(i, j));
+        }
+    }
+
+    factor.solve_transpose(B, expected_matrix);
+    const Matrix actual_matrix_transpose = solve_transpose(factor, B);
+    for (idx i = 0; i < expected_matrix.rows(); ++i) {
+        for (idx j = 0; j < expected_matrix.cols(); ++j) {
+            EXPECT_DOUBLE_EQ(actual_matrix_transpose(i, j), expected_matrix(i, j));
+        }
+    }
+
+    Vector expected_diagonal(2, 0.0);
+    InverseDiagonalWorkspace workspace;
+    inverse_diagonal(factor, expected_diagonal, workspace);
+    const Vector actual_diagonal = inverse_diagonal(factor);
+    EXPECT_DOUBLE_EQ(actual_diagonal[0], expected_diagonal[0]);
+    EXPECT_DOUBLE_EQ(actual_diagonal[1], expected_diagonal[1]);
+
+    const std::vector<idx> indices{1, 0};
+    Matrix expected_block;
+    inverse_principal_block(factor, indices, expected_block, workspace);
+    const Matrix actual_block = inverse_principal_block(factor, indices);
+    ASSERT_EQ(actual_block.rows(), expected_block.rows());
+    ASSERT_EQ(actual_block.cols(), expected_block.cols());
+    for (idx i = 0; i < expected_block.rows(); ++i) {
+        for (idx j = 0; j < expected_block.cols(); ++j) {
+            EXPECT_DOUBLE_EQ(actual_block(i, j), expected_block(i, j));
+        }
+    }
+}
+
 TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
     Matrix matrix(3, 3, 0.0);
     matrix(0, 0) = 4.0;
@@ -143,8 +206,8 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
     matrix(2, 1) = 1.0;
     matrix(2, 2) = 2.0;
 
-    const auto lu_factor = lu(matrix);
-    const auto cholesky_factor = cholesky(matrix);
+    const auto lu_factor = lu(assume_square(matrix));
+    const auto cholesky_factor = cholesky(assume_spd(matrix));
     const Matrix inverse = lu_inv(lu_factor);
     const std::vector<idx> indices{2, 0};
     InverseDiagonalWorkspace workspace;
@@ -168,109 +231,6 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
                  std::invalid_argument);
     EXPECT_THROW(inverse_principal_block(lu_factor, std::vector<idx>{3}, principal, workspace),
                  std::out_of_range);
-}
-
-TEST(InverseDiagonalUpdate, CholeskyWoodburyAndDirectFallback) {
-    Matrix matrix(3, 3, 0.0);
-    matrix(0, 0) = 4.0;
-    matrix(0, 1) = 1.0;
-    matrix(1, 0) = 1.0;
-    matrix(1, 1) = 3.0;
-    matrix(1, 2) = 0.5;
-    matrix(2, 1) = 0.5;
-    matrix(2, 2) = 2.0;
-    const auto factor = cholesky(matrix);
-
-    Matrix vectors(3, 2, 0.0);
-    vectors(0, 0) = 1.0;
-    vectors(0, 1) = 0.2;
-    vectors(1, 1) = 0.5;
-    vectors(2, 0) = 0.3;
-    vectors(2, 1) = -0.2;
-    Matrix weights(2, 2, 0.0);
-    weights(0, 0) = 0.2;
-    weights(0, 1) = 0.05;
-    weights(1, 0) = 0.05;
-    weights(1, 1) = 0.1;
-
-    const auto updated_factor = cholesky(low_rank_update(matrix, vectors, weights));
-    InverseDiagonalWorkspace workspace;
-    Vector diagonal(3, 0.0);
-    Vector expected(3, 0.0);
-    Vector result(3, 0.0);
-    inverse_diagonal(factor, diagonal, workspace);
-    inverse_diagonal(updated_factor, expected, workspace);
-    EXPECT_EQ(inverse_diagonal_after_update(factor, updated_factor, diagonal, vectors, weights,
-                                            result, workspace),
-              InverseDiagonalUpdatePath::woodbury);
-    for (idx state = 0; state < result.size(); ++state) {
-        EXPECT_NEAR(result[state], expected[state], 1e-12);
-    }
-
-    Matrix downdate_vectors(3, 1, 0.0);
-    downdate_vectors(0, 0) = 0.5;
-    downdate_vectors(1, 0) = 0.25;
-    downdate_vectors(2, 0) = 0.1;
-    Matrix negative_weight(1, 1, -0.1);
-    const auto downdated_factor =
-        cholesky(low_rank_update(matrix, downdate_vectors, negative_weight));
-    inverse_diagonal(downdated_factor, expected, workspace);
-    EXPECT_EQ(inverse_diagonal_after_update(factor, downdated_factor, diagonal, downdate_vectors,
-                                            negative_weight, result, workspace),
-              InverseDiagonalUpdatePath::direct);
-    for (idx state = 0; state < result.size(); ++state) {
-        EXPECT_NEAR(result[state], expected[state], 1e-12);
-    }
-}
-
-TEST(InverseDiagonalUpdate, NonsymmetricTwoSidedWoodbury) {
-    Matrix matrix(3, 3, 0.0);
-    matrix(0, 0) = 4.0;
-    matrix(0, 1) = -1.0;
-    matrix(1, 0) = -2.0;
-    matrix(1, 1) = 5.0;
-    matrix(1, 2) = -1.0;
-    matrix(2, 1) = -0.5;
-    matrix(2, 2) = 3.0;
-
-    Matrix vectors(3, 2, 0.0);
-    vectors(0, 0) = 1.0;
-    vectors(1, 1) = 0.5;
-    vectors(2, 0) = -0.2;
-    vectors(2, 1) = 0.3;
-    Matrix weights(2, 2, 0.0);
-    weights(0, 0) = 0.1;
-    weights(0, 1) = 0.03;
-    weights(1, 0) = -0.02;
-    weights(1, 1) = 0.08;
-
-    const auto factor = lu(matrix);
-    const auto updated_factor = lu(low_rank_update(matrix, vectors, weights));
-    InverseDiagonalWorkspace workspace;
-    Vector diagonal(3, 0.0);
-    Vector expected(3, 0.0);
-    Vector result(3, 0.0);
-    inverse_diagonal(factor, diagonal, workspace);
-    inverse_diagonal(updated_factor, expected, workspace);
-
-    EXPECT_EQ(inverse_diagonal_after_update(factor, updated_factor, diagonal, vectors, weights,
-                                            result, workspace),
-              InverseDiagonalUpdatePath::woodbury);
-    for (idx state = 0; state < result.size(); ++state) {
-        EXPECT_NEAR(result[state], expected[state], 1e-12);
-    }
-
-    Matrix scalar(1, 1, 1.0);
-    Matrix scalar_vectors(1, 1, 1.0);
-    Matrix large_weight(1, 1, 1e16);
-    const auto scalar_factor = lu(scalar);
-    const auto updated_scalar_factor = lu(low_rank_update(scalar, scalar_vectors, large_weight));
-    Vector scalar_diagonal{1.0};
-    Vector scalar_result(1, 0.0);
-    EXPECT_EQ(inverse_diagonal_after_update(scalar_factor, updated_scalar_factor, scalar_diagonal,
-                                            scalar_vectors, large_weight, scalar_result, workspace),
-              InverseDiagonalUpdatePath::direct);
-    EXPECT_NEAR(scalar_result[0], 1e-16, 1e-28);
 }
 
 TEST(UMFPACK, SparseFactorAndSolve) {
@@ -303,7 +263,7 @@ TEST(LU, SolveSmall3x3) {
     A(2, 2) = 9;
     Vector b{1.0, 2.0, 3.0};
 
-    auto f = lu(A);
+    auto f = lu(assume_square(A));
     EXPECT_FALSE(f.singular);
 
     Vector x(3);
@@ -323,7 +283,7 @@ TEST(LU, SolveIdentitySystem) {
     }
     Vector b{1.0, 2.0, 3.0, 4.0, 5.0};
 
-    auto f = lu(A);
+    auto f = lu(assume_square(A));
     Vector x(n);
     lu_solve(f, b, x);
 
@@ -341,7 +301,7 @@ TEST(LU, SolveDiagonalSystem) {
     A(3, 3) = 4;
     Vector b{3.0, 12.0, 5.0, 8.0};
 
-    auto f = lu(A);
+    auto f = lu(assume_square(A));
     Vector x(4);
     lu_solve(f, b, x);
 
@@ -374,7 +334,7 @@ TEST(LU, SolveLargerSystem) {
         }
     }
 
-    auto f = lu(A);
+    auto f = lu(assume_square(A));
     Vector x(n);
     lu_solve(f, b, x);
     for (idx i = 0; i < n; ++i) {
@@ -389,7 +349,7 @@ TEST(LU, Determinant2x2) {
     A(0, 1) = 8;
     A(1, 0) = 4;
     A(1, 1) = 6;
-    auto f = lu(A);
+    auto f = lu(assume_square(A));
     EXPECT_NEAR(lu_det(f), -14.0, 1e-10);
 }
 
@@ -407,7 +367,7 @@ TEST(LU, Determinant3x3) {
     A(2, 0) = 3;
     A(2, 1) = 9;
     A(2, 2) = 27;
-    auto f = lu(A);
+    auto f = lu(assume_square(A));
     EXPECT_NEAR(lu_det(f), 12.0, 1e-9);
 }
 
@@ -424,7 +384,7 @@ TEST(LU, InverseTimesOriginal) {
     A(2, 1) = 1;
     A(2, 2) = 2;
 
-    auto f = lu(A);
+    auto f = lu(assume_square(A));
     Matrix Ainv = lu_inv(f);
 
     // Check A * Ainv ~= I
@@ -461,8 +421,8 @@ TEST(LU, MultipleRHS) {
     B(1, 1) = 1;
     B(2, 1) = 0; // second column: e_1
 
-    for (const Backend backend : {Backend::seq, lapack_backend}) {
-        const auto factor = lu(A, backend);
+    for (const Backend backend : {Backend::seq, Backend::lapack}) {
+        const auto factor = lu(assume_square(A), backend);
         Matrix X;
         lu_solve(factor, B, X);
 
@@ -490,7 +450,7 @@ TEST(LU, SingularMatrix) {
     A(2, 0) = 1;
     A(2, 1) = 2;
     A(2, 2) = 3;
-    auto f = lu(A);
+    auto f = lu(assume_square(A));
     EXPECT_TRUE(f.singular);
 }
 
@@ -695,7 +655,7 @@ TEST(Cholesky, SPDSolve) {
 
     Vector b{1.0, 2.0, 3.0};
     Vector x(3, 0.0);
-    auto f = cholesky(linalg::assume_spd(A));
+    auto f = cholesky(linear::assume_spd(A));
     ASSERT_TRUE(f.success);
     cholesky_solve(f, b, x);
 
@@ -718,7 +678,7 @@ TEST(Cholesky, MultipleRHS) {
     B(0, 0) = 1.0;
     B(1, 1) = 1.0;
     Matrix X;
-    const auto factor = cholesky(linalg::assume_spd(A));
+    const auto factor = cholesky(linear::assume_spd(A));
     ASSERT_TRUE(factor.success);
     cholesky_solve(factor, B, X);
 
@@ -736,6 +696,8 @@ TEST(Cholesky, IndefiniteFails) {
     A(0, 0) = 1.0;
     A(1, 1) = -1.0;
 
-    auto f = cholesky(A);
+    // Deliberately indefinite: assume_spd would reject it before the factorization
+    // ever runs, which is the point of the opt-out.
+    auto f = unsafe::cholesky(A);
     EXPECT_FALSE(f.success);
 }

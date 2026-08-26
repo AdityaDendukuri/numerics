@@ -22,13 +22,13 @@ int main() {
     // Check if Aop is a LinearOperator (Yes!)
     static_assert(num::LinearOperator<decltype(aop)>, "Aop should satisfy LinearOperator");
 
-    // Check if Aop is an SPDLinearOperator (No! Not tagged yet)
-    static_assert(!num::SPDLinearOperator<decltype(aop)>,
-                  "Aop does not satisfy SPDLinearOperator until tagged");
+    // Check if Aop is an SPDOperator (No! Not tagged yet)
+    static_assert(!num::SPDOperator<decltype(aop)>,
+                  "Aop does not satisfy SPDOperator until tagged");
 
     std::cout << "[1] Raw DenseOp created.\n";
     std::cout << "    - Satisfies LinearOperator?    YES\n";
-    std::cout << "    - Satisfies SPDLinearOperator? NO\n\n";
+    std::cout << "    - Satisfies SPDOperator? NO\n\n";
 
     // UNCOMMENTING THE LINE BELOW WILL FAIL TO COMPILE:
     // num::LinearSolution s_fail = num::solve(num::LinearProblem{Aop, b}, num::CG{});
@@ -36,11 +36,11 @@ int main() {
     // 3. Attach the SPD property tag using assume_spd()
     auto spd_a = num::operators::assume_spd(aop);
 
-    // Now spd_A satisfies SPDLinearOperator!
-    static_assert(num::SPDLinearOperator<decltype(spd_a)>, "spd_A satisfies SPDLinearOperator");
+    // Now spd_A satisfies SPDOperator!
+    static_assert(num::SPDOperator<decltype(spd_a)>, "spd_A satisfies SPDOperator");
 
     std::cout << "[2] Wrapped with assume_spd().\n";
-    std::cout << "    - Satisfies SPDLinearOperator? YES!\n\n";
+    std::cout << "    - Satisfies SPDOperator? YES!\n\n";
 
     // 4. Solve Ax = b using Conjugate Gradient (CG)
     num::LinearSolution s = num::solve(num::LinearProblem{spd_a, b}, num::CG{});
