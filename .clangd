@@ -1,0 +1,19 @@
+CompileFlags:
+  CompilationDatabase: build
+  Add:
+    - -std=c++23
+
+Diagnostics:
+  ClangTidy:
+    Add:
+      - bugprone-*
+      - performance-*
+      - modernize-use-nullptr
+      - modernize-use-override
+      - modernize-use-nodiscard
+    Remove:
+      - bugprone-easily-swappable-parameters
+      - modernize-use-trailing-return-type
+
+Index:
+  Background: Build

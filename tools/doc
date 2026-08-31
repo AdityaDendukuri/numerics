@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# tools/doc — Quick CLI documentation lookup for Numerics
+# Usage: ./tools/doc <symbol> (e.g. ./tools/doc SolverResult, ./tools/doc cg)
+
+if [ -z "$1" ]; then
+    echo "Usage: ./tools/doc <symbol>"
+    echo "Examples: ./tools/doc SolverResult"
+    echo "          ./tools/doc KrylovResult"
+    echo "          ./tools/doc cg"
+    exit 1
+fi
+
+QUERY="$1"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+MAN_DIR="$REPO_ROOT/build/docs/man/man3"
+
+MATCH=$(find "$MAN_DIR" -type f \( -iname "*${QUERY}*.3" -o -iname "num_*${QUERY}*.3" \) 2>/dev/null | head -n 1)
+
+if [ -n "$MATCH" ] && [ -f "$MATCH" ]; then
+    man "$MATCH"
+    exit 0
+fi
+
+echo "Man page not found in build/docs/man/man3/."
+echo "Tip: Run 'cmake --build build --target docs' to generate full man pages."
+echo ""
+echo "Searching include/ for '$QUERY' declarations:"
+grep -rnE "(struct|class|concept|using)\s+.*$QUERY" "$REPO_ROOT/include" 2>/dev/null | head -n 10

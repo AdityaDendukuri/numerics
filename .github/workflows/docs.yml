@@ -1,0 +1,63 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # allow manual trigger from the GitHub UI
+
+permissions:
+  contents: write      # needed to push to gh-pages branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y doxygen
+
+      - name: Configure
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DNUMERICS_BUILD_TESTS=OFF \
+            -DNUMERICS_BUILD_BENCHMARKS=OFF \
+            -DNUMERICS_BUILD_DOCS=ON
+
+      - name: Build docs
+        run: cmake --build build --target docs
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/report
+          # Doxygen API and landing page output
+          cp -r build/docs/html/. _site/
+          # Report (committed to repo, updated locally via `cmake --build --target report`)
+          if [ -d "docs/report" ]; then
+            cp -r docs/report/. _site/report/
+          fi
+          touch _site/.nojekyll
+
+      - name: Check documentation links
+        run: |
+          missing=0
+          for page in index page_reference concepts annotated namespaces files examples; do
+            if [ ! -f "_site/${page}.html" ]; then
+              echo "::error file=${page}.html::Doxygen did not generate ${page}.html"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
+          force_orphan: true        # keeps gh-pages history clean

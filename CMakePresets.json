@@ -1,0 +1,91 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "dev",
+      "displayName": "Developer build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "NUMERICS_BUILD_TESTS": "ON",
+        "NUMERICS_BUILD_DOCS": "ON",
+        "NUMERICS_BUILD_BENCHMARKS": "OFF",
+        "NUMERICS_BUILD_REPORT": "OFF"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "NUMERICS_BUILD_TESTS": "ON",
+        "NUMERICS_BUILD_DOCS": "ON",
+        "NUMERICS_BUILD_BENCHMARKS": "ON",
+        "NUMERICS_BUILD_REPORT": "ON"
+      }
+    },
+    {
+      "name": "asan",
+      "displayName": "AddressSanitizer build",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build/asan",
+      "cacheVariables": {
+        "NUMERICS_SANITIZE": "asan,ubsan"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev"
+    },
+    {
+      "name": "docs",
+      "configurePreset": "dev",
+      "targets": [
+        "docs"
+      ]
+    },
+    {
+      "name": "tags",
+      "configurePreset": "dev",
+      "targets": [
+        "tags"
+      ]
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}
