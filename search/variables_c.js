@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['m2_0',['M2',['../structnum_1_1basic__running__stats.html#ad9b55594d6caf90f528a4f9962e0a9b9',1,'num::basic_running_stats']]],
+  ['m_5fbuf_1',['M_buf',['../structnum_1_1dense__resolvent__solver_1_1Impl.html#aa7e2b03d775d18cd05a7d184c2bd072e',1,'num::dense_resolvent_solver::Impl']]],
+  ['max_5fiter_2',['max_iter',['../structnum_1_1cg__method.html#a6d4979a660dba267462b97e1953c004f',1,'num::cg_method::max_iter'],['../structnum_1_1gmres__method.html#a99ab4103887ee2eb3036dc3d3a8dd1c6',1,'num::gmres_method::max_iter'],['../structnum_1_1minres__method.html#aa8927cf4dd4091f1eb1ddf60b08dfece',1,'num::minres_method::max_iter'],['../structnum_1_1pcg__method.html#aea6328da6e5f119b122c28c4753c9823',1,'num::pcg_method::max_iter'],['../structnum_1_1pcg__on__method.html#a52a4184d2b49b26aab3ee6304e8f09af',1,'num::pcg_on_method::max_iter']]],
+  ['max_5fiterations_3',['max_iterations',['../structnum_1_1cg__options.html#a59f25c8d856d8591379966993afd1cac',1,'num::cg_options::max_iterations'],['../structnum_1_1gmres__options.html#a54b3961e544fb781ea65b886cca9326e',1,'num::gmres_options::max_iterations'],['../structnum_1_1minres__options.html#a71b2f7dbab3617dd5b6f0d0f6b95cfc1',1,'num::minres_options::max_iterations'],['../structnum_1_1pcg__options.html#a70c1ecda154d3b761fec7fbdb3b456db',1,'num::pcg_options::max_iterations']]],
+  ['max_5fparallel_5fblocks_4',['max_parallel_blocks',['../namespacenum_1_1omp.html#af6d5d81c5bd670676bad95290cdf3cf3',1,'num::omp']]],
+  ['max_5fsteps_5',['max_steps',['../structnum_1_1rk45__method.html#a9bbd300a0019dc6cb56815d87e38b907',1,'num::rk45_method::max_steps'],['../structnum_1_1ode__params.html#a1d143a2897b5a959098725cf16d97278',1,'num::ode_params::max_steps']]],
+  ['mc_6',['mc',['../structnum_1_1markov_1_1umbrella__stats.html#a4c1e3b4402dcb9bb723ca8e7523aa700',1,'num::markov::umbrella_stats']]],
+  ['mean_7',['mean',['../structnum_1_1basic__running__stats.html#aa66aa27b1225d605dcde0d39ba5bc066',1,'num::basic_running_stats']]],
+  ['measure_8',['measure',['../structnum_1_1mcmc__model.html#a022d124d218fd04640c52a5b5d95a37d',1,'num::mcmc_model']]],
+  ['measurements_9',['measurements',['../structnum_1_1metropolis__method.html#a16e108e88d73ef3d13022d4aedefe6e1',1,'num::metropolis_method']]],
+  ['method_10',['method',['../structnum_1_1math_1_1evidence__provenance.html#a2f3f67a6612c18bab2ee42b4b8da02ee',1,'num::math::evidence_provenance']]],
+  ['modes_11',['modes',['../structnum_1_1talbot__quadrature.html#a4a26f5bf3829cdedb35853ed024b62f5',1,'num::talbot_quadrature']]],
+  ['mp_5fcols_5f_12',['mp_cols_',['../structnum_1_1plt_1_1detail_1_1plot__state.html#ab645f56763fcca7e43e778469962b97e',1,'num::plt::detail::plot_state']]],
+  ['mp_5frows_5f_13',['mp_rows_',['../structnum_1_1plt_1_1detail_1_1plot__state.html#aa5ee8c7e81b918ff89c0858cfeeb0430',1,'num::plt::detail::plot_state']]],
+  ['mpi_5fcomm_5fworld_14',['MPI_COMM_WORLD',['../mpi__ops_8hpp.html#a14d87b3d7cb9b0a9481e1317d9958856',1,'mpi_ops.hpp']]],
+  ['mu_15',['mu',['../structnum_1_1talbot__quadrature.html#a3004785556f2f6e229f7819717c6af09',1,'num::talbot_quadrature']]],
+  ['mu0_16',['MU0',['../classnum_1_1magnetic__solver.html#a1c032d58b8df39b74dee755662e23e4d',1,'num::magnetic_solver']]]
+];

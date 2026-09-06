@@ -1,0 +1,26 @@
+var operations_8hpp =
+[
+    [ "num::math::dimension_t", "structnum_1_1math_1_1dimension__t.html", "structnum_1_1math_1_1dimension__t" ],
+    [ "num::math::zero_like_t", "structnum_1_1math_1_1zero__like__t.html", "structnum_1_1math_1_1zero__like__t" ],
+    [ "num::math::scale_t", "structnum_1_1math_1_1scale__t.html", "structnum_1_1math_1_1scale__t" ],
+    [ "num::math::axpy_t", "structnum_1_1math_1_1axpy__t.html", "structnum_1_1math_1_1axpy__t" ],
+    [ "num::math::linear_combination_t", "structnum_1_1math_1_1linear__combination__t.html", "structnum_1_1math_1_1linear__combination__t" ],
+    [ "num::math::inner_t", "structnum_1_1math_1_1inner__t.html", "structnum_1_1math_1_1inner__t" ],
+    [ "num::math::axpy_norm_sq_t", "structnum_1_1math_1_1axpy__norm__sq__t.html", "structnum_1_1math_1_1axpy__norm__sq__t" ],
+    [ "num::math::norm_t", "structnum_1_1math_1_1norm__t.html", "structnum_1_1math_1_1norm__t" ],
+    [ "num::math::apply_t", "structnum_1_1math_1_1apply__t.html", "structnum_1_1math_1_1apply__t" ],
+    [ "num::math::cpo_detail::tag_invocable", "conceptnum_1_1math_1_1cpo__detail_1_1tag__invocable.html", null ],
+    [ "tag_result_t", "operations_8hpp.html#a01157dd2b48aed2881dbcedc62493471", null ],
+    [ "conjugate", "operations_8hpp.html#a7476c668d1bae91b3e9ce7673e2c6c27", null ],
+    [ "real_part", "operations_8hpp.html#a1ba5dbe2d5f5340c8d3802a6949e0d6a", null ],
+    [ "tag_invoke", "operations_8hpp.html#a4fe624ea793bdf56c7a7aecf51fa64ac", null ],
+    [ "apply", "operations_8hpp.html#aef34943989b5c0f50d9c5da10e94a69d", null ],
+    [ "axpy", "operations_8hpp.html#a23bdb12f525a32646b6d342ba4130cb8", null ],
+    [ "axpy_norm_sq", "operations_8hpp.html#ade4ce65c78213cc53a8b93ed516d1534", null ],
+    [ "dimension", "operations_8hpp.html#a0194c1f314d5f44d4524f0a8d11bd979", null ],
+    [ "inner", "operations_8hpp.html#aa1ebd36f4bad665b8de127786df87d04", null ],
+    [ "linear_combination", "operations_8hpp.html#a46eab28e97e23a4e22ee877ff3d5666e", null ],
+    [ "norm", "operations_8hpp.html#a2276540689053117bf23755b741f1bfa", null ],
+    [ "scale", "operations_8hpp.html#a0577a54c5fc2390d272a967e38bc50aa", null ],
+    [ "zero_like", "operations_8hpp.html#a1fc780062c13766f0222588fe22e2097", null ]
+];

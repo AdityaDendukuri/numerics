@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['k_5fmax_5fdim_0',['k_max_dim',['../structnum_1_1multi__index.html#a3671a0554898863504cc88d52f6cdf6c',1,'num::multi_index']]],
+  ['kernel_20architecture_20implementation_20boundaries_1',['4. Kernel Architecture &amp; Implementation Boundaries',['../page_performance.html#autotoc_md234',1,'']]],
+  ['kernel_20in_20this_20tier_20assumes_2',['The contract every kernel in this tier assumes',['../kernel_2vector_8hpp.html#kernel_contract',1,'']]],
+  ['kernel_20set_3',['Kernel Set',['../page_sph_kernel.html#autotoc_md338',1,'']]],
+  ['kernel_20tt_20to_20lapack_20cuda_4',['3. Worked Example: Switching One Call from &lt;tt&gt;kernel&lt;/tt&gt; to LAPACK/CUDA',['../page_parallel.html#autotoc_md204',1,'']]],
+  ['kernel_20usage_20examples_5',['3. Standalone Raw Kernel Usage Examples',['../page_architecture.html#autotoc_md13',1,'']]],
+  ['kernel_2ehpp_6',['kernel.hpp',['../kernel_8hpp.html',1,'']]],
+  ['kernel_2emd_7',['kernel.md',['../kernel_8md.html',1,'']]],
+  ['kernels_8',['kernels',['../page_getting_started.html#autotoc_md114',1,'3. Two Operating Styles: Expressions vs. Zero-Allocation Kernels'],['../page_spatial.html#autotoc_md320',1,'4. SPH Smoothing Kernels'],['../page_expressive.html#autotoc_md89',1,'5. The Recommended Idiom: Pre-Allocated Out-Parameter Kernels'],['../page_sph_kernel.html#autotoc_md342',1,'Kernels'],['../page_sph_kernel.html',1,'SPH Kernels']]],
+  ['key_5fof_9',['key_of',['../classnum_1_1indexed__priority__queue.html#a447a60ce54bce3bfd73f0d707e4b17d2',1,'num::indexed_priority_queue']]],
+  ['key_5fset_10',['key_set',['../namespacenum.html#ae13b66c0afb9d6ff05c4fcbb91fc8372',1,'num']]],
+  ['key_5ftype_11',['key_type',['../classnum_1_1indexed__priority__queue.html#a24972ffc2102dc41c9ff816a8739b158',1,'num::indexed_priority_queue']]],
+  ['kinds_20of_20constraint_12',['2. Four Different Kinds of Constraint',['../page_refactor_roadmap.html#autotoc_md256',1,'']]],
+  ['kl_13',['kl',['../classnum_1_1linear_1_1band__mat__view.html#a89f8aa6a6d7073bf56f5d406673997ae',1,'num::linear::band_mat_view::kl()'],['../classnum_1_1band__mat.html#a73ae32a820704d948b55659f7294e6a8',1,'num::band_mat::kl()']]],
+  ['klu_2ecpp_14',['klu.cpp',['../klu_8cpp.html',1,'']]],
+  ['klu_2ehpp_15',['klu.hpp',['../klu_8hpp.html',1,'']]],
+  ['klu_5favailable_16',['klu_available',['../namespacenum.html#ac6e2cf3447e4f6612c4e9e24d1aaa86c',1,'num']]],
+  ['klu_5ffactorization_17',['klu_factorization',['../classnum_1_1klu__factorization.html',1,'num::klu_factorization'],['../classnum_1_1klu__factorization.html#a2fe326adb1e2c447659be108fc990049',1,'num::klu_factorization::klu_factorization(const spmat &amp;matrix)'],['../classnum_1_1klu__factorization.html#aac6851f30800227422d0c325888d330a',1,'num::klu_factorization::klu_factorization(const klu_factorization &amp;)=delete'],['../classnum_1_1klu__factorization.html#a606ac76563948db6cb94ae1ed03f3a10',1,'num::klu_factorization::klu_factorization(klu_factorization &amp;&amp;) noexcept']]],
+  ['krylov_18',['5. Sparse, factorizations, rotations, Krylov',['../page_kernel.html#autotoc_md148',1,'']]],
+  ['krylov_20solvers_19',['2. Iterative Krylov Solvers',['../page_linear.html#autotoc_md166',1,'']]],
+  ['krylov_2ehpp_20',['krylov.hpp',['../krylov_8hpp.html',1,'']]],
+  ['krylov_5fresult_21',['krylov_result',['../structnum_1_1kernel_1_1krylov__result.html',1,'num::kernel']]],
+  ['ku_22',['ku',['../classnum_1_1linear_1_1band__mat__view.html#a720e903ce0c9a69e74a75e065e352f00',1,'num::linear::band_mat_view::ku()'],['../classnum_1_1band__mat.html#ae342181e35c3e83bf6e10990708652cc',1,'num::band_mat::ku()']]]
+];

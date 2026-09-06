@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['packed_0',['packed',['../structnum_1_1no__pivot__lu.html#a1893e7d1b7a0536b9ec952bb9c87f67d',1,'num::no_pivot_lu']]],
+  ['palette_5f_1',['palette_',['../structnum_1_1plt_1_1detail_1_1plot__panel.html#a80326655affe9dd80f738bc07e5bac62',1,'num::plt::detail::plot_panel']]],
+  ['panels_2',['panels',['../structnum_1_1plt_1_1detail_1_1plot__state.html#a0026411d013719f6f92de80980b5605d',1,'num::plt::detail::plot_state']]],
+  ['parallel_5fblock_3',['parallel_block',['../namespacenum_1_1omp.html#a13a1e5c04dc695fdf877b1e5af9ebfa1',1,'num::omp']]],
+  ['parallel_5fthreshold_4',['parallel_threshold',['../namespacenum_1_1omp.html#ab0b4daa52f682b972fa83ee6515cb4d1',1,'num::omp']]],
+  ['phi_5',['phi',['../namespacenum.html#a14822036806c57171355b63de037a96f',1,'num']]],
+  ['pi_6',['pi',['../namespacenum.html#a78d7fbfab27d115f37b5b9d8a9db523b',1,'num']]],
+  ['piv_7',['piv',['../structnum_1_1lu__result.html#a0c7b7f4fb02a35ca01a83fc5b0e14222',1,'num::lu_result']]],
+  ['pivot_5frow_8',['pivot_row',['../structnum_1_1banded__solver__result.html#aa807ebaa0faea15f6d5e0e967e6c758d',1,'num::banded_solver_result']]],
+  ['pivots_9',['pivots',['../structnum_1_1dense__resolvent__solver_1_1Impl.html#a7f2d67df16bc4878d5f014f368aba07e',1,'num::dense_resolvent_solver::Impl']]],
+  ['position_10',['position',['../structnum_1_1detail_1_1block__layout.html#afe9c7c75469469027db125e4b0b9635c',1,'num::detail::block_layout']]],
+  ['preconditioner_11',['preconditioner',['../structnum_1_1pcg__on__method.html#a48bc01cd6b45b9be0b6a0ef12e63a7bd',1,'num::pcg_on_method::preconditioner'],['../structnum_1_1pcg__method.html#adf97718cf3508eec1ada4f7884511844',1,'num::pcg_method::preconditioner']]],
+  ['production_12',['production',['../namespacenum_1_1debug_1_1preset.html#aa8f5234b9499e97fcac532463c011fea',1,'num::debug::preset']]],
+  ['project_13',['project',['../namespacenum_1_1math.html#a08d851a29d00b5a0261a5cde5ddd1240',1,'num::math']]],
+  ['propose_14',['propose',['../structnum_1_1mcmc__model.html#a5def7d7635f47a38d1b81777ddfeb28f',1,'num::mcmc_model']]],
+  ['prototype_15',['prototype',['../namespacenum_1_1debug_1_1preset.html#ad7f22c9cf8bd8044cdb329bac3691fac',1,'num::debug::preset']]]
+];

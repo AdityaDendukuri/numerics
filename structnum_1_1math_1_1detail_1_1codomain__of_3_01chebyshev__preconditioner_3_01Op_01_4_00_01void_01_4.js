@@ -1,0 +1,4 @@
+var structnum_1_1math_1_1detail_1_1codomain__of_3_01chebyshev__preconditioner_3_01Op_01_4_00_01void_01_4 =
+[
+    [ "type", "structnum_1_1math_1_1detail_1_1codomain__of_3_01chebyshev__preconditioner_3_01Op_01_4_00_01void_01_4.html#ad16dedce6fc177000df23b1371f32ffd", null ]
+];

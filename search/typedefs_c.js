@@ -1,0 +1,12 @@
+var searchData=
+[
+  ['mat_0',['mat',['../namespacenum.html#ad6ec681714adfa6ea1dee0928a10276c',1,'num']]],
+  ['math_5flaws_1',['math_laws',['../classnum_1_1randommat_1_1approx__chol__preconditioner.html#ac8bab77c414fa93102bb65aace4f56d8',1,'num::randommat::approx_chol_preconditioner::math_laws'],['../classnum_1_1operators_1_1backward__euler__2d.html#a4888e05b60ee194bf13baf1c372ead68',1,'num::operators::backward_euler_2d::math_laws'],['../classnum_1_1operators_1_1laplacian__2d.html#a428612ebb2e52769409f5a64c9c17b0c',1,'num::operators::laplacian_2d::math_laws'],['../classnum_1_1pde_1_1backward__euler__operator__2d.html#a1c94513fd2d614d134118bca5667436e',1,'num::pde::backward_euler_operator_2d::math_laws'],['../classnum_1_1operators_1_1structured__op.html#a8987d604eda17d1297a9e0d29f4ce22c',1,'num::operators::structured_op::math_laws'],['../structnum_1_1operators_1_1dense__op.html#ab9f3ad0f19d7e5e781d28deb1141651c',1,'num::operators::dense_op::math_laws'],['../structnum_1_1operators_1_1sparse__op.html#ac7dd0c608c6521b09b4d0bd46ffe9ba1',1,'num::operators::sparse_op::math_laws'],['../classnum_1_1jacobi__preconditioner.html#a3c0c557d9f7a38161a3a348a6dad6464',1,'num::jacobi_preconditioner::math_laws'],['../classnum_1_1chebyshev__preconditioner.html#aad9d279e3c40db9ea2425004299b8afc',1,'num::chebyshev_preconditioner::math_laws'],['../classnum_1_1linear_1_1structured__mat.html#af51b3bfadaae57adbc6a6151773e9f37',1,'num::linear::structured_mat::math_laws'],['../classnum_1_1math_1_1certified__ref.html#a3774406bb1c00ea3c8509ea1d0c5243b',1,'num::math::certified_ref::math_laws']]],
+  ['matrix_5ffree_5fbackward_5feuler_5f2d_2',['matrix_free_backward_euler_2d',['../namespacenum_1_1pde.html#aac751abd5eced3f6d7a60e0a0eee07d9',1,'num::pde']]],
+  ['matrix_5ffree_5flaplacian_5f2d_3',['matrix_free_laplacian_2d',['../namespacenum_1_1pde.html#a294805cd18a8164533c2aa6ed715f1d9',1,'num::pde']]],
+  ['max_5findexed_5fpq_4',['max_indexed_pq',['../namespacenum.html#ac89b6d375739e305c2c9f733d4c090f8',1,'num']]],
+  ['meet_5ft_5',['meet_t',['../namespacenum_1_1law.html#af80276cf3527df452ad2913a3e0224d8',1,'num::law']]],
+  ['min_5findexed_5fpq_6',['min_indexed_pq',['../namespacenum.html#af721dabe292eecbf260694de464c3f5c',1,'num']]],
+  ['mpi_5fcomm_7',['MPI_Comm',['../mpi__ops_8hpp.html#a161d2f0d69c09838316e4ea9a74f02d7',1,'mpi_ops.hpp']]],
+  ['multigraph_8',['multigraph',['../namespacenum_1_1structures.html#a0517eb93f90eb2649674ba14a545ee58',1,'num::structures']]]
+];

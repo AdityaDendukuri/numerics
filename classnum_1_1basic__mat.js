@@ -1,0 +1,25 @@
+var classnum_1_1basic__mat =
+[
+    [ "value_type", "classnum_1_1basic__mat.html#aa3a7f3f1ef1f6280229be516e0ab51a0", null ],
+    [ "basic_mat", "classnum_1_1basic__mat.html#a5e7e64e920a2c55072112e38d1c205cc", null ],
+    [ "basic_mat", "classnum_1_1basic__mat.html#a9a1aa3f145e283e1c3bda53d49172902", null ],
+    [ "basic_mat", "classnum_1_1basic__mat.html#a7a75d9b3d0c5a6dbc370270acf8b82ed", null ],
+    [ "~basic_mat", "classnum_1_1basic__mat.html#ae205a61ed70040a8320d80dbe97609bc", null ],
+    [ "basic_mat", "classnum_1_1basic__mat.html#a567ba979aab55c872354854828dd8e6c", null ],
+    [ "basic_mat", "classnum_1_1basic__mat.html#a9162f3c21ae08fda861e7d248cc2018a", null ],
+    [ "apply", "classnum_1_1basic__mat.html#a8ec8d23e52c847ef7d16cb77ab9fb319", null ],
+    [ "cols", "classnum_1_1basic__mat.html#a9637846a397c3768823743407695c9a6", null ],
+    [ "data", "classnum_1_1basic__mat.html#a9e54e90d4da5e0a6ff8009745f237eb8", null ],
+    [ "data", "classnum_1_1basic__mat.html#a9741b2572ac25792f06ed4023e9deda2", null ],
+    [ "gpu_data", "classnum_1_1basic__mat.html#a6373f0344936cd1595a7e50b5a837a9d", null ],
+    [ "gpu_data", "classnum_1_1basic__mat.html#ae3cf81829e54c0beed55625da7c9b056", null ],
+    [ "on_gpu", "classnum_1_1basic__mat.html#a52013dae9cb028b26ac8c0e4ba7017d5", null ],
+    [ "operator()", "classnum_1_1basic__mat.html#adb570df506bb90e6e305b3cb94ba7b7b", null ],
+    [ "operator()", "classnum_1_1basic__mat.html#a2f7a0ac3e3caab00c1a20f4be88dddc9", null ],
+    [ "operator=", "classnum_1_1basic__mat.html#ac0ebf39623e66f12ad3379c7654cfd66", null ],
+    [ "operator=", "classnum_1_1basic__mat.html#a782591a75036e490a71cdb2cbc2ab348", null ],
+    [ "rows", "classnum_1_1basic__mat.html#a39f82e0992bd41cfc07a91903921dea0", null ],
+    [ "size", "classnum_1_1basic__mat.html#a6033a03ff3f767693e705da4933e4484", null ],
+    [ "to_cpu", "classnum_1_1basic__mat.html#aff30a2598023d2079bccd0d4eb7cca6d", null ],
+    [ "to_gpu", "classnum_1_1basic__mat.html#adcc97d21c7e4c9d5e9935faa597a543d", null ]
+];
