@@ -5,11 +5,10 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// This file has no dependencies outside the standard library: copy it into
-/// another project as-is, or lift a single routine out of it together with the
-/// NUM_K_* macro block below. Please keep the two attribution lines above with
-/// whatever you take.
-/// Needs only kernel/raw.hpp alongside it.
+/// This file has no dependencies outside the standard library beyond
+/// kernel/vector.hpp and kernel/dense.hpp: copy the three into another project
+/// as-is, or lift a single routine out of it. Please keep the two attribution
+/// lines above with whatever you take.
 ///
 /// These are the factorizations expressed the way a consuming project can
 /// actually use them: over `T *` and a dimension, with no owning container, no
@@ -20,16 +19,16 @@
 /// there is one implementation of each algorithm rather than a container-coupled
 /// copy and a raw copy that drift apart.
 ///
-/// Storage is row-major throughout, matching `num::BasicMatrix`.
+/// Storage is row-major throughout, matching `num::basic_mat`.
 #pragma once
 
-#include "kernel/raw.hpp"
+#include "kernel/dense.hpp"
+#include "kernel/vector.hpp"
 #include <algorithm>
 #include <cmath>
-#include <complex>
 #include <concepts>
 
-namespace num::kernel::raw {
+namespace num::kernel {
 
 /// @brief Cholesky factorization \f$A = L L^T\f$ for symmetric positive definite \f$A\f$.
 ///
@@ -42,7 +41,7 @@ namespace num::kernel::raw {
 ///
 /// @param L Output lower triangular factor, n*n.
 /// @param A Input symmetric matrix, n*n; only the lower triangle is read.
-/// @param n Matrix dimension.
+/// @param n mat dimension.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky(T *L, const T *A, idx n) noexcept {
     for (idx i = 0; i < n; ++i) {
@@ -175,7 +174,7 @@ inline void cholesky_solve_batched(T *x, const T *L, const T *b, idx n, idx batc
 ///
 /// @param LU In/out packed factors, n*n row-major; pass a copy of A.
 /// @param piv Output pivot sequence, length n.
-/// @param n Matrix dimension.
+/// @param n mat dimension.
 template <std::floating_point T, class Index>
 [[nodiscard]] inline bool lu_factor(T *NUM_K_RESTRICT LU, Index *NUM_K_RESTRICT piv,
                                     idx n) noexcept {
@@ -211,7 +210,7 @@ template <std::floating_point T, class Index>
     return nonsingular;
 }
 
-/// @brief Solve \f$A x = b\f$ from a packed \f$PA = LU\f$ factorization.
+/// @brief Blocked variant of `lu_factor`: same packed \f$PA = LU\f$ contract, panel-at-a-time.
 template <std::floating_point T, class Index>
 [[nodiscard]] inline bool lu_factor_blocked(T *NUM_K_RESTRICT LU, Index *NUM_K_RESTRICT piv, idx n,
                                             idx block_size = 64) noexcept {
@@ -248,8 +247,10 @@ template <std::floating_point T, class Index>
     return nonsingular;
 }
 
+/// @brief Solve \f$A x = b\f$ from a packed \f$PA = LU\f$ factorization.
 template <std::floating_point T, class Index>
-inline void lu_solve(T *x, const T *LU, const Index *piv, const T *b, idx n) noexcept {
+inline void lu_solve(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT LU,
+                     const Index *NUM_K_RESTRICT piv, const T *b, idx n) noexcept {
     for (idx i = 0; i < n; ++i) {
         x[i] = b[i];
     }
@@ -276,100 +277,6 @@ inline void lu_solve(T *x, const T *LU, const Index *piv, const T *b, idx n) noe
         }
         x[i] = sum / LU[(i * n) + i];
     }
-}
-
-/// @brief Factor \f$sI - H\f$ in place for an upper Hessenberg \f$H\f$.
-///
-/// Gaussian elimination needs to clear only one subdiagonal entry per column, so
-/// this costs \f$O(n^2)\f$ rather than the \f$O(n^3)\f$ of a general LU. That is
-/// what makes a Krylov resolvent affordable: the Hessenberg form is computed once
-/// and each shift factors cheaply on top of it.
-///
-/// Partial pivoting compares the diagonal against the single subdiagonal entry,
-/// since no other entry in the column can be larger.
-///
-/// @param work  In/out, n*n. Receives \f$sI - H\f$ and its factors.
-/// @param H     Upper Hessenberg matrix, n*n row-major, real.
-/// @param shift Complex shift \f$s\f$.
-/// @param n     Dimension.
-/// @param piv   Output pivot record, length n.
-template <std::floating_point T, class Index>
-inline void hessenberg_shifted_factor(std::complex<T> *NUM_K_RESTRICT work, const T *H,
-                                      std::complex<T> shift, idx n, Index *NUM_K_RESTRICT piv) {
-    using C = std::complex<T>;
-    const T tiny = T(1e-30);
-
-    for (idx i = 0; i < n; ++i) {
-        const T *h_row = H + (i * n);
-        C *m_row = work + (i * n);
-        for (idx j = 0; j < n; ++j) {
-            m_row[j] = (i == j ? shift : C(0, 0)) - h_row[j];
-        }
-    }
-
-    for (idx i = 0; i + 1 < n; ++i) {
-        C *row_i = work + (i * n);
-        C *row_next = work + ((i + 1) * n);
-
-        if (std::abs(row_next[i]) > std::abs(row_i[i])) {
-            for (idx j = i; j < n; ++j) {
-                std::swap(row_i[j], row_next[j]);
-            }
-            piv[i] = static_cast<Index>(i + 1);
-        } else {
-            piv[i] = static_cast<Index>(i);
-        }
-
-        const C pivot = row_i[i];
-        if (std::abs(pivot) > tiny) {
-            const C mult = row_next[i] / pivot;
-            row_next[i] = mult;
-            for (idx j = i + 1; j < n; ++j) {
-                row_next[j] -= mult * row_i[j];
-            }
-        }
-    }
-}
-
-/// @brief Substitute a right-hand side through a factored shifted Hessenberg system.
-///
-/// Separate from the factorization so that many right-hand sides share one
-/// factorization at the same shift. `y` and `b` may alias.
-template <std::floating_point T, class Index>
-inline void hessenberg_shifted_substitute(std::complex<T> *y, const std::complex<T> *work,
-                                          const Index *piv, const std::complex<T> *b, idx n) {
-    using C = std::complex<T>;
-    const T tiny = T(1e-30);
-
-    for (idx i = 0; i < n; ++i) {
-        y[i] = b[i];
-    }
-    for (idx i = 0; i + 1 < n; ++i) {
-        if (static_cast<idx>(piv[i]) != i) {
-            std::swap(y[i], y[i + 1]);
-        }
-        y[i + 1] -= work[((i + 1) * n) + i] * y[i];
-    }
-    for (idx step = 0; step < n; ++step) {
-        const idx i = n - 1 - step;
-        const C *row_i = work + (i * n);
-        C sum = y[i];
-        for (idx j = i + 1; j < n; ++j) {
-            sum -= row_i[j] * y[j];
-        }
-        const C diag = row_i[i];
-        y[i] = std::abs(diag) < tiny ? C(0, 0) : sum / diag;
-    }
-}
-
-/// @brief Solve \f$(sI - H)\,y = b\f$ for a single right-hand side.
-template <std::floating_point T, class Index>
-inline void hessenberg_shifted_solve(std::complex<T> *y, const T *H, std::complex<T> shift,
-                                     const std::complex<T> *b, idx n,
-                                     std::complex<T> *NUM_K_RESTRICT work,
-                                     Index *NUM_K_RESTRICT piv) {
-    hessenberg_shifted_factor(work, H, shift, n, piv);
-    hessenberg_shifted_substitute(y, work, piv, b, n);
 }
 
 /// @brief Invert packed LU factors in place: A <- A^{-1}.
@@ -424,10 +331,10 @@ inline void cholesky_invert(T *NUM_K_RESTRICT L, idx n, T *NUM_K_RESTRICT work) 
     std::copy_n(work, n * n, L);
 }
 
-/// @brief Banded LU factorization with partial pivoting over LAPACK-compatible band storage.
+/// @brief banded LU factorization with partial pivoting over LAPACK-compatible band storage.
 template <std::floating_point T, class Index>
-[[nodiscard]] inline bool banded_factor(T *ab, idx ldab, idx n, idx kl, idx ku,
-                                        Index *ipiv) noexcept {
+[[nodiscard]] inline bool banded_factor(T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
+                                        Index *NUM_K_RESTRICT ipiv) noexcept {
     for (idx i = 0; i < n; ++i) ipiv[i] = static_cast<Index>(i);
     const idx kv = ku + kl;
     for (idx j = 0; j < n; ++j) {
@@ -475,10 +382,10 @@ template <std::floating_point T, class Index>
     return true;
 }
 
-/// @brief Banded LU solve for x = b over LAPACK-compatible factored band storage.
+/// @brief banded LU solve for x = b over LAPACK-compatible factored band storage.
 template <std::floating_point T, class Index>
-inline void banded_solve(T *x, const T *ab, idx ldab, idx n, idx kl, idx ku,
-                         const Index *ipiv) noexcept {
+inline void banded_solve(T *x, const T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
+                         const Index *NUM_K_RESTRICT ipiv) noexcept {
     const idx kv = ku + kl;
     for (idx i = 0; i < n; ++i) {
         if (static_cast<idx>(ipiv[i]) != i) {
@@ -507,4 +414,4 @@ inline void banded_solve(T *x, const T *ab, idx ldab, idx n, idx kl, idx ku,
     }
 }
 
-} // namespace num::kernel::raw
+} // namespace num::kernel

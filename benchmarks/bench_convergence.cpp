@@ -15,9 +15,9 @@ namespace fs = std::filesystem;
 namespace {
 
 /// Generate a variable-coefficient 2D Laplacian matrix with varying diagonal entries: -\div(a(x,y)\grad u).
-num::Matrix make_variable_laplacian_2d(num::idx n_side) {
+num::mat make_variable_laplacian_2d(num::idx n_side) {
     const num::idx n = n_side * n_side;
-    num::Matrix A(n, n, 0.0);
+    num::mat A(n, n, 0.0);
     const auto id = [n_side](num::idx x, num::idx y) { return y * n_side + x; };
 
     for (num::idx y = 0; y < n_side; ++y) {
@@ -45,8 +45,8 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     const idx n_side = 32;
     const idx n = n_side * n_side;
 
-    Matrix A = make_variable_laplacian_2d(n_side);
-    Vector b(n, 0.0);
+    mat A = make_variable_laplacian_2d(n_side);
+    vec b(n, 0.0);
     const auto id = [n_side](idx x, idx y) { return y * n_side + x; };
     for (idx y = 0; y < n_side; ++y) {
         for (idx x = 0; x < n_side; ++x) {
@@ -55,9 +55,9 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     }
     const double b_norm = norm(b);
 
-    operators::DenseOp dense_op{A};
-    operators::SPDOp<operators::DenseOp> spd_op{dense_op};
-    auto jacobi = jacobi_preconditioner(A);
+    operators::dense_op dense_op{A};
+    operators::spd_op<operators::dense_op> spd_op{dense_op};
+    auto jacobi = make_jacobi_preconditioner(A);
 
     const idx max_iters = 80;
 
@@ -67,7 +67,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         iters_cg.push_back(0.0);
         res_cg.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            Vector x(n, 0.0);
+            vec x(n, 0.0);
             auto res = cg(spd_op, b, x, 1e-15, k);
             iters_cg.push_back(static_cast<double>(k));
             res_cg.push_back(std::max(1e-16, res.residual / b_norm));
@@ -81,7 +81,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         iters_pcg.push_back(0.0);
         res_pcg.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            Vector x(n, 0.0);
+            vec x(n, 0.0);
             auto res = pcg(spd_op, jacobi, b, x, 1e-15, k);
             iters_pcg.push_back(static_cast<double>(k));
             res_pcg.push_back(std::max(1e-16, res.residual / b_norm));
@@ -95,7 +95,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         iters_gmres.push_back(0.0);
         res_gmres.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            Vector x(n, 0.0);
+            vec x(n, 0.0);
             auto res = gmres(dense_op, b, x, 1e-15, /*max_iter=*/k, /*restart=*/30);
             iters_gmres.push_back(static_cast<double>(k));
             res_gmres.push_back(std::max(1e-16, res.residual / b_norm));
@@ -109,7 +109,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         iters_minres.push_back(0.0);
         res_minres.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            Vector x(n, 0.0);
+            vec x(n, 0.0);
             auto res = minres(spd_op, b, x, 1e-15, k);
             iters_minres.push_back(static_cast<double>(k));
             res_minres.push_back(std::max(1e-16, res.residual / b_norm));
@@ -120,7 +120,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     // 5. Trace Gauss-Seidel
     std::vector<double> iters_gs, res_gs;
     {
-        Vector x(n, 0.0);
+        vec x(n, 0.0);
         iters_gs.push_back(0.0);
         res_gs.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
@@ -131,7 +131,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
                 }
                 x[i] = (b[i] - sigma) / A(i, i);
             }
-            Vector r(n, 0.0);
+            vec r(n, 0.0);
             dense_op.apply(x, r);
             axpy(-1.0, b, r);
             iters_gs.push_back(static_cast<double>(k));
@@ -142,11 +142,11 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     // 6. Trace Jacobi
     std::vector<double> iters_jac, res_jac;
     {
-        Vector x(n, 0.0);
+        vec x(n, 0.0);
         iters_jac.push_back(0.0);
         res_jac.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            Vector x_new(n, 0.0);
+            vec x_new(n, 0.0);
             for (idx i = 0; i < n; ++i) {
                 double sigma = 0.0;
                 for (idx j = 0; j < n; ++j) {
@@ -155,7 +155,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
                 x_new[i] = (b[i] - sigma) / A(i, i);
             }
             x = x_new;
-            Vector r(n, 0.0);
+            vec r(n, 0.0);
             dense_op.apply(x, r);
             axpy(-1.0, b, r);
             iters_jac.push_back(static_cast<double>(k));
@@ -164,10 +164,10 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     }
 
     // Plot residual curves
-    plt::plot(iters_cg, res_cg, "Conjugate Gradient (CG)", "lines lw 2.5 lc rgb '#1f77b4'");
-    plt::plot(iters_pcg, res_pcg, "Preconditioned CG (Jacobi)", "lines lw 2.5 lc rgb '#2ca02c'");
-    plt::plot(iters_gmres, res_gmres, "GMRES (m=30)", "lines lw 2.5 lc rgb '#d62728'");
-    plt::plot(iters_minres, res_minres, "MINRES", "lines lw 2.0 lc rgb '#9467bd'");
+    plt::plot(iters_cg, res_cg, "Conjugate Gradient (cg_method)", "lines lw 2.5 lc rgb '#1f77b4'");
+    plt::plot(iters_pcg, res_pcg, "Preconditioned cg_method (Jacobi)", "lines lw 2.5 lc rgb '#2ca02c'");
+    plt::plot(iters_gmres, res_gmres, "gmres_method (m=30)", "lines lw 2.5 lc rgb '#d62728'");
+    plt::plot(iters_minres, res_minres, "minres_method", "lines lw 2.0 lc rgb '#9467bd'");
     plt::plot(iters_gs, res_gs, "Gauss-Seidel", "lines lw 2.0 lc rgb '#ff7f0e'");
     plt::plot(iters_jac, res_jac, "Jacobi Iteration", "lines lw 1.8 lc rgb '#8c564b'");
 
@@ -188,7 +188,7 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
     const idx n = 100;
 
     // Generate well-conditioned SPD test matrix with known exact solution
-    Matrix A(n, n, 0.0);
+    mat A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 2.0 + 0.5 * (i + 1);
         if (i > 0) {
@@ -197,12 +197,12 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
         }
     }
 
-    Vector x_star(n, 1.0);
-    Vector b(n, 0.0);
-    operators::DenseOp dense_op{A};
+    vec x_star(n, 1.0);
+    vec b(n, 0.0);
+    operators::dense_op dense_op{A};
     dense_op.apply(x_star, b);
 
-    operators::SPDOp<operators::DenseOp> spd_op{dense_op};
+    operators::spd_op<operators::dense_op> spd_op{dense_op};
 
     std::vector<double> iters;
     std::vector<double> err_minres, res_minres, err_cg, res_cg;
@@ -213,28 +213,28 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
         iters.push_back(static_cast<double>(k));
 
         // MINRES
-        Vector x_m(n, 0.0);
+        vec x_m(n, 0.0);
         auto res_m = minres(spd_op, b, x_m, 1e-15, k);
-        Vector e_m(n, 0.0);
+        vec e_m(n, 0.0);
         for (idx i = 0; i < n; ++i) e_m[i] = x_m[i] - x_star[i];
         err_minres.push_back(std::max(1e-16, norm(e_m)));
         res_minres.push_back(std::max(1e-16, res_m.residual));
 
         // CG
-        Vector x_c(n, 0.0);
+        vec x_c(n, 0.0);
         auto res_c = cg(spd_op, b, x_c, 1e-15, k);
-        Vector e_c(n, 0.0);
+        vec e_c(n, 0.0);
         for (idx i = 0; i < n; ++i) e_c[i] = x_c[i] - x_star[i];
         err_cg.push_back(std::max(1e-16, norm(e_c)));
         res_cg.push_back(std::max(1e-16, res_c.residual));
     }
 
-    plt::plot(iters, err_minres, "Error ||x_k - x*|| (MINRES)", "lines lw 2.5 lc rgb '#2ca02c'");
-    plt::plot(iters, res_minres, "Residual ||r_k|| (MINRES)", "lines dt 2 lw 2.5 lc rgb '#2ca02c'");
-    plt::plot(iters, err_cg, "Error ||x_k - x*|| (CG)", "lines lw 2.5 lc rgb '#1f77b4'");
-    plt::plot(iters, res_cg, "Residual ||r_k|| (CG)", "lines dt 2 lw 2.5 lc rgb '#1f77b4'");
+    plt::plot(iters, err_minres, "Error ||x_k - x*|| (minres_method)", "lines lw 2.5 lc rgb '#2ca02c'");
+    plt::plot(iters, res_minres, "Residual ||r_k|| (minres_method)", "lines dt 2 lw 2.5 lc rgb '#2ca02c'");
+    plt::plot(iters, err_cg, "Error ||x_k - x*|| (cg_method)", "lines lw 2.5 lc rgb '#1f77b4'");
+    plt::plot(iters, res_cg, "Residual ||r_k|| (cg_method)", "lines dt 2 lw 2.5 lc rgb '#1f77b4'");
 
-    plt::title("MINRES vs Conjugate Gradient (Error and Residual Norms)");
+    plt::title("minres_method vs Conjugate Gradient (Error and Residual Norms)");
     plt::xlabel("Iteration (k)");
     plt::ylabel("Error / Residual Euclidean Norm");
     plt::semilogy();
@@ -251,15 +251,15 @@ void generate_talbot_convergence_plot(const std::string &out_dir) {
     const idx N = 100;
     std::mt19937_64 rng(42);
 
-    Graph G = structures::erdos_renyi(N, 0.08, rng, true, 0.5, 2.0);
-    Matrix Q = num::linear::dense_markov_generator(G, true);
-    Vector p0 = unit_vector(N, 0);
+    graph G = structures::erdos_renyi(N, 0.08, rng, true, 0.5, 2.0);
+    mat Q = num::linear::dense_markov_generator(G, true);
+    vec p0 = unit_vector(N, 0);
 
     const double t = 1.0;
-    operators::DenseOp Q_op(Q);
-    Vector p_exact = expv(t, Q_op, p0, 50, 1e-15);
+    operators::dense_op Q_op(Q);
+    vec p_exact = expv(t, Q_op, p0, 50, 1e-15);
 
-    HessenbergResolventSolver solver(Q);
+    hessenberg_resolvent_solver solver(Q);
 
     const std::vector<idx> node_counts = {4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 28, 32};
     std::vector<double> nodes_dbl;
@@ -273,7 +273,7 @@ void generate_talbot_convergence_plot(const std::string &out_dir) {
             for (idx i = 0; i < N; ++i) density[i] += weight * sol[i];
         });
 
-        Vector p_talbot(N, 0.0);
+        vec p_talbot(N, 0.0);
         for (idx i = 0; i < N; ++i) p_talbot[i] = std::max(0.0, density[i].real());
         clip_and_normalize_nonnegative(p_talbot);
 
@@ -399,8 +399,8 @@ void generate_symplectic_energy_plot(const std::string &out_dir) {
         }
     }
 
-    plt::plot(time_steps, e_euler, "Explicit Euler (O(t) Explosion)", "lines lw 2.0 lc rgb '#d62728'");
-    plt::plot(time_steps, e_rk4, "Classical RK4 (Dissipative Drift)", "lines lw 2.0 lc rgb '#ff7f0e'");
+    plt::plot(time_steps, e_euler, "Explicit euler_method (O(t) Explosion)", "lines lw 2.0 lc rgb '#d62728'");
+    plt::plot(time_steps, e_rk4, "Classical rk4_method (Dissipative Drift)", "lines lw 2.0 lc rgb '#ff7f0e'");
     plt::plot(time_steps, e_verlet, "Störmer-Verlet 2nd-Order (Bounded O(h^2))", "lines lw 2.0 lc rgb '#1f77b4'");
     plt::plot(time_steps, e_yoshida, "Yoshida 4th-Order Symplectic (Bounded O(h^4))", "lines lw 2.5 lc rgb '#2ca02c'");
 

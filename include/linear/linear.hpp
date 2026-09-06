@@ -7,6 +7,7 @@
 #include "linear/debug.hpp"
 #include "linear/eigen/eigen.hpp"
 #include "linear/expv/expv.hpp"
+#include "linear/factorization/block_tridiagonal.hpp"
 #include "linear/factorization/factorization.hpp"
 #include "linear/math_adapters.hpp"
 #include "linear/matrix_properties.hpp"

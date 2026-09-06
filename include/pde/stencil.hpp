@@ -20,7 +20,7 @@
 namespace num {
 
 template <typename T>
-void laplacian_stencil_2d(const BasicVector<T> &x, BasicVector<T> &y, int N) {
+void laplacian_stencil_2d(const basic_vec<T> &x, basic_vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             int k = (i * N) + j;
@@ -44,7 +44,7 @@ void laplacian_stencil_2d(const BasicVector<T> &x, BasicVector<T> &y, int N) {
 
 /// @brief Periodic second-order 2D Laplacian stencil.
 template <typename T>
-void laplacian_stencil_2d_periodic(const BasicVector<T> &x, BasicVector<T> &y, int N) {
+void laplacian_stencil_2d_periodic(const basic_vec<T> &x, basic_vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
         int ip = (i + 1) % N, im = (i + N - 1) % N;
         const T *row = x.data() + (i * N);
@@ -69,7 +69,7 @@ void laplacian_stencil_2d_periodic(const BasicVector<T> &x, BasicVector<T> &y, i
 ///   \bigr)
 /// \f]
 template <typename T>
-void laplacian_stencil_2d_4th(const BasicVector<T> &x, BasicVector<T> &y, int N) {
+void laplacian_stencil_2d_4th(const basic_vec<T> &x, basic_vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             int k = (i * N) + j;
@@ -132,7 +132,7 @@ void laplacian_stencil_2d_4th(const BasicVector<T> &x, BasicVector<T> &y, int N)
 ///   \text{interp\_v}(px,py) = \texttt{sample\_2d\_periodic}(v, N, h,\; px,
 ///   py,\; h/2,\; 0)
 /// \f]
-inline real sample_2d_periodic(const Vector &field, idx N, real h, real px, real py, real ox,
+inline real sample_2d_periodic(const vec &field, idx N, real h, real px, real py, real ox,
                                real oy) {
     real fx = std::fmod((px - ox) / h, static_cast<real>(N));
     real fy = std::fmod((py - oy) / h, static_cast<real>(N));
@@ -154,7 +154,7 @@ inline real sample_2d_periodic(const Vector &field, idx N, real h, real px, real
 
 /// @brief Apply a mutable 1D operation to each column fiber.
 template <typename T, typename F>
-void col_fiber_sweep(BasicVector<T> &data, int N, F &&f) {
+void col_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
     std::vector<T> fiber(N);
     for (int j = 0; j < N; ++j) {
         for (int i = 0; i < N; ++i) {
@@ -169,7 +169,7 @@ void col_fiber_sweep(BasicVector<T> &data, int N, F &&f) {
 
 /// @brief Apply a mutable 1D operation to each row fiber.
 template <typename T, typename F>
-void row_fiber_sweep(BasicVector<T> &data, int N, F &&f) {
+void row_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
     std::vector<T> fiber(N);
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
@@ -184,7 +184,7 @@ void row_fiber_sweep(BasicVector<T> &data, int N, F &&f) {
 
 /// @brief Fill grid values at \f$x_i=(i+1)h,\ y_j=(j+1)h\f$.
 template <typename F>
-void fill_grid(Vector &u, int N, double h, F &&f) {
+void fill_grid(vec &u, int N, double h, F &&f) {
     for (int i = 0; i < N; ++i) {
         double xi = (i + 1) * h;
         for (int j = 0; j < N; ++j) {
@@ -194,25 +194,25 @@ void fill_grid(Vector &u, int N, double h, F &&f) {
 }
 
 template <typename F>
-void fill_grid(ScalarField2D &g, F &&f) {
-    fill_grid(g.vec(), g.N(), g.h(), std::forward<F>(f));
+void fill_grid(scalar_field_2d &g, F &&f) {
+    fill_grid(g.as_vec(), g.N(), g.h(), std::forward<F>(f));
 }
 
-inline void laplacian_stencil_2d_periodic(const ScalarField2D &x, ScalarField2D &y) {
-    laplacian_stencil_2d_periodic(x.vec(), y.vec(), x.N());
+inline void laplacian_stencil_2d_periodic(const scalar_field_2d &x, scalar_field_2d &y) {
+    laplacian_stencil_2d_periodic(x.as_vec(), y.as_vec(), x.N());
 }
 
-inline void laplacian_stencil_2d_4th(const ScalarField2D &x, ScalarField2D &y) {
-    laplacian_stencil_2d_4th(x.vec(), y.vec(), x.N());
+inline void laplacian_stencil_2d_4th(const scalar_field_2d &x, scalar_field_2d &y) {
+    laplacian_stencil_2d_4th(x.as_vec(), y.as_vec(), x.N());
 }
 
-inline real sample_2d_periodic(const ScalarField2D &g, real px, real py, real ox = 0.0,
+inline real sample_2d_periodic(const scalar_field_2d &g, real px, real py, real ox = 0.0,
                                real oy = 0.0) {
-    return sample_2d_periodic(g.vec(), static_cast<idx>(g.N()), g.h(), px, py, ox, oy);
+    return sample_2d_periodic(g.as_vec(), static_cast<idx>(g.N()), g.h(), px, py, ox, oy);
 }
 
 /// @brief Compute \f$-\Delta_h x\f$ on a 3D grid.
-inline void neg_laplacian_3d(const Vector &x, Vector &y, int nx, int ny, int nz, double inv_dx2) {
+inline void neg_laplacian_3d(const vec &x, vec &y, int nx, int ny, int nz, double inv_dx2) {
     auto flat = [&](int i, int j, int k) -> idx {
         return static_cast<idx>((k * ny * nx) + (j * nx) + i);
     };
@@ -242,8 +242,8 @@ inline void neg_laplacian_3d(const Vector &x, Vector &y, int nx, int ny, int nz,
 }
 
 /// @brief Compute \f$\nabla\phi\f$ with central differences.
-inline void gradient_3d(const ScalarField3D &phi, ScalarField3D &gx, ScalarField3D &gy,
-                        ScalarField3D &gz) {
+inline void gradient_3d(const scalar_field_3d &phi, scalar_field_3d &gx, scalar_field_3d &gy,
+                        scalar_field_3d &gz) {
     int nx = phi.nx(), ny = phi.ny(), nz = phi.nz();
     double inv2dx = 1.0 / (2.0 * phi.dx());
     for (int k = 0; k < nz; ++k) {
@@ -261,8 +261,8 @@ inline void gradient_3d(const ScalarField3D &phi, ScalarField3D &gx, ScalarField
 }
 
 /// @brief Compute \f$\nabla\cdot f\f$ with central differences.
-inline void divergence_3d(const ScalarField3D &fx, const ScalarField3D &fy, const ScalarField3D &fz,
-                          ScalarField3D &out) {
+inline void divergence_3d(const scalar_field_3d &fx, const scalar_field_3d &fy, const scalar_field_3d &fz,
+                          scalar_field_3d &out) {
     int nx = fx.nx(), ny = fx.ny(), nz = fx.nz();
     double inv2dx = 1.0 / (2.0 * fx.dx());
     for (int k = 0; k < nz; ++k) {
@@ -280,8 +280,8 @@ inline void divergence_3d(const ScalarField3D &fx, const ScalarField3D &fy, cons
 }
 
 /// @brief Compute \f$\nabla\times A\f$ with central differences.
-inline void curl_3d(const ScalarField3D &ax, const ScalarField3D &ay, const ScalarField3D &az,
-                    ScalarField3D &bx, ScalarField3D &by, ScalarField3D &bz) {
+inline void curl_3d(const scalar_field_3d &ax, const scalar_field_3d &ay, const scalar_field_3d &az,
+                    scalar_field_3d &bx, scalar_field_3d &by, scalar_field_3d &bz) {
     int nx = ax.nx(), ny = ax.ny(), nz = ax.nz();
     double inv2dx = 1.0 / (2.0 * ax.dx());
     for (int k = 0; k < nz; ++k) {

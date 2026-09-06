@@ -8,10 +8,10 @@ Complete domain guides and runnable feature examples organized by topic.
 
 - @subpage page_container "Vectors, Matrices & Sparse Storage" — Memory layouts, BLAS/SIMD operations, slicing, and views.
 - @subpage page_linear "Linear Solvers & Decompositions" — Direct factorizations (LU, Cholesky, QR), Krylov methods (CG, GMRES, MINRES, BiCGSTAB), eigensystems, and SVD.
-- @subpage page_operator "Matrix-Free Linear Operators" — Non-owning dense/sparse adapters, lambda stencils, and subspace projectors.
-- @subpage page_structures "Discrete Structures & Graph Algorithms" — Disjoint-set union-find, indexed priority queues, degree queues, and graph generators.
-- @subpage page_solve "Unified Problem Dispatch" — Façade descriptors (`LinearProblem`, `ODEProblem`) and automated solver dispatch.
-- @subpage page_algebra "Algebraic Hierarchy & Field Laws" — Scalar fields, vector spaces, and linear operator property tags.
+- @subpage page_operator "mat-Free Linear Operators" — Non-owning dense/sparse adapters, lambda stencils, and subspace projectors.
+- @subpage page_structures "Discrete Structures & graph Algorithms" — Disjoint-set union-find, indexed priority queues, degree queues, and graph generators.
+- @subpage page_solve "Unified Problem Dispatch" — Façade descriptors (`linear_problem`, `ode_problem`) and automated solver dispatch.
+- @subpage page_algebra "Algebraic Hierarchy & field Laws" — scalar fields, vector spaces, and linear operator property tags.
 
 ---
 
@@ -29,12 +29,12 @@ Complete domain guides and runnable feature examples organized by topic.
 
 ## Fields, Grids & Spatial Utilities
 
-- @subpage page_fields "Scalar & Vector Fields" — 2D/3D regular grids, trilinear interpolation, differential field operators (grad, div, curl), and magnetic solvers.
+- @subpage page_fields "scalar & vec Fields" — 2D/3D regular grids, trilinear interpolation, differential field operators (grad, div, curl), and magnetic solvers.
 - @subpage page_spatial "Spatial Acceleration" — Cell lists, Verlet neighbour lists, and periodic boundary conditions.
 - @subpage page_sph_kernel "SPH Smoothing Kernels" — Cubic spline kernel and radial gradient evaluations.
 - @subpage page_pbc_lattice "Periodic Boundary Indexing" — Fast modulo-free lattice neighbour lookups.
 - @subpage page_connected_components "Connected-Component Labeling" — Spatial component partitioning.
-- @subpage page_stencil_hof "Higher-Order Stencils" — Matrix-free higher-order discrete operators.
+- @subpage page_stencil_hof "Higher-Order Stencils" — mat-free higher-order discrete operators.
 - @subpage page_boltzmann_table "Boltzmann Energy Tables" — Precomputed discrete state transitions.
 
 ---

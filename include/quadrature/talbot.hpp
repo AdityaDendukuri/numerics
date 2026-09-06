@@ -10,29 +10,29 @@
 
 namespace num {
 
-struct ContourNode {
+struct contour_node {
     cplx shift;
     cplx weight;
 };
 
-using TalbotNode = ContourNode;
+using talbot_node = contour_node;
 
 /// @brief Weideman--Talbot hyperbolic contour quadrature for Numerical Inverse Laplace Transformation.
-struct TalbotQuadrature {
+struct talbot_quadrature {
     idx modes = 16;
     real sigma = 0.6407;
     real mu = 0.5017;
     real nu = 0.6122;
     real eta = 0.2645;
 
-    TalbotQuadrature() = default;
-    /* implicit */ TalbotQuadrature(idx n_modes) : modes(n_modes) {}
+    talbot_quadrature() = default;
+    /* implicit */ talbot_quadrature(idx n_modes) : modes(n_modes) {}
 
-    [[nodiscard]] std::vector<ContourNode> nodes(real t) const {
+    [[nodiscard]] std::vector<contour_node> nodes(real t) const {
         if (!(t > 0.0) || modes < 2) {
-            throw std::invalid_argument("TalbotQuadrature: invalid time or mode count");
+            throw std::invalid_argument("talbot_quadrature: invalid time or mode count");
         }
-        std::vector<ContourNode> result;
+        std::vector<contour_node> result;
         result.reserve(modes);
         const real pi = std::acos(-1.0);
         for (idx k = 0; k < modes; ++k) {
@@ -55,7 +55,7 @@ struct TalbotQuadrature {
 
     template <typename Accumulate>
     void accumulate(real t, Accumulate &&accumulate_fn) const {
-        for (const ContourNode &node : nodes(t)) {
+        for (const contour_node &node : nodes(t)) {
             accumulate_fn(node.shift, node.weight);
         }
     }
@@ -63,11 +63,11 @@ struct TalbotQuadrature {
 
 /// Return quadrature nodes and weights on the Weideman--Talbot inversion contour for \f$f(t) = \mathcal{L}^{-1}[F](t), \; t > 0\f$.
 /// The contour is scaled per requested time; weights include \f$1/(2\pi i)\f$.
-inline std::vector<ContourNode> talbot_contour(real t, idx modes = 16) {
-    return TalbotQuadrature{modes}.nodes(t);
+inline std::vector<contour_node> talbot_contour(real t, idx modes = 16) {
+    return talbot_quadrature{modes}.nodes(t);
 }
 
-inline std::vector<ContourNode> talbot_nodes(real t, idx modes = 16) {
+inline std::vector<contour_node> talbot_nodes(real t, idx modes = 16) {
     return talbot_contour(t, modes);
 }
 
@@ -75,7 +75,7 @@ inline std::vector<ContourNode> talbot_nodes(real t, idx modes = 16) {
 /// value type. The callback receives each shift and fully scaled weight.
 template <typename Accumulate>
 void inverse_laplace_accumulate(real time, idx modes, Accumulate &&accumulate) {
-    TalbotQuadrature{modes}.accumulate(time, std::forward<Accumulate>(accumulate));
+    talbot_quadrature{modes}.accumulate(time, std::forward<Accumulate>(accumulate));
 }
 
 } // namespace num

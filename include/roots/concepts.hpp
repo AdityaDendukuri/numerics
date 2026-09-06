@@ -1,7 +1,7 @@
 /// @file roots/concepts.hpp
 /// @brief Contracts for scalar root finding.
 ///
-/// `num::ScalarFunction` and `num::DifferentiableFunction` are defined in
+/// `num::scalar_function` and `num::differentiable_function` are defined in
 /// `algebra/concepts.hpp`. What root finding adds is the bracket.
 #pragma once
 
@@ -20,6 +20,6 @@ namespace num {
 /// given \f$[a,b]\f$ brackets a root depends on the values, so it is checked by
 /// `num::roots::debug::verify_bracket`.
 template <class F, class T = real>
-concept BracketableFunction = ScalarFunction<F, T> && std::totally_ordered<T>;
+concept bracketable_function = scalar_function<F, T> && std::totally_ordered<T>;
 
 } // namespace num

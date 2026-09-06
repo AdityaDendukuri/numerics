@@ -5,6 +5,7 @@
 /// zero external dependencies.
 #pragma once
 
+#include "container/vector.hpp"
 #include "core/types.hpp"
 #include <algorithm>
 #include <cassert>
@@ -244,9 +245,13 @@ inline real beta(real a, real b) {
 // Sequence utilities (wrapping <numeric>)
 
 /// @brief Evenly spaced values from start to stop, inclusive. MATLAB/NumPy linspace.
-inline std::vector<real> linspace(real start, real stop, idx n) {
+///
+/// Returns `vec` rather than `std::vector<real>`, matching `zeros` and `ones`. The
+/// constructor from `std::vector` is explicit, so the earlier return type made
+/// `num::vec v = num::linspace(...)` ill-formed.
+[[nodiscard]] inline vec linspace(real start, real stop, idx n) {
     assert(n >= 2);
-    std::vector<real> out(n);
+    vec out(n);
     real step = (stop - start) / static_cast<real>(n - 1);
     for (idx i = 0; i < n; ++i) {
         out[i] = start + (static_cast<real>(i) * step);
@@ -255,8 +260,8 @@ inline std::vector<real> linspace(real start, real stop, idx n) {
 }
 
 /// @brief Values with evenly spaced exponents, inclusive.
-inline std::vector<real> logspace(real start, real stop, idx n, real base = 10.0) {
-    auto out = linspace(start, stop, n);
+[[nodiscard]] inline vec logspace(real start, real stop, idx n, real base = 10.0) {
+    vec out = linspace(start, stop, n);
     for (real &exponent : out) {
         exponent = std::pow(base, exponent);
     }
@@ -274,27 +279,27 @@ inline std::vector<int> int_range(int start, int n) {
 // Random number generation (wrapping the mt19937 boilerplate)
 
 /// @brief Seeded pseudo-random number generator (Mersenne Twister).
-struct Rng {
+struct rng_state {
     std::mt19937 engine;
 
-    explicit Rng(uint32_t seed) : engine(seed) {}
+    explicit rng_state(uint32_t seed) : engine(seed) {}
 
     /// Seed from hardware entropy.
-    Rng() : engine(std::random_device{}()) {}
+    rng_state() : engine(std::random_device{}()) {}
 };
 
 /// @brief Uniform real in [lo, hi).
-inline real rng_uniform(Rng *r, real lo, real hi) {
+inline real rng_uniform(rng_state *r, real lo, real hi) {
     return std::uniform_real_distribution<real>{lo, hi}(r->engine);
 }
 
 /// @brief Normal (Gaussian) sample with given mean and standard deviation.
-inline real rng_normal(Rng *r, real mean, real stddev) {
+inline real rng_normal(rng_state *r, real mean, real stddev) {
     return std::normal_distribution<real>{mean, stddev}(r->engine);
 }
 
 /// @brief Uniform integer in [lo, hi] (inclusive on both ends).
-inline int rng_int(Rng *r, int lo, int hi) {
+inline int rng_int(rng_state *r, int lo, int hi) {
     return std::uniform_int_distribution<int>{lo, hi}(r->engine);
 }
 

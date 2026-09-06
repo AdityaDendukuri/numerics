@@ -268,13 +268,13 @@ static std::string backends_table(const BuildInfo& b) {
   };
   row("BLAS / cblas",
       b.has_blas,
-      "Backend::blas   -- cblas_dgemm, cblas_ddot, cblas_dgemv");
+      "num::blas -- cblas_dgemm, cblas_ddot, cblas_dgemv");
   row("LAPACKE",
       b.has_lapack,
-      "Backend::lapack -- dgetrf, dgeqrf, dgesdd, dsyevd, dgtsv");
-  row("OpenMP", b.has_omp, "Backend::omp    -- parallel blocked loops");
+      "num::lapack -- dgetrf, dgeqrf, dgesdd, dsyevd, dgtsv");
+  row("OpenMP", b.has_omp, "num::omp -- parallel blocked loops");
   row("FFTW3", b.has_fftw, "FFTBackend::fftw -- AVX2/NEON optimised DFT");
-  row("CUDA", b.has_cuda, "Backend::gpu    -- custom kernels / cuBLAS");
+  row("CUDA", b.has_cuda, "num::cuda -- custom kernels / cuBLAS");
   row("MPI", b.has_mpi, "distributed ops (experimental)");
   return s;
 }
@@ -344,24 +344,24 @@ static std::string bench_label(const std::string& name) {
   if (has("FFTBackend::seq"))
     return "seq (Cooley-Tukey)";
   // Linalg backends
-  if (has("Backend::blas"))
-    return "blas";
-  if (has("Backend::omp"))
-    return "omp";
-  if (has("Backend::simd"))
-    return "simd";
-  if (has("Backend::blocked"))
-    return "blocked";
-  if (has("Backend::seq"))
-    return "seq";
   if (has("Matmul_RegBlocked"))
     return "reg-blocked";
-  if (has("Matmul_Blocked"))
+  if (has("Matmul_Blocked") || has("Matvec_Blocked"))
     return "blocked (auto-vec)";
   if (has("Matmul_Naive"))
     return "naive";
   if (has("CG_GPU") || has("GPU"))
     return "gpu";
+  if (has("Lapack"))
+    return "lapack";
+  if (has("Blas"))
+    return "blas";
+  if (has("Omp"))
+    return "omp";
+  if (has("Simd"))
+    return "simd";
+  if (has("Seq"))
+    return "seq";
   // fallback: strip BM_ prefix and /N suffix
   std::string v = name;
   if (v.size() > 3 && v.substr(0, 3) == "BM_")
@@ -473,7 +473,7 @@ static std::map<std::string, std::string> build_subs(const BuildInfo& info,
 
   // --- Test tables ---
   s["TESTS_SUMMARY"] = tests_table(tests);
-  s["TESTS_CORE"] = tests_table(tests, {"Vector", "Matrix"});
+  s["TESTS_CORE"] = tests_table(tests, {"vec", "mat"});
   s["TESTS_FACTORIZATION"] = tests_table(tests, {"LU", "QR", "Thomas", "TriDiag"});
   s["TESTS_SOLVERS"] =
     tests_table(tests, {"CG", "GaussSeidel", "Jacobi", "Krylov", "Solver"});
@@ -539,8 +539,8 @@ static std::map<std::string, std::string> build_subs(const BuildInfo& info,
     [&](const std::string& key, const std::string& file, const std::string& alt) {
       s[key] = figure(plots_dir, file, alt);
     };
-  fig("BENCH_MATMUL_FIGURE", "matmul.png", "Matrix multiply: GFLOP/s vs n");
-  fig("BENCH_MATVEC_FIGURE", "matvec.png", "Matrix-vector multiply: GB/s vs n");
+  fig("BENCH_MATMUL_FIGURE", "matmul.png", "mat multiply: GFLOP/s vs n");
+  fig("BENCH_MATVEC_FIGURE", "matvec.png", "mat-vector multiply: GB/s vs n");
   fig("BENCH_DOT_FIGURE", "dot.png", "Dot product: GB/s vs n");
   fig("BENCH_AXPY_FIGURE", "axpy.png", "Axpy: GB/s vs n");
   fig("BENCH_CG_FIGURE", "cg.png", "Conjugate gradient: time vs n");

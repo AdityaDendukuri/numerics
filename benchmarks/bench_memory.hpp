@@ -59,7 +59,7 @@ void install();
 /// Runs with allocs/iter == 0 are flagged "allocation-free" — the hot path
 /// never touched the heap, which is the ideal result for production kernels.
 ///
-/// @param results  Vector of Run objects from CollectingReporter::results()
+/// @param results  vec of Run objects from CollectingReporter::results()
 /// @param out      Output stream (default std::cout)
 void print_report(const std::vector<benchmark::BenchmarkReporter::Run> &results, std::ostream &out);
 

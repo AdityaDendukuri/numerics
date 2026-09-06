@@ -1,3 +1,4 @@
+#include "kernel/complex.hpp"
 #include "kernel/factor.hpp"
 #include "linear/solvers/dense_resolvent.hpp"
 #include "core/debug.hpp"
@@ -9,63 +10,63 @@
 
 namespace num {
 
-struct DenseResolventSolver::Impl {
-    explicit Impl(Matrix input)
+struct dense_resolvent_solver::Impl {
+    explicit Impl(mat input)
         : decomp(input), M_buf(input.rows() * input.rows()), pivots(input.rows()) {
-        debug::check_dim(input.rows(), input.cols(), "DenseResolventSolver requires a square matrix");
-        debug::check_non_empty(input.rows(), "DenseResolventSolver matrix");
+        debug::check_dim(input.rows(), input.cols(), "dense_resolvent_solver requires a square matrix");
+        debug::check_non_empty(input.rows(), "dense_resolvent_solver matrix");
     }
 
-    HessenbergDecomposition decomp;
+    hessenberg_decomposition decomp;
     cplx current_shift{0.0, 0.0};
     std::vector<cplx> M_buf;
     std::vector<idx> pivots;
     bool factored = false;
 };
 
-DenseResolventSolver::DenseResolventSolver(const Matrix &matrix)
+dense_resolvent_solver::dense_resolvent_solver(const mat &matrix)
     : impl_(std::make_unique<Impl>(matrix)) {}
 
-DenseResolventSolver::DenseResolventSolver(const SparseMatrix &matrix)
+dense_resolvent_solver::dense_resolvent_solver(const spmat &matrix)
     : impl_(std::make_unique<Impl>(dense(matrix))) {}
 
-DenseResolventSolver::~DenseResolventSolver() = default;
-DenseResolventSolver::DenseResolventSolver(DenseResolventSolver &&) noexcept = default;
-DenseResolventSolver &DenseResolventSolver::operator=(DenseResolventSolver &&) noexcept = default;
+dense_resolvent_solver::~dense_resolvent_solver() = default;
+dense_resolvent_solver::dense_resolvent_solver(dense_resolvent_solver &&) noexcept = default;
+dense_resolvent_solver &dense_resolvent_solver::operator=(dense_resolvent_solver &&) noexcept = default;
 
-idx DenseResolventSolver::size() const noexcept {
+idx dense_resolvent_solver::size() const noexcept {
     return impl_ ? impl_->decomp.size() : 0;
 }
 
-void DenseResolventSolver::factorize(cplx shift) {
+void dense_resolvent_solver::factorize(cplx shift) {
     const idx n = impl_->decomp.size();
     impl_->current_shift = shift;
-    kernel::raw::hessenberg_shifted_factor(impl_->M_buf.data(), impl_->decomp.H().data(), shift, n,
+    kernel::hessenberg_shifted_factor(impl_->M_buf.data(), impl_->decomp.H().data(), shift, n,
                                            impl_->pivots.data());
     impl_->factored = true;
 }
 
-std::vector<cplx> DenseResolventSolver::solve(const std::vector<cplx> &rhs) const {
+std::vector<cplx> dense_resolvent_solver::solve(const std::vector<cplx> &rhs) const {
     std::vector<cplx> result;
     solve(rhs, result);
     return result;
 }
 
-void DenseResolventSolver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &result) const {
+void dense_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &result) const {
     const idx n = impl_->decomp.size();
     if (!impl_->factored) {
-        throw std::invalid_argument("DenseResolventSolver: factorization required before solve");
+        throw std::invalid_argument("dense_resolvent_solver: factorization required before solve");
     }
-    debug::check_dim(n, static_cast<idx>(rhs.size()), "DenseResolventSolver RHS");
+    debug::check_dim(n, static_cast<idx>(rhs.size()), "dense_resolvent_solver RHS");
 
     // 1. Project RHS to Hessenberg coordinates: b_tilde = Q^T * rhs (O(n^2))
     std::vector<cplx> b_tilde(n);
-    kernel::raw::matvec_transpose_into_complex(b_tilde.data(), impl_->decomp.Q().data(),
+    kernel::matvec_transpose_into_complex(b_tilde.data(), impl_->decomp.Q().data(),
                                                rhs.data(), n, n);
 
     // 2. Substitute through the cached factorization (O(n^2))
     std::vector<cplx> y(n);
-    kernel::raw::hessenberg_shifted_substitute(y.data(), impl_->M_buf.data(),
+    kernel::hessenberg_shifted_substitute(y.data(), impl_->M_buf.data(),
                                                impl_->pivots.data(), b_tilde.data(), n);
 
     // 4. Back-project solution: result = Q * y (O(n^2))
@@ -73,7 +74,7 @@ void DenseResolventSolver::solve(const std::vector<cplx> &rhs, std::vector<cplx>
 }
 
 std::vector<std::vector<cplx>>
-DenseResolventSolver::solve(const std::vector<std::vector<cplx>> &right_hand_sides) const {
+dense_resolvent_solver::solve(const std::vector<std::vector<cplx>> &right_hand_sides) const {
     std::vector<std::vector<cplx>> result(right_hand_sides.size());
     for (idx index = 0; index < right_hand_sides.size(); ++index) {
         solve(right_hand_sides[index], result[index]);

@@ -11,7 +11,7 @@
 
 namespace num {
 
-struct CGOptions {
+struct cg_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;
 };
@@ -21,10 +21,10 @@ struct CGOptions {
 /// This is the canonical implementation: mathematical requirements are checked
 /// here and representation-specific operations lower through the shared CPOs.
 template <class Op, class V>
-requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&
-    math::Carries<Op, axiom::positive_definite> &&
-        std::floating_point<math::scalar_t<V>> [[nodiscard]] SolverResult
-        cg(const Op &A, const V &b, V &x, CGOptions options = {}) {
+requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
+    claims<Op, law::spd> &&
+        std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
+        cg(const Op &A, const V &b, V &x, cg_options options = {}) {
     using S = math::scalar_t<V>;
 
     const auto n = math::dimension(b);
@@ -45,7 +45,7 @@ requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&
     direction = residual;
 
     S residual_square = math::inner(residual, residual);
-    SolverResult result{0, static_cast<real>(std::sqrt(residual_square)), false};
+    solver_result result{0, static_cast<real>(std::sqrt(residual_square)), false};
     if (result.residual < options.tolerance) {
         result.converged = true;
         return result;
@@ -89,6 +89,6 @@ requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&
 namespace num::experimental {
 
 using ::num::cg;
-using ::num::CGOptions;
+using ::num::cg_options;
 
 } // namespace num::experimental

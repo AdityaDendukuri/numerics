@@ -1,5 +1,4 @@
-build/
-build-clang/
+build*/
 *.o
 *.a
 *.so
@@ -9,4 +8,4 @@ tags
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-build_verify/
+output/

@@ -12,24 +12,24 @@ namespace spectral {
 
 // -- One-shot dispatch --------------------------------------------------------
 
-void fft(const CVector &in, CVector &out, FFTBackend b) {
+void fft(const cvec &in, cvec &out, fft_backend b) {
     if (out.size() != in.size()) {
         throw std::invalid_argument("fft: in and out must have the same size");
     }
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw) {
+    if (b == fft_backend::fftw) {
         num::backends::fftw::fft(in, out);
         return;
     }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd) {
+    if (b == fft_backend::simd) {
         num::backends::opt::fft(in, out);
         return;
     }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) {
+    if (b == fft_backend::stdsimd) {
         num::backends::stdsimd::fft(in, out);
         return;
     }
@@ -38,24 +38,24 @@ void fft(const CVector &in, CVector &out, FFTBackend b) {
     num::backends::seq::fft(in, out);
 }
 
-void ifft(const CVector &in, CVector &out, FFTBackend b) {
+void ifft(const cvec &in, cvec &out, fft_backend b) {
     if (out.size() != in.size()) {
         throw std::invalid_argument("ifft: in and out must have the same size");
     }
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw) {
+    if (b == fft_backend::fftw) {
         num::backends::fftw::ifft(in, out);
         return;
     }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd) {
+    if (b == fft_backend::simd) {
         num::backends::opt::ifft(in, out);
         return;
     }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) {
+    if (b == fft_backend::stdsimd) {
         num::backends::stdsimd::ifft(in, out);
         return;
     }
@@ -63,24 +63,24 @@ void ifft(const CVector &in, CVector &out, FFTBackend b) {
     num::backends::seq::ifft(in, out);
 }
 
-void rfft(const Vector &in, CVector &out, FFTBackend b) {
+void rfft(const vec &in, cvec &out, fft_backend b) {
     if (static_cast<int>(out.size()) != (static_cast<int>(in.size()) / 2) + 1) {
         throw std::invalid_argument("rfft: out must have size n/2+1");
     }
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw) {
+    if (b == fft_backend::fftw) {
         num::backends::fftw::rfft(in, out);
         return;
     }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd) {
+    if (b == fft_backend::simd) {
         num::backends::opt::rfft(in, out);
         return;
     }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) {
+    if (b == fft_backend::stdsimd) {
         num::backends::stdsimd::rfft(in, out);
         return;
     }
@@ -88,7 +88,7 @@ void rfft(const Vector &in, CVector &out, FFTBackend b) {
     num::backends::seq::rfft(in, out);
 }
 
-void irfft(const CVector &in, int n, Vector &out, FFTBackend b) {
+void irfft(const cvec &in, int n, vec &out, fft_backend b) {
     if (static_cast<int>(in.size()) != (n / 2) + 1) {
         throw std::invalid_argument("irfft: in must have size n/2+1");
     }
@@ -96,19 +96,19 @@ void irfft(const CVector &in, int n, Vector &out, FFTBackend b) {
         throw std::invalid_argument("irfft: out must have size n");
     }
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw) {
+    if (b == fft_backend::fftw) {
         num::backends::fftw::irfft(in, n, out);
         return;
     }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd) {
+    if (b == fft_backend::simd) {
         num::backends::opt::irfft(in, n, out);
         return;
     }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) {
+    if (b == fft_backend::stdsimd) {
         num::backends::stdsimd::irfft(in, n, out);
         return;
     }
@@ -116,37 +116,37 @@ void irfft(const CVector &in, int n, Vector &out, FFTBackend b) {
     num::backends::seq::irfft(in, n, out);
 }
 
-// -- FFTPlan ------------------------------------------------------------------
+// -- fft_plan ------------------------------------------------------------------
 
-FFTPlan::FFTPlan(int n, bool forward, FFTBackend b) : n_(n), backend_(b) {
+fft_plan::fft_plan(int n, bool forward, fft_backend b) : n_(n), backend_(b) {
 #ifdef NUMERICS_HAS_FFTW
-    if (b == FFTBackend::fftw) {
-        impl_ = std::make_unique<num::backends::fftw::FFTPlanImpl>(n, forward);
+    if (b == fft_backend::fftw) {
+        impl_ = std::make_unique<num::backends::fftw::fft_plan_impl>(n, forward);
         return;
     }
 #endif
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
-    if (b == FFTBackend::simd) {
-        impl_ = std::make_unique<num::backends::opt::FFTPlanImpl>(n, !forward);
+    if (b == fft_backend::simd) {
+        impl_ = std::make_unique<num::backends::opt::fft_plan_impl>(n, !forward);
         return;
     }
 #endif
 #ifdef NUMERICS_HAS_STD_SIMD
-    if (b == FFTBackend::stdsimd) {
-        impl_ = std::make_unique<num::backends::stdsimd::FFTPlanImpl>(n, !forward);
+    if (b == fft_backend::stdsimd) {
+        impl_ = std::make_unique<num::backends::stdsimd::fft_plan_impl>(n, !forward);
         return;
     }
 #endif
-    impl_ = std::make_unique<num::backends::seq::FFTPlanImpl>(n, !forward);
+    impl_ = std::make_unique<num::backends::seq::fft_plan_impl>(n, !forward);
 }
 
-FFTPlan::~FFTPlan() = default;
-FFTPlan::FFTPlan(FFTPlan &&) noexcept = default;
-FFTPlan &FFTPlan::operator=(FFTPlan &&) noexcept = default;
+fft_plan::~fft_plan() = default;
+fft_plan::fft_plan(fft_plan &&) noexcept = default;
+fft_plan &fft_plan::operator=(fft_plan &&) noexcept = default;
 
-void FFTPlan::execute(const CVector &in, CVector &out) const {
+void fft_plan::execute(const cvec &in, cvec &out) const {
     if (static_cast<int>(in.size()) != n_ || static_cast<int>(out.size()) != n_) {
-        throw std::invalid_argument("FFTPlan::execute: size mismatch");
+        throw std::invalid_argument("fft_plan::execute: size mismatch");
     }
     impl_->execute(in, out);
 }

@@ -2,8 +2,8 @@
 /// @brief Structural and property contracts for linear algebra objects and solvers.
 ///
 /// Matrices and matrix-free operators state their properties in one vocabulary:
-/// both record a position in the `num::property` lattice, so `SPDMatrixLike` and
-/// `num::SPDOperator` mean the same mathematical thing about different
+/// both record a position in the `num::law` hierarchy, so `spd_matrix_like` and
+/// `num::spd_operator` mean the same mathematical thing about different
 /// representations.
 ///
 /// Storage formats — CSR, banded, tridiagonal — are not properties of a linear map
@@ -33,10 +33,10 @@ concept has_square_tag = requires {
 } // namespace detail
 
 // =============================================================================
-// 1. Matrix invariants
+// 1. mat invariants
 // =============================================================================
 
-/// @brief Matrix carrying a square-dimension guarantee \f$A: V \to V\f$.
+/// @brief mat carrying a square-dimension guarantee \f$A: V \to V\f$.
 ///
 /// Squareness of a dynamically sized matrix is a runtime fact, so this asks
 /// whether a guarantee has been *attached* — by `assume_square`, `make_square`, or
@@ -44,23 +44,23 @@ concept has_square_tag = requires {
 /// `rows() == cols()` is a well-formed expression, which is true of every matrix
 /// and therefore says nothing.
 template <class M>
-concept SquareMatrixLike =
-    MatrixSpace<M> && (detail::has_square_tag<M> || Asserts<M, property::self_adjoint>);
+concept square_matrix_like =
+    matrix_space<M> && (detail::has_square_tag<M> || claims<M, law::self_adjoint>);
 
-/// @brief Matrix asserted self-adjoint: \f$A = A^T\f$, or \f$A = A^*\f$ over \f$\mathbb{C}\f$.
+/// @brief mat asserted self-adjoint: \f$A = A^T\f$, or \f$A = A^*\f$ over \f$\mathbb{C}\f$.
 template <class M>
-concept SymmetricMatrixLike =
-    SquareMatrixLike<M> && Asserts<M, property::self_adjoint>;
+concept symmetric_matrix_like =
+    square_matrix_like<M> && claims<M, law::self_adjoint>;
 
-/// @brief Matrix asserted positive semi-definite: \f$x^T A x \geq 0\f$; may be singular.
+/// @brief mat asserted positive semi-definite: \f$x^T A x \geq 0\f$; may be singular.
 template <class M>
-concept PSDMatrixLike =
-    SymmetricMatrixLike<M> && Asserts<M, property::psd>;
+concept psd_matrix_like =
+    symmetric_matrix_like<M> && claims<M, law::psd>;
 
-/// @brief Matrix asserted positive definite: \f$x^T A x > 0\f$ for \f$x \neq 0\f$; admits a Cholesky factor.
+/// @brief mat asserted positive definite: \f$x^T A x > 0\f$ for \f$x \neq 0\f$; admits a Cholesky factor.
 template <class M>
-concept SPDMatrixLike =
-    PSDMatrixLike<M> && Asserts<M, property::spd>;
+concept spd_matrix_like =
+    psd_matrix_like<M> && claims<M, law::spd>;
 
 // =============================================================================
 // 2. Storage formats
@@ -69,17 +69,17 @@ concept SPDMatrixLike =
 // Aliases into num::repr. A banded solver needs banded *storage*; bandedness is
 // not a property of the underlying linear map.
 
-/// @brief Banded storage with \f$A_{ij} = 0\f$ outside \f$-k_l \leq j-i \leq k_u\f$.
+/// @brief banded storage with \f$A_{ij} = 0\f$ outside \f$-k_l \leq j-i \leq k_u\f$.
 template <class B>
-concept BandedMatrixLike = repr::Banded<B>;
+concept banded_matrix_like = repr::banded<B>;
 
-/// @brief Tridiagonal storage exposing subdiagonal, diagonal and superdiagonal.
+/// @brief tridiagonal storage exposing subdiagonal, diagonal and superdiagonal.
 template <class T>
-concept TridiagonalMatrixLike = repr::Tridiagonal<T>;
+concept tridiagonal_matrix_like = repr::tridiagonal<T>;
 
 /// @brief Compressed sparse row storage.
 template <class M>
-concept SparseMatrixCSRLike = repr::CSR<M>;
+concept sparse_matrix_csr_like = repr::csr<M>;
 
 // =============================================================================
 // 3. Direct factorizations
@@ -90,9 +90,9 @@ concept SparseMatrixCSRLike = repr::CSR<M>;
 /// The library's factorizations are plain results paired with free functions, so
 /// the contract is `solve_in_place(factor, rhs)` found by argument-dependent
 /// lookup. Requiring a `.solve()` member, as this once did, made the concept
-/// unsatisfiable by `CholeskyResult` and `LUResult` alike.
-template <class F, class Vec = Vector>
-concept TriangularFactor = VectorSpace<Vec> && requires(const F &factor, Vec &rhs) {
+/// unsatisfiable by `cholesky_result` and `lu_result` alike.
+template <class F, class Vec = vec>
+concept triangular_factor = vector_space<Vec> && requires(const F &factor, Vec &rhs) {
     solve_in_place(factor, rhs);
 };
 
@@ -102,8 +102,8 @@ concept TriangularFactor = VectorSpace<Vec> && requires(const F &factor, Vec &rh
 /// to any number of right-hand sides, which is what distinguishes a factorization
 /// from a one-shot solve. That is expressed by also accepting a matrix of
 /// right-hand sides.
-template <class F, class Vec = Vector, class Mat = Matrix>
-concept DirectFactorization = TriangularFactor<F, Vec> && requires(const F &factor, Mat &rhs) {
+template <class F, class Vec = vec, class Mat = mat>
+concept direct_factorization = triangular_factor<F, Vec> && requires(const F &factor, Mat &rhs) {
     solve_in_place(factor, rhs);
 };
 
@@ -115,22 +115,22 @@ concept DirectFactorization = TriangularFactor<F, Vec> && requires(const F &fact
 ///
 /// Structurally a linear operator; what makes it a preconditioner is intent, not
 /// interface, so it is stated as such rather than given a distinguishing method.
-template <class M, class X = Vector, class Y = Vector>
-concept Preconditioner = LinearOperator<M, X, Y>;
+template <class M, class X = vec, class Y = vec>
+concept preconditioner = linear_operator<M, X, Y>;
 
-/// @brief Preconditioner asserted self-adjoint, as PCG and MINRES require.
+/// @brief preconditioner asserted self-adjoint, as PCG and MINRES require.
 ///
 /// A non-symmetric preconditioner silently destroys the Krylov space those methods
 /// build; this is the constraint that should gate them.
-template <class M, class X = Vector, class Y = Vector>
-concept SymmetricPreconditioner = Preconditioner<M, X, Y> && SelfAdjointOperator<M, X, Y>;
+template <class M, class X = vec, class Y = vec>
+concept symmetric_preconditioner = preconditioner<M, X, Y> && self_adjoint_operator<M, X, Y>;
 
-/// @brief Preconditioner asserted SPD, the precondition for PCG's error norm to be a norm.
-template <class M, class X = Vector, class Y = Vector>
-concept SPDPreconditioner = SymmetricPreconditioner<M, X, Y> && SPDOperator<M, X, Y>;
+/// @brief preconditioner asserted SPD, the precondition for PCG's error norm to be a norm.
+template <class M, class X = vec, class Y = vec>
+concept spd_preconditioner = symmetric_preconditioner<M, X, Y> && spd_operator<M, X, Y>;
 
 // =============================================================================
-// 5. Matrix functions
+// 5. mat functions
 // =============================================================================
 
 

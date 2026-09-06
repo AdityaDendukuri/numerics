@@ -16,31 +16,31 @@ namespace num {
 ///
 /// Preprocessing cost: O(n^3) once (Hessenberg reduction A = Q H Q^T).
 /// Per-shift solve cost: O(n^2) (Hessenberg-structured Gaussian elimination + Q back-projection).
-class HessenbergResolventSolver {
+class hessenberg_resolvent_solver {
   public:
     /// Construct and decompose A into upper Hessenberg form.
-    explicit HessenbergResolventSolver(const Matrix &A);
-    explicit HessenbergResolventSolver(HessenbergDecomposition decomp);
+    explicit hessenberg_resolvent_solver(const mat &A);
+    explicit hessenberg_resolvent_solver(hessenberg_decomposition decomp);
 
     [[nodiscard]] idx size() const noexcept { return decomp_.size(); }
-    [[nodiscard]] const HessenbergDecomposition &decomposition() const noexcept { return decomp_; }
+    [[nodiscard]] const hessenberg_decomposition &decomposition() const noexcept { return decomp_; }
 
     /// Solve (sI - A) x = b for a single shift and real RHS in O(n^2).
-    [[nodiscard]] std::vector<cplx> solve(cplx shift, const Vector &b) const;
+    [[nodiscard]] std::vector<cplx> solve(cplx shift, const vec &b) const;
 
     /// Solve (sI - A) x = b for a single shift and complex RHS in O(n^2).
     [[nodiscard]] std::vector<cplx> solve(cplx shift, const std::vector<cplx> &b) const;
 
     /// Solve for multiple shifts and a single RHS in parallel O(n^3 + k * n^2).
     [[nodiscard]] std::vector<std::vector<cplx>>
-    solve_batch(const std::vector<cplx> &shifts, const Vector &b) const;
+    solve_batch(const std::vector<cplx> &shifts, const vec &b) const;
 
     /// Solve for multiple shifts and multiple RHS vectors in parallel.
     [[nodiscard]] std::vector<std::vector<std::vector<cplx>>>
-    solve_batch(const std::vector<cplx> &shifts, const std::vector<Vector> &rhs_list) const;
+    solve_batch(const std::vector<cplx> &shifts, const std::vector<vec> &rhs_list) const;
 
   private:
-    HessenbergDecomposition decomp_;
+    hessenberg_decomposition decomp_;
 };
 
 } // namespace num

@@ -18,7 +18,7 @@ bool sparse_resolvent_available() noexcept {
 #endif
 }
 
-struct SparseResolventSolver::Impl {
+struct sparse_resolvent_solver::Impl {
     idx n = 0;
 #if defined(NUMERICS_HAS_UMFPACK)
     std::vector<int> ap, ai;
@@ -38,13 +38,13 @@ struct SparseResolventSolver::Impl {
 #endif
 };
 
-SparseResolventSolver::SparseResolventSolver(const SparseMatrix &A, SparseResolventOptions options)
+sparse_resolvent_solver::sparse_resolvent_solver(const spmat &A, sparse_resolvent_options options)
     : impl_(std::make_unique<Impl>()) {
     if (A.n_rows() != A.n_cols()) {
-        throw std::invalid_argument("SparseResolventSolver requires a square matrix");
+        throw std::invalid_argument("sparse_resolvent_solver requires a square matrix");
     }
     if (A.n_rows() > INT_MAX || A.nnz() > INT_MAX) {
-        throw std::overflow_error("SparseResolventSolver int32 interface overflow");
+        throw std::overflow_error("sparse_resolvent_solver int32 interface overflow");
     }
     impl_->n = A.n_rows();
 #if defined(NUMERICS_HAS_UMFPACK)
@@ -107,15 +107,15 @@ SparseResolventSolver::SparseResolventSolver(const SparseMatrix &A, SparseResolv
 #endif
 }
 
-SparseResolventSolver::~SparseResolventSolver() = default;
-SparseResolventSolver::SparseResolventSolver(SparseResolventSolver &&) noexcept = default;
-SparseResolventSolver &
-SparseResolventSolver::operator=(SparseResolventSolver &&) noexcept = default;
-idx SparseResolventSolver::size() const noexcept {
+sparse_resolvent_solver::~sparse_resolvent_solver() = default;
+sparse_resolvent_solver::sparse_resolvent_solver(sparse_resolvent_solver &&) noexcept = default;
+sparse_resolvent_solver &
+sparse_resolvent_solver::operator=(sparse_resolvent_solver &&) noexcept = default;
+idx sparse_resolvent_solver::size() const noexcept {
     return impl_ ? impl_->n : 0;
 }
 
-void SparseResolventSolver::factorize(cplx shift) {
+void sparse_resolvent_solver::factorize(cplx shift) {
 #if defined(NUMERICS_HAS_UMFPACK)
     if (impl_->numeric) {
         umfpack_zi_free_numeric(&impl_->numeric);
@@ -124,7 +124,7 @@ void SparseResolventSolver::factorize(cplx shift) {
     for (idx j = 0; j < impl_->n; ++j) {
         const int p = impl_->diagonal[j];
         if (p < 0) {
-            throw std::runtime_error("SparseResolventSolver requires explicit diagonal");
+            throw std::runtime_error("sparse_resolvent_solver requires explicit diagonal");
         }
         impl_->ar[p] += delta_real;
         impl_->az[p] = shift.imag();
@@ -138,20 +138,20 @@ void SparseResolventSolver::factorize(cplx shift) {
     }
 #else
     (void)shift;
-    throw std::runtime_error("SparseResolventSolver requires SuiteSparse UMFPACK complex support");
+    throw std::runtime_error("sparse_resolvent_solver requires SuiteSparse UMFPACK complex support");
 #endif
 }
 
-std::vector<cplx> SparseResolventSolver::solve(const std::vector<cplx> &rhs) const {
+std::vector<cplx> sparse_resolvent_solver::solve(const std::vector<cplx> &rhs) const {
     std::vector<cplx> out;
     solve(rhs, out);
     return out;
 }
 
-void SparseResolventSolver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &out) const {
+void sparse_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &out) const {
 #if defined(NUMERICS_HAS_UMFPACK)
     if (!impl_->numeric || rhs.size() != impl_->n) {
-        throw std::invalid_argument("SparseResolventSolver: factorization or dimension missing");
+        throw std::invalid_argument("sparse_resolvent_solver: factorization or dimension missing");
     }
     for (idx i = 0; i < impl_->n; ++i) {
         impl_->br[i] = rhs[i].real(), impl_->bz[i] = rhs[i].imag();
@@ -168,12 +168,12 @@ void SparseResolventSolver::solve(const std::vector<cplx> &rhs, std::vector<cplx
 #else
     (void)rhs;
     (void)out;
-    throw std::runtime_error("SparseResolventSolver requires SuiteSparse UMFPACK complex support");
+    throw std::runtime_error("sparse_resolvent_solver requires SuiteSparse UMFPACK complex support");
 #endif
 }
 
 std::vector<std::vector<cplx>>
-SparseResolventSolver::solve(const std::vector<std::vector<cplx>> &rhs) const {
+sparse_resolvent_solver::solve(const std::vector<std::vector<cplx>> &rhs) const {
     std::vector<std::vector<cplx>> out;
     out.reserve(rhs.size());
     for (const auto &b : rhs) {

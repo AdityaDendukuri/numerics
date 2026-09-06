@@ -8,11 +8,11 @@
 int main() {
     using namespace num;
 
-    RunningStats stats;
+    running_stats stats;
     std::mt19937 rng(42);
     std::normal_distribution<double> norm_dist(0.0, 1.0);
 
-    Histogram hist(20, -3.0, 3.0);
+    histogram hist(20, -3.0, 3.0);
     for (int i = 0; i < 10000; ++i) {
         double val = norm_dist(rng);
         stats.update(val);

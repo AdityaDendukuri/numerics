@@ -13,33 +13,33 @@ namespace num::randommat {
 
 // Aliases from graph module
 template <typename Float = double, std::integral Index = num::idx>
-using Edge = num::structures::MultiEdge<Float, Index>;
+using graph_edge = num::structures::multi_edge<Float, Index>;
 
 template <typename Float = double, std::integral Index = num::idx>
-using Graph = std::vector<std::vector<Edge<Float, Index>>>;
+using graph = std::vector<std::vector<graph_edge<Float, Index>>>;
 
 template <typename Float = double, std::integral Index = num::idx>
-using Neighbor = num::structures::MultiEdge<Float, Index>;
+using neighbor = num::structures::multi_edge<Float, Index>;
 
 template <typename Float = double, std::integral Index = num::idx>
-struct FactorEntry {
+struct factor_entry {
     Index row{};
     Float value{};
 };
 
 template <typename Float = double, std::integral Index = num::idx>
-struct FactorColumn {
-    std::vector<FactorEntry<Float, Index>> entries;
+struct factor_column {
+    std::vector<factor_entry<Float, Index>> entries;
 };
 
 template <typename Float = double, std::integral Index = num::idx>
-struct CholeskyFactor {
-    std::vector<FactorColumn<Float, Index>> columns;
+struct cholesky_factor {
+    std::vector<factor_column<Float, Index>> columns;
     std::vector<Index> order;
 };
 
 template <typename Float = double, std::integral Index = num::idx>
-inline Float get_entry(const CholeskyFactor<Float, Index> &F, Index row, Index col) {
+inline Float get_entry(const cholesky_factor<Float, Index> &F, Index row, Index col) {
     if (col >= F.columns.size()) {
         return static_cast<Float>(0);
     }

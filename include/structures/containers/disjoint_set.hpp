@@ -14,19 +14,19 @@ namespace num {
 /// @brief Disjoint-Set forest data structure supporting near O(1) amortized operations.
 /// @tparam Index Integer type used for vertex/element indices (e.g. num::idx, uint32_t, int).
 template <std::integral Index = num::idx>
-class BasicDisjointSet {
+class basic_disjoint_set {
   public:
     using index_type = Index;
 
     /// Construct a disjoint-set structure with n singleton sets: {0}, {1}, ..., {n-1}.
-    explicit BasicDisjointSet(Index n = 0)
+    explicit basic_disjoint_set(Index n = 0)
         : parent_(n), rank_(n, 0), size_(n, 1), count_(n) {
         std::iota(parent_.begin(), parent_.end(), static_cast<Index>(0));
     }
 
     /// Find the representative root of the set containing element u with path compression.
     Index find(Index u) {
-        structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "DisjointSet::find");
+        structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::find");
         Index root = u;
         while (root != parent_[root]) {
             root = parent_[root];
@@ -43,7 +43,7 @@ class BasicDisjointSet {
 
     /// Find representative root (const view without mutation).
     [[nodiscard]] Index find(Index u) const {
-        structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "DisjointSet::find");
+        structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::find");
         while (u != parent_[u]) {
             u = parent_[u];
         }
@@ -53,8 +53,8 @@ class BasicDisjointSet {
     /// Unite the sets containing elements u and v.
     /// @return true if u and v were in different sets, false if already in the same set.
     bool unite(Index u, Index v) {
-        structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "DisjointSet::unite u");
-        structures::debug::check_index_bounds(v, static_cast<Index>(parent_.size()), "DisjointSet::unite v");
+        structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::unite u");
+        structures::debug::check_index_bounds(v, static_cast<Index>(parent_.size()), "disjoint_set::unite v");
 
         Index root_u = find(u);
         Index root_v = find(v);
@@ -131,15 +131,15 @@ class BasicDisjointSet {
     Index count_ = 0;
 };
 
-/// Canonical 64-bit DisjointSet alias
-using DisjointSet = BasicDisjointSet<num::idx>;
+/// Canonical 64-bit disjoint_set alias
+using disjoint_set = basic_disjoint_set<num::idx>;
 
-/// Compact 32-bit DisjointSet alias (halves memory overhead)
-using DisjointSet32 = BasicDisjointSet<uint32_t>;
+/// Compact 32-bit disjoint_set alias (halves memory overhead)
+using disjoint_set_32 = basic_disjoint_set<uint32_t>;
 
-static_assert(concepts::EquivalenceRelation<DisjointSet, num::idx>,
-              "DisjointSet must satisfy EquivalenceRelation concept");
-static_assert(concepts::EquivalenceRelation<DisjointSet32, uint32_t>,
-              "DisjointSet32 must satisfy EquivalenceRelation concept");
+static_assert(concepts::equivalence_relation<disjoint_set, num::idx>,
+              "disjoint_set must satisfy equivalence_relation concept");
+static_assert(concepts::equivalence_relation<disjoint_set_32, uint32_t>,
+              "disjoint_set_32 must satisfy equivalence_relation concept");
 
 } // namespace num

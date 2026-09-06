@@ -1,6 +1,6 @@
 # SPH Kernels {#page_sph_kernel}
 
-`include/spatial/sph_kernel.hpp` provides `num::SPHKernel<Dim>` for 2D and 3D
+`include/spatial/sph_kernel.hpp` provides `num::sph_kernel<Dim>` for 2D and 3D
 SPH density, viscosity, heat-diffusion, and pressure-gradient terms.
 
 ---
@@ -16,7 +16,7 @@ The formulas are otherwise shared.
 
 ```cpp
 template<int Dim>   // Dim = 2 or 3
-struct num::SPHKernel {
+struct num::sph_kernel {
     static float W(float r, float h);
     static float dW_dr(float r, float h);
     static float Spiky_dW_dr(float r, float h);
@@ -90,25 +90,25 @@ Both are fully specialized for `Dim=2` and `Dim=3`.
 
 ```cpp
 // 2D density update
-const float W0 = num::SPHKernel<2>::W(0.0f, h);
-const float w  = m * num::SPHKernel<2>::W(r, h);
+const float W0 = num::sph_kernel<2>::W(0.0f, h);
+const float w  = m * num::sph_kernel<2>::W(r, h);
 
 // 2D pressure gradient
-auto g = num::SPHKernel<2>::Spiky_gradW({rx, ry}, r, h);
+auto g = num::sph_kernel<2>::Spiky_gradW({rx, ry}, r, h);
 float gx = g[0], gy = g[1];
 
 // 3D pressure gradient
-auto g3 = num::SPHKernel<3>::Spiky_gradW({rx, ry, rz}, r, h);
+auto g3 = num::sph_kernel<3>::Spiky_gradW({rx, ry, rz}, r, h);
 
 // Morris Laplacian (viscosity / heat, same formula for 2D and 3D)
-float lap = 2.0f * num::SPHKernel<Dim>::Spiky_dW_dr(r, h) * r / (r2 + eps2);
+float lap = 2.0f * num::sph_kernel<Dim>::Spiky_dW_dr(r, h) * r / (r2 + eps2);
 ```
 
 ## SPH Terms
 
 | Kernel | Term |
 |---|---|
-| `SPHKernel<Dim>::W` | Density interpolation |
-| `SPHKernel<Dim>::dW_dr` | Morris viscosity and heat Laplacian |
-| `SPHKernel<Dim>::Spiky_dW_dr` | Spiky pressure derivative |
-| `SPHKernel<Dim>::Spiky_gradW` | Pressure-gradient vector |
+| `sph_kernel<Dim>::W` | Density interpolation |
+| `sph_kernel<Dim>::dW_dr` | Morris viscosity and heat Laplacian |
+| `sph_kernel<Dim>::Spiky_dW_dr` | Spiky pressure derivative |
+| `sph_kernel<Dim>::Spiky_gradW` | Pressure-gradient vector |

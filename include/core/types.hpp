@@ -18,10 +18,10 @@ constexpr idx to_idx(T x) noexcept {
     return static_cast<idx>(x);
 }
 
-/// Scalar callback \f$f(x)\f$.
-using ScalarFn = std::function<real(real)>;
+/// scalar callback \f$f(x)\f$.
+using scalar_fn = std::function<real(real)>;
 
-/// Vector callback writing \f$f(t, y)\f$ into a caller-provided buffer.
-using VectorFn = std::function<void(real, real *, real *)>;
+/// vec callback writing \f$f(t, y)\f$ into a caller-provided buffer.
+using vector_fn = std::function<void(real, real *, real *)>;
 
 } // namespace num

@@ -1,5 +1,5 @@
 /// @file 10_banded_and_spd_operators.cpp
-/// @brief Banded Matrix storage (KL, KU), Banded solves, and compile-time SPD operator
+/// @brief banded mat storage (KL, KU), banded solves, and compile-time SPD operator
 /// tags.
 #include <iostream>
 #include <numerics.hpp>
@@ -9,7 +9,7 @@ int main() {
 
     idx n = 10;
     idx kl = 1, ku = 1;
-    BandedMatrix B(n, kl, ku);
+    band_mat B(n, kl, ku);
 
     for (idx i = 0; i < n; ++i) {
         B(i, i) = 4.0;
@@ -21,11 +21,11 @@ int main() {
         }
     }
 
-    Vector b(n, 1.0);
-    Vector x_sol(n, 0.0);
+    vec b(n, 1.0);
+    vec x_sol(n, 0.0);
     banded_solve(B, b, x_sol);
 
-    std::cout << "Banded Matrix (n=" << n << ", kl=" << kl << ", ku=" << ku
+    std::cout << "banded mat (n=" << n << ", kl=" << kl << ", ku=" << ku
               << ") Solved x[0] = " << x_sol[0] << "\n";
 
     std::vector<double> grid, sol;
@@ -34,8 +34,8 @@ int main() {
         sol.push_back(x_sol[i]);
     }
 
-    plt::plot(grid, sol, "Banded x", "linespoints");
-    plt::title("10 Banded Matrices: Solution Vector x");
+    plt::plot(grid, sol, "banded x", "linespoints");
+    plt::title("10 banded Matrices: Solution vec x");
     plt::xlabel("Grid Index i");
     plt::ylabel("Solution x_i");
     plt::show_dumb(140, 35);

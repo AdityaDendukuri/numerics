@@ -25,25 +25,25 @@ namespace num {
 /// BLAS/LAPACK wrappers, and memory allocators.
 namespace repr {
 
-/// @brief Vector stored in one contiguous block, addressable via a direct raw pointer `.data()`.
+/// @brief vec stored in one contiguous block, addressable via a direct raw pointer `.data()`.
 ///
-/// Models include `num::Vector`, `num::CVector`, and `std::vector<double>`.
+/// Models include `num::vec`, `num::cvec`, and `std::vector<double>`.
 ///
 /// @tparam V Container type.
 template <class V>
-concept Contiguous = VectorSpace<V> && requires(V v, const V cv) {
+concept contiguous = vector_space<V> && requires(V v, const V cv) {
     { cv.data() } -> std::convertible_to<const scalar_t<V> *>;
     { v.data() } -> std::convertible_to<scalar_t<V> *>;
 };
 
-/// @brief Matrix stored contiguously in row-major order with row stride equal to `cols()`.
+/// @brief mat stored contiguously in row-major order with row stride equal to `cols()`.
 ///
 /// Allows zero-copy lowering directly to CBLAS row-major routines (`cblas_dgemm`, `cblas_dgemv`).
-/// Models include `num::Matrix`.
+/// Models include `num::mat`.
 ///
-/// @tparam A Matrix type.
+/// @tparam A mat type.
 template <class A>
-concept DenseRowMajor = MatrixSpace<A> && requires(A a, const A ca) {
+concept dense_row_major = matrix_space<A> && requires(A a, const A ca) {
     { ca.data() } -> std::convertible_to<const entry_t<A> *>;
     { a.data() } -> std::convertible_to<entry_t<A> *>;
 };
@@ -51,11 +51,11 @@ concept DenseRowMajor = MatrixSpace<A> && requires(A a, const A ca) {
 /// @brief Compressed sparse row (CSR) storage format: row offsets, column indices, and nonzero values.
 ///
 /// Enables matrix-vector multiplication in \f$\mathcal{O}(\text{nnz})\f$ time.
-/// Models include `num::SparseMatrix`.
+/// Models include `num::spmat`.
 ///
 /// @tparam M Sparse matrix type.
 template <class M>
-concept CSR = requires(const M &m) {
+concept csr = requires(const M &m) {
     { m.n_rows() } -> std::convertible_to<idx>;
     { m.n_cols() } -> std::convertible_to<idx>;
     { m.nnz() } -> std::convertible_to<idx>;
@@ -64,13 +64,13 @@ concept CSR = requires(const M &m) {
     { m.values() };
 };
 
-/// @brief Banded storage format: entries confined to \f$-k_l \leq j - i \leq k_u\f$.
+/// @brief banded storage format: entries confined to \f$-k_l \leq j - i \leq k_u\f$.
 ///
-/// Models include `num::BandedMatrix`.
+/// Models include `num::band_mat`.
 ///
-/// @tparam B Banded matrix type.
+/// @tparam B banded matrix type.
 template <class B>
-concept Banded = MatrixSpace<B> && (requires(const B &b) {
+concept banded = matrix_space<B> && (requires(const B &b) {
     { b.kl() } -> std::convertible_to<idx>;
     { b.ku() } -> std::convertible_to<idx>;
 } || requires(const B &b) {
@@ -98,11 +98,11 @@ template <class B>
     }
 }
 
-/// @brief Tridiagonal storage format: subdiagonal (`dl`), main diagonal (`d`), and superdiagonal (`du`).
+/// @brief tridiagonal storage format: subdiagonal (`dl`), main diagonal (`d`), and superdiagonal (`du`).
 ///
-/// @tparam T Tridiagonal matrix type.
+/// @tparam T tridiagonal matrix type.
 template <class T>
-concept Tridiagonal = requires(const T &t) {
+concept tridiagonal = requires(const T &t) {
     { t.dl };
     { t.d };
     { t.du };

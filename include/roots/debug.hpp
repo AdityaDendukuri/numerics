@@ -11,7 +11,7 @@
 
 namespace num::roots::debug {
 
-using num::debug::DiagnosticLevel;
+using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
@@ -21,10 +21,9 @@ using num::debug::panic;
 /// inside the interval. Without one they return a value that is not a root and
 /// report no error, so the bracket is checked rather than assumed.
 template <class F, class T = real>
-requires ScalarFunction<F, T>
-inline void verify_bracket(F &&f, T a, T b,
-                           std::source_location loc = std::source_location::current()) {
-    if (get_level() == DiagnosticLevel::off) {
+requires scalar_function<F, T> inline void
+verify_bracket(F &&f, T a, T b, std::source_location loc = std::source_location::current()) {
+    if (get_level() == diagnostic_level::off) {
         return;
     }
     if (!(a < b)) {
@@ -38,8 +37,8 @@ inline void verify_bracket(F &&f, T a, T b,
     if ((fa > T(0)) == (fb > T(0))) {
         panic("BracketError",
               "f does not change sign on the bracket: f(a) = " +
-                  std::to_string(static_cast<double>(fa)) + ", f(b) = " +
-                  std::to_string(static_cast<double>(fb)) +
+                  std::to_string(static_cast<double>(fa)) +
+                  ", f(b) = " + std::to_string(static_cast<double>(fb)) +
                   ". A bracketing method cannot converge to a root here.",
               loc);
     }
@@ -50,10 +49,13 @@ inline void verify_bracket(F &&f, T a, T b,
 /// A wrong derivative makes Newton's method converge slowly, to the wrong point,
 /// or not at all, and none of those report an error on their own.
 template <class F, class D, class T = real>
-requires DifferentiableFunction<F, D, T>
-inline void verify_derivative(F &&f, D &&df, T x, T tol = T(1e-5),
-                              std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full) {
+requires differentiable_function<F, D, T> inline void
+verify_derivative(F &&f, D &&df, T x, T tol = T(1e-5),
+                  std::source_location loc = std::source_location::current()) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full) {
         return;
     }
     const T h = std::cbrt(std::numeric_limits<T>::epsilon()) * std::max(T(1), std::abs(x));

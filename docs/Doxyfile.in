@@ -1,4 +1,11 @@
 PROJECT_NAME           = "numerics"
+
+# Reference-style sections for the num::kernel tier. Doxygen already provides
+# @param, @return, @pre, @post, @note, @warning and @see; these add the three
+# things a raw-pointer kernel needs that a general-purpose C++ API does not.
+ALIASES                += complexity="@par Complexity^^"
+ALIASES                += aliasing="@par Aliasing^^"
+ALIASES                += workspace="@par Workspace^^"
 PROJECT_BRIEF          =
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
 

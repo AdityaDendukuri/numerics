@@ -2,13 +2,13 @@
 /// @brief Gauss-Seidel iterative solver
 #pragma once
 
+#include "container/matrix.hpp"
+#include "container/vector.hpp"
+#include "container/vector_ops.hpp"
+#include "core/policy.hpp"
+#include "linear/solvers/solver_result.hpp"
 #include <cmath>
 #include <stdexcept>
-#include "container/vector_ops.hpp"
-#include "container/matrix.hpp"
-#include "core/policy.hpp"
-#include "container/vector.hpp"
-#include "linear/solvers/solver_result.hpp"
 
 namespace num {
 
@@ -18,36 +18,30 @@ namespace num {
 /// other components. Converges for strictly diagonally dominant or symmetric
 /// positive definite A.
 ///
-/// With backend::omp the residual computation is parallelised; the update
-/// sweep remains sequential to preserve convergence properties.
+/// Standard Gauss-Seidel has sequential data dependencies (x[i] depends on
+/// x[0..i-1] updated in the same sweep): the update sweep stays sequential
+/// regardless of `Parallel` to preserve convergence properties; only the
+/// residual computation runs in parallel when `Parallel` is true. For a truly
+/// parallel relaxation scheme use the Jacobi solver (`num::jacobi<true>`).
 ///
+/// @tparam Parallel  Thread the residual reduction with OpenMP (default: whatever
+///                    the build has available).
 /// @param A        Square matrix
 /// @param b        Right-hand side vector
 /// @param x        Solution vector (initial guess on input, solution on output)
 /// @param tol      Convergence tolerance on residual norm (default 1e-10)
 /// @param max_iter Maximum iterations (default 1000)
-/// @param backend  Execution backend (default: backend::dflt)
-/// @return SolverResult with convergence info
-SolverResult gauss_seidel(const Matrix &A, const Vector &b, Vector &x, real tol = 1e-10,
-                          idx max_iter = 1000, Backend backend = backend::dflt);
-
-
-
-// Gauss-Seidel  -- sequential update order, parallel residual when omp backend.
-//
-// Note: standard Gauss-Seidel has sequential data dependencies (x[i] depends
-// on x[0..i-1] updated in the same sweep).  We keep the sequential update
-// order here and parallelise only the residual computation.  For a truly
-// parallel relaxation scheme, use the Jacobi solver with backend::omp.
-inline SolverResult gauss_seidel(const Matrix &A, const Vector &b, Vector &x, real tol, idx max_iter,
-                          Backend backend) {
+/// @return solver_result with convergence info
+template <bool Parallel = has_omp>
+inline solver_result gauss_seidel(const mat &A, const vec &b, vec &x, real tol = 1e-10,
+                                 idx max_iter = 1000) {
     constexpr real zero_diag_tol = 1e-15;
     idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {
         throw std::invalid_argument("Dimension mismatch in Gauss-Seidel solver");
     }
 
-    SolverResult result{0, 0.0, false};
+    solver_result result{0, 0.0, false};
 
     for (idx iter = 0; iter < max_iter; ++iter) {
         // Sequential update  -- maintain GS convergence properties
@@ -67,15 +61,26 @@ inline SolverResult gauss_seidel(const Matrix &A, const Vector &b, Vector &x, re
 
         // Residual ||b - Ax||
         real res = 0.0;
-#ifdef NUMERICS_HAS_OMP
-#pragma omp parallel for reduction(+ : res) schedule(static) if (backend == backend::omp)
-#endif
-        for (idx i = 0; i < n; ++i) {
-            real ri = b[i];
-            for (idx j = 0; j < n; ++j) {
-                ri -= A(i, j) * x[j];
+#if defined(NUMERICS_HAS_OMP)
+        if constexpr (Parallel) {
+#pragma omp parallel for reduction(+ : res) schedule(static)
+            for (idx i = 0; i < n; ++i) {
+                real ri = b[i];
+                for (idx j = 0; j < n; ++j) {
+                    ri -= A(i, j) * x[j];
+                }
+                res += ri * ri;
             }
-            res += ri * ri;
+        } else
+#endif
+        {
+            for (idx i = 0; i < n; ++i) {
+                real ri = b[i];
+                for (idx j = 0; j < n; ++j) {
+                    ri -= A(i, j) * x[j];
+                }
+                res += ri * ri;
+            }
         }
         result.residual = std::sqrt(res);
         result.iterations = iter + 1;

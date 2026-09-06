@@ -12,13 +12,13 @@
 
 namespace num {
 
-template <scalars::Field Scalar>
+template <scalars::field scalar>
 /// Counting-sorted 3D spatial bins for local-neighbor iteration.
-class CellList3D {
+class cell_list_3d {
   public:
     /// Cover the bounding box with padded cubic cells.
-    CellList3D(Scalar cell_size, Scalar xmin, Scalar xmax, Scalar ymin, Scalar ymax, Scalar zmin,
-               Scalar zmax)
+    cell_list_3d(scalar cell_size, scalar xmin, scalar xmax, scalar ymin, scalar ymax, scalar zmin,
+               scalar zmax)
         : cs_(cell_size), xmin_(xmin), ymin_(ymin), zmin_(zmin),
           nx_(static_cast<int>(std::ceil((xmax - xmin) / cs_)) + 2),
           ny_(static_cast<int>(std::ceil((ymax - ymin) / cs_)) + 2),
@@ -30,7 +30,7 @@ class CellList3D {
     }
 
     /// @brief Rebuild by counting-sort over cell ids.
-    template <PositionAccessor2D<Scalar> PosAccessor>
+    template <position_accessor_2d<scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n) {
         sorted_.resize(n);
         const int total = nx_ * ny_ * nz_;
@@ -55,7 +55,7 @@ class CellList3D {
 
     /// @brief Call f(j) for candidate particles near (px, py, pz).
     template <typename F>
-    void query(Scalar px, Scalar py, Scalar pz, F &&f) const {
+    void query(scalar px, scalar py, scalar pz, F &&f) const {
         const int cx = cell_x(px);
         const int cy = cell_y(py);
         const int cz = cell_z(pz);
@@ -141,24 +141,24 @@ class CellList3D {
     [[nodiscard]] int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
 
   private:
-    Scalar cs_ = 0, xmin_ = 0, ymin_ = 0, zmin_ = 0;
+    scalar cs_ = 0, xmin_ = 0, ymin_ = 0, zmin_ = 0;
     int nx_ = 0, ny_ = 0, nz_ = 0;
 
     std::vector<int> sorted_, start_, count_;
 
-    int cell_x(Scalar x) const noexcept {
+    int cell_x(scalar x) const noexcept {
         const int cx = static_cast<int>(std::floor((x - xmin_) / cs_)) + 1;
         return cx < 0 ? 0 : (cx >= nx_ ? nx_ - 1 : cx);
     }
-    int cell_y(Scalar y) const noexcept {
+    int cell_y(scalar y) const noexcept {
         const int cy = static_cast<int>(std::floor((y - ymin_) / cs_)) + 1;
         return cy < 0 ? 0 : (cy >= ny_ ? ny_ - 1 : cy);
     }
-    int cell_z(Scalar z) const noexcept {
+    int cell_z(scalar z) const noexcept {
         const int cz = static_cast<int>(std::floor((z - zmin_) / cs_)) + 1;
         return cz < 0 ? 0 : (cz >= nz_ ? nz_ - 1 : cz);
     }
-    int cell_id_of(std::tuple<Scalar, Scalar, Scalar> p) const noexcept {
+    int cell_id_of(std::tuple<scalar, scalar, scalar> p) const noexcept {
         const auto [x, y, z] = p;
         return (((cell_z(z) * ny_) + cell_y(y)) * nx_) + cell_x(x);
     }

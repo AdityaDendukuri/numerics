@@ -11,9 +11,9 @@ industry-standard LAPACK/BLAS reference. Sections without data show `[not availa
 
 - [Build Environment](#build-environment)
 - [Test Summary](#test-summary)
-- [Core — Vector and Matrix](#core--vector-and-matrix)
-  - [Benchmarks — Matrix Multiply](#benchmarks--matrix-multiply)
-  - [Benchmarks — Matrix-Vector Multiply](#benchmarks--matrix-vector-multiply)
+- [Core — vec and mat](#core--vector-and-matrix)
+  - [Benchmarks — mat Multiply](#benchmarks--matrix-multiply)
+  - [Benchmarks — mat-vec Multiply](#benchmarks--matrix-vector-multiply)
   - [Benchmarks — Dot Product](#benchmarks--dot-product)
   - [Benchmarks — Axpy](#benchmarks--axpy)
 - [Factorizations](#factorizations)
@@ -23,12 +23,12 @@ industry-standard LAPACK/BLAS reference. Sections without data show `[not availa
 - [Iterative Solvers](#iterative-solvers)
   - [Conjugate Gradient](#conjugate-gradient)
   - [Convergence Dynamics](#convergence-dynamics)
-- [Resolvent & Matrix Exponential](#resolvent--matrix-exponential)
+- [Resolvent & mat Exponential](#resolvent--matrix-exponential)
   - [Talbot Spectral Quadrature](#talbot-spectral-quadrature)
 - [Banded Matrices](#banded-matrices)
 - [Eigensolvers](#eigensolvers)
   - [Full Symmetric Eigensolver](#full-symmetric-eigensolver)
-  - [Lanczos (Matrix-Free)](#lanczos-matrix-free)
+  - [Lanczos (mat-Free)](#lanczos-matrix-free)
 - [Singular Value Decomposition](#singular-value-decomposition)
   - [Full SVD](#full-svd)
   - [Randomized Truncated SVD](#randomized-truncated-svd)
@@ -59,9 +59,9 @@ All test suites. A failed suite must be investigated before using the library in
 
 ---
 
-## Core — Vector and Matrix
+## Core — vec and mat
 
-`Vector` and `Matrix` dispatch to the backend selected via the `Backend` enum
+`vec` and `mat` dispatch to the backend selected via the `Backend` enum
 (`seq → blocked → simd → blas → omp → gpu`). With BLAS available, `default_backend`
 resolves to `Backend::blas`.
 
@@ -69,7 +69,7 @@ resolves to `Backend::blas`.
 
 {{TESTS_CORE}}
 
-### Benchmarks — Matrix Multiply
+### Benchmarks — mat Multiply
 
 Throughput: `2 n³ / time` (GFLOP/s, higher is better). Sizes n = 64…512.
 
@@ -77,7 +77,7 @@ Throughput: `2 n³ / time` (GFLOP/s, higher is better). Sizes n = 64…512.
 
 {{BENCH_MATMUL_TABLE}}
 
-### Benchmarks — Matrix-Vector Multiply
+### Benchmarks — mat-vec Multiply
 
 Memory-bound. GB/s = `(n² + 2n) × 8 / time`.
 
@@ -165,7 +165,7 @@ Comparison of monotonicity in residual 2-norm versus $A$-norm energy minimizatio
 
 ---
 
-## Resolvent & Matrix Exponential
+## Resolvent & mat Exponential
 
 ### Talbot Spectral Quadrature
 
@@ -205,7 +205,7 @@ Lanczos is matrix-free and targets only k eigenvalues — it lives on a separate
 
 {{BENCH_EIGSYM_TABLE}}
 
-### Lanczos (Matrix-Free)
+### Lanczos (mat-Free)
 
 k = 10 eigenvalues requested. Each step costs one matvec O(n²) plus reorthogonalisation.
 

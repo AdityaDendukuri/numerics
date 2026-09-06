@@ -13,7 +13,7 @@ using namespace num;
 TEST(Roots, BisectionSimple) {
     // x^2 - 2 = 0, root at sqrt(2)
     auto f = [](real x) { return (x * x) - 2.0; };
-    RootResult r = bisection(f, 1.0, 2.0);
+    root_result r = bisection(f, 1.0, 2.0);
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(r.root, std::sqrt(2.0), 1e-9);
 }
@@ -26,7 +26,7 @@ TEST(Roots, BisectionBadBracketThrows) {
 TEST(Roots, NewtonQuadratic) {
     auto f = [](real x) { return (x * x) - 2.0; };
     auto df = [](real x) { return 2.0 * x; };
-    RootResult r = newton(f, df, 1.5);
+    root_result r = newton(f, df, 1.5);
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(r.root, std::sqrt(2.0), 1e-10);
     EXPECT_LT(r.iterations, 20u);
@@ -36,28 +36,28 @@ TEST(Roots, NewtonTrigonometric) {
     // cos(x) = x  =>  cos(x) - x = 0, Dottie number ~0.7390851332
     auto f = [](real x) { return std::cos(x) - x; };
     auto df = [](real x) { return -std::sin(x) - 1.0; };
-    RootResult r = newton(f, df, 0.5);
+    root_result r = newton(f, df, 0.5);
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(r.root, 0.7390851332151607, 1e-10);
 }
 
 TEST(Roots, SecantSimple) {
     auto f = [](real x) { return (x * x) - 2.0; };
-    RootResult r = secant(f, 1.0, 2.0);
+    root_result r = secant(f, 1.0, 2.0);
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(r.root, std::sqrt(2.0), 1e-9);
 }
 
 TEST(Roots, BrentSimple) {
     auto f = [](real x) { return (x * x) - 2.0; };
-    RootResult r = brent(f, 1.0, 2.0);
+    root_result r = brent(f, 1.0, 2.0);
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(r.root, std::sqrt(2.0), 1e-10);
 }
 
 TEST(Roots, BrentTrigonometric) {
     auto f = [](real x) { return std::cos(x) - x; };
-    RootResult r = brent(f, 0.0, 1.0);
+    root_result r = brent(f, 0.0, 1.0);
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(r.root, 0.7390851332151607, 1e-10);
 }
@@ -71,10 +71,10 @@ TEST(Roots, AllMethodsAgree) {
     // x^3 - x - 1 = 0, root ~1.3247179572
     auto f = [](real x) { return (x * x * x) - x - 1.0; };
     auto df = [](real x) { return (3.0 * x * x) - 1.0; };
-    RootResult rb = bisection(f, 1.0, 2.0);
-    RootResult rn = newton(f, df, 1.5);
-    RootResult rs = secant(f, 1.0, 2.0);
-    RootResult rr = brent(f, 1.0, 2.0);
+    root_result rb = bisection(f, 1.0, 2.0);
+    root_result rn = newton(f, df, 1.5);
+    root_result rs = secant(f, 1.0, 2.0);
+    root_result rr = brent(f, 1.0, 2.0);
     EXPECT_NEAR(rb.root, rr.root, 1e-8);
     EXPECT_NEAR(rn.root, rr.root, 1e-8);
     EXPECT_NEAR(rs.root, rr.root, 1e-8);
@@ -156,13 +156,13 @@ TEST(Quadrature, AllMethodsAgree) {
 TEST(Quadrature, TrapzOmpMatchesSeq) {
     auto f = [](real x) { return x * x; };
     real seq_result = trapz(f, 0.0, 1.0, 10000);
-    real omp_result = trapz(f, 0.0, 1.0, 10000, backend::omp);
+    real omp_result = trapz<true>(f, 0.0, 1.0, 10000);
     EXPECT_NEAR(omp_result, seq_result, 1e-12);
 }
 
 TEST(Quadrature, SimpsonOmpMatchesSeq) {
     auto f = [](real x) { return x * x * x; };
     real seq_result = simpson(f, 0.0, 1.0, 1000);
-    real omp_result = simpson(f, 0.0, 1.0, 1000, backend::omp);
+    real omp_result = simpson<true>(f, 0.0, 1.0, 1000);
     EXPECT_NEAR(omp_result, seq_result, 1e-12);
 }

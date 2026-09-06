@@ -14,7 +14,7 @@ namespace num {
 /// `std::mt19937`, `std::mt19937_64`, or user engine satisfying the standard's
 /// requirements qualifies.
 template <class G>
-concept RandomEngine = std::uniform_random_bit_generator<G>;
+concept random_engine = std::uniform_random_bit_generator<G>;
 
 /// @brief Sampler drawing an index from a fixed distribution.
 ///
@@ -24,7 +24,7 @@ concept RandomEngine = std::uniform_random_bit_generator<G>;
 /// satisfies that is a property of the values, checked by
 /// `num::stochastic::debug::verify_weights`.
 template <class S, class G>
-concept CategoricalSampling = RandomEngine<G> && requires(S &sampler, G &rng) {
+concept categorical_sampling = random_engine<G> && requires(S &sampler, G &rng) {
     { sampler(rng) } -> std::convertible_to<idx>;
 };
 
@@ -34,7 +34,7 @@ concept CategoricalSampling = RandomEngine<G> && requires(S &sampler, G &rng) {
 /// callable reports the change rather than the total, which is what makes a sweep
 /// cost \f$O(1)\f$ per site instead of \f$O(N)\f$.
 template <class F, class T = real>
-concept EnergyDifference = scalars::Field<T> && requires(F &&delta_e, idx site) {
+concept energy_difference = scalars::field<T> && requires(F &&delta_e, idx site) {
     { delta_e(site) } -> std::convertible_to<T>;
 };
 

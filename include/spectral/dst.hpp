@@ -32,19 +32,19 @@ inline void dst_check_size(int N) {
 /// X[k] = sum_{j=1}^{N} x[j] * sin(j*k*pi/(N+1)),  k = 1..N (stored 0-indexed).
 /// Odd-extension y = [0, x, 0, -rev(x)] has length M = 2(N+1).
 /// FFT(y)[k] = -2i * sum sin(...)  =>  DST(x)[k-1] = -Im(FFT(y)[k]) / 2.
-inline Vector dst1(const Vector &x) {
+inline vec dst1(const vec &x) {
     const int N = static_cast<int>(x.size());
     dst_check_size(N);
     const int M = 2 * (N + 1);
-    CVector y(static_cast<std::size_t>(M), cplx{0.0, 0.0});
+    cvec y(static_cast<std::size_t>(M), cplx{0.0, 0.0});
     for (int j = 0; j < N; ++j) {
         const auto sj = static_cast<std::size_t>(j);
         y[sj + 1] = cplx{x[sj], 0.0};
         y[static_cast<std::size_t>(M - 1 - j)] = cplx{-x[sj], 0.0};
     }
-    CVector Y(static_cast<std::size_t>(M));
+    cvec Y(static_cast<std::size_t>(M));
     spectral::fft(y, Y);
-    Vector out(static_cast<std::size_t>(N));
+    vec out(static_cast<std::size_t>(N));
     for (int k = 0; k < N; ++k) {
         out[static_cast<std::size_t>(k)] = -Y[static_cast<std::size_t>(k) + 1].imag() / 2.0;
     }
@@ -52,7 +52,7 @@ inline Vector dst1(const Vector &x) {
 }
 
 inline void dst_rows(std::vector<double> &A, int N) {
-    Vector row(static_cast<std::size_t>(N));
+    vec row(static_cast<std::size_t>(N));
     for (int i = 0; i < N; ++i) {
         const std::size_t base = static_cast<std::size_t>(i) * static_cast<std::size_t>(N);
         for (int j = 0; j < N; ++j) {
@@ -66,7 +66,7 @@ inline void dst_rows(std::vector<double> &A, int N) {
 }
 
 inline void dst_cols(std::vector<double> &A, int N) {
-    Vector col(static_cast<std::size_t>(N));
+    vec col(static_cast<std::size_t>(N));
     for (int j = 0; j < N; ++j) {
         const std::size_t sj = static_cast<std::size_t>(j);
         for (int i = 0; i < N; ++i) {

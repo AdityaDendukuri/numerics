@@ -13,7 +13,7 @@ namespace seq {
 
 static constexpr double TWO_PI = 6.283185307179586476925286766559;
 
-inline void bit_reverse(num::CVector &a) {
+inline void bit_reverse(num::cvec &a) {
     num::idx n = a.size();
     for (num::idx i = 1, j = 0; i < n; ++i) {
         num::idx bit = n >> 1;
@@ -27,7 +27,7 @@ inline void bit_reverse(num::CVector &a) {
     }
 }
 
-inline void cooley_tukey(num::CVector &a, bool invert) {
+inline void cooley_tukey(num::cvec &a, bool invert) {
     num::idx n = a.size();
     if (n == 0 || (n & (n - 1))) {
         throw std::invalid_argument("FFT: length must be a power of two");
@@ -49,23 +49,23 @@ inline void cooley_tukey(num::CVector &a, bool invert) {
     }
 }
 
-inline void fft(const num::CVector &in, num::CVector &out) {
+inline void fft(const num::cvec &in, num::cvec &out) {
     for (num::idx i = 0; i < in.size(); ++i) {
         out[i] = in[i];
     }
     cooley_tukey(out, false);
 }
 
-inline void ifft(const num::CVector &in, num::CVector &out) {
+inline void ifft(const num::cvec &in, num::cvec &out) {
     for (num::idx i = 0; i < in.size(); ++i) {
         out[i] = in[i];
     }
     cooley_tukey(out, true);
 }
 
-inline void rfft(const num::Vector &in, num::CVector &out) {
+inline void rfft(const num::vec &in, num::cvec &out) {
     num::idx n = in.size();
-    num::CVector tmp(n, num::cplx{0, 0});
+    num::cvec tmp(n, num::cplx{0, 0});
     for (num::idx i = 0; i < n; ++i) {
         tmp[i] = {in[i], 0.0};
     }
@@ -75,8 +75,8 @@ inline void rfft(const num::Vector &in, num::CVector &out) {
     }
 }
 
-inline void irfft(const num::CVector &in, int n, num::Vector &out) {
-    num::CVector tmp(static_cast<num::idx>(n), num::cplx{0, 0});
+inline void irfft(const num::cvec &in, int n, num::vec &out) {
+    num::cvec tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (num::idx k = 0; k < static_cast<num::idx>((n / 2) + 1); ++k) {
         tmp[k] = in[k];
     }
@@ -90,14 +90,14 @@ inline void irfft(const num::CVector &in, int n, num::Vector &out) {
 }
 
 // Precomputed plan: twiddle factors per butterfly stage
-struct FFTPlanImpl : public num::spectral::FFTPlanImpl {
+struct fft_plan_impl : public num::spectral::fft_plan_impl {
     int n;
     bool invert;
     std::vector<std::vector<num::cplx>> twiddles;
 
-    FFTPlanImpl(int n_, bool inv) : n(n_), invert(inv) {
+    fft_plan_impl(int n_, bool inv) : n(n_), invert(inv) {
         if (n_ == 0 || (n_ & (n_ - 1))) {
-            throw std::invalid_argument("FFTPlan: length must be a power of two");
+            throw std::invalid_argument("fft_plan: length must be a power of two");
         }
         for (int len = 2; len <= n_; len <<= 1) {
             double ang = TWO_PI / static_cast<double>(len) * (inv ? 1.0 : -1.0);
@@ -112,7 +112,7 @@ struct FFTPlanImpl : public num::spectral::FFTPlanImpl {
         }
     }
 
-    void execute(const num::CVector &in, num::CVector &out) const override {
+    void execute(const num::cvec &in, num::cvec &out) const override {
         for (num::idx i = 0; i < static_cast<num::idx>(n); ++i) {
             out[i] = in[i];
         }

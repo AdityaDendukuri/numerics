@@ -2,7 +2,7 @@
 
 The `spatial` module provides cell lists, Verlet lists, periodic lattice indexing, and SPH smoothing kernels for neighbour queries in particle and lattice simulations.
 
-Coordinates live in a scalar field, so every structure is templated on `num::Field`. An integer coordinate type is rejected at compile time, since it would assign particles to the wrong cells and report nothing.
+Coordinates live in a scalar field, so every structure is templated on `num::field`. An integer coordinate type is rejected at compile time, since it would assign particles to the wrong cells and report nothing.
 
 ---
 
@@ -17,7 +17,7 @@ Bins particles into a uniform grid of edge \f$h\f$, so a query touches only the 
 ### Build from a position accessor
 
 ```cpp
-num::CellList2D<double> cells(/*cell_size=*/1.0, /*xmin=*/0.0, /*xmax=*/10.0,
+num::cell_list_2d<double> cells(/*cell_size=*/1.0, /*xmin=*/0.0, /*xmax=*/10.0,
                                                 /*ymin=*/0.0, /*ymax=*/10.0);
 
 auto position = [&](int i) { return std::pair<double, double>{x[i], y[i]}; };
@@ -48,7 +48,7 @@ cells.query(px, py, [&](int j) {
 Caches neighbour pairs within \f$r_c + s\f$ for a cutoff \f$r_c\f$ and skin \f$s\f$, so the list survives several steps before it must be rebuilt:
 
 ```cpp
-num::VerletList2D<double> verlet(/*cutoff=*/2.5, /*skin=*/0.5);
+num::verlet_list_2d<double> verlet(/*cutoff=*/2.5, /*skin=*/0.5);
 
 verlet.build(position, n, cells); // Uses the cell list to find pairs.
 
@@ -77,8 +77,9 @@ The skin trades memory for rebuild frequency. A larger skin holds more pairs and
 Precomputes the four periodic neighbours of every site on an \f$N \times N\f$ lattice, so a sweep evaluates no modulus:
 
 ```cpp
-num::PBCLattice2D lattice(/*N=*/64);
+num::pbc_lattice_2d lattice(/*N=*/64);
 
+const int row = 3, col = 5;
 const int i = (row * lattice.N) + col;
 
 const int above = lattice.up[i]; // Row -1, wrapping at the boundary.
@@ -100,16 +101,16 @@ Cubic spline kernel \f$W(r, h)\f$ in two or three dimensions, normalized over it
 \f]
 
 ```cpp
-const float w    = num::SPHKernel<2>::W(r, h);          // Kernel value.
-const float dwdr = num::SPHKernel<2>::dW_dr(r, h);      // Radial derivative.
-const float spiky = num::SPHKernel<2>::Spiky_dW_dr(r, h); // Pressure gradient variant.
+const float w    = num::sph_kernel<2>::W(r, h);          // Kernel value.
+const float dwdr = num::sph_kernel<2>::dW_dr(r, h);      // Radial derivative.
+const float spiky = num::sph_kernel<2>::Spiky_dW_dr(r, h); // Pressure gradient variant.
 ```
 
 Normalization is what makes an SPH sum reproduce a constant field. A kernel that is not normalized yields densities off by a constant factor, which looks like a physical result rather than an error:
 
 ```cpp
-num::spatial::debug::verify_kernel_normalization<num::SPHKernel<2>>(h); // Integrates the kernel.
-num::spatial::debug::verify_kernel_support<num::SPHKernel<2>>(h);       // Checks W(2h+, h) == 0.
+num::spatial::debug::verify_kernel_normalization<num::sph_kernel<2>>(h); // Integrates the kernel.
+num::spatial::debug::verify_kernel_support<num::sph_kernel<2>>(h);       // Checks W(2h+, h) == 0.
 ```
 
 ---
@@ -117,10 +118,12 @@ num::spatial::debug::verify_kernel_support<num::SPHKernel<2>>(h);       // Check
 ## 5. Compile-Time Concepts
 
 ```cpp
-static_assert(num::PositionAccessor2D<decltype(position), double>);
-static_assert(num::NeighborQuery2D<num::CellList2D<double>, double>);
-static_assert(num::SmoothingKernel<num::SPHKernel<2>, float>);
-static_assert(num::PeriodicLattice2D<num::PBCLattice2D>);
+auto position = [](int i) { return std::pair<double, double>{double(i), double(i)}; };
+
+static_assert(num::position_accessor_2d<decltype(position), double>);
+static_assert(num::neighbor_query_2d<num::cell_list_2d<double>, double>);
+static_assert(num::smoothing_kernel<num::sph_kernel<2>, float>);
+static_assert(num::periodic_lattice_2d<num::pbc_lattice_2d>);
 ```
 
 ---

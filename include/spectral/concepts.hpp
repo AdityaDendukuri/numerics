@@ -16,8 +16,8 @@ namespace num {
 /// A plan is built once for a length and reused, which is what lets a backend
 /// precompute twiddle factors or hand the length to FFTW. Transform length is
 /// fixed at construction, so a plan and a vector must agree on it.
-template <class P, class V = CVector>
-concept TransformPlan = InnerProductSpace<V> && requires(const P &plan, const V &in, V &out) {
+template <class P, class V = cvec>
+concept transform_plan = inner_product_space<V> && requires(const P &plan, const V &in, V &out) {
     { plan.size() } -> std::convertible_to<int>;
     plan.execute(in, out);
 };
@@ -30,7 +30,7 @@ concept TransformPlan = InnerProductSpace<V> && requires(const P &plan, const V 
 /// domain is required to be an inner product space rather than merely indexable.
 /// It is the property that makes a spectral method conserve energy, and
 /// `num::spectral::debug::verify_parseval` samples it.
-template <class P, class V = CVector>
-concept UnitaryTransform = TransformPlan<P, V>;
+template <class P, class V = cvec>
+concept unitary_transform = transform_plan<P, V>;
 
 } // namespace num

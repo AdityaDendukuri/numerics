@@ -14,7 +14,7 @@ namespace num {
 /// Welford's recurrence and a fixed-bin histogram qualify, while anything that
 /// retains the samples in order to summarize them does not.
 template <class A, class T = real>
-concept StreamingAccumulator = scalars::Field<T> && requires(A acc, T x) {
+concept streaming_accumulator = scalars::field<T> && requires(A acc, T x) {
     acc.update(x);
     { acc.count } -> std::convertible_to<idx>;
 };
@@ -29,7 +29,7 @@ concept StreamingAccumulator = scalars::Field<T> && requires(A acc, T x) {
 /// The recurrence is used rather than \f$\sum x^2 - n\mu^2\f$ because the latter
 /// cancels catastrophically when the variance is small relative to the mean.
 template <class A, class T = real>
-concept MomentAccumulator = StreamingAccumulator<A, T> && requires(const A &acc) {
+concept moment_accumulator = streaming_accumulator<A, T> && requires(const A &acc) {
     { acc.variance() } -> std::convertible_to<T>;
     { acc.std_dev() } -> std::convertible_to<T>;
 };

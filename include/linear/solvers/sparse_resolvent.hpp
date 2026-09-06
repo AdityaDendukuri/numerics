@@ -13,7 +13,7 @@ namespace num {
 [[nodiscard]] bool sparse_resolvent_available() noexcept;
 
 /// Symbolic-analysis hints for sparse shifted systems.
-struct SparseResolventOptions {
+struct sparse_resolvent_options {
     bool symmetric_pattern = false;
 };
 
@@ -21,15 +21,15 @@ struct SparseResolventOptions {
 /// sparsity analysis is retained while numeric values are rebuilt per shift.
 /// Without SuiteSparse, factorize/solve report that no sparse complex backend
 /// is available rather than silently densifying a large matrix.
-class SparseResolventSolver {
+class sparse_resolvent_solver {
   public:
     /// Analyze A's sparsity pattern once for repeated numerical factorizations.
-    explicit SparseResolventSolver(const SparseMatrix &A, SparseResolventOptions options = {});
-    ~SparseResolventSolver();
-    SparseResolventSolver(SparseResolventSolver &&) noexcept;
-    SparseResolventSolver &operator=(SparseResolventSolver &&) noexcept;
-    SparseResolventSolver(const SparseResolventSolver &) = delete;
-    SparseResolventSolver &operator=(const SparseResolventSolver &) = delete;
+    explicit sparse_resolvent_solver(const spmat &A, sparse_resolvent_options options = {});
+    ~sparse_resolvent_solver();
+    sparse_resolvent_solver(sparse_resolvent_solver &&) noexcept;
+    sparse_resolvent_solver &operator=(sparse_resolvent_solver &&) noexcept;
+    sparse_resolvent_solver(const sparse_resolvent_solver &) = delete;
+    sparse_resolvent_solver &operator=(const sparse_resolvent_solver &) = delete;
 
     /// Return the order of A.
     [[nodiscard]] idx size() const noexcept;

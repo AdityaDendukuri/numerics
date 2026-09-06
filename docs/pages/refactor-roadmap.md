@@ -17,7 +17,7 @@ graph Laplacian, and restricted PCG enforces membership and preservation through
 the recurrence. This removes the former need to describe a singular Laplacian or
 ApproxChol factor as globally SPD. The projected-operator adapter makes gauge
 selection explicit when an approximate inverse returns a representative outside
-the chosen subspace, and `PCGOn` carries the same restriction through the
+the chosen subspace, and `pcg_on_method` carries the same restriction through the
 problem-level solve interface.
 
 The old property wrappers remain compatibility carriers while callers migrate.
@@ -166,7 +166,7 @@ template<class T, class Law>
 inline constexpr bool models = false; // customization point
 
 template<class V>
-concept VectorSpace =
+concept vector_space =
     VectorProtocol<V> && Models<V, law::vector_space>;
 ```
 
@@ -184,7 +184,7 @@ immutable evidence:
 
 ```cpp
 template<class Proposition, class T, class EvidenceKind>
-class CertifiedRef;
+class certified_ref;
 
 template<class T, class P>
 concept Carries = /* T contains evidence for proposition P */;
@@ -201,6 +201,7 @@ auto v = require<axiom::spd>(A); // exhaustive validation or failure
 Construction can provide a fourth, stronger origin:
 
 ```cpp
+// PROPOSED API -- part of the design target, not yet implemented.
 auto L = pde::negative_dirichlet_laplacian(grid);
 // The construction returns a certified self-adjoint negative-definite operator.
 ```
@@ -239,14 +240,14 @@ textbook. A new abstraction is added only when it constrains an algorithm,
 selects an overload, enables invariant propagation, or supports a meaningful law
 suite.
 
-### 3.1 Scalar hierarchy
+### 3.1 scalar hierarchy
 
 Candidate initial hierarchy:
 
 ```text
 Semiring
   Ring
-    Field
+    field
       RealField
       ComplexField
 
@@ -261,11 +262,11 @@ hierarchy.
 ### 3.2 Space hierarchy
 
 ```text
-AdditiveGroup
+additive_group
   Module
-    VectorSpace
-      NormedSpace
-      InnerProductSpace
+    vector_space
+      normed_space
+      inner_product_space
         FiniteHilbertSpace
 ```
 
@@ -287,13 +288,13 @@ The mathematical structure must not require a particular representation.
 
 ```text
 Map<X,Y>
-  Endomorphism<X>
-  LinearMap<X,Y>
-    LinearOperator<X,Y>
+  endomorphism<X>
+  linear_map<X,Y>
+    linear_operator<X,Y>
     AdjointableOperator<X,Y>
 ```
 
-`OperatorProtocol` is callable structure. `LinearMap` additionally requires a
+`OperatorProtocol` is callable structure. `linear_map` additionally requires a
 type-level law certification. Properties of a particular map are evidence:
 
 ```text
@@ -314,9 +315,9 @@ Only properties with consumers or propagation rules enter the public vocabulary.
 ```text
 FiniteSet
 Relation
-EquivalenceRelation
+equivalence_relation
 PartialOrder
-IncidenceStructure
+incidence_structure
 FiniteGraph
 ```
 
@@ -386,10 +387,10 @@ invariant semantics remain stable.
 ### 5.1 Linear algebra
 
 ```cpp
-template<SPDOperator A, FiniteHilbertSpace V>
-SolverResult cg(const A& op, const V& b, V& x, CGOptions = {});
+template<spd_operator A, FiniteHilbertSpace V>
+solver_result cg(const A& op, const V& b, V& x, cg_options = {});
 
-template<DenseRowMajor A>
+template<dense_row_major A>
 requires Carries<A, axiom::spd>
 auto cholesky(const A& matrix);
 ```
@@ -401,8 +402,8 @@ depends on stored representation.
 
 ```cpp
 template<class P>
-concept ODEProblem =
-    NormedSpace<state_t<P>> &&
+concept ode_problem =
+    normed_space<state_t<P>> &&
     VectorField<rhs_t<P>, state_t<P>> &&
     InitialValueProblemProtocol<P>;
 ```
@@ -417,6 +418,7 @@ Discrete function spaces and operators refine core spaces and maps. Builders
 carry theorems from the discretization into their result types:
 
 ```cpp
+// PROPOSED API -- part of the design target, not yet implemented.
 auto L = pde::dirichlet_laplacian(grid);
 // L: self-adjoint negative-definite operator
 
@@ -777,7 +779,7 @@ include/
       space.hpp              vector, normed, inner-product spaces
       map.hpp                maps and operator protocols
       axioms.hpp             shared value propositions
-      evidence.hpp           assume/probe/require and CertifiedRef
+      evidence.hpp           assume/probe/require and certified_ref
       laws.hpp               reusable law-test declarations
     discrete/
       set.hpp
@@ -845,7 +847,7 @@ model of the same leaf-operation contract.
 ### 10.2 Dependencies are capabilities, not global configuration
 
 Optional dependencies must not attach themselves transitively to the raw kernel
-or mathematical core. Finding MPI must not make every `Vector` consumer include
+or mathematical core. Finding MPI must not make every `vec` consumer include
 MPI flags; finding CUDA must not change the semantics of a host container; finding
 BLAS must not force CBLAS headers and link flags into a project that only uses a
 root finder.
@@ -896,7 +898,7 @@ supports a small intersection:
 ```cpp
 template<class V>
 concept BlasVector =
-    ContiguousVector<V> &&
+    contiguous_vector<V> &&
     BlasScalar<scalar_t<V>> &&
     HostAccessible<V>;
 
@@ -907,7 +909,7 @@ concept LapackMatrix =
     HostAccessible<M>;
 ```
 
-BLAS need not support every `VectorSpace`; CUDA need not support every operator;
+BLAS need not support every `vector_space`; CUDA need not support every operator;
 FFTW need not support every transform scalar. Unsupported combinations use the
 generic implementation or fail capability selection without weakening the
 mathematical API.
@@ -939,7 +941,7 @@ Concrete shipped types carry their certifications automatically, so strictness
 does not make common calls verbose:
 
 ```cpp
-dot(x, y);               // Vector is already a certified inner-product space.
+dot(x, y);               // vec is already a certified inner-product space.
 fft(plan, x, y);         // Plan and spaces establish transform compatibility.
 cg(A, b, x);             // A already carries SPD evidence.
 ```
@@ -1087,15 +1089,15 @@ Two escape mechanisms serve different purposes:
 ```cpp
 assume<axiom::spd>(A)   // preserves the mathematical thread; caller supplies proof
 unchecked::matmul(...)  // bypasses decidable structural checks
-kernel::raw::matmul(...)// raw buffers and caller-owned preconditions
+kernel::matmul(...)// raw buffers and caller-owned preconditions
 ```
 
 `assume` is not an unsafe algorithm. It creates required evidence with explicit
 caller responsibility. `unchecked` skips mechanically decidable validation and
-is reserved for measured internal or expert use. `kernel::raw` is the final raw
+is reserved for measured internal or expert use. `num::kernel` is the final raw
 layer.
 
-Normal downstream code uses neither `unchecked` nor `kernel::raw` directly. All
+Normal downstream code uses neither `unchecked` nor `num::kernel` directly. All
 three levels remain greppable and unambiguous.
 
 ---
@@ -1127,11 +1129,11 @@ Deliverable: a concept/algorithm matrix with no ambiguous entries.
 7. Establish dependency-free `kernel` and `core` installation targets.
 
 Deliverable: generic vector operations and one Krylov primitive compile against
-both `num::Vector` and a foreign certified vector type.
+both `num::vec` and a foreign certified vector type.
 
 ### Phase 2: Replace property wrappers with immutable evidence
 
-1. Implement `CertifiedRef` and proposition sets.
+1. Implement `certified_ref` and proposition sets.
 2. Implement explicit `assume`, `probe`, and `require` paths.
 3. Enforce decidable prerequisites regardless of diagnostic policy.
 4. Remove mutable access through evidence-bearing references.

@@ -13,13 +13,13 @@ Draws discrete states from unnormalized non-negative weights \f$w_k \ge 0\f$: \f
 
 auto rng = num::markov::make_rng(1234);
 
-num::Vector weights{1.0, 2.0, 7.0}; // [10%, 20%, 70%]
+num::vec weights{1.0, 2.0, 7.0}; // [10%, 20%, 70%]
 
 // Single draw
 num::idx state = num::sample_categorical(weights.span(), rng);
 
 // Reusable sampler for repeated draws
-num::CategoricalSampler sampler(weights.span());
+num::categorical_sampler sampler(weights.span());
 num::idx draw = sampler(rng);
 ```
 
@@ -33,7 +33,7 @@ Generates Markov chains targeting the Boltzmann distribution \f$\pi(x) \propto e
 auto delta_energy = [&](num::idx site) { return energy_change(spins, site); };
 auto flip         = [&](num::idx site) { spins[site] = -spins[site]; };
 
-num::markov::MetropolisStats stats = num::markov::metropolis_sweep(
+num::markov::metropolis_stats stats = num::markov::metropolis_sweep(
     spins.size(), delta_energy, flip, beta, rng);
 
 double acceptance_rate = stats.acceptance_rate();
@@ -43,6 +43,7 @@ double acceptance_rate = stats.acceptance_rate();
 Avoids runtime `std::exp` calls when \f$\Delta E\f$ takes values in a known discrete set:
 
 ```cpp
+const double beta = 1.0;   // inverse temperature; `num::beta` is the beta function
 std::vector<double> discrete_dE{-8.0, -4.0, 0.0, 4.0, 8.0};
 auto table = num::markov::make_boltzmann_table(discrete_dE, beta);
 
@@ -60,7 +61,7 @@ auto stats = num::markov::metropolis_sweep_prob(
 Constrains Markov walks to an order parameter window \f$\xi(x) \in [\xi_{\text{lo}}, \xi_{\text{hi}}]\f$:
 
 ```cpp
-num::markov::UmbrellaWindow window{.lo = 40, .hi = 60};
+num::markov::umbrella_window window{.lo = 40, .hi = 60};
 
 auto save          = [&] { saved_spins = spins; };
 auto restore       = [&] { spins = saved_spins; };
@@ -76,9 +77,9 @@ auto res = num::markov::umbrella_sweep(
 ## 4. Concepts
 
 ```cpp
-static_assert(num::RandomEngine<std::mt19937>);
-static_assert(!num::RandomEngine<double>);
-static_assert(num::CategoricalSampling<num::CategoricalSampler, std::mt19937>);
+static_assert(num::random_engine<std::mt19937>);
+static_assert(!num::random_engine<double>);
+static_assert(num::categorical_sampling<num::categorical_sampler, std::mt19937>);
 ```
 
 ---

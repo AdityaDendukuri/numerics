@@ -11,7 +11,7 @@
 
 namespace num::spatial::debug {
 
-using num::debug::DiagnosticLevel;
+using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
@@ -24,10 +24,13 @@ using num::debug::panic;
 /// produces densities off by a constant factor, which looks like a physical result
 /// rather than an error.
 template <class K, class Scalar = float>
-requires SmoothingKernel<K, Scalar>
-inline void verify_kernel_normalization(Scalar h, Scalar tol = Scalar(2e-2),
-                                        std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full) {
+requires smoothing_kernel<K, Scalar> inline void
+verify_kernel_normalization(Scalar h, Scalar tol = Scalar(2e-2),
+                            std::source_location loc = std::source_location::current()) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full) {
         return;
     }
     const int panels = 4000;
@@ -49,9 +52,9 @@ inline void verify_kernel_normalization(Scalar h, Scalar tol = Scalar(2e-2),
 
 /// @brief Verify that a kernel vanishes beyond its support radius.
 template <class K, class Scalar = float>
-requires SmoothingKernel<K, Scalar>
-inline void verify_kernel_support(Scalar h, std::source_location loc = std::source_location::current()) {
-    if (get_level() == DiagnosticLevel::off) {
+requires smoothing_kernel<K, Scalar> inline void
+verify_kernel_support(Scalar h, std::source_location loc = std::source_location::current()) {
+    if (get_level() == diagnostic_level::off) {
         return;
     }
     const Scalar outside = Scalar(2.001) * h;
@@ -68,10 +71,10 @@ inline void verify_kernel_support(Scalar h, std::source_location loc = std::sour
 /// Stepping up from a site and then down must return to it, and likewise left and
 /// right. A table built with the wrong modulus satisfies neither.
 template <class P>
-requires PeriodicLattice2D<P>
-inline void verify_lattice_symmetry(const P &lattice,
-                                    std::source_location loc = std::source_location::current()) {
-    if (get_level() == DiagnosticLevel::off) {
+requires periodic_lattice_2d<P> inline void
+verify_lattice_symmetry(const P &lattice,
+                        std::source_location loc = std::source_location::current()) {
+    if (get_level() == diagnostic_level::off) {
         return;
     }
     const int sites = lattice.N * lattice.N;
@@ -79,8 +82,7 @@ inline void verify_lattice_symmetry(const P &lattice,
         if (lattice.dn[lattice.up[i]] != i || lattice.up[lattice.dn[i]] != i ||
             lattice.rt[lattice.lt[i]] != i || lattice.lt[lattice.rt[i]] != i) {
             panic("LatticeError",
-                  "periodic neighbour tables are not mutually inverse at site " +
-                      std::to_string(i),
+                  "periodic neighbour tables are not mutually inverse at site " + std::to_string(i),
                   loc);
         }
     }

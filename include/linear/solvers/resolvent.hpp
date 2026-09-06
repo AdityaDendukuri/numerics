@@ -11,10 +11,10 @@
 namespace num {
 
 /// Compatibility adapter that factors one dense shift during construction.
-class ResolventFactor {
+class resolvent_factor {
   public:
     /// Factor sI-A for repeated right-hand sides.
-    ResolventFactor(cplx s, const Matrix &A);
+    resolvent_factor(cplx s, const mat &A);
 
     /// Solve one complex right-hand side.
     [[nodiscard]] std::vector<cplx> solve(const std::vector<cplx> &rhs) const;
@@ -24,26 +24,26 @@ class ResolventFactor {
     solve(const std::vector<std::vector<cplx>> &right_hand_sides) const;
 
   private:
-    DenseResolventSolver solver_;
+    dense_resolvent_solver solver_;
 };
 
 /// Solve one dense shifted system with a real right-hand side.
-[[nodiscard]] std::vector<cplx> resolvent_solve(cplx shift, const Matrix &matrix,
-                                                const Vector &right_hand_side);
+[[nodiscard]] std::vector<cplx> resolvent_solve(cplx shift, const mat &matrix,
+                                                const vec &right_hand_side);
 
 /// Solve one dense shift for several real right-hand sides.
 [[nodiscard]] std::vector<std::vector<cplx>>
-resolvent_solve_rhs_batch(cplx shift, const Matrix &matrix,
-                          const std::vector<Vector> &right_hand_sides);
+resolvent_solve_rhs_batch(cplx shift, const mat &matrix,
+                          const std::vector<vec> &right_hand_sides);
 
 /// Solve several dense shifts for one real right-hand side.
 [[nodiscard]] std::vector<std::vector<cplx>> resolvent_solve_batch(const std::vector<cplx> &shifts,
-                                                                   const Matrix &matrix,
-                                                                   const Vector &right_hand_side);
+                                                                   const mat &matrix,
+                                                                   const vec &right_hand_side);
 
 /// Solve several dense shifts for several real right-hand sides.
 [[nodiscard]] std::vector<std::vector<std::vector<cplx>>>
-resolvent_solve_batch(const std::vector<cplx> &shifts, const Matrix &matrix,
-                      const std::vector<Vector> &right_hand_sides);
+resolvent_solve_batch(const std::vector<cplx> &shifts, const mat &matrix,
+                      const std::vector<vec> &right_hand_sides);
 
 } // namespace num

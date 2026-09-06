@@ -1,5 +1,5 @@
 /// @file pde/grid_operators.hpp
-/// @brief Matrix-free grid & stencil operators with explicit SparseMatrix generation.
+/// @brief mat-free grid & stencil operators with explicit spmat generation.
 #pragma once
 
 #include "algebra/properties.hpp"
@@ -14,27 +14,26 @@
 
 namespace num::operators {
 
-/// @brief Matrix-free 2D discrete 5-point Laplacian operator with SparseMatrix materialization.
-class Laplacian2D final {
+/// @brief mat-free 2D discrete 5-point Laplacian operator with spmat materialization.
+class laplacian_2d final {
   public:
-    using properties = property::self_adjoint;
-    using domain_type = Vector;
-    using codomain_type = Vector;
-    using math_propositions = math::type_list<axiom::self_adjoint>;
+    using domain_type = vec;
+    using codomain_type = vec;
+    using math_laws = math::type_list<law::self_adjoint>;
 
-    explicit Laplacian2D(int N) : N_(N) {
+    explicit laplacian_2d(int N) : N_(N) {
         if (N_ <= 0) {
-            throw std::invalid_argument("Laplacian2D: grid dimension N must be positive");
+            throw std::invalid_argument("laplacian_2d: grid dimension N must be positive");
         }
     }
 
-    void apply(const Vector &x, Vector &y) const {
+    void apply(const vec &x, vec &y) const {
         const idx n = rows();
         if (x.size() != n) {
-            throw std::invalid_argument("Laplacian2D: input dimension mismatch");
+            throw std::invalid_argument("laplacian_2d: input dimension mismatch");
         }
         if (y.size() != n) {
-            y = Vector(n);
+            y = vec(n);
         }
         for (int i = 0; i < N_; ++i) {
             for (int j = 0; j < N_; ++j) {
@@ -61,8 +60,8 @@ class Laplacian2D final {
     [[nodiscard]] idx cols() const noexcept { return static_cast<idx>(N_) * N_; }
     [[nodiscard]] int N() const noexcept { return N_; }
 
-    /// @brief Materialize the 5-point discrete Laplacian as an assembled CSR SparseMatrix.
-    [[nodiscard]] SparseMatrix to_sparse() const {
+    /// @brief Materialize the 5-point discrete Laplacian as an assembled CSR spmat.
+    [[nodiscard]] spmat to_sparse() const {
         const idx n = rows();
         std::vector<idx> rows_idx, cols_idx;
         std::vector<real> vals;
@@ -97,37 +96,36 @@ class Laplacian2D final {
                 }
             }
         }
-        return SparseMatrix::from_triplets(n, n, rows_idx, cols_idx, vals);
+        return spmat::from_triplets(n, n, rows_idx, cols_idx, vals);
     }
 
   private:
     int N_;
 };
 
-/// @brief Matrix-free 2D Backward Euler operator \f$I - \text{coeff} \cdot \nabla^2\f$ with SparseMatrix materialization.
-class BackwardEuler2D final {
+/// @brief mat-free 2D Backward Euler operator \f$I - \text{coeff} \cdot \nabla^2\f$ with spmat materialization.
+class backward_euler_2d final {
   public:
-    using properties = property::spd;
-    using domain_type = Vector;
-    using codomain_type = Vector;
-    using math_propositions = math::type_list<axiom::positive_definite>;
+    using domain_type = vec;
+    using codomain_type = vec;
+    using math_laws = math::type_list<law::spd>;
 
-    BackwardEuler2D(int N, double coeff) : N_(N), coeff_(coeff) {
+    backward_euler_2d(int N, double coeff) : N_(N), coeff_(coeff) {
         if (N_ <= 0) {
-            throw std::invalid_argument("BackwardEuler2D: grid dimension N must be positive");
+            throw std::invalid_argument("backward_euler_2d: grid dimension N must be positive");
         }
         if (coeff_ < 0.0) {
-            throw std::invalid_argument("BackwardEuler2D: SPD construction requires nonnegative coefficient");
+            throw std::invalid_argument("backward_euler_2d: SPD construction requires nonnegative coefficient");
         }
     }
 
-    void apply(const Vector &x, Vector &y) const {
+    void apply(const vec &x, vec &y) const {
         const idx n = rows();
         if (x.size() != n) {
-            throw std::invalid_argument("BackwardEuler2D: input dimension mismatch");
+            throw std::invalid_argument("backward_euler_2d: input dimension mismatch");
         }
         if (y.size() != n) {
-            y = Vector(n);
+            y = vec(n);
         }
         const real diag = 1.0 + (4.0 * coeff_);
         for (int i = 0; i < N_; ++i) {
@@ -156,8 +154,8 @@ class BackwardEuler2D final {
     [[nodiscard]] int N() const noexcept { return N_; }
     [[nodiscard]] double coeff() const noexcept { return coeff_; }
 
-    /// @brief Materialize the Backward Euler system matrix as an assembled CSR SparseMatrix.
-    [[nodiscard]] SparseMatrix to_sparse() const {
+    /// @brief Materialize the Backward Euler system matrix as an assembled CSR spmat.
+    [[nodiscard]] spmat to_sparse() const {
         const idx n = rows();
         std::vector<idx> rows_idx, cols_idx;
         std::vector<real> vals;
@@ -193,7 +191,7 @@ class BackwardEuler2D final {
                 }
             }
         }
-        return SparseMatrix::from_triplets(n, n, rows_idx, cols_idx, vals);
+        return spmat::from_triplets(n, n, rows_idx, cols_idx, vals);
     }
 
   private:
@@ -201,31 +199,31 @@ class BackwardEuler2D final {
     double coeff_;
 };
 
-/// @brief Generic free function to extract SparseMatrix from any SparseConvertible operator.
-template <SparseConvertible Op>
-[[nodiscard]] inline SparseMatrix to_sparse_matrix(const Op &op) {
+/// @brief Generic free function to extract spmat from any sparse_convertible operator.
+template <sparse_convertible Op>
+[[nodiscard]] inline spmat to_sparse_matrix(const Op &op) {
     return op.to_sparse();
 }
 
-static_assert(LinearOperator<Laplacian2D>);
-static_assert(SelfAdjointOperator<Laplacian2D>);
-static_assert(SparseConvertible<Laplacian2D>);
-static_assert(LinearOperator<BackwardEuler2D>);
-static_assert(SPDOperator<BackwardEuler2D>);
-static_assert(SparseConvertible<BackwardEuler2D>);
+static_assert(linear_operator<laplacian_2d>);
+static_assert(self_adjoint_operator<laplacian_2d>);
+static_assert(sparse_convertible<laplacian_2d>);
+static_assert(linear_operator<backward_euler_2d>);
+static_assert(spd_operator<backward_euler_2d>);
+static_assert(sparse_convertible<backward_euler_2d>);
 
 } // namespace num::operators
 
 namespace num::math {
 
 template<>
-struct model_of<operators::Laplacian2D> {
-    using laws = type_list<law::linear_map>;
+struct claims_of<operators::laplacian_2d> {
+    using type = type_list<law::linear_map>;
 };
 
 template<>
-struct model_of<operators::BackwardEuler2D> {
-    using laws = type_list<law::linear_map>;
+struct claims_of<operators::backward_euler_2d> {
+    using type = type_list<law::linear_map>;
 };
 
 } // namespace num::math

@@ -6,7 +6,7 @@
 int main() {
     using namespace num;
 
-    Matrix A(3, 3, 0.0);
+    mat A(3, 3, 0.0);
     A(0, 0) = 2.0;
     A(0, 1) = -1.0;
     A(0, 2) = 0.0;
@@ -18,12 +18,12 @@ int main() {
     A(2, 2) = 2.0;
 
     // 1. Full Symmetric Eigendecomposition
-    auto eig_res = eig_sym(assume_symmetric(A), 1e-12, 100, backend::lapack);
+    auto eig_res = lapack::eig_sym(A);
     std::cout << "Eigenvalues: [" << eig_res.values[0] << ", " << eig_res.values[1] << ", "
               << eig_res.values[2] << "]\n";
 
     // 2. SVD
-    auto svd_res = svd(A, backend::lapack);
+    auto svd_res = lapack::svd(A);
     std::cout << "Singular Values: [" << svd_res.S[0] << ", " << svd_res.S[1] << ", "
               << svd_res.S[2] << "]\n";
 

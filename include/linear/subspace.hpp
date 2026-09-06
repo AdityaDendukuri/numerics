@@ -8,27 +8,27 @@
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
 #include "core/types.hpp"
-#include "kernel/raw.hpp"
+#include "kernel/kernel.hpp"
 #include <vector>
 
-namespace num::kernel::subspace {
+namespace num::dispatch::subspace {
 
 /// @brief Modified Gram–Schmidt orthogonalization against basis vectors \f$\mathbf{v}_0, \dots,
 /// \mathbf{v}_{k-1}\f$.
-[[nodiscard]] real mgs_orthogonalize(const std::vector<Vector> &basis, Vector &v,
+[[nodiscard]] real mgs_orthogonalize(const std::vector<vec> &basis, vec &v,
                                      std::vector<real> &h, idx k);
 
 /// @brief Modified Gram–Schmidt orthogonalization against columns \f$0, \dots, k-1\f$ of a
 /// row-major matrix.
-[[nodiscard]] real mgs_orthogonalize(const Matrix &basis, idx k, Vector &v);
+[[nodiscard]] real mgs_orthogonalize(const mat &basis, idx k, vec &v);
 
 /// @brief One Arnoldi iteration step: expands orthonormal Krylov basis \f$V_k \to V_{k+1}\f$.
 template <class Op>
-requires requires(const Op &A, const Vector &x, Vector &y) {
+requires requires(const Op &A, const vec &x, vec &y) {
     A.apply(x, y);
 }
-[[nodiscard]] real arnoldi_step(const Op &A, std::vector<Vector> &basis, std::vector<real> &h,
-                                idx k, Vector &scratch, real breakdown_tol = real(1e-14)) {
+[[nodiscard]] real arnoldi_step(const Op &A, std::vector<vec> &basis, std::vector<real> &h,
+                                idx k, vec &scratch, real breakdown_tol = real(1e-14)) {
     // w <- A*v_k
     A.apply(basis[k], scratch);
 
@@ -45,7 +45,7 @@ requires requires(const Op &A, const Vector &x, Vector &y) {
     return beta;
 }
 
-inline real mgs_orthogonalize(const std::vector<Vector> &basis, Vector &v, std::vector<real> &h,
+inline real mgs_orthogonalize(const std::vector<vec> &basis, vec &v, std::vector<real> &h,
                               idx k) {
     for (idx i = 0; i < k; ++i) {
         // h_i <- v_i^T*v
@@ -56,11 +56,11 @@ inline real mgs_orthogonalize(const std::vector<Vector> &basis, Vector &v, std::
     return norm(v);
 }
 
-inline real mgs_orthogonalize(const Matrix &basis, idx k, Vector &v) {
+inline real mgs_orthogonalize(const mat &basis, idx k, vec &v) {
     const idx n = basis.rows();
     // v <- (I - V_k*V_k^T)v, in modified Gram--Schmidt order
-    raw::mgs_columns(v.data(), basis.data(), basis.cols(), n, k);
+    kernel::mgs_columns(v.data(), basis.data(), basis.cols(), n, k);
     return norm(v);
 }
 
-} // namespace num::kernel::subspace
+} // namespace num::dispatch::subspace

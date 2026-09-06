@@ -30,14 +30,14 @@
 namespace num {
 
 /// Largest Ritz pairs and residual-based convergence metadata.
-struct LanczosResult {
-    Vector ritz_values;     ///< Requested Ritz values in ascending order.
-    Matrix ritz_vectors;    ///< Ritz vectors stored as columns.
+struct lanczos_result {
+    vec ritz_values;     ///< Requested Ritz values in ascending order.
+    mat ritz_vectors;    ///< Ritz vectors stored as columns.
     idx steps = 0;          ///< Lanczos basis vectors generated.
     bool converged = false; ///< Whether all returned Ritz pairs met tolerance.
 
-    friend std::ostream &operator<<(std::ostream &os, const LanczosResult &r) {
-        os << "LanczosResult{ ritz_values: [" << r.ritz_values.size() << " eigenvalues]"
+    friend std::ostream &operator<<(std::ostream &os, const lanczos_result &r) {
+        os << "lanczos_result{ ritz_values: [" << r.ritz_values.size() << " eigenvalues]"
            << ", steps: " << r.steps
            << ", converged: " << (r.converged ? "true" : "false") << " }";
         return os;
@@ -47,9 +47,8 @@ struct LanczosResult {
 namespace detail {
 
 template <class Op>
-requires LinearOperator<Op, Vector, Vector> LanczosResult
-lanczos_operator_impl(const Op &A, idx k, real tol, idx max_steps, Backend backend) {
-    (void)backend;
+requires linear_operator<Op, vec, vec> lanczos_result
+lanczos_operator_impl(const Op &A, idx k, real tol, idx max_steps) {
     const idx n = A.rows();
     if (A.cols() != n) {
         throw std::invalid_argument("lanczos: operator must be square");
@@ -63,9 +62,9 @@ lanczos_operator_impl(const Op &A, idx k, real tol, idx max_steps, Backend backe
     }
     max_steps = std::min(max_steps, n);
 
-    Matrix V(n, max_steps, 0.0);
-    Vector alpha(max_steps, 0.0);
-    Vector beta(max_steps, 0.0);
+    mat V(n, max_steps, 0.0);
+    vec alpha(max_steps, 0.0);
+    vec beta(max_steps, 0.0);
 
     // v_0 <- e_0
     V(0, 0) = 1.0;
@@ -73,11 +72,11 @@ lanczos_operator_impl(const Op &A, idx k, real tol, idx max_steps, Backend backe
     idx steps = 0;
 
     for (idx j = 0; j < max_steps; ++j) {
-        Vector vj(n);
+        vec vj(n);
         // v_j <- V[:,j]
-        kernel::raw::copy_strided(vj.data(), 1, &V(0, j), V.cols(), n);
+        kernel::copy_strided(vj.data(), 1, &V(0, j), V.cols(), n);
 
-        Vector w(n, 0.0);
+        vec w(n, 0.0);
         A.apply(vj, w);
 
         const real a = dot(vj, w);
@@ -86,10 +85,10 @@ lanczos_operator_impl(const Op &A, idx k, real tol, idx max_steps, Backend backe
         axpy(-a, vj, w);
         if (j > 0) {
             // w <- w - beta_{j-1}*v_{j-1}
-            kernel::raw::axpy_strided(w.data(), 1, &V(0, j - 1), V.cols(), -beta[j - 1], n);
+            kernel::axpy_strided(w.data(), 1, &V(0, j - 1), V.cols(), -beta[j - 1], n);
         }
 
-        const real b = kernel::subspace::mgs_orthogonalize(V, j + 1, w);
+        const real b = dispatch::subspace::mgs_orthogonalize(V, j + 1, w);
         ++steps;
 
         if (b < real(1e-12)) {
@@ -100,12 +99,12 @@ lanczos_operator_impl(const Op &A, idx k, real tol, idx max_steps, Backend backe
 
         if (j + 1 < max_steps) {
             // V[:,j+1] <- w/beta_j
-            kernel::raw::scale_copy_strided(&V(0, j + 1), V.cols(), w.data(), 1, real(1) / b, n);
+            kernel::scale_copy_strided(&V(0, j + 1), V.cols(), w.data(), 1, real(1) / b, n);
         }
     }
 
     const idx m = steps;
-    Matrix T(m, m, 0.0);
+    mat T(m, m, 0.0);
     for (idx j = 0; j < m; ++j) {
         T(j, j) = alpha[j];
         if (j + 1 < m) {
@@ -117,32 +116,32 @@ lanczos_operator_impl(const Op &A, idx k, real tol, idx max_steps, Backend backe
     // T is the Lanczos tridiagonal, symmetric by construction: it is filled from a
     // single alpha/beta recurrence with T(j,j+1) and T(j+1,j) written from the same
     // beta. The invariant is established here rather than assumed downstream.
-    EigenResult teig = eig_sym(linear::SymmetricMatrix<Matrix>(T), tol * real(1e-2));
+    eigen_result teig = eig_sym(linear::sym_mat<mat>(T), tol * real(1e-2));
     const idx nret = std::min(k, m);
 
-    Matrix ritz_vecs(n, nret, 0.0);
+    mat ritz_vecs(n, nret, 0.0);
     // U_Ritz <- V_m*Z_selected
-    kernel::raw::gemm(ritz_vecs.data(), ritz_vecs.cols(), V.data(), V.cols(),
+    kernel::gemm(ritz_vecs.data(), ritz_vecs.cols(), V.data(), V.cols(),
                       &teig.vectors(0, m - nret), teig.vectors.cols(), real(1), real(0), n, nret,
                       m);
 
-    Vector ritz_vals(nret);
+    vec ritz_vals(nret);
     // lambda_Ritz <- lambda(T_m)_selected
-    kernel::raw::copy(ritz_vals.data(), teig.values.data() + (m - nret), nret);
+    kernel::copy(ritz_vals.data(), teig.values.data() + (m - nret), nret);
 
     bool all_converged = true;
     for (idx i = 0; i < nret; ++i) {
-        Vector u(n);
+        vec u(n);
         // u_i <- U_Ritz[:,i]
-        kernel::raw::copy_strided(u.data(), 1, &ritz_vecs(0, i), ritz_vecs.cols(), n);
+        kernel::copy_strided(u.data(), 1, &ritz_vecs(0, i), ritz_vecs.cols(), n);
 
-        Vector Au(n, 0.0);
+        vec Au(n, 0.0);
         A.apply(u, Au);
 
         const real lam = ritz_vals[i];
         // res^2 <- ||A*u_i - lambda_i*u_i||_2^2
         const real res =
-            kernel::raw::linear_combination_norm_sq(Au.data(), real(1), u.data(), -lam, n);
+            kernel::linear_combination_norm_sq(Au.data(), real(1), u.data(), -lam, n);
         if (std::sqrt(res) > tol) {
             all_converged = false;
             break;
@@ -159,19 +158,18 @@ lanczos_operator_impl(const Op &A, idx k, real tol, idx max_steps, Backend backe
 /// Builds an orthonormal Krylov basis with modified Gram-Schmidt reorthogonalization, generates
 /// a symmetric tridiagonal projection \f$T_m\f$, and extracts Ritz values and Ritz vectors.
 ///
-/// @tparam Op Linear operator type satisfying `SelfAdjointOperator<Op, Vector, Vector>`.
+/// @tparam Op Linear operator type satisfying `self_adjoint_operator<Op, vec, vec>`.
 /// @param A Self-adjoint linear operator (matrix-free callable, sparse, or dense wrapper).
 /// @param k Number of extremal eigenpairs to compute (\f$0 < k \le n\f$).
 /// @param tol Residual tolerance \f$\|A v - \lambda v\|_2\f$ for declaring convergence (default: 1e-10).
 /// @param max_steps Maximum Lanczos steps to perform (defaults to \f$\min(3k, n)\f$).
-/// @param backend Execution backend tag (default: `backend::seq`).
-/// @return `LanczosResult` containing Ritz values, column Ritz vectors, steps performed, and convergence flag.
+/// @return `lanczos_result` containing Ritz values, column Ritz vectors, steps performed, and convergence flag.
 /// @throws std::invalid_argument If `k` is invalid or operator is not square.
 /// @see eig_sym, power_iteration
 template <class Op>
-requires SelfAdjointOperator<Op, Vector, Vector> LanczosResult
-lanczos(const Op &A, idx k, real tol = 1e-10, idx max_steps = 0, Backend backend = backend::seq) {
-    return detail::lanczos_operator_impl(A, k, tol, max_steps, backend);
+requires self_adjoint_operator<Op, vec, vec> lanczos_result
+lanczos(const Op &A, idx k, real tol = 1e-10, idx max_steps = 0) {
+    return detail::lanczos_operator_impl(A, k, tol, max_steps);
 }
 
 namespace unsafe {
@@ -180,12 +178,10 @@ namespace unsafe {
 ///
 /// The three-term recurrence is derived from \f$A = A^T\f$; without it the basis
 /// loses orthogonality and the Ritz values are not eigenvalue estimates.
-LanczosResult lanczos(const Matrix &A, idx k, real tol = 1e-10, idx max_steps = 0,
-                      Backend backend = backend::seq);
+lanczos_result lanczos(const mat &A, idx k, real tol = 1e-10, idx max_steps = 0);
 
 /// @brief Lanczos on a stored sparse matrix without requiring the symmetry invariant.
-LanczosResult lanczos(const SparseMatrix &A, idx k, real tol = 1e-10, idx max_steps = 0,
-                      Backend backend = backend::seq);
+lanczos_result lanczos(const spmat &A, idx k, real tol = 1e-10, idx max_steps = 0);
 
 } // namespace unsafe
 
@@ -195,19 +191,18 @@ LanczosResult lanczos(const SparseMatrix &A, idx k, real tol = 1e-10, idx max_st
 /// @param k Number of extremal eigenpairs to compute.
 /// @param tol Residual tolerance (default: 1e-10).
 /// @param max_steps Maximum Lanczos steps (default: \f$\min(3k, n)\f$).
-/// @param backend Execution backend (default: `backend::seq`).
-/// @return `LanczosResult` with Ritz pairs and convergence metadata.
-inline LanczosResult lanczos(const linear::SymmetricMatrix<Matrix> &A, idx k, real tol = 1e-10,
-                             idx max_steps = 0, Backend backend = backend::seq) {
-    return unsafe::lanczos(A.base(), k, tol, max_steps, backend);
+/// @return `lanczos_result` with Ritz pairs and convergence metadata.
+inline lanczos_result lanczos(const linear::sym_mat<mat> &A, idx k, real tol = 1e-10,
+                             idx max_steps = 0) {
+    return unsafe::lanczos(A.base(), k, tol, max_steps);
 }
 
 /// @brief Rejects an untagged matrix at compile time.
 template <class M>
-    requires MatrixSpace<M> &&
-    (!SymmetricMatrixLike<M>)LanczosResult lanczos(const M & /*untagged*/, idx, real = 1e-10,
-                                                   idx = 0, Backend = backend::seq) {
-    static_assert(SymmetricMatrixLike<M>,
+    requires matrix_space<M> &&
+    (!symmetric_matrix_like<M>)lanczos_result lanczos(const M & /*untagged*/, idx, real = 1e-10,
+                                                   idx = 0) {
+    static_assert(symmetric_matrix_like<M>,
                   "lanczos() requires a matrix carrying the symmetry invariant: the three-term "
                   "recurrence is a consequence of A = A^T and produces meaningless Ritz values "
                   "without it. "
@@ -219,22 +214,20 @@ template <class M>
 
 namespace unsafe {
 
-inline LanczosResult lanczos(const Matrix &A, idx k, real tol, idx max_steps, Backend backend) {
+inline lanczos_result lanczos(const mat &A, idx k, real tol, idx max_steps) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("lanczos: matrix must be square");
     }
-    operators::DenseOp op(A, backend);
-    return lanczos(operators::assume_symmetric(op), k, tol, max_steps, backend);
+    operators::dense_op op(A);
+    return num::lanczos(operators::assume_symmetric(op), k, tol, max_steps);
 }
 
-inline LanczosResult lanczos(const SparseMatrix &A, idx k, real tol, idx max_steps,
-                             Backend backend) {
+inline lanczos_result lanczos(const spmat &A, idx k, real tol, idx max_steps) {
     if (A.n_rows() != A.n_cols()) {
         throw std::invalid_argument("lanczos: matrix must be square");
     }
-    (void)backend;
-    operators::SparseOp op(A);
-    return lanczos(operators::assume_symmetric(op), k, tol, max_steps, backend);
+    operators::sparse_op op(A);
+    return num::lanczos(operators::assume_symmetric(op), k, tol, max_steps);
 }
 
 } // namespace unsafe

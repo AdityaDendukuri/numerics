@@ -6,7 +6,7 @@
 /// https://github.com/AdityaDendukuri/numerics
 ///
 /// This file has no dependencies outside the standard library beyond
-/// kernel/raw.hpp: copy the two into another project as-is, or lift a single
+/// kernel/vector.hpp: copy the two into another project as-is, or lift a single
 /// routine. Please keep the two attribution lines above with whatever you take.
 ///
 /// The operator enters as a callable `A(const T *x, T *y)` writing \f$y = Ax\f$, so
@@ -19,27 +19,24 @@
 /// inside numerics should prefer `num::cg`, which does enforce them.
 #pragma once
 
-#include "kernel/raw.hpp"
+#include "kernel/vector.hpp"
 #include <cmath>
 #include <concepts>
 
-#include <ostream>
-
-namespace num::kernel::raw {
+namespace num::kernel {
 
 /// @brief Iteration count, final residual norm, and convergence flag.
+///
+/// A plain aggregate, deliberately without a streaming operator: printing it
+/// would require `<ostream>`, which costs ~38k preprocessed lines here — a 70%
+/// tax on a header whose whole pitch is that you can copy it and
+/// `kernel/vector.hpp` into another project. `kernel/debug.hpp` supplies the
+/// `operator<<` for anyone who wants it.
 template <std::floating_point T>
-struct KrylovResult {
+struct krylov_result {
     idx iterations = 0;
     T residual = T(0);
     bool converged = false;
-
-    friend std::ostream &operator<<(std::ostream &os, const KrylovResult &r) {
-        os << "KrylovResult{ converged: " << (r.converged ? "true" : "false")
-           << ", iterations: " << r.iterations
-           << ", residual: " << r.residual << " }";
-        return os;
-    }
 };
 
 /// @brief Conjugate gradients for symmetric positive definite \f$A\f$.
@@ -56,8 +53,9 @@ struct KrylovResult {
 /// @param work     Caller-supplied scratch of length 3n.
 /// @param tol      Absolute tolerance on \f$\|r\|_2\f$.
 /// @param max_iter Iteration cap.
+/// @return `krylov_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
 template <std::floating_point T, class MatVec>
-[[nodiscard]] inline KrylovResult<T> cg(MatVec &&A, T *NUM_K_RESTRICT x, const T *b, idx n,
+[[nodiscard]] inline krylov_result<T> cg(MatVec &&A, T *NUM_K_RESTRICT x, const T *b, idx n,
                                         T *NUM_K_RESTRICT work, T tol = T(1e-10),
                                         idx max_iter = 1000) {
     T *r = work;
@@ -71,7 +69,7 @@ template <std::floating_point T, class MatVec>
     }
 
     T rs_old = dot(r, r, n);
-    KrylovResult<T> result{0, std::sqrt(rs_old), false};
+    krylov_result<T> result{0, std::sqrt(rs_old), false};
     if (result.residual < tol) {
         result.converged = true;
         return result;
@@ -122,8 +120,9 @@ template <std::floating_point T, class MatVec>
 /// @param work     Caller-supplied scratch of length 4n.
 /// @param tol      Absolute tolerance on \f$\|r\|_2\f$.
 /// @param max_iter Iteration cap.
+/// @return `krylov_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
 template <std::floating_point T, class MatVec, class Precond>
-[[nodiscard]] inline KrylovResult<T> pcg(MatVec &&A, Precond &&M, T *NUM_K_RESTRICT x, const T *b,
+[[nodiscard]] inline krylov_result<T> pcg(MatVec &&A, Precond &&M, T *NUM_K_RESTRICT x, const T *b,
                                          idx n, T *NUM_K_RESTRICT work, T tol = T(1e-10),
                                          idx max_iter = 1000) {
     T *r = work;
@@ -135,7 +134,7 @@ template <std::floating_point T, class MatVec, class Precond>
     // r <- b - A*x
     axpby(r, b, T(1), T(-1), n);
 
-    KrylovResult<T> result{0, std::sqrt(dot(r, r, n)), false};
+    krylov_result<T> result{0, std::sqrt(dot(r, r, n)), false};
     if (result.residual < tol) {
         result.converged = true;
         return result;
@@ -176,4 +175,4 @@ template <std::floating_point T, class MatVec, class Precond>
     return result;
 }
 
-} // namespace num::kernel::raw
+} // namespace num::kernel

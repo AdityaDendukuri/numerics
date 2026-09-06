@@ -17,9 +17,9 @@ namespace num::structures {
 
 /// Generate an undirected path graph: 0 - 1 - 2 - ... - (n-1).
 template <typename Weight = double, std::integral Index = num::idx>
-[[nodiscard]] inline BasicGraph<Weight, Index> path_graph(std::type_identity_t<Index> n,
+[[nodiscard]] inline basic_graph<Weight, Index> path_graph(std::type_identity_t<Index> n,
                                                          Weight weight = Weight{1}) {
-    BasicGraph<Weight, Index> G(n);
+    basic_graph<Weight, Index> G(n);
     for (Index i = 0; i + 1 < n; ++i) {
         G.add_edge(i, i + 1, weight);
     }
@@ -28,9 +28,9 @@ template <typename Weight = double, std::integral Index = num::idx>
 
 /// Generate an undirected cycle graph: 0 - 1 - ... - (n-1) - 0.
 template <typename Weight = double, std::integral Index = num::idx>
-[[nodiscard]] inline BasicGraph<Weight, Index> cycle_graph(std::type_identity_t<Index> n,
+[[nodiscard]] inline basic_graph<Weight, Index> cycle_graph(std::type_identity_t<Index> n,
                                                           Weight weight = Weight{1}) {
-    BasicGraph<Weight, Index> G(n);
+    basic_graph<Weight, Index> G(n);
     for (Index i = 0; i < n; ++i) {
         G.add_edge(i, (i + 1) % n, weight);
     }
@@ -39,11 +39,11 @@ template <typename Weight = double, std::integral Index = num::idx>
 
 /// Generate an undirected 2D grid graph of size nx by ny.
 template <typename Weight = double, std::integral Index = num::idx>
-[[nodiscard]] inline BasicGraph<Weight, Index> grid_2d(std::type_identity_t<Index> nx,
+[[nodiscard]] inline basic_graph<Weight, Index> grid_2d(std::type_identity_t<Index> nx,
                                                       std::type_identity_t<Index> ny,
                                                       Weight weight = Weight{1}) {
     const Index n = nx * ny;
-    BasicGraph<Weight, Index> G(n);
+    basic_graph<Weight, Index> G(n);
     const auto id = [&](Index x, Index y) { return (y * nx) + x; };
 
     for (Index y = 0; y < ny; ++y) {
@@ -57,9 +57,9 @@ template <typename Weight = double, std::integral Index = num::idx>
 
 /// Generate an undirected complete graph K_n.
 template <typename Weight = double, std::integral Index = num::idx>
-[[nodiscard]] inline BasicGraph<Weight, Index> complete_graph(std::type_identity_t<Index> n,
+[[nodiscard]] inline basic_graph<Weight, Index> complete_graph(std::type_identity_t<Index> n,
                                                              Weight weight = Weight{1}) {
-    BasicGraph<Weight, Index> G(n);
+    basic_graph<Weight, Index> G(n);
     for (Index i = 0; i < n; ++i) {
         for (Index j = i + 1; j < n; ++j) {
             G.add_edge(i, j, weight);
@@ -70,9 +70,9 @@ template <typename Weight = double, std::integral Index = num::idx>
 
 /// Generate a star graph with center at vertex 0 and n-1 leaves.
 template <typename Weight = double, std::integral Index = num::idx>
-[[nodiscard]] inline BasicGraph<Weight, Index> star_graph(std::type_identity_t<Index> n,
+[[nodiscard]] inline basic_graph<Weight, Index> star_graph(std::type_identity_t<Index> n,
                                                          Weight weight = Weight{1}) {
-    BasicGraph<Weight, Index> G(n);
+    basic_graph<Weight, Index> G(n);
     for (Index i = 1; i < n; ++i) {
         G.add_edge(0, i, weight);
     }
@@ -81,11 +81,11 @@ template <typename Weight = double, std::integral Index = num::idx>
 
 /// Generate a uniformly random connected spanning tree on n vertices via Wilson's algorithm.
 template <typename Weight = double, std::integral Index = num::idx, typename RNG>
-[[nodiscard]] inline BasicGraph<Weight, Index> random_spanning_tree(std::type_identity_t<Index> n,
+[[nodiscard]] inline basic_graph<Weight, Index> random_spanning_tree(std::type_identity_t<Index> n,
                                                                    RNG &rng,
                                                                    Weight min_weight = Weight{1},
                                                                    Weight max_weight = Weight{1}) {
-    BasicGraph<Weight, Index> G(n);
+    basic_graph<Weight, Index> G(n);
     if (n <= 1) return G;
 
     std::uniform_real_distribution<double> weight_dist(static_cast<double>(min_weight),
@@ -127,7 +127,7 @@ template <typename Weight = double, std::integral Index = num::idx, typename RNG
 
 /// Generate an Erdős-Rényi random graph G(n, p) with optional guaranteed connectivity.
 template <typename Weight = double, std::integral Index = num::idx, typename RNG>
-[[nodiscard]] inline BasicGraph<Weight, Index> erdos_renyi(std::type_identity_t<Index> n,
+[[nodiscard]] inline basic_graph<Weight, Index> erdos_renyi(std::type_identity_t<Index> n,
                                                            double p, RNG &rng,
                                                            bool ensure_connected = true,
                                                            Weight min_weight = Weight{1},
@@ -136,9 +136,9 @@ template <typename Weight = double, std::integral Index = num::idx, typename RNG
     std::uniform_real_distribution<double> weight_dist(static_cast<double>(min_weight),
                                                        static_cast<double>(max_weight));
 
-    BasicGraph<Weight, Index> G = ensure_connected
+    basic_graph<Weight, Index> G = ensure_connected
                                       ? random_spanning_tree<Weight, Index>(n, rng, min_weight, max_weight)
-                                      : BasicGraph<Weight, Index>(n);
+                                      : basic_graph<Weight, Index>(n);
 
     for (Index i = 0; i < n; ++i) {
         for (Index j = i + 1; j < n; ++j) {

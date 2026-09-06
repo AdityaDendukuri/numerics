@@ -35,7 +35,7 @@ int main() {
     std::cout << std::string(80, '-') << "\n";
 
     for (num::idx n : sizes) {
-        num::Matrix A(n, n, 0.0);
+        num::mat A(n, n, 0.0);
         for (num::idx i = 0; i < n; ++i) {
             for (num::idx j = 0; j < n; ++j) {
                 A(i, j) = dist(rng);
@@ -43,7 +43,7 @@ int main() {
             A(i, i) += 5.0; // Ensure well-conditioned
         }
 
-        num::Vector b(n);
+        num::vec b(n);
         for (num::idx i = 0; i < n; ++i) {
             b[i] = dist(rng);
         }
@@ -52,7 +52,7 @@ int main() {
         auto t0 = std::chrono::high_resolution_clock::now();
         std::vector<std::vector<num::cplx>> naive_sol(num_shifts);
         for (std::size_t k = 0; k < num_shifts; ++k) {
-            num::DenseResolventSolver naive_solver(A);
+            num::dense_resolvent_solver naive_solver(A);
             naive_solver.factorize(shifts[k]);
             std::vector<num::cplx> b_cplx(n);
             for (num::idx i = 0; i < n; ++i) b_cplx[i] = b[i];
@@ -63,7 +63,7 @@ int main() {
 
         // 2. Optimized O(n^3 + k * n^2) Hessenberg approach
         auto t2 = std::chrono::high_resolution_clock::now();
-        num::HessenbergResolventSolver hess_solver(A);
+        num::hessenberg_resolvent_solver hess_solver(A);
         auto hess_sol = hess_solver.solve_batch(shifts, b);
         auto t3 = std::chrono::high_resolution_clock::now();
         double hess_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();

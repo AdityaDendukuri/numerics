@@ -44,13 +44,13 @@ The automated benchmark suite profiles both execution paths side-by-side:
 
 ### Empirical Findings from Benchmark Data
 
-| Benchmark Scope | In-Tree C++20 Kernels (`kernel::raw`) | Hardware Backend (BLAS / LAPACKE / FFTW3) | Empirical Comparison & Tradeoff |
+| Benchmark Scope | In-Tree C++20 Kernels (`num::kernel`) | Hardware Backend (BLAS / LAPACKE / FFTW3) | Empirical Comparison & Tradeoff |
 | :--- | :--- | :--- | :--- |
-| **BLAS-1 / Vector Operations** (`dot`, `axpy`, `norm`) | Streamlined register loops (`kernel::raw::axpy`, `dot`) | `cblas_daxpy`, `cblas_ddot` (Apple Accelerate / OpenBLAS) | Native in-tree scalar/SIMD kernels match or exceed BLAS throughput on small-to-medium vectors (\f$N \le 4096\f$) by eliminating library call overhead; OpenMP parallel loops dominate for large vectors (\f$N \ge 262144\f$). |
-| **Matrix-Vector Multiply** (`matvec`) | Row-major tiled loop (`kernel::raw::matvec`) | `cblas_dgemv` | Hardware CBLAS achieves peak memory bandwidth utilizing SIMD registers (up to \f$160+\text{ GB/s}\f$ on unified memory architectures). |
-| **Matrix Multiplication** (`gemm`) | Portable blocked loops (`Matmul<backend::blocked>`) | `cblas_dgemm` | Vendor GEMM microkernels achieve peak GFLOPS through hardware-specific matrix accelerators (e.g. Apple AMX / AVX-512 FMA). |
-| **Dense Factorizations** (LU / QR / Cholesky) | Standalone in-place factorization (`kernel::raw::lu_factor`, `cholesky`) | `LAPACKE_dgetrf`, `LAPACKE_dgeqrf`, `LAPACKE_dpotrf` | For small matrices (\f$N \le 64\f$), in-tree unblocked kernels execute with minimal latency; for large matrices (\f$N \ge 512\f$), LAPACK's blocked BLAS-3 updates scale efficiently. |
-| **Eigensolvers & SVD** | Cyclic Jacobi (`EigSym<backend::seq>`), One-Sided Jacobi SVD | `LAPACKE_dsyevd`, `LAPACKE_dgesdd` (Divide-and-Conquer) | LAPACK divide-and-conquer provides optimal \f$\mathcal{O}(N^3)\f$ scaling for large dense matrices; native matrix-free **Lanczos** (`num::lanczos`) and **Randomized SVD** (`num::randomized_svd`) excel when computing a low-rank subspace (\f$k \ll N\f$). |
+| **BLAS-1 / vec Operations** (`dot`, `axpy`, `norm`) | Streamlined register loops (`kernel::axpy`, `dot`) | `cblas_daxpy`, `cblas_ddot` (Apple Accelerate / OpenBLAS) | Native in-tree scalar/SIMD kernels match or exceed BLAS throughput on small-to-medium vectors (\f$N \le 4096\f$) by eliminating library call overhead; OpenMP parallel loops dominate for large vectors (\f$N \ge 262144\f$). |
+| **mat-vec Multiply** (`matvec`) | Row-major tiled loop (`kernel::matvec`) | `cblas_dgemv` | Hardware CBLAS achieves peak memory bandwidth utilizing SIMD registers (up to \f$160+\text{ GB/s}\f$ on unified memory architectures). |
+| **mat Multiplication** (`gemm`) | Portable blocked loops (`BM_Matmul_Blocked`) | `cblas_dgemm` | Vendor GEMM microkernels achieve peak GFLOPS through hardware-specific matrix accelerators (e.g. Apple AMX / AVX-512 FMA). |
+| **Dense Factorizations** (LU / QR / Cholesky) | Standalone in-place factorization (`kernel::lu_factor`, `cholesky`) | `LAPACKE_dgetrf`, `LAPACKE_dgeqrf`, `LAPACKE_dpotrf` | For small matrices (\f$N \le 64\f$), in-tree unblocked kernels execute with minimal latency; for large matrices (\f$N \ge 512\f$), LAPACK's blocked BLAS-3 updates scale efficiently. |
+| **Eigensolvers & SVD** | Cyclic Jacobi (`BM_EigSym_Seq`), One-Sided Jacobi SVD | `LAPACKE_dsyevd`, `LAPACKE_dgesdd` (Divide-and-Conquer) | LAPACK divide-and-conquer provides optimal \f$\mathcal{O}(N^3)\f$ scaling for large dense matrices; native matrix-free **Lanczos** (`num::lanczos`) and **Randomized SVD** (`num::randomized_svd`) excel when computing a low-rank subspace (\f$k \ll N\f$). |
 | **Fast Fourier Transforms** | Cooley-Tukey & NEON SIMD (`spectral::fft`) | `FFTW3` (`fftw_plan_dft_1d`) | FFTW3 achieves peak throughput via pre-computed execution plans; native in-tree FFT provides zero-dependency standalone execution. |
 
 ---

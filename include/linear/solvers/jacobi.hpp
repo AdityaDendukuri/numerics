@@ -2,13 +2,13 @@
 /// @brief Jacobi iterative solver
 #pragma once
 
+#include "container/matrix.hpp"
+#include "container/vector.hpp"
+#include "container/vector_ops.hpp"
+#include "core/policy.hpp"
+#include "linear/solvers/solver_result.hpp"
 #include <cmath>
 #include <stdexcept>
-#include "container/vector_ops.hpp"
-#include "container/matrix.hpp"
-#include "core/policy.hpp"
-#include "container/vector.hpp"
-#include "linear/solvers/solver_result.hpp"
 
 namespace num {
 
@@ -16,48 +16,62 @@ namespace num {
 ///
 /// Updates all components simultaneously using only values from the previous
 /// iteration. Converges for strictly diagonally dominant A. Trivially
-/// parallelisable with backend::omp.
+/// parallelisable, unlike Gauss-Seidel.
 ///
+/// @tparam Parallel  Thread both sweeps with OpenMP (default: whatever the
+///                    build has available).
 /// @param A        Square matrix
 /// @param b        Right-hand side vector
 /// @param x        Solution vector (initial guess on input, solution on output)
 /// @param tol      Convergence tolerance on residual norm (default 1e-10)
 /// @param max_iter Maximum iterations (default 1000)
-/// @param backend  Execution backend (default: backend::dflt)
-/// @return SolverResult with convergence info
-SolverResult jacobi(const Matrix &A, const Vector &b, Vector &x, real tol = 1e-10,
-                    idx max_iter = 1000, Backend backend = backend::dflt);
-
-
-
-inline SolverResult jacobi(const Matrix &A, const Vector &b, Vector &x, real tol, idx max_iter,
-                    Backend backend) {
+/// @return solver_result with convergence info
+template <bool Parallel = has_omp>
+inline solver_result jacobi(const mat &A, const vec &b, vec &x, real tol = 1e-10,
+                           idx max_iter = 1000) {
     constexpr real zero_diag_tol = 1e-15;
     idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {
         throw std::invalid_argument("Dimension mismatch in Jacobi solver");
     }
 
-    Vector x_new(n);
-    SolverResult result{0, 0.0, false};
+    vec x_new(n);
+    solver_result result{0, 0.0, false};
 
     for (idx iter = 0; iter < max_iter; ++iter) {
         // Compute all updates from the previous iterate simultaneously
-#ifdef NUMERICS_HAS_OMP
-#pragma omp parallel for schedule(static) if (backend == backend::omp)
-#endif
-        for (idx i = 0; i < n; ++i) {
-            if (std::abs(A(i, i)) < zero_diag_tol) {
-                throw std::runtime_error("Zero diagonal in Jacobi solver at row " +
-                                         std::to_string(i));
-            }
-            real sigma = 0.0;
-            for (idx j = 0; j < n; ++j) {
-                if (j != i) {
-                    sigma += A(i, j) * x[j];
+#if defined(NUMERICS_HAS_OMP)
+        if constexpr (Parallel) {
+#pragma omp parallel for schedule(static)
+            for (idx i = 0; i < n; ++i) {
+                if (std::abs(A(i, i)) < zero_diag_tol) {
+                    throw std::runtime_error("Zero diagonal in Jacobi solver at row " +
+                                             std::to_string(i));
                 }
+                real sigma = 0.0;
+                for (idx j = 0; j < n; ++j) {
+                    if (j != i) {
+                        sigma += A(i, j) * x[j];
+                    }
+                }
+                x_new[i] = (b[i] - sigma) / A(i, i);
             }
-            x_new[i] = (b[i] - sigma) / A(i, i);
+        } else
+#endif
+        {
+            for (idx i = 0; i < n; ++i) {
+                if (std::abs(A(i, i)) < zero_diag_tol) {
+                    throw std::runtime_error("Zero diagonal in Jacobi solver at row " +
+                                             std::to_string(i));
+                }
+                real sigma = 0.0;
+                for (idx j = 0; j < n; ++j) {
+                    if (j != i) {
+                        sigma += A(i, j) * x[j];
+                    }
+                }
+                x_new[i] = (b[i] - sigma) / A(i, i);
+            }
         }
 
         for (idx i = 0; i < n; ++i) {
@@ -66,15 +80,26 @@ inline SolverResult jacobi(const Matrix &A, const Vector &b, Vector &x, real tol
 
         // Residual ||b - Ax||
         real res = 0.0;
-#ifdef NUMERICS_HAS_OMP
-#pragma omp parallel for reduction(+ : res) schedule(static) if (backend == backend::omp)
-#endif
-        for (idx i = 0; i < n; ++i) {
-            real ri = b[i];
-            for (idx j = 0; j < n; ++j) {
-                ri -= A(i, j) * x[j];
+#if defined(NUMERICS_HAS_OMP)
+        if constexpr (Parallel) {
+#pragma omp parallel for reduction(+ : res) schedule(static)
+            for (idx i = 0; i < n; ++i) {
+                real ri = b[i];
+                for (idx j = 0; j < n; ++j) {
+                    ri -= A(i, j) * x[j];
+                }
+                res += ri * ri;
             }
-            res += ri * ri;
+        } else
+#endif
+        {
+            for (idx i = 0; i < n; ++i) {
+                real ri = b[i];
+                for (idx j = 0; j < n; ++j) {
+                    ri -= A(i, j) * x[j];
+                }
+                res += ri * ri;
+            }
         }
         result.residual = std::sqrt(res);
         result.iterations = iter + 1;

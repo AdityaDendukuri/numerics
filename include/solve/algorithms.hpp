@@ -12,17 +12,17 @@ namespace num {
 // -- ODE integrators --
 
 /// Fixed-step forward Euler configuration.
-struct Euler {
+struct euler_method {
     double h = 1e-3;
 };
 
 /// Fixed-step classical fourth-order Runge-Kutta configuration.
-struct RK4 {
+struct rk4_method {
     double h = 1e-3;
 };
 
 /// Adaptive Dormand-Prince configuration.
-struct RK45 {
+struct rk45_method {
     double h = 1e-3;
     double rtol = 1e-6;
     double atol = 1e-9;
@@ -31,43 +31,39 @@ struct RK45 {
 
 // -- Linear-system solvers --
 
-/// Conjugate-gradient convergence and backend options.
-struct CG {
+/// Conjugate-gradient convergence options.
+struct cg_method {
     real tol = 1e-10;
     idx max_iter = 1000;
-    Backend backend = backend::dflt;
 };
 
-/// Restarted GMRES convergence and backend options.
-struct GMRES {
+/// Restarted GMRES convergence options.
+struct gmres_method {
     real tol = 1e-6;
     idx max_iter = 1000;
     idx restart = 30;
-    Backend backend = backend::dflt;
 };
 
-/// MINRES convergence and backend options.
-struct MINRES {
+/// MINRES convergence options.
+struct minres_method {
     real tol = 1e-10;
     idx max_iter = 1000;
-    Backend backend = backend::dflt;
 };
 
 template <class M>
 /// Preconditioned-CG configuration holding a non-owning preconditioner reference.
-struct PCG {
+struct pcg_method {
     const M &preconditioner;
     real tol = 1e-10;
     idx max_iter = 1000;
-    Backend backend = backend::dflt;
 };
 
 template <class M>
-PCG(const M &) -> PCG<M>;
+pcg_method(const M &) -> pcg_method<M>;
 
 template <class M, class Subspace>
 /// PCG configuration for an operator and preconditioner certified on Subspace.
-struct PCGOn {
+struct pcg_on_method {
     const M &preconditioner;
     Subspace subspace;
     real tol = 1e-10;
@@ -75,24 +71,24 @@ struct PCGOn {
 };
 
 template <class M, class Subspace>
-PCGOn(const M &, Subspace) -> PCGOn<M, Subspace>;
+pcg_on_method(const M &, Subspace) -> pcg_on_method<M, Subspace>;
 
 // -- MCMC samplers --
 
 /// Metropolis sampling burn-in and measurement counts.
-struct Metropolis {
+struct metropolis_method {
     int equilibration = 1000;
     int measurements = 500;
 };
 
 /// @brief An explicit ODE algorithm tag.
 template <typename A>
-concept IsExplicitODEAlg =
-    std::same_as<std::remove_cvref_t<A>, Euler> || std::same_as<std::remove_cvref_t<A>, RK4> ||
-    std::same_as<std::remove_cvref_t<A>, RK45>;
+concept is_explicit_ode_alg =
+    std::same_as<std::remove_cvref_t<A>, euler_method> || std::same_as<std::remove_cvref_t<A>, rk4_method> ||
+    std::same_as<std::remove_cvref_t<A>, rk45_method>;
 
 /// @brief An MCMC algorithm tag.
 template <typename A>
-concept IsMCMCAlg = std::same_as<std::remove_cvref_t<A>, Metropolis>;
+concept is_mcmc_alg = std::same_as<std::remove_cvref_t<A>, metropolis_method>;
 
 } // namespace num

@@ -10,7 +10,7 @@ A x = b
 
 ## 1. Linear System Matrix Classes
 
-| Operator / Matrix Class | Condition | Direct Solver | Iterative Solver |
+| Operator / mat Class | Condition | Direct Solver | Iterative Solver |
 | :--- | :--- | :--- | :--- |
 | **Symmetric Positive Definite** | \f$A = A^T, \ x^T A x > 0\f$ | `num::cholesky` | `num::cg`, `num::pcg` |
 | **Symmetric Indefinite** | \f$A = A^T\f$ | `num::lu`, `num::qr` | `num::minres` |
@@ -26,17 +26,17 @@ Prefer constructors that establish mathematical structure in the returned type:
 ```cpp
 // 1. Backward Euler discretization is SPD by construction:
 auto A = num::pde::backward_euler_operator(grid, coeff);
-num::Vector rhs(grid.size(), 1.0), x(grid.size(), 0.0);
-num::SolverResult info = num::cg(A, rhs, x); // Accepted directly without assume_spd
+num::vec rhs(grid.size(), 1.0), x(grid.size(), 0.0);
+num::solver_result info = num::cg(A, rhs, x); // Accepted directly without assume_spd
 ```
 
 ```cpp
 // 2. External assembly requires explicit assertion or validation:
-num::SparseMatrix A_sp = assemble_spd_matrix();
-num::operators::SparseOp op(A_sp);
+num::spmat A_sp = assemble_spd_matrix();
+num::operators::sparse_op op(A_sp);
 
 auto spd = num::operators::assume_spd(op); // Assertion tag
-num::SolverResult info = num::cg(spd, b, x);
+num::solver_result info = num::cg(spd, b, x);
 ```
 
 ---
@@ -46,11 +46,11 @@ num::SolverResult info = num::cg(spd, b, x);
 Use `num::pcg` for ill-conditioned SPD systems when CG iteration count is high:
 
 ```cpp
-num::SparseMatrix A = assemble_spd_matrix();
-num::operators::SparseOp Aop(A);
+num::spmat A = assemble_spd_matrix();
+num::operators::sparse_op Aop(A);
 
-auto M = num::jacobi_preconditioner(A); // M represents M^{-1} action
-num::SolverResult info = num::pcg(num::operators::assume_spd(Aop), M, b, x);
+auto M = num::make_jacobi_preconditioner(A); // M represents M^{-1} action
+num::solver_result info = num::pcg(num::operators::assume_spd(Aop), M, b, x);
 ```
 
 ---

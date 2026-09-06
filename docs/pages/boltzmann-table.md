@@ -45,6 +45,7 @@ double p = num::markov::boltzmann_accept(dE, beta);
 ### Flat Lookup Table
 
 ```cpp
+const double beta = 1.0;   // inverse temperature; `num::beta` is the beta function
 std::vector<double> dEs = {-4.0, -2.0, 0.0, 2.0, 4.0};
 auto table = num::markov::make_boltzmann_table(dEs, beta);
 

@@ -16,14 +16,14 @@
 namespace num::plt {
 namespace detail {
 
-struct SeriesEntry {
-    Series data;
+struct series_entry {
+    series data;
     std::string label;
     std::string style; // gnuplot "with" clause, e.g. "lines"
 };
 
 /// 2-D field snapshot for heatmap rendering via gnuplot pm3d map.
-struct HeatmapEntry {
+struct heatmap_entry {
     std::vector<double> data; // NxN row-major values
     int N = 0;
     double h = 1.0;
@@ -31,9 +31,9 @@ struct HeatmapEntry {
     double vmax = 1.0;
 };
 
-struct Panel {
-    std::vector<SeriesEntry> series;
-    std::vector<HeatmapEntry> heatmaps;
+struct plot_panel {
+    std::vector<series_entry> series;
+    std::vector<heatmap_entry> heatmaps;
     std::string title_, xlabel_, ylabel_;
     std::string xrange_, yrange_;
     std::string palette_; // gnuplot palette string; empty = hot/fire
@@ -43,23 +43,23 @@ struct Panel {
     bool logy_ = false;
 };
 
-struct State {
-    Panel current;
-    std::vector<Panel> panels;       // accumulated panels in multiplot mode
+struct plot_state {
+    plot_panel current;
+    std::vector<plot_panel> panels;       // accumulated panels in multiplot mode
     int mp_rows_ = 0, mp_cols_ = 0;  // 0 = single-plot mode
     std::string term_override_ = ""; // "dumb", "qt", "pngcairo"
     int term_w_ = 140, term_h_ = 35;
 
-    void reset() { *this = State{}; }
+    void reset() { *this = plot_state{}; }
 };
 
-inline State &state() {
-    static State s;
+inline plot_state &state() {
+    static plot_state s;
     return s;
 }
 
 // Write all datablocks for a panel, then emit the plot command for that panel.
-inline void write_panel(FILE *pipe, const Panel &p, int block_offset) {
+inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
     if (p.series.empty() && p.heatmaps.empty()) {
         return;
     }
@@ -165,7 +165,7 @@ inline void write_panel(FILE *pipe, const Panel &p, int block_offset) {
 inline void flush_to(FILE *pipe, const std::string &outfile) {
     auto &s = state();
 
-    std::vector<Panel> all = s.panels;
+    std::vector<plot_panel> all = s.panels;
     all.push_back(s.current);
 
     bool multiplot = (s.mp_rows_ > 0);
@@ -182,8 +182,9 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
             double h = multiplot ? 3.0 * s.mp_rows_ : 4.0;
             fprintf(pipe, "set terminal pdfcairo size 6,%.0f font 'Arial,11'\n", h);
         } else {
+            int w = multiplot ? std::max(900, 300 * s.mp_cols_) : 900;
             int h = multiplot ? 350 * s.mp_rows_ : 600;
-            fprintf(pipe, "set terminal pngcairo size 900,%d enhanced font 'Arial,11'\n", h);
+            fprintf(pipe, "set terminal pngcairo size %d,%d enhanced font 'Arial,11'\n", w, h);
         }
         fprintf(pipe, "set output '%s'\n", outfile.c_str());
     }
@@ -242,20 +243,20 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
 
 } // namespace detail
 
-// -- Series builders ----------------------------------------------------------
+// -- series builders ----------------------------------------------------------
 
-/// Append a Series (vector of (x,y) pairs) to the current panel.
-inline void plot(const Series &data, const std::string &label = "",
+/// Append a series (vector of (x,y) pairs) to the current panel.
+inline void plot(const series &data, const std::string &label = "",
                  const std::string &style = "lines") {
     detail::state().current.series.push_back({data, label, style});
 }
 
 /// Append parallel x and y vectors to the current panel (supports std::vector,
-/// num::Vector, etc.).
+/// num::vec, etc.).
 template <typename ContainerX, typename ContainerY>
 inline void plot(const ContainerX &x, const ContainerY &y, const std::string &label = "",
                  const std::string &style = "lines") {
-    Series s;
+    series s;
     s.reserve(x.size());
     for (std::size_t i = 0; i < x.size() && i < y.size(); ++i) {
         s.emplace_back(static_cast<double>(x[i]), static_cast<double>(y[i]));
@@ -358,7 +359,7 @@ inline void plot_paths(const Paths &paths, const Labels &labels, const Colors &c
 
     if (paths.size() > 1) {
         for (std::size_t component = 0; component < components; ++component) {
-            Series envelope;
+            series envelope;
             envelope.reserve(2 * samples);
             for (std::size_t i = 0; i < samples; ++i) {
                 envelope.emplace_back(times[i], upper[component][i]);
@@ -413,7 +414,7 @@ inline void subplot(int rows, int cols = 1) {
 /// @brief Advance to the next panel.
 inline void next() {
     detail::state().panels.push_back(detail::state().current);
-    detail::state().current = detail::Panel{};
+    detail::state().current = detail::plot_panel{};
 }
 
 // -- 2-D heatmap --------------------------------------------------------------
@@ -421,7 +422,7 @@ inline void next() {
 template <typename Container>
 /// Add an N-by-N row-major scalar array as a heatmap.
 inline void heatmap(const Container &u, int N, double h, double vmin = 0.0, double vmax = 1.0) {
-    detail::HeatmapEntry e;
+    detail::heatmap_entry e;
     e.data.assign(u.data(), u.data() + u.size());
     e.N = N;
     e.h = h;
@@ -431,9 +432,9 @@ inline void heatmap(const Container &u, int N, double h, double vmin = 0.0, doub
 }
 
 template <class Field>
-/// Add a square field exposing vec(), N(), and h() as a heatmap.
+/// Add a square field exposing as_vec(), N(), and h() as a heatmap.
 inline void heatmap(const Field &g, double vmin = 0.0, double vmax = 1.0) {
-    heatmap(g.vec(), g.N(), g.h(), vmin, vmax);
+    heatmap(g.as_vec(), g.N(), g.h(), vmin, vmax);
 }
 
 /// Set a gnuplot palette expression for the current panel.

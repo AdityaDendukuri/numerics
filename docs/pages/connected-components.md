@@ -20,7 +20,7 @@ neighbor traversal.
 ## Routine Reference
 
 ```cpp
-struct num::ClusterResult {
+struct num::cluster_result {
     std::vector<int> id;        // id[i]: -2 = excluded, >=0 = cluster index
     std::vector<int> sizes;     // sizes[c] = number of sites in cluster c
     int largest_id   = -1;
@@ -28,7 +28,7 @@ struct num::ClusterResult {
 };
 
 template<typename InCluster, typename Neighbors>
-num::ClusterResult num::connected_components(
+num::cluster_result num::connected_components(
     int n_sites,
     InCluster&&  in_cluster,   // bool(int i)        -- include site i?
     Neighbors&&  neighbors);   // void(int i, F&& f) -- call f(nb) per neighbor
@@ -41,7 +41,7 @@ num::ClusterResult num::connected_components(
 | `-2` | Excluded -- `in_cluster(i)` returned `false` |
 | `>=0` | Cluster index |
 
-Sites with `id[i] == ClusterResult::largest_id` belong to the largest cluster.
+Sites with `id[i] == cluster_result::largest_id` belong to the largest cluster.
 
 ---
 
@@ -59,15 +59,15 @@ for each unvisited included site s:
     update largest_id / largest_size
 ```
 
-No heap allocations after the initial `ClusterResult` construction.
+No heap allocations after the initial `cluster_result` construction.
 
 ---
 
 ## Ising Nucleation Observable
 
 ```cpp
-num::PBCLattice2D nbr(N);
-num::ClusterResult det;
+num::pbc_lattice_2d nbr(N);
+num::cluster_result det;
 
 // In the Metropolis order-parameter measurement:
 det = num::connected_components(N*N,
@@ -88,7 +88,11 @@ The callable interface accepts any graph topology:
 
 ```cpp
 // 3D cubic lattice with PBC
-det = num::connected_components(nx*ny*nz,
+const int nx = 8, ny = 8, nz = 8;
+std::vector<char> active(nx * ny * nz, 1);
+auto six_neighbors = [](int i, int, int, int) { return std::vector<int>{i}; };
+
+auto det = num::connected_components(nx*ny*nz,
     [&](int i) { return active[i]; },
     [&](int i, auto&& visit) {
         for (int nb : six_neighbors(i, nx, ny, nz))
@@ -96,10 +100,14 @@ det = num::connected_components(nx*ny*nz,
     });
 
 // Irregular graph from adjacency list
-det = num::connected_components(n_nodes,
+const int n_nodes = 16;
+std::vector<char> excluded(n_nodes, 0);
+std::vector<std::vector<int>> adjacency(n_nodes);
+
+auto det2 = num::connected_components(n_nodes,
     [&](int i) { return !excluded[i]; },
     [&](int i, auto&& visit) {
-        for (int nb : adj[i]) visit(nb);
+        for (int nb : adjacency[i]) visit(nb);
     });
 ```
 
@@ -107,5 +115,5 @@ det = num::connected_components(n_nodes,
 
 ## See Also
 
-* **`num::structures::connected_components` (@ref page_structures):** Graph topology partitioning on `num::Graph` using Union-Find.
-* **`num::DisjointSet` (@ref page_structures):** General \f$\mathcal{O}(\alpha(N))\f$ disjoint set data structure with path compression.
+* **`num::structures::connected_components` (@ref page_structures):** graph topology partitioning on `num::graph` using Union-Find.
+* **`num::disjoint_set` (@ref page_structures):** General \f$\mathcal{O}(\alpha(N))\f$ disjoint set data structure with path compression.

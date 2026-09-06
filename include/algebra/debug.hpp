@@ -12,7 +12,7 @@
 #include "algebra/scalar.hpp"
 #include "core/debug.hpp"
 #include "core/types.hpp"
-#include "kernel/raw.hpp"
+#include "kernel/kernel.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -45,10 +45,10 @@ template <class T>
 }
 
 /// @brief Deterministic xorshift generator, so a reported violation reproduces exactly.
-struct ProbeRng {
+struct probe_rng {
     std::uint64_t state;
 
-    explicit constexpr ProbeRng(std::uint64_t seed = 0x9E3779B97F4A7C15ULL) noexcept
+    explicit constexpr probe_rng(std::uint64_t seed = 0x9E3779B97F4A7C15ULL) noexcept
         : state(seed == 0 ? 1 : seed) {}
 
     constexpr std::uint64_t next() noexcept {
@@ -66,7 +66,7 @@ struct ProbeRng {
 
 /// @brief Overwrite v with a reproducible random probe over its own scalar field.
 template <class VectorType>
-inline void fill_probe(VectorType &v, ProbeRng &rng) {
+inline void fill_probe(VectorType &v, probe_rng &rng) {
     using T = num::scalar_t<VectorType>;
     using R = scalars::real_t<T>;
     for (idx i = 0; i < v.size(); ++i) {
@@ -94,7 +94,7 @@ template <class VectorType>
                                                            const VectorType &y) {
     using T = num::scalar_t<VectorType>;
     if constexpr (algebra::detail::raw_reducible<VectorType>) {
-        return kernel::raw::dot(x.data(), y.data(), x.size());
+        return kernel::dot(x.data(), y.data(), x.size());
     } else {
         T sum = T(0);
         for (idx i = 0; i < x.size(); ++i) {
@@ -116,7 +116,6 @@ template <class VectorType>
     return s == 0 ? idx(1) : s;
 }
 
-
 // ---------------------------------------------------------------------------
 // Algebraic law sampling
 // ---------------------------------------------------------------------------
@@ -127,7 +126,7 @@ template <class VectorType>
 // is not decidable from a type and is sampled here.
 //
 // These probes route through num::algebra, which resolves to the type's own
-// operations. Checking num::Vector therefore checks the shipped `dot`, `norm`,
+// operations. Checking num::vec therefore checks the shipped `dot`, `norm`,
 // `axpy` and `scale`, backend dispatch included: a BLAS path that returns an
 // unconjugated inner product for complex data fails conjugate symmetry here.
 
@@ -135,15 +134,18 @@ template <class VectorType>
 ///
 /// Associativity, commutativity, the additive identity, and additive inverses.
 template <class V>
-inline void verify_additive_group_axioms(idx n,
-                                         std::source_location loc = std::source_location::current()) {
-    if (g_level != DiagnosticLevel::full || n == 0) {
+inline void
+verify_additive_group_axioms(idx n, std::source_location loc = std::source_location::current()) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<V>;
     using R = scalars::real_t<T>;
     const R tol = property_tol<T>();
-    ProbeRng rng;
+    probe_rng rng;
 
     auto rel_diff = [&](const V &a, const V &b) {
         R num_ = R(0), den = R(0);
@@ -216,13 +218,16 @@ inline void verify_additive_group_axioms(idx n,
 template <class V>
 inline void verify_vector_space_axioms(idx n,
                                        std::source_location loc = std::source_location::current()) {
-    if (g_level != DiagnosticLevel::full || n == 0) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<V>;
     using R = scalars::real_t<T>;
     const R tol = property_tol<T>();
-    ProbeRng rng(0xC0FFEE123456789ULL);
+    probe_rng rng(0xC0FFEE123456789ULL);
 
     auto rel_diff = [&](const V &a, const V &b) {
         R num_ = R(0), den = R(0);
@@ -285,8 +290,9 @@ inline void verify_vector_space_axioms(idx n,
         V ab_together = x;
         algebra::scale_inplace(ab_together, a * b);
         if (rel_diff(abx, ab_together) > tol) {
-            panic("AlgebraError", "scalar action is not compatible with field multiplication: "
-                                  "a(bx) != (ab)x",
+            panic("AlgebraError",
+                  "scalar action is not compatible with field multiplication: "
+                  "a(bx) != (ab)x",
                   loc);
         }
 
@@ -307,15 +313,18 @@ inline void verify_vector_space_axioms(idx n,
 /// that separates a genuine Hermitian form from a transpose-only implementation,
 /// and it is invisible on real data.
 template <class V>
-inline void verify_inner_product_axioms(idx n,
-                                        std::source_location loc = std::source_location::current()) {
-    if (g_level != DiagnosticLevel::full || n == 0) {
+inline void
+verify_inner_product_axioms(idx n, std::source_location loc = std::source_location::current()) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<V>;
     using R = scalars::real_t<T>;
     const R tol = property_tol<T>();
-    ProbeRng rng(0xABCDEF0123456789ULL);
+    probe_rng rng(0xABCDEF0123456789ULL);
 
     for (idx probe = 0; probe < g_probe_count; ++probe) {
         V x(n), y(n), z(n);
@@ -370,13 +379,16 @@ inline void verify_inner_product_axioms(idx n,
 /// assumes when it uses a residual norm to reason about an inner product.
 template <class V>
 inline void verify_norm_axioms(idx n, std::source_location loc = std::source_location::current()) {
-    if (g_level != DiagnosticLevel::full || n == 0) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<V>;
     using R = scalars::real_t<T>;
     const R tol = property_tol<T>();
-    ProbeRng rng(0x13579BDF02468ACEULL);
+    probe_rng rng(0x13579BDF02468ACEULL);
 
     for (idx probe = 0; probe < g_probe_count; ++probe) {
         V x(n), y(n);
@@ -406,9 +418,9 @@ inline void verify_norm_axioms(idx n, std::source_location loc = std::source_loc
         if (nsum > (nx + ny) * (R(1) + tol)) {
             panic("AlgebraError",
                   "norm violates the triangle inequality: ||x+y|| = " +
-                      std::to_string(static_cast<double>(nsum)) + " > ||x||+||y|| = " +
-                      std::to_string(static_cast<double>(nx + ny)) + " on probe " +
-                      std::to_string(probe),
+                      std::to_string(static_cast<double>(nsum)) +
+                      " > ||x||+||y|| = " + std::to_string(static_cast<double>(nx + ny)) +
+                      " on probe " + std::to_string(probe),
                   loc);
         }
 
@@ -417,8 +429,8 @@ inline void verify_norm_axioms(idx n, std::source_location loc = std::source_loc
         if (scalars::mag(nx - induced) / (induced + std::numeric_limits<R>::min()) > tol) {
             panic("AlgebraError",
                   "norm is not induced by the inner product: ||x|| = " +
-                      std::to_string(static_cast<double>(nx)) + " but sqrt(<x,x>) = " +
-                      std::to_string(static_cast<double>(induced)),
+                      std::to_string(static_cast<double>(nx)) +
+                      " but sqrt(<x,x>) = " + std::to_string(static_cast<double>(induced)),
                   loc);
         }
     }
@@ -426,8 +438,8 @@ inline void verify_norm_axioms(idx n, std::source_location loc = std::source_loc
 
 /// @brief Sample every law of a Hilbert space: group, scalar action, inner product, norm.
 template <class V>
-inline void verify_hilbert_space_axioms(idx n,
-                                        std::source_location loc = std::source_location::current()) {
+inline void
+verify_hilbert_space_axioms(idx n, std::source_location loc = std::source_location::current()) {
     verify_vector_space_axioms<V>(n, loc);
     verify_inner_product_axioms<V>(n, loc);
     verify_norm_axioms<V>(n, loc);
@@ -439,7 +451,7 @@ inline void verify_hilbert_space_axioms(idx n,
 //
 // Generic over anything exposing apply(x, y) and cols(); nothing here knows what
 // an "operator" is beyond that. They live in core because the property hierarchy binds
-// to them, and the lattice is vocabulary the whole library speaks.
+// to them, and the hierarchy is vocabulary the whole library speaks.
 
 /// @brief Estimate the extreme eigenvalues of a self-adjoint operator by power iteration.
 ///
@@ -454,7 +466,7 @@ template <class Op, class VectorType>
     using R = scalars::real_t<T>;
 
     VectorType v(n), w(n);
-    ProbeRng rng(0xD1B54A32D192ED03ULL);
+    probe_rng rng(0xD1B54A32D192ED03ULL);
 
     auto normalize = [&](VectorType &u) {
         const R nrm = probe_norm(u);
@@ -488,21 +500,25 @@ template <class Op, class VectorType>
         v = w;
     }
 
-    struct Bounds {
+    struct bounds {
         R min;
         R max;
     };
-    return Bounds{lambda_max - shifted, lambda_max};
+    return bounds{lambda_max - shifted, lambda_max};
 }
 
-/// @brief Sampled test for positive definiteness \f$\langle x, A x \rangle > 0\ \forall x \neq 0\f$.
+/// @brief Sampled test for positive definiteness \f$\langle x, A x \rangle > 0\ \forall x \neq
+/// 0\f$.
 ///
 /// Basis probes check the necessary condition \f$A_{ii} > 0\f$ exactly; randomized
 /// probes then sample the quadratic form away from the axes.
 template <class Op, class VectorType>
 inline void verify_spd_sample(const Op &A, idx n,
                               std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full || n == 0) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<VectorType>;
@@ -524,7 +540,7 @@ inline void verify_spd_sample(const Op &A, idx n,
         }
     }
 
-    ProbeRng rng;
+    probe_rng rng;
     for (idx probe = 0; probe < g_probe_count; ++probe) {
         fill_probe(x, rng);
         A.apply(x, Ax);
@@ -561,7 +577,10 @@ inline void verify_spd_sample(const Op &A, idx n,
 template <class Op, class VectorType>
 inline void verify_psd_sample(const Op &A, idx n,
                               std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full || n == 0) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<VectorType>;
@@ -585,7 +604,7 @@ inline void verify_psd_sample(const Op &A, idx n,
         }
     }
 
-    ProbeRng rng;
+    probe_rng rng;
     for (idx probe = 0; probe < g_probe_count; ++probe) {
         fill_probe(x, rng);
         A.apply(x, Ax);
@@ -602,21 +621,25 @@ inline void verify_psd_sample(const Op &A, idx n,
     }
 }
 
-/// @brief Sampled test for self-adjointness \f$\langle x, A y \rangle = \overline{\langle y, A x \rangle}\f$.
+/// @brief Sampled test for self-adjointness \f$\langle x, A y \rangle = \overline{\langle y, A x
+/// \rangle}\f$.
 ///
 /// On a real field this is symmetry \f$A = A^T\f$; on a complex field it is the
 /// Hermitian condition \f$A = A^*\f$, which conjugate-free comparison would miss.
 template <class Op, class VectorType>
 inline void verify_symmetry_sample(const Op &A, idx n,
                                    std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full || n <= 1) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n <= 1) {
         return;
     }
     using T = num::scalar_t<VectorType>;
     using R = scalars::real_t<T>;
 
     VectorType x(n), y(n), Ax(n), Ay(n);
-    ProbeRng rng;
+    probe_rng rng;
     const R tol = property_tol<T>();
 
     for (idx probe = 0; probe < g_probe_count; ++probe) {
@@ -643,18 +666,22 @@ inline void verify_symmetry_sample(const Op &A, idx n,
     }
 }
 
-/// @brief Sampled test for adjoint consistency \f$\langle A x, y \rangle = \langle x, A^* y \rangle\f$.
+/// @brief Sampled test for adjoint consistency \f$\langle A x, y \rangle = \langle x, A^* y
+/// \rangle\f$.
 template <class Op, class VectorType>
 inline void verify_adjoint_sample(const Op &A, idx m, idx n,
                                   std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full || m == 0 || n == 0) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || m == 0 || n == 0) {
         return;
     }
     using T = num::scalar_t<VectorType>;
     using R = scalars::real_t<T>;
 
     VectorType x(n), y(m), Ax(m), Aty(n);
-    ProbeRng rng;
+    probe_rng rng;
     const R tol = property_tol<T>();
 
     for (idx probe = 0; probe < g_probe_count; ++probe) {
@@ -666,7 +693,8 @@ inline void verify_adjoint_sample(const Op &A, idx m, idx n,
         const T lhs = probe_inner(Ax, y);
         const T rhs = probe_inner(x, Aty);
         const R difference = scalars::mag(lhs - rhs);
-        const R scale = std::max(scalars::mag(lhs), scalars::mag(rhs)) + std::numeric_limits<R>::min();
+        const R scale =
+            std::max(scalars::mag(lhs), scalars::mag(rhs)) + std::numeric_limits<R>::min();
 
         if (difference / scale > tol) {
             panic("PropertyError",
@@ -687,7 +715,10 @@ inline void verify_adjoint_sample(const Op &A, idx m, idx n,
 template <class Op, class VectorType>
 inline void verify_orthogonal_sample(const Op &A, idx n,
                                      std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full || n == 0) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<VectorType>;
@@ -710,7 +741,7 @@ inline void verify_orthogonal_sample(const Op &A, idx n,
         }
     }
 
-    ProbeRng rng;
+    probe_rng rng;
     for (idx probe = 0; probe < g_probe_count; ++probe) {
         fill_probe(x, rng);
         A.apply(x, Ax);
@@ -732,14 +763,17 @@ inline void verify_orthogonal_sample(const Op &A, idx n,
 template <class Op, class VectorType>
 inline void verify_projection_sample(const Op &P, idx n,
                                      std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full || n == 0) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<VectorType>;
     using R = scalars::real_t<T>;
 
     VectorType x(n), Px(n), PPx(n);
-    ProbeRng rng;
+    probe_rng rng;
     const R tol = property_tol<T>();
 
     for (idx probe = 0; probe < g_probe_count; ++probe) {
@@ -765,7 +799,8 @@ inline void verify_projection_sample(const Op &P, idx n,
     }
 }
 
-/// @brief Sampled test for skew-adjointness \f$A = -A^*\f$, i.e. \f$\mathrm{Re}\langle x, A x \rangle = 0\ \forall x\f$.
+/// @brief Sampled test for skew-adjointness \f$A = -A^*\f$, i.e. \f$\mathrm{Re}\langle x, A x
+/// \rangle = 0\ \forall x\f$.
 ///
 /// The comparison is relative to \f$\|x\|\,\|Ax\|\f$ (the Cauchy-Schwarz bound on
 /// the quantity being tested), so the test does not weaken as the operator scale
@@ -773,9 +808,13 @@ inline void verify_projection_sample(const Op &P, idx n,
 /// which is what distinguishes a skew operator from a symmetric one that merely
 /// annihilates a particular probe vector.
 template <class Op, class VectorType>
-inline void verify_skew_symmetry_sample(const Op &A, idx n,
-                                        std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full || n == 0) {
+inline void
+verify_skew_symmetry_sample(const Op &A, idx n,
+                            std::source_location loc = std::source_location::current()) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<VectorType>;
@@ -793,14 +832,14 @@ inline void verify_skew_symmetry_sample(const Op &A, idx n,
         if (diagonal / scale > tol) {
             panic("PropertyError",
                   "assume_skew_symmetric() assertion failed: diagonal entry A(" +
-                      std::to_string(i) + "," + std::to_string(i) + ") = " +
-                      std::to_string(static_cast<double>(scalars::re(Ax[i]))) +
+                      std::to_string(i) + "," + std::to_string(i) +
+                      ") = " + std::to_string(static_cast<double>(scalars::re(Ax[i]))) +
                       " is nonzero, so the operator is NOT skew-adjoint.",
                   loc);
         }
     }
 
-    ProbeRng rng;
+    probe_rng rng;
     for (idx probe = 0; probe < g_probe_count; ++probe) {
         fill_probe(x, rng);
         A.apply(x, Ax);
@@ -823,14 +862,17 @@ inline void verify_skew_symmetry_sample(const Op &A, idx n,
 template <class Op, class VectorType>
 inline void verify_linearity_sample(const Op &A, idx n,
                                     std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full || n == 0) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     using T = num::scalar_t<VectorType>;
     using R = scalars::real_t<T>;
 
     VectorType x(n), y(n), combination(n), Ax(n), Ay(n), A_combination(n);
-    ProbeRng rng;
+    probe_rng rng;
     const R tol = property_tol<T>();
 
     for (idx probe = 0; probe < g_probe_count; ++probe) {
@@ -854,7 +896,8 @@ inline void verify_linearity_sample(const Op &A, idx n,
             residual_sq += scalars::re(scalars::conj(d) * d);
             scale_sq += scalars::re(scalars::conj(expected) * expected);
         }
-        const R relative = std::sqrt(residual_sq) / (std::sqrt(scale_sq) + std::numeric_limits<R>::min());
+        const R relative =
+            std::sqrt(residual_sq) / (std::sqrt(scale_sq) + std::numeric_limits<R>::min());
 
         if (relative > tol) {
             panic("PropertyError",

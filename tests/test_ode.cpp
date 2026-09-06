@@ -10,16 +10,16 @@ using namespace num;
 
 // Helpers
 
-static ODERhsFn harmonic_osc() {
-    return [](real t, const Vector &y, Vector &dy) {
+static ode_rhs_fn harmonic_osc() {
+    return [](real t, const vec &y, vec &dy) {
         (void)t;
         dy[0] = y[1];
         dy[1] = -y[0];
     };
 }
 
-static AccelFn kepler_accel() {
-    return [](const Vector &q, Vector &a) {
+static accel_fn kepler_accel() {
+    return [](const vec &q, vec &a) {
         real r2 = (q[0] * q[0]) + (q[1] * q[1]);
         real r3 = r2 * std::sqrt(r2);
         a[0] = -q[0] / r3;
@@ -27,23 +27,23 @@ static AccelFn kepler_accel() {
     };
 }
 
-static real kepler_energy(const Vector &q, const Vector &v) {
+static real kepler_energy(const vec &q, const vec &v) {
     real KE = 0.5 * ((v[0] * v[0]) + (v[1] * v[1]));
     real r = std::sqrt((q[0] * q[0]) + (q[1] * q[1]));
     return KE - (1.0 / r);
 }
 
-static Vector kepler_q0() {
+static vec kepler_q0() {
     return {1.0, 0.0};
 }
-static Vector kepler_v0() {
+static vec kepler_v0() {
     return {0.0, 1.0};
 }
 
 // Euler
 
 TEST(ODE_Euler, OrderOne) {
-    auto f = [](real t, const Vector &y, Vector &dy) {
+    auto f = [](real t, const vec &y, vec &dy) {
         (void)t;
         dy[0] = -y[0];
     };
@@ -61,7 +61,7 @@ TEST(ODE_Euler, OrderOne) {
 
 TEST(ODE_RK4, OrderFour) {
     auto f = harmonic_osc();
-    Vector y0{1.0, 0.0};
+    vec y0{1.0, 0.0};
 
     auto err = [&](real h) {
         auto res = ode_rk4(f, y0, {.tf = 1.0, .h = h});
@@ -89,7 +89,7 @@ TEST(ODE_RK45, HarmonicOscillator) {
 }
 
 TEST(ODE_RK45, ExponentialDecay) {
-    auto f = [](real t, const Vector &y, Vector &dy) {
+    auto f = [](real t, const vec &y, vec &dy) {
         (void)t;
         dy[0] = -y[0];
     };
@@ -149,7 +149,7 @@ TEST(ODE_Verlet, EnergyBetterThanRK4Long) {
     real E0 = kepler_energy(kepler_q0(), kepler_v0());
     real h = 0.05;
 
-    auto rhs = [](real, const Vector &y, Vector &dy) {
+    auto rhs = [](real, const vec &y, vec &dy) {
         real r2 = (y[0] * y[0]) + (y[1] * y[1]);
         real r3 = r2 * std::sqrt(r2);
         dy[0] = y[2];
@@ -158,9 +158,9 @@ TEST(ODE_Verlet, EnergyBetterThanRK4Long) {
         dy[3] = -y[1] / r3;
     };
     real rk4_max_drift = 0.0;
-    for (auto [t, y] : rk4(rhs, Vector{1.0, 0.0, 0.0, 1.0}, {.tf = 200.0, .h = h})) {
+    for (auto [t, y] : rk4(rhs, vec{1.0, 0.0, 0.0, 1.0}, {.tf = 200.0, .h = h})) {
         (void)t;
-        Vector q{y[0], y[1]}, v{y[2], y[3]};
+        vec q{y[0], y[1]}, v{y[2], y[3]};
         rk4_max_drift = std::max(rk4_max_drift, std::abs(kepler_energy(q, v) - E0));
     }
 

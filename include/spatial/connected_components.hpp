@@ -8,11 +8,11 @@
 ///   cluster Neighbors  callable: void(int i, F&& f) -- calls f(nb) for each
 ///   neighbor nb of i
 ///
-/// Returns ClusterResult where id[i] is:
+/// Returns cluster_result where id[i] is:
 ///   -2  = excluded (in_cluster returned false)
 ///   >=0 = cluster index
 ///
-/// ClusterResult::largest_id and largest_size track the biggest connected
+/// cluster_result::largest_id and largest_size track the biggest connected
 /// component.
 #pragma once
 
@@ -21,14 +21,14 @@
 
 namespace num {
 
-struct ClusterResult {
+struct cluster_result {
     std::vector<int> id;    ///< Per-site label: -2 excluded, >=0 cluster index
     std::vector<int> sizes; ///< sizes[c] = number of sites in cluster c
     int largest_id = -1;    ///< Index of largest cluster (-1 if none)
     int largest_size = 0;   ///< Size of largest cluster
 
-    friend std::ostream &operator<<(std::ostream &os, const ClusterResult &r) {
-        os << "ClusterResult{ num_clusters: " << r.sizes.size()
+    friend std::ostream &operator<<(std::ostream &os, const cluster_result &r) {
+        os << "cluster_result{ num_clusters: " << r.sizes.size()
            << ", largest_id: " << r.largest_id
            << ", largest_size: " << r.largest_size << " }";
         return os;
@@ -43,8 +43,8 @@ struct ClusterResult {
 /// @param neighbors   void(int i, auto&& visit) -- call visit(nb) per neighbor
 /// of i
 template <typename InCluster, typename Neighbors>
-ClusterResult connected_components(int n_sites, InCluster &&in_cluster, Neighbors &&neighbors) {
-    ClusterResult res;
+cluster_result connected_components(int n_sites, InCluster &&in_cluster, Neighbors &&neighbors) {
+    cluster_result res;
     res.id.resize(n_sites);
     res.sizes.reserve(64);
 

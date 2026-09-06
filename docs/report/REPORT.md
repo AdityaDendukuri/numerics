@@ -11,24 +11,24 @@ industry-standard LAPACK/BLAS reference. Sections without data show `[not availa
 
 - [Build Environment](#build-environment)
 - [Test Summary](#test-summary)
-- [Core — Vector and Matrix](#core--vector-and-matrix)
-  - [Benchmarks — Matrix Multiply](#benchmarks--matrix-multiply)
-  - [Benchmarks — Matrix-Vector Multiply](#benchmarks--matrix-vector-multiply)
+- [Core — vec and mat](#core--vector-and-matrix)
+  - [Benchmarks — mat Multiply](#benchmarks--matrix-multiply)
+  - [Benchmarks — mat-vec Multiply](#benchmarks--matrix-vector-multiply)
   - [Benchmarks — Dot Product](#benchmarks--dot-product)
   - [Benchmarks — Axpy](#benchmarks--axpy)
 - [Factorizations](#factorizations)
   - [LU Factorization](#lu-factorization)
   - [QR Factorization](#qr-factorization)
-  - [Thomas Tridiagonal Solver](#thomas-tridiagonal-solver)
+  - [Thomas tridiagonal Solver](#thomas-tridiagonal-solver)
 - [Iterative Solvers](#iterative-solvers)
   - [Conjugate Gradient](#conjugate-gradient)
   - [Convergence Dynamics](#convergence-dynamics)
-- [Resolvent & Matrix Exponential](#resolvent--matrix-exponential)
+- [Resolvent & mat Exponential](#resolvent--matrix-exponential)
   - [Talbot Spectral Quadrature](#talbot-spectral-quadrature)
-- [Banded Matrices](#banded-matrices)
+- [banded Matrices](#banded-matrices)
 - [Eigensolvers](#eigensolvers)
   - [Full Symmetric Eigensolver](#full-symmetric-eigensolver)
-  - [Lanczos (Matrix-Free)](#lanczos-matrix-free)
+  - [Lanczos (mat-Free)](#lanczos-matrix-free)
 - [Singular Value Decomposition](#singular-value-decomposition)
   - [Full SVD](#full-svd)
   - [Randomized Truncated SVD](#randomized-truncated-svd)
@@ -58,7 +58,7 @@ industry-standard LAPACK/BLAS reference. Sections without data show `[not availa
 | BLAS / cblas | **found** | Backend::blas   -- cblas_dgemm, cblas_ddot, cblas_dgemv |
 | LAPACKE | **found** | Backend::lapack -- dgetrf, dgeqrf, dgesdd, dsyevd, dgtsv |
 | OpenMP | **found** | Backend::omp    -- parallel blocked loops |
-| FFTW3 | **found** | FFTBackend::fftw -- AVX2/NEON optimised DFT |
+| FFTW3 | **found** | fft_backend::fftw -- AVX2/NEON optimised DFT |
 | CUDA | not found | Backend::gpu    -- custom kernels / cuBLAS |
 | MPI | **found** | distributed ops (experimental) |
 
@@ -71,25 +71,25 @@ All test suites. A failed suite must be investigated before using the library in
 
 | Suite | Tests | Passed | Failed | Time |
 |-------|------:|-------:|-------:|-----:|
-| Vector | 7 | 7 | 0 | 0.0 ms |
+| vec | 7 | 7 | 0 | 0.0 ms |
 | RawKernel | 3 | 3 | 0 | 0.0 ms |
-| Matrix | 7 | 7 | 0 | 0.0 ms |
+| mat | 7 | 7 | 0 | 0.0 ms |
 | MatmulPolicy | 1 | 1 | 0 | 0.0 ms |
 | MatvecPolicy | 1 | 1 | 0 | 0.0 ms |
 | MatrixExpr | 3 | 3 | 0 | 0.0 ms |
 | Resolvent | 2 | 2 | 0 | 0.0 ms |
-| CG | 5 | 5 | 0 | 0.0 ms |
+| cg_method | 5 | 5 | 0 | 0.0 ms |
 | MatrixProperties | 2 | 2 | 0 | 0.0 ms |
 | SolveDispatch | 2 | 2 | 0 | 0.0 ms |
 | Operators | 1 | 1 | 0 | 0.0 ms |
-| PCG | 2 | 2 | 0 | 0.0 ms |
-| MINRES | 1 | 1 | 0 | 3.0 ms |
+| pcg_method | 2 | 2 | 0 | 0.0 ms |
+| minres_method | 1 | 1 | 0 | 3.0 ms |
 | PDEOperators | 2 | 2 | 0 | 0.0 ms |
 | Thomas | 3 | 3 | 0 | 0.0 ms |
 | GaussSeidel | 3 | 3 | 0 | 2.0 ms |
 | Jacobi | 3 | 3 | 0 | 0.0 ms |
-| GMRES | 5 | 5 | 0 | 0.0 ms |
-| SparseMatrix | 5 | 5 | 0 | 0.0 ms |
+| gmres_method | 5 | 5 | 0 | 0.0 ms |
+| spmat | 5 | 5 | 0 | 0.0 ms |
 | Probability | 1 | 1 | 0 | 0.0 ms |
 | Selection | 2 | 2 | 0 | 0.0 ms |
 | Sequence | 1 | 1 | 0 | 0.0 ms |
@@ -101,7 +101,7 @@ All test suites. A failed suite must be investigated before using the library in
 | Hessenberg | 2 | 2 | 0 | 0.0 ms |
 | KernelRaw | 1 | 1 | 0 | 0.0 ms |
 | HessenbergResolvent | 1 | 1 | 0 | 1.0 ms |
-| BandedMatrix | 6 | 6 | 0 | 0.0 ms |
+| band_mat | 6 | 6 | 0 | 0.0 ms |
 | BandedSolver | 11 | 11 | 0 | 0.0 ms |
 | BandedMatvec | 2 | 2 | 0 | 0.0 ms |
 | BandedNorm | 1 | 1 | 0 | 0.0 ms |
@@ -115,7 +115,7 @@ All test suites. A failed suite must be investigated before using the library in
 | Roots | 9 | 9 | 0 | 0.0 ms |
 | Quadrature | 11 | 11 | 0 | 2.0 ms |
 | FFT | 13 | 13 | 0 | 2.0 ms |
-| FFTPlan | 4 | 4 | 0 | 1.0 ms |
+| fft_plan | 4 | 4 | 0 | 1.0 ms |
 | ODE_Euler | 1 | 1 | 0 | 0.0 ms |
 | ODE_RK4 | 2 | 2 | 0 | 0.0 ms |
 | ODE_RK45 | 2 | 2 | 0 | 0.0 ms |
@@ -129,27 +129,27 @@ All test suites. A failed suite must be investigated before using the library in
 | SVD_Jacobi | 3 | 3 | 0 | 0.0 ms |
 | SVD_LAPACK | 4 | 4 | 0 | 1.0 ms |
 | SVD_Randomized | 2 | 2 | 0 | 0.0 ms |
-| ScalarField3D | 1 | 1 | 0 | 0.0 ms |
-| VectorField3D | 1 | 1 | 0 | 0.0 ms |
-| FieldSolver | 2 | 2 | 0 | 0.0 ms |
+| scalar_field_3d | 1 | 1 | 0 | 0.0 ms |
+| vector_field_3d | 1 | 1 | 0 | 0.0 ms |
+| field_solver | 2 | 2 | 0 | 0.0 ms |
 | Solve | 3 | 3 | 0 | 0.0 ms |
 | Sample | 1 | 1 | 0 | 0.0 ms |
 | Umbrella | 1 | 1 | 0 | 0.0 ms |
 | DebugCheck | 6 | 6 | 0 | 0.0 ms |
-| DisjointSet | 4 | 4 | 0 | 0.0 ms |
-| IndexedPriorityQueue | 4 | 4 | 0 | 0.0 ms |
-| Graph | 7 | 7 | 0 | 0.0 ms |
-| DegreeQueue | 2 | 2 | 0 | 0.0 ms |
-| Multigraph | 1 | 1 | 0 | 0.0 ms |
+| disjoint_set | 4 | 4 | 0 | 0.0 ms |
+| indexed_priority_queue | 4 | 4 | 0 | 0.0 ms |
+| graph | 7 | 7 | 0 | 0.0 ms |
+| degree_queue | 2 | 2 | 0 | 0.0 ms |
+| multigraph | 1 | 1 | 0 | 0.0 ms |
 | MathSpine | 14 | 14 | 0 | 0.0 ms |
 | RandomMat | 3 | 3 | 0 | 0.0 ms |
 
 
 ---
 
-## Core — Vector and Matrix
+## Core — vec and mat
 
-`Vector` and `Matrix` dispatch to the backend selected via the `Backend` enum
+`vec` and `mat` dispatch to the backend selected via the `Backend` enum
 (`seq → blocked → simd → blas → omp → gpu`). With BLAS available, `default_backend`
 resolves to `Backend::blas`.
 
@@ -157,15 +157,15 @@ resolves to `Backend::blas`.
 
 | Suite | Tests | Passed | Failed | Time |
 |-------|------:|-------:|-------:|-----:|
-| Vector | 7 | 7 | 0 | 0.0 ms |
-| Matrix | 7 | 7 | 0 | 0.0 ms |
+| vec | 7 | 7 | 0 | 0.0 ms |
+| mat | 7 | 7 | 0 | 0.0 ms |
 
 
-### Benchmarks — Matrix Multiply
+### Benchmarks — mat Multiply
 
 Throughput: `2 n³ / time` (GFLOP/s, higher is better). Sizes n = 64…512.
 
-![Matrix multiply: GFLOP/s vs n](plots/matmul.png)
+![mat multiply: GFLOP/s vs n](plots/matmul.png)
 
 
 | Variant | n=64 us | n=128 us | n=256 us | n=512 us |
@@ -183,11 +183,11 @@ Throughput: `2 n³ / time` (GFLOP/s, higher is better). Sizes n = 64…512.
 *Time in us. Lower is better.*
 
 
-### Benchmarks — Matrix-Vector Multiply
+### Benchmarks — mat-vec Multiply
 
 Memory-bound. GB/s = `(n² + 2n) × 8 / time`.
 
-![Matrix-vector multiply: GB/s vs n](plots/matvec.png)
+![mat-vector multiply: GB/s vs n](plots/matvec.png)
 
 
 | Variant | n=64 GB/s | n=128 GB/s | n=256 GB/s | n=512 GB/s | n=1024 GB/s | n=2048 GB/s |
@@ -279,7 +279,7 @@ LAPACK (`dgeqrf` + `dorgqr`) uses blocked Householder with `dgemm` for panel upd
 *GFLOP/s: 4/3 n^3 / time. Higher is better.*
 
 
-### Thomas Tridiagonal Solver
+### Thomas tridiagonal Solver
 
 O(n) direct solver. `LAPACKE_dgtsv` uses the same algorithm with additional
 pivoting for stability.
@@ -302,21 +302,21 @@ pivoting for stability.
 
 | Suite | Tests | Passed | Failed | Time |
 |-------|------:|-------:|-------:|-----:|
-| CG | 5 | 5 | 0 | 0.0 ms |
+| cg_method | 5 | 5 | 0 | 0.0 ms |
 | GaussSeidel | 3 | 3 | 0 | 2.0 ms |
 | Jacobi | 3 | 3 | 0 | 0.0 ms |
 
 
 ### Conjugate Gradient
 
-CG inner-product and axpy calls dispatch to `best_backend` (BLAS when available).
+cg_method inner-product and axpy calls dispatch to `best_backend` (BLAS when available).
 
 ![Conjugate gradient: time vs n](plots/cg.png)
 
 
 | Variant | n=32 us | n=64 us | n=128 us | n=256 us |
 |---------|---------|---------|----------|----------|
-| CG | 57.6 | 292.6 | 1554.4 | 6460.9 |
+| cg_method | 57.6 | 292.6 | 1554.4 | 6460.9 |
 
 *Time in us. Lower is better.*
 
@@ -327,15 +327,15 @@ Relative residual reduction $\frac{\|r_k\|}{\|b\|}$ across iterations on anisotr
 
 ![Iterative Solvers Convergence](plots/iterative_convergence.png)
 
-### MINRES vs Conjugate Gradient (Error & Residual Comparison)
+### minres_method vs Conjugate Gradient (Error & Residual Comparison)
 
-Comparison of monotonicity in residual 2-norm versus $A$-norm energy minimization between MINRES and CG:
+Comparison of monotonicity in residual 2-norm versus $A$-norm energy minimization between minres_method and cg_method:
 
-![MINRES vs CG](plots/cg_vs_minres.png)
+![minres_method vs cg_method](plots/cg_vs_minres.png)
 
 ---
 
-## Resolvent & Matrix Exponential
+## Resolvent & mat Exponential
 
 ### Talbot Spectral Quadrature
 
@@ -345,7 +345,7 @@ Evaluation of matrix exponential action $e^{t Q} p_0$ via Weideman-Talbot shifte
 
 ---
 
-## Banded Matrices
+## banded Matrices
 
 ### Tests
 
@@ -354,7 +354,7 @@ Evaluation of matrix exponential action $e^{t Q} p_0$ via Weideman-Talbot shifte
 
 ### Benchmarks
 
-![Banded solver: time vs n](plots/banded.png)
+![banded solver: time vs n](plots/banded.png)
 
 
 | Variant | n=3 us | n=5 us | n=7 us | n=11 us | n=15 us | n=21 us | n=64 us | n=256 us | n=1024 us | n=4096 us | n=16384 us | n=65536 us | n=262144 us |
@@ -402,7 +402,7 @@ Lanczos is matrix-free and targets only k eigenvalues — it lives on a separate
 *Time in us. Lower is better.*
 
 
-### Lanczos (Matrix-Free)
+### Lanczos (mat-Free)
 
 k = 10 eigenvalues requested. Each step costs one matvec O(n²) plus reorthogonalisation.
 
@@ -478,7 +478,7 @@ Backends: `seq` (Cooley-Tukey), `simd` (AVX2/NEON), `fftw` (FFTW3).
 | Suite | Tests | Passed | Failed | Time |
 |-------|------:|-------:|-------:|-----:|
 | FFT | 13 | 13 | 0 | 2.0 ms |
-| FFTPlan | 4 | 4 | 0 | 1.0 ms |
+| fft_plan | 4 | 4 | 0 | 1.0 ms |
 
 
 ### Benchmarks — Forward FFT

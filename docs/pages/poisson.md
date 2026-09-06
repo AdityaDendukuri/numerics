@@ -14,7 +14,7 @@ on an \f$N\times N\f$ interior grid by DST-I diagonalization.
 constexpr int N = 63;
 constexpr double h = 1.0 / (N + 1);
 
-num::Matrix f(N, N, 0.0);
+num::mat f(N, N, 0.0);
 for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
         double x = (i + 1) * h;
@@ -25,7 +25,7 @@ for (int i = 0; i < N; ++i) {
     }
 }
 
-num::Matrix u = num::pde::poisson2d(f, N);
+num::mat u = num::pde::poisson2d(f, N);
 ```
 
 The exact solution in this example is
@@ -37,7 +37,7 @@ The exact solution in this example is
 ## Finite-Difference Reference
 
 ```cpp
-num::Matrix u_fd = num::pde::poisson2d_fd(f, N);
+num::mat u_fd = num::pde::poisson2d_fd(f, N);
 ```
 
 Use `poisson2d_fd` as a direct finite-difference reference for small grids.

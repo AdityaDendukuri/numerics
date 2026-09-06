@@ -16,7 +16,7 @@ namespace num::structures::debug {
 template <std::integral Index>
 inline void check_index_bounds(Index index, Index capacity, std::string_view label = "Index",
                                std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
     if (index >= capacity) {
@@ -28,9 +28,10 @@ inline void check_index_bounds(Index index, Index capacity, std::string_view lab
 
 /// @brief Verify an indexed item exists in an indexed container.
 template <std::integral Index>
-inline void check_contains(bool exists, Index index, std::string_view label = "IndexedPriorityQueue",
+inline void check_contains(bool exists, Index index,
+                           std::string_view label = "indexed_priority_queue",
                            std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
     if (!exists) {
@@ -42,9 +43,10 @@ inline void check_contains(bool exists, Index index, std::string_view label = "I
 
 /// @brief Verify an indexed item does NOT already exist before insertion.
 template <std::integral Index>
-inline void check_not_contains(bool exists, Index index, std::string_view label = "IndexedPriorityQueue",
+inline void check_not_contains(bool exists, Index index,
+                               std::string_view label = "indexed_priority_queue",
                                std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
     if (exists) {
@@ -53,7 +55,6 @@ inline void check_not_contains(bool exists, Index index, std::string_view label 
         num::debug::panic("DuplicateKeyError", msg, loc);
     }
 }
-
 
 /// @brief Sample the equivalence-relation axioms a union-find claims to maintain.
 ///
@@ -65,9 +66,13 @@ inline void check_not_contains(bool exists, Index index, std::string_view label 
 /// Takes a mutable reference because path compression rewrites the forest while
 /// answering queries: `find` is observationally pure but not physically const.
 template <class DS, std::integral Index = num::idx>
-inline void verify_equivalence_relation(DS &ds, Index n,
-                                        std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() != num::debug::DiagnosticLevel::full || n == 0) {
+inline void
+verify_equivalence_relation(DS &ds, Index n,
+                            std::source_location loc = std::source_location::current()) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || n == 0) {
         return;
     }
     const Index limit = n < Index(24) ? n : Index(24);
@@ -125,8 +130,8 @@ inline void verify_equivalence_relation(DS &ds, Index n,
     if (ds.count() > ds.size()) {
         num::debug::panic("PropertyError",
                           "union-find quotient is larger than the underlying set: count() = " +
-                              std::to_string(ds.count()) + " > size() = " +
-                              std::to_string(ds.size()),
+                              std::to_string(ds.count()) +
+                              " > size() = " + std::to_string(ds.size()),
                           loc);
     }
 }
@@ -135,7 +140,7 @@ inline void verify_equivalence_relation(DS &ds, Index n,
 template <class PQ, class Key = double, std::integral Index = num::idx>
 inline void verify_heap_order(const PQ &pq, Index capacity,
                               std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() != num::debug::DiagnosticLevel::full || pq.empty()) {
+    if (num::debug::get_level() != num::debug::diagnostic_level::full || pq.empty()) {
         return;
     }
     const Key top = pq.top_key();
@@ -151,9 +156,9 @@ inline void verify_heap_order(const PQ &pq, Index capacity,
 
 /// @brief Verify vertex index is within graph vertex range [0, n_vertices).
 template <std::integral Index>
-inline void check_vertex_bounds(Index u, Index n_vertices, std::string_view label = "Graph::vertex",
+inline void check_vertex_bounds(Index u, Index n_vertices, std::string_view label = "graph::vertex",
                                 std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
     if (u >= n_vertices) {
@@ -165,9 +170,10 @@ inline void check_vertex_bounds(Index u, Index n_vertices, std::string_view labe
 
 /// @brief Verify edge weight is strictly positive.
 template <typename Weight>
-inline void check_positive_weight(const Weight &weight, std::string_view label = "Graph::edge_weight",
+inline void check_positive_weight(const Weight &weight,
+                                  std::string_view label = "graph::edge_weight",
                                   std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
     if (!(weight > Weight{0})) {
@@ -178,9 +184,9 @@ inline void check_positive_weight(const Weight &weight, std::string_view label =
 
 /// @brief Verify graph connectivity invariant (1 connected component).
 template <std::integral Index>
-inline void check_connected(Index n_components, std::string_view label = "Graph",
+inline void check_connected(Index n_components, std::string_view label = "graph",
                             std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
     if (n_components > 1) {
@@ -190,7 +196,6 @@ inline void check_connected(Index n_components, std::string_view label = "Graph"
     }
 }
 
-
 /// @brief Verify that reported degrees agree with the enumerated adjacency.
 ///
 /// `degree(u)` and `neighbors(u)` are two presentations of the same set
@@ -199,7 +204,7 @@ inline void check_connected(Index n_components, std::string_view label = "Graph"
 template <class G, std::integral Index = num::idx>
 inline void verify_degree_consistency(const G &g,
                                       std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
     for (Index u = 0; u < g.n_vertices(); ++u) {
@@ -209,10 +214,9 @@ inline void verify_degree_consistency(const G &g,
         }
         if (counted != g.degree(u)) {
             num::debug::panic("GraphStructureError",
-                              "degree(" + std::to_string(u) + ") = " +
-                                  std::to_string(g.degree(u)) + " but neighbors(" +
-                                  std::to_string(u) + ") enumerates " + std::to_string(counted) +
-                                  " entries",
+                              "degree(" + std::to_string(u) + ") = " + std::to_string(g.degree(u)) +
+                                  " but neighbors(" + std::to_string(u) + ") enumerates " +
+                                  std::to_string(counted) + " entries",
                               loc);
         }
     }
@@ -222,7 +226,7 @@ inline void verify_degree_consistency(const G &g,
 template <class G, std::integral Index = num::idx>
 inline void verify_handshake_lemma(const G &g,
                                    std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
     Index degree_sum = 0;
@@ -230,12 +234,12 @@ inline void verify_handshake_lemma(const G &g,
         degree_sum += g.degree(u);
     }
     if (degree_sum != Index(2) * g.n_edges()) {
-        num::debug::panic("GraphStructureError",
-                          "handshake lemma violated: sum of degrees = " +
-                              std::to_string(degree_sum) + " but 2|E| = " +
-                              std::to_string(Index(2) * g.n_edges()) +
-                              ". The graph is not a consistent undirected incidence structure.",
-                          loc);
+        num::debug::panic(
+            "GraphStructureError",
+            "handshake lemma violated: sum of degrees = " + std::to_string(degree_sum) +
+                " but 2|E| = " + std::to_string(Index(2) * g.n_edges()) +
+                ". The graph is not a consistent undirected incidence structure.",
+            loc);
     }
 }
 
@@ -244,7 +248,7 @@ inline void verify_handshake_lemma(const G &g,
 /// A Laplacian is symmetric with zero row sums, which is exactly the statement
 /// \f$\Delta \mathbf{1} = 0\f$: the constant vector lies in its null space. That
 /// null space is why a Laplacian is positive *semi*-definite and must be asserted
-/// `property::psd` rather than `property::spd` — asserting the latter claims an
+/// `law::psd` rather than `law::spd` — asserting the latter claims an
 /// invertibility it does not have.
 ///
 /// Accepts dense or CSR storage; for CSR only the stored entries are visited, so
@@ -252,7 +256,7 @@ inline void verify_handshake_lemma(const G &g,
 template <class Mat>
 inline void verify_laplacian_structure(const Mat &L, double tol = 1e-9,
                                        std::source_location loc = std::source_location::current()) {
-    if (num::debug::get_level() == num::debug::DiagnosticLevel::off) {
+    if (num::debug::get_level() == num::debug::diagnostic_level::off) {
         return;
     }
 
@@ -271,11 +275,11 @@ inline void verify_laplacian_structure(const Mat &L, double tol = 1e-9,
 
     auto check_row = [&](num::idx i, double row_sum) {
         if (std::abs(row_sum) > tol) {
-            num::debug::panic("GraphStructureError",
-                              "Laplacian row " + std::to_string(i) + " sums to " +
-                                  std::to_string(row_sum) +
-                                  " rather than 0, so the constant vector is not in its null space.",
-                              loc);
+            num::debug::panic(
+                "GraphStructureError",
+                "Laplacian row " + std::to_string(i) + " sums to " + std::to_string(row_sum) +
+                    " rather than 0, so the constant vector is not in its null space.",
+                loc);
         }
     };
     auto check_symmetry = [&](num::idx i, num::idx j) {
@@ -289,7 +293,11 @@ inline void verify_laplacian_structure(const Mat &L, double tol = 1e-9,
         }
     };
 
-    if constexpr (requires { L.row_ptr(); L.col_idx(); L.values(); }) {
+    if constexpr (requires {
+                      L.row_ptr();
+                      L.col_idx();
+                      L.values();
+                  }) {
         const auto *row_ptr = L.row_ptr();
         const auto *col_idx = L.col_idx();
         const auto *values = L.values();

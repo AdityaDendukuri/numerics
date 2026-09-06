@@ -1,5 +1,6 @@
 /// @file linear/solvers/hessenberg_resolvent.cpp
 /// @brief O(n^2)-per-shift Hessenberg resolvent solver implementation.
+#include "kernel/complex.hpp"
 #include "kernel/factor.hpp"
 #include "linear/solvers/hessenberg_resolvent.hpp"
 #include "linear/factorization/hessenberg.hpp"
@@ -9,16 +10,16 @@
 
 namespace num {
 
-HessenbergResolventSolver::HessenbergResolventSolver(const Matrix &A) : decomp_(A) {
-    debug::check_dim(A.rows(), A.cols(), "HessenbergResolventSolver matrix must be square");
-    debug::check_non_empty(A.rows(), "HessenbergResolventSolver matrix");
+hessenberg_resolvent_solver::hessenberg_resolvent_solver(const mat &A) : decomp_(A) {
+    debug::check_dim(A.rows(), A.cols(), "hessenberg_resolvent_solver matrix must be square");
+    debug::check_non_empty(A.rows(), "hessenberg_resolvent_solver matrix");
 }
 
-HessenbergResolventSolver::HessenbergResolventSolver(HessenbergDecomposition decomp)
+hessenberg_resolvent_solver::hessenberg_resolvent_solver(hessenberg_decomposition decomp)
     : decomp_(std::move(decomp)) {}
 
-std::vector<cplx> HessenbergResolventSolver::solve(cplx shift, const Vector &b) const {
-    debug::check_dim(decomp_.size(), b.size(), "HessenbergResolventSolver RHS");
+std::vector<cplx> hessenberg_resolvent_solver::solve(cplx shift, const vec &b) const {
+    debug::check_dim(decomp_.size(), b.size(), "hessenberg_resolvent_solver RHS");
     const idx n = decomp_.size();
     const auto b_tilde = hessenberg_project(decomp_.Q(), b);
 
@@ -32,9 +33,9 @@ std::vector<cplx> HessenbergResolventSolver::solve(cplx shift, const Vector &b) 
     return x;
 }
 
-std::vector<cplx> HessenbergResolventSolver::solve(cplx shift,
+std::vector<cplx> hessenberg_resolvent_solver::solve(cplx shift,
                                                   const std::vector<cplx> &b) const {
-    debug::check_dim(decomp_.size(), static_cast<idx>(b.size()), "HessenbergResolventSolver RHS");
+    debug::check_dim(decomp_.size(), static_cast<idx>(b.size()), "hessenberg_resolvent_solver RHS");
     const idx n = decomp_.size();
     const auto b_tilde = hessenberg_project(decomp_.Q(), b);
 
@@ -49,8 +50,8 @@ std::vector<cplx> HessenbergResolventSolver::solve(cplx shift,
 }
 
 std::vector<std::vector<cplx>>
-HessenbergResolventSolver::solve_batch(const std::vector<cplx> &shifts, const Vector &b) const {
-    debug::check_dim(decomp_.size(), b.size(), "HessenbergResolventSolver RHS");
+hessenberg_resolvent_solver::solve_batch(const std::vector<cplx> &shifts, const vec &b) const {
+    debug::check_dim(decomp_.size(), b.size(), "hessenberg_resolvent_solver RHS");
     const idx n = decomp_.size();
     const auto b_tilde = hessenberg_project(decomp_.Q(), b);
 
@@ -77,13 +78,13 @@ HessenbergResolventSolver::solve_batch(const std::vector<cplx> &shifts, const Ve
 }
 
 std::vector<std::vector<std::vector<cplx>>>
-HessenbergResolventSolver::solve_batch(const std::vector<cplx> &shifts,
-                                      const std::vector<Vector> &rhs_list) const {
+hessenberg_resolvent_solver::solve_batch(const std::vector<cplx> &shifts,
+                                      const std::vector<vec> &rhs_list) const {
     const idx n = decomp_.size();
     const std::size_t num_rhs = rhs_list.size();
     std::vector<std::vector<cplx>> b_tilde_list(num_rhs);
     for (std::size_t r = 0; r < num_rhs; ++r) {
-        debug::check_dim(n, rhs_list[r].size(), "HessenbergResolventSolver RHS list");
+        debug::check_dim(n, rhs_list[r].size(), "hessenberg_resolvent_solver RHS list");
         b_tilde_list[r] = hessenberg_project(decomp_.Q(), rhs_list[r]);
     }
 

@@ -12,9 +12,9 @@ int main() {
     using namespace num;
 
     // Dense vectors own contiguous storage.
-    Vector x{1.0, 2.0, 3.0};
-    Vector y(3, 2.0);
-    Vector z(3, 0.0);
+    vec x{1.0, 2.0, 3.0};
+    vec y(3, 2.0);
+    vec z(3, 0.0);
 
     scale(y, 0.5);    // y <- 0.5 y
     add(x, y, z);     // z <- x+y
@@ -29,32 +29,32 @@ int main() {
     copy_to(x, host);
 
     // Interleaved coordinate views avoid copying particle data.
-    Vector coordinates{1.0, 2.0, 3.0, 4.0};
-    Vec2View points{coordinates};
+    vec coordinates{1.0, 2.0, 3.0, 4.0};
+    vec2_view points{coordinates};
     points.x(1) = 5.0;
 
     // Dense matrices are row-major and dispatch arithmetic by backend.
-    Matrix A(3, 3, 0.0);
+    mat A(3, 3, 0.0);
     set_diagonal(A, std::array<real, 3>{4.0, 5.0, 6.0});
     A(0, 1) = 1.0;
     A(1, 0) = 1.0;
 
-    Vector Ax(3, 0.0);
+    vec Ax(3, 0.0);
     matvec(A, x, Ax);
-    Matrix At = transpose(A);
-    Matrix product(3, 3, 0.0);
+    mat At = transpose(A);
+    mat product(3, 3, 0.0);
     matmul(A, At, product);
-    Matrix sum(3, 3, 0.0);
+    mat sum(3, 3, 0.0);
     matadd(1.0, A, 1.0, At, sum);
 
-    // Matrix constructors cover common right-hand sides and scalings.
-    const Vector e1 = unit_vector(3, 1);
-    const Matrix I = identity(3);
-    const Matrix rhs = identity_columns(3, 1, 2);
-    const Vector diag = diagonal(A);
-    const Matrix D = diagonal_matrix(std::span<const real>(diag.data(), diag.size()));
+    // mat constructors cover common right-hand sides and scalings.
+    const vec e1 = unit_vector(3, 1);
+    const mat I = identity(3);
+    const mat rhs = identity_columns(3, 1, 2);
+    const vec diag = diagonal(A);
+    const mat D = diagonal_matrix(std::span<const real>(diag.data(), diag.size()));
 
-    Vector weighted = x;
+    vec weighted = x;
     const std::array<real, 3> weights{1.0, 2.0, 4.0};
     scale_elements(weighted, weights);
     divide_elements(weighted, weights);
@@ -67,17 +67,17 @@ int main() {
     std::vector<real> scattered(3, 0.0);
     scatter<real>(selected, indices, scattered);
 
-    // Triplets are sorted and duplicate entries are summed into CSR storage.
-    const SparseMatrix sparse = SparseMatrix::from_triplets(3, 3, std::vector<idx>{0, 0, 1, 2},
+    // Triplets are sorted and duplicate entries are summed into csr storage.
+    const spmat sparse = spmat::from_triplets(3, 3, std::vector<idx>{0, 0, 1, 2},
                                                             std::vector<idx>{0, 1, 1, 2},
                                                             std::vector<real>{2.0, 1.0, 3.0, 4.0});
-    Vector sparse_x(3, 0.0);
+    vec sparse_x(3, 0.0);
     sparse_matvec(sparse, x, sparse_x);
-    const SparseMatrix sparse_t = transpose(sparse);
-    const SparseMatrix half = scaled(sparse, 0.5);
-    const Matrix sparse_dense = dense(sparse);
-    const Vector sparse_diag = diagonal(sparse);
-    const Matrix similar = diagonal_similarity(sparse, weights);
+    const spmat sparse_t = transpose(sparse);
+    const spmat half = scaled(sparse, 0.5);
+    const mat sparse_dense = dense(sparse);
+    const vec sparse_diag = diagonal(sparse);
+    const mat similar = diagonal_similarity(sparse, weights);
 
     // Property wrappers distinguish checked and construction-guaranteed claims.
     const bool symmetric = linear::is_symmetric(A);
@@ -88,7 +88,7 @@ int main() {
     // Selection and probability helpers replace common application loops.
     const idx largest = argmax(std::span<const real>(diag.data(), diag.size()));
     const auto smallest = smallest_indices(std::span<const real>(diag.data(), diag.size()), 2);
-    Vector probability{0.2, -0.1, 0.8};
+    vec probability{0.2, -0.1, 0.8};
     const real clipped_mass =
         clip_and_normalize_nonnegative(std::span<real>(probability.data(), probability.size()));
     const real expectation =

@@ -4,6 +4,8 @@
 
 #include "algebra/concepts.hpp"
 #include "container/vector.hpp"
+#include "core/index_space.hpp"
+#include "ode/concepts.hpp"
 #include "core/types.hpp"
 #include <concepts>
 
@@ -14,29 +16,27 @@ namespace num {
 /// The grid holds the shape and the spacing. It owns no values, so several fields
 /// may share one grid.
 template <class G>
-concept StructuredGrid2D = requires(const G &grid, int i, int j) {
-    { grid.N } -> std::convertible_to<int>;
-    { grid.flat(i, j) } -> std::convertible_to<int>;
-};
+concept structured_grid_2d = cartesian_index_space_2d<G>;
 
-/// @brief Scalar-valued field sampled on a grid.
+/// @brief scalar-valued field sampled on a grid.
 ///
 /// Indexing by grid coordinate reads a sample. The values are contiguous and
 /// exposed as a vector space, so a field can be handed to a Krylov solver without
 /// being copied.
 template <class F, class T = real>
-concept ScalarFieldLike = scalars::Field<T> && requires(F &f, const F &cf, int i, int j) {
+concept scalar_field_like = scalars::field<T> && requires(F &f, const F &cf, int i, int j) {
     { cf(i, j) } -> std::convertible_to<T>;
     { f(i, j) } -> std::convertible_to<T &>;
-    { f.vec() };
+    { f.as_vec() };
 };
 
-/// @brief Field whose storage satisfies the vector space contract.
+/// @brief field whose storage satisfies the vector space contract.
 ///
-/// This is what lets an implicit time stepper solve on a field directly.
-template <class F, class T = real>
-concept SolvableField = ScalarFieldLike<F, T> && requires(F &f) {
-    { f.vec() } -> std::convertible_to<Vector &>;
-};
+/// This is what lets an implicit time stepper solve on a field directly. It is exactly
+/// `num::vec_field` restricted to fields sampled on a grid, so it refines that rather than
+/// restating the requirement — and, like it, takes the space as a parameter instead of
+/// naming `vec`.
+template <class F, class T = real, class V = vec>
+concept solvable_field = scalar_field_like<F, T> && vec_field<F, V>;
 
 } // namespace num

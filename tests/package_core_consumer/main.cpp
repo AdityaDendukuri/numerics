@@ -5,13 +5,13 @@
 namespace num::math {
 
 template <>
-struct model_of<std::vector<double>> {
-    using laws = type_list<law::inner_product_space>;
+struct claims_of<std::vector<double>> {
+    using type = type_list<law::inner_product_space>;
 };
 
 } // namespace num::math
 
-static_assert(num::math::InnerProductSpace<std::vector<double>>);
+static_assert(num::math::inner_product_space<std::vector<double>>);
 
 int main() {
     const std::vector<double> x{3.0, 4.0};

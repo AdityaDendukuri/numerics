@@ -13,26 +13,24 @@
 #include <vector>
 
 #if defined(NUMERICS_HAS_LAPACK)
-#include "container/parallel/lapack_wrapper.hpp"
+#include "lapack/lapack_wrapper.hpp"
 #endif
 
 #ifdef NUMERICS_HAS_CUDA
-#include "container/parallel/cuda_ops.hpp"
+#include "cuda/cuda_ops.hpp"
 #endif
 
 namespace num {
 
-namespace backends {
-
 namespace seq {
 
 template <typename Float = double>
-inline void thomas(const BasicVector<Float> &a, const BasicVector<Float> &b,
-                   const BasicVector<Float> &c, const BasicVector<Float> &d,
-                   BasicVector<Float> &x) {
+inline void thomas(const basic_vec<Float> &a, const basic_vec<Float> &b,
+                   const basic_vec<Float> &c, const basic_vec<Float> &d,
+                   basic_vec<Float> &x) {
     const idx n = b.size();
-    BasicVector<Float> b_work = b;
-    BasicVector<Float> d_work = d;
+    basic_vec<Float> b_work = b;
+    basic_vec<Float> d_work = d;
 
     for (idx i = 1; i < n; ++i) {
         Float w = a[i - 1] / b_work[i - 1];
@@ -50,7 +48,7 @@ inline void thomas(const BasicVector<Float> &a, const BasicVector<Float> &b,
 
 namespace lapack {
 
-inline void thomas(const Vector &a, const Vector &b, const Vector &c, const Vector &d, Vector &x) {
+inline void thomas(const vec &a, const vec &b, const vec &c, const vec &d, vec &x) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = b.size();
     std::vector<double> dl(a.data(), a.data() + (n - 1));
@@ -69,12 +67,33 @@ inline void thomas(const Vector &a, const Vector &b, const Vector &c, const Vect
 
 } // namespace lapack
 
-} // namespace backends
+#ifdef NUMERICS_HAS_CUDA
+namespace cuda {
+inline void thomas(const vec &a, const vec &b, const vec &c, const vec &d, vec &x) {
+    const idx n = b.size();
+    vec ag = a;
+    ag.to_gpu();
+    vec bg = b;
+    bg.to_gpu();
+    vec cg = c;
+    cg.to_gpu();
+    vec dg = d;
+    dg.to_gpu();
+    x = vec(n);
+    x.to_gpu();
+    num::cuda::thomas_batched(ag.gpu_data(), bg.gpu_data(), cg.gpu_data(), dg.gpu_data(),
+                              x.gpu_data(), n, 1);
+    x.to_cpu();
+}
+} // namespace cuda
+#endif
 
 /// @brief Solve tridiagonal linear system \f$a_{i-1} x_{i-1} + b_i x_i + c_i x_{i+1} = d_i\f$ in \f$\mathcal{O}(n)\f$ time.
 ///
 /// Executes the Thomas algorithm (specialized Gaussian elimination for tridiagonal systems) with zero heap allocations.
-/// Dispatches to LAPACK (`dgtsv`) or CUDA batched tridiagonal kernel when requested.
+/// Picks LAPACK (`dgtsv`) if configured, else the in-tree sequential elimination.
+/// To force a specific one (including the CUDA batched kernel when built with
+/// CUDA), call `num::lapack::thomas`/`num::seq::thomas`/`num::cuda::thomas`.
 ///
 /// @tparam Float Floating-point scalar type (`double`, `float`).
 /// @param a Subdiagonal entries (\f$n-1\f$ elements: \f$a_0, \dots, a_{n-2}\f$).
@@ -82,49 +101,25 @@ inline void thomas(const Vector &a, const Vector &b, const Vector &c, const Vect
 /// @param c Superdiagonal entries (\f$n-1\f$ elements: \f$c_0, \dots, c_{n-2}\f$).
 /// @param d Right-hand side vector (\f$n\f$ elements).
 /// @param x Output solution vector (\f$n\f$ elements).
-/// @param backend Execution backend (`backend::factor`, `backend::lapack`, `backend::gpu`, `backend::seq`).
 /// @throws std::invalid_argument If dimensions do not match (\f$a, c\f$ size \f$n-1\f$, \f$b, d, x\f$ size \f$n\f$).
 /// @see banded_solve, lu_solve
 template <typename Float = double>
-inline void thomas(const BasicVector<Float> &a, const BasicVector<Float> &b,
-                   const BasicVector<Float> &c, const BasicVector<Float> &d,
-                   BasicVector<Float> &x, Backend backend = backend::factor) {
+inline void thomas(const basic_vec<Float> &a, const basic_vec<Float> &b,
+                   const basic_vec<Float> &c, const basic_vec<Float> &d,
+                   basic_vec<Float> &x) {
     const idx n = b.size();
     if (a.size() != n - 1 || c.size() != n - 1 || d.size() != n || x.size() != n) {
         throw std::invalid_argument("Dimension mismatch in Thomas solver");
     }
 
     if constexpr (std::is_same_v<Float, double>) {
-        switch (backend) {
-        case backend::lapack:
-            backends::lapack::thomas(a, b, c, d, x);
-            return;
-        case backend::gpu:
-#ifdef NUMERICS_HAS_CUDA
-        {
-            Vector ag = a;
-            ag.to_gpu();
-            Vector bg = b;
-            bg.to_gpu();
-            Vector cg = c;
-            cg.to_gpu();
-            Vector dg = d;
-            dg.to_gpu();
-            x = Vector(n);
-            x.to_gpu();
-            cuda::thomas_batched(ag.gpu_data(), bg.gpu_data(), cg.gpu_data(), dg.gpu_data(),
-                                 x.gpu_data(), n, 1);
-            x.to_cpu();
-            return;
-        }
+#if defined(NUMERICS_HAS_LAPACK)
+        lapack::thomas(a, b, c, d, x);
+#else
+        seq::thomas(a, b, c, d, x);
 #endif
-            [[fallthrough]];
-        default:
-            backends::seq::thomas(a, b, c, d, x);
-            return;
-        }
     } else {
-        backends::seq::thomas(a, b, c, d, x);
+        seq::thomas(a, b, c, d, x);
     }
 }
 

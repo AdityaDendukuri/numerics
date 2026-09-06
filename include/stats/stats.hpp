@@ -14,7 +14,7 @@ namespace num {
 
 /// @brief Welford updates for mean and variance.
 template <typename Float = double, std::integral Index = num::idx>
-struct BasicRunningStats {
+struct basic_running_stats {
     Float mean = Float{0};
     Float M2 = Float{0};
     Index count = 0;
@@ -48,18 +48,18 @@ struct BasicRunningStats {
     }
 };
 
-using RunningStats = BasicRunningStats<real, idx>;
+using running_stats = basic_running_stats<real, idx>;
 
 /// @brief Fixed-bin histogram over \f$[\ell,h)\f$.
 template <typename Float = double, std::integral Index = num::idx>
-struct BasicHistogram {
+struct basic_histogram {
     std::vector<Float> counts;
     Float lo = Float{0};
     Float hi = Float{0};
     Index nbins = 0;
 
     /// Divide [lo,hi) into equally sized bins.
-    BasicHistogram(Index nbins, Float lo, Float hi)
+    basic_histogram(Index nbins, Float lo, Float hi)
         : counts(static_cast<std::size_t>(nbins), Float{0}), lo(lo), hi(hi), nbins(nbins) {}
 
     /// Return the containing bin, or nbins when x lies outside the interval.
@@ -109,7 +109,7 @@ struct BasicHistogram {
     }
 };
 
-using Histogram = BasicHistogram<real, idx>;
+using histogram = basic_histogram<real, idx>;
 
 // Autocorrelation time
 /// Integrated autocorrelation time tau_int from a stored time series.

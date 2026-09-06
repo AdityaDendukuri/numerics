@@ -12,35 +12,35 @@ namespace num {
 
 template <idx N>
 /// Stack-allocated fixed-size real vector with constexpr arithmetic.
-struct SmallVec {
+struct small_vec {
     std::array<real, N> data{};
 
     constexpr real &operator[](idx i) noexcept { return data[i]; }
     constexpr const real &operator[](idx i) const noexcept { return data[i]; }
     static constexpr idx size() noexcept { return N; }
 
-    constexpr SmallVec &operator+=(const SmallVec &o) noexcept {
+    constexpr small_vec &operator+=(const small_vec &o) noexcept {
         for (idx i = 0; i < N; ++i) {
             data[i] += o.data[i];
         }
         return *this;
     }
 
-    constexpr SmallVec &operator-=(const SmallVec &o) noexcept {
+    constexpr small_vec &operator-=(const small_vec &o) noexcept {
         for (idx i = 0; i < N; ++i) {
             data[i] -= o.data[i];
         }
         return *this;
     }
 
-    constexpr SmallVec &operator*=(real s) noexcept {
+    constexpr small_vec &operator*=(real s) noexcept {
         for (idx i = 0; i < N; ++i) {
             data[i] *= s;
         }
         return *this;
     }
 
-    constexpr real dot(const SmallVec &o) const noexcept {
+    constexpr real dot(const small_vec &o) const noexcept {
         real s = 0;
         for (idx i = 0; i < N; ++i) {
             s += data[i] * o.data[i];
@@ -52,18 +52,18 @@ struct SmallVec {
 };
 
 template <idx N>
-constexpr SmallVec<N> operator+(SmallVec<N> a, const SmallVec<N> &b) noexcept {
+constexpr small_vec<N> operator+(small_vec<N> a, const small_vec<N> &b) noexcept {
     return a += b;
 }
 
 template <idx N>
-constexpr SmallVec<N> operator*(real s, SmallVec<N> v) noexcept {
+constexpr small_vec<N> operator*(real s, small_vec<N> v) noexcept {
     return v *= s;
 }
 
 template <idx M, idx N>
 /// Stack-allocated row-major real matrix with constexpr arithmetic.
-struct SmallMatrix {
+struct small_matrix {
     std::array<real, M * N> data{};
 
     constexpr real &operator()(idx i, idx j) noexcept { return data[(i * N) + j]; }
@@ -76,12 +76,12 @@ struct SmallMatrix {
     constexpr void fill(real v) noexcept { data.fill(v); }
 
     /// Construct a zero-filled matrix.
-    static constexpr SmallMatrix zeros() noexcept { return SmallMatrix{}; }
+    static constexpr small_matrix zeros() noexcept { return small_matrix{}; }
 
     /// Construct an identity matrix; available only for square shapes.
-    static constexpr SmallMatrix identity() noexcept {
+    static constexpr small_matrix identity() noexcept {
         static_assert(M == N, "identity() requires a square matrix");
-        SmallMatrix m{};
+        small_matrix m{};
         for (idx i = 0; i < M; ++i) {
             m(i, i) = 1;
         }
@@ -89,8 +89,8 @@ struct SmallMatrix {
     }
 
     /// Return a copy with rows and columns exchanged.
-    constexpr SmallMatrix<N, M> transposed() const noexcept {
-        SmallMatrix<N, M> t{};
+    constexpr small_matrix<N, M> transposed() const noexcept {
+        small_matrix<N, M> t{};
         for (idx i = 0; i < M; ++i) {
             for (idx j = 0; j < N; ++j) {
                 t(j, i) = (*this)(i, j);
@@ -100,8 +100,8 @@ struct SmallMatrix {
     }
 
     template <idx K>
-    constexpr SmallMatrix<M, K> operator*(const SmallMatrix<N, K> &B) const noexcept {
-        SmallMatrix<M, K> C{};
+    constexpr small_matrix<M, K> operator*(const small_matrix<N, K> &B) const noexcept {
+        small_matrix<M, K> C{};
         for (idx i = 0; i < M; ++i) {
             for (idx k = 0; k < N; ++k) {
                 for (idx j = 0; j < K; ++j) {
@@ -112,8 +112,8 @@ struct SmallMatrix {
         return C;
     }
 
-    constexpr SmallVec<M> operator*(const SmallVec<N> &x) const noexcept {
-        SmallVec<M> y{};
+    constexpr small_vec<M> operator*(const small_vec<N> &x) const noexcept {
+        small_vec<M> y{};
         for (idx i = 0; i < M; ++i) {
             for (idx j = 0; j < N; ++j) {
                 y[i] += (*this)(i, j) * x[j];
@@ -122,14 +122,14 @@ struct SmallMatrix {
         return y;
     }
 
-    constexpr SmallMatrix &operator+=(const SmallMatrix &o) noexcept {
+    constexpr small_matrix &operator+=(const small_matrix &o) noexcept {
         for (idx k = 0; k < M * N; ++k) {
             data[k] += o.data[k];
         }
         return *this;
     }
 
-    constexpr SmallMatrix &operator*=(real s) noexcept {
+    constexpr small_matrix &operator*=(real s) noexcept {
         for (idx k = 0; k < M * N; ++k) {
             data[k] *= s;
         }
@@ -138,12 +138,12 @@ struct SmallMatrix {
 };
 
 /// Plane rotation used to eliminate one component of a two-vector.
-struct GivensRotation {
+struct givens_rotation {
     real c = 1;
     real s = 0;
 
     /// @brief Construct \f$G=\begin{bmatrix}c&s\\-s&c\end{bmatrix}\f$.
-    static constexpr GivensRotation from(real a, real b) noexcept {
+    static constexpr givens_rotation from(real a, real b) noexcept {
         if (b == 0) {
             return {};
         }
@@ -166,8 +166,8 @@ struct GivensRotation {
     }
 
     /// Materialize the rotation as a 2x2 matrix.
-    constexpr SmallMatrix<2, 2> matrix() const noexcept {
-        SmallMatrix<2, 2> G{};
+    constexpr small_matrix<2, 2> matrix() const noexcept {
+        small_matrix<2, 2> G{};
         G(0, 0) = c;
         G(0, 1) = s;
         G(1, 0) = -s;

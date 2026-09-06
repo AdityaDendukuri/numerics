@@ -17,12 +17,12 @@ namespace num::markov {
 /// @tparam Apply   Callable: idx -> void. Applies the flip at site i.
 /// @tparam RNG     Random number generator (e.g., std::mt19937).
 template <typename DeltaE, typename Apply, typename RNG>
-MetropolisStats metropolis_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip, real beta,
+metropolis_stats metropolis_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip, real beta,
                                  RNG &rng) {
     std::uniform_real_distribution<real> u01(0.0, 1.0);
     std::uniform_int_distribution<idx> site_dist(0, n_sites - 1);
 
-    MetropolisStats stats;
+    metropolis_stats stats;
     stats.total = n_sites;
 
     for (idx k = 0; k < n_sites; ++k) {
@@ -48,12 +48,12 @@ MetropolisStats metropolis_sweep(idx n_sites, DeltaE delta_energy, Apply apply_f
 /// @tparam Apply   Callable: idx -> void. Applies the flip at site i.
 /// @tparam RNG     Random number generator.
 template <typename ProbFn, typename Apply, typename RNG>
-MetropolisStats metropolis_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply apply_flip,
+metropolis_stats metropolis_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply apply_flip,
                                       RNG &rng) {
     std::uniform_real_distribution<real> u01(0.0, 1.0);
     std::uniform_int_distribution<idx> site_dist(0, n_sites - 1);
 
-    MetropolisStats stats;
+    metropolis_stats stats;
     stats.total = n_sites;
 
     for (idx k = 0; k < n_sites; ++k) {
@@ -80,14 +80,14 @@ MetropolisStats metropolis_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply
 /// @tparam RNG      Random number generator.
 template <typename DeltaE, typename Apply, typename Save, typename Restore, typename Measure,
           typename RNG>
-UmbrellaStats umbrella_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip, Save save_state,
-                             Restore restore_state, Measure measure_order, UmbrellaWindow window,
+umbrella_stats umbrella_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip, Save save_state,
+                             Restore restore_state, Measure measure_order, umbrella_window window,
                              real beta, RNG &rng) {
     save_state();
-    MetropolisStats mc = metropolis_sweep(n_sites, delta_energy, apply_flip, beta, rng);
+    metropolis_stats mc = metropolis_sweep(n_sites, delta_energy, apply_flip, beta, rng);
     idx op = measure_order();
 
-    UmbrellaStats stats;
+    umbrella_stats stats;
     stats.mc = mc;
     stats.order_param = op;
 
@@ -111,14 +111,14 @@ UmbrellaStats umbrella_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip,
 /// @tparam RNG      Random number generator.
 template <typename ProbFn, typename Apply, typename Save, typename Restore, typename Measure,
           typename RNG>
-UmbrellaStats umbrella_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply apply_flip,
+umbrella_stats umbrella_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply apply_flip,
                                   Save save_state, Restore restore_state, Measure measure_order,
-                                  UmbrellaWindow window, RNG &rng) {
+                                  umbrella_window window, RNG &rng) {
     save_state();
-    MetropolisStats mc = metropolis_sweep_prob(n_sites, acceptance_prob, apply_flip, rng);
+    metropolis_stats mc = metropolis_sweep_prob(n_sites, acceptance_prob, apply_flip, rng);
     idx op = measure_order();
 
-    UmbrellaStats stats;
+    umbrella_stats stats;
     stats.mc = mc;
     stats.order_param = op;
 

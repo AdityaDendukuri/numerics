@@ -9,10 +9,10 @@
 
 using namespace num;
 
-// BandedMatrix Construction and Access Tests
+// band_mat Construction and Access Tests
 
-TEST(BandedMatrix, ConstructBasic) {
-    BandedMatrix A(10, 2, 3); // 10x10 with 2 lower, 3 upper diagonals
+TEST(band_mat, ConstructBasic) {
+    band_mat A(10, 2, 3); // 10x10 with 2 lower, 3 upper diagonals
 
     EXPECT_EQ(A.size(), 10);
     EXPECT_EQ(A.rows(), 10);
@@ -23,8 +23,8 @@ TEST(BandedMatrix, ConstructBasic) {
     EXPECT_EQ(A.ldab(), 8);      // 2*kl + ku + 1
 }
 
-TEST(BandedMatrix, ConstructWithValue) {
-    BandedMatrix A(5, 1, 1, 2.0);
+TEST(band_mat, ConstructWithValue) {
+    band_mat A(5, 1, 1, 2.0);
 
     // Check that band elements are initialized
     for (idx j = 0; j < 5; ++j) {
@@ -34,8 +34,8 @@ TEST(BandedMatrix, ConstructWithValue) {
     }
 }
 
-TEST(BandedMatrix, ElementAccess) {
-    BandedMatrix A(5, 1, 2, 0.0); // Tridiagonal plus one extra upper
+TEST(band_mat, ElementAccess) {
+    band_mat A(5, 1, 2, 0.0); // tridiagonal plus one extra upper
 
     // Set diagonal
     for (idx i = 0; i < 5; ++i) {
@@ -63,8 +63,8 @@ TEST(BandedMatrix, ElementAccess) {
     EXPECT_EQ(A(0, 2), 0.5);
 }
 
-TEST(BandedMatrix, InBandCheck) {
-    BandedMatrix A(5, 1, 2, 0.0);
+TEST(band_mat, InBandCheck) {
+    band_mat A(5, 1, 2, 0.0);
 
     // Diagonal is in band
     EXPECT_TRUE(A.in_band(2, 2));
@@ -81,14 +81,14 @@ TEST(BandedMatrix, InBandCheck) {
     EXPECT_FALSE(A.in_band(4, 0)); // Too far below
 }
 
-TEST(BandedMatrix, CopyConstruct) {
-    BandedMatrix A(4, 1, 1, 0.0);
+TEST(band_mat, CopyConstruct) {
+    band_mat A(4, 1, 1, 0.0);
     A(0, 0) = 2.0;
     A(0, 1) = -1.0;
     A(1, 0) = -1.0;
     A(1, 1) = 2.0;
 
-    BandedMatrix B(A);
+    band_mat B(A);
 
     EXPECT_EQ(B.size(), 4);
     EXPECT_EQ(B.kl(), 1);
@@ -101,19 +101,19 @@ TEST(BandedMatrix, CopyConstruct) {
     EXPECT_EQ(B(0, 0), 2.0);
 }
 
-TEST(BandedMatrix, MoveConstruct) {
-    BandedMatrix A(4, 1, 1, 0.0);
+TEST(band_mat, MoveConstruct) {
+    band_mat A(4, 1, 1, 0.0);
     A(0, 0) = 2.0;
     real *orig_data = A.data();
 
-    BandedMatrix B(std::move(A));
+    band_mat B(std::move(A));
 
     EXPECT_EQ(B.size(), 4);
     EXPECT_EQ(B(0, 0), 2.0);
     EXPECT_EQ(B.data(), orig_data); // Same memory
 }
 
-// Tridiagonal System Tests (special case of banded)
+// tridiagonal System Tests (special case of banded)
 
 TEST(BandedSolver, Tridiagonal4x4) {
     // Same system as Thomas algorithm test:
@@ -123,7 +123,7 @@ TEST(BandedSolver, Tridiagonal4x4) {
     // | 0  0 -1  2 | |x3|   | 1 |
     // Solution: x = [1, 1, 1, 1]
 
-    BandedMatrix A(4, 1, 1, 0.0);
+    band_mat A(4, 1, 1, 0.0);
 
     // Set up tridiagonal system
     for (idx i = 0; i < 4; ++i) {
@@ -136,10 +136,10 @@ TEST(BandedSolver, Tridiagonal4x4) {
         }
     }
 
-    Vector b{1.0, 0.0, 0.0, 1.0};
-    Vector x(4, 0.0);
+    vec b{1.0, 0.0, 0.0, 1.0};
+    vec x(4, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
     EXPECT_NEAR(x[0], 1.0, 1e-10);
@@ -152,7 +152,7 @@ TEST(BandedSolver, Tridiagonal1DLaplacian) {
     // 1D Laplacian: -u'' = f with Dirichlet BC
     // Pattern: -1, 2, -1
     idx n = 20;
-    BandedMatrix A(n, 1, 1, 0.0);
+    band_mat A(n, 1, 1, 0.0);
 
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 2.0;
@@ -164,15 +164,15 @@ TEST(BandedSolver, Tridiagonal1DLaplacian) {
         }
     }
 
-    Vector b(n, 1.0); // Constant RHS
-    Vector x(n, 0.0);
+    vec b(n, 1.0); // Constant RHS
+    vec x(n, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Verify solution by computing residual
-    Vector r(n);
+    vec r(n);
     banded_matvec(A, x, r);
 
     real max_err = 0.0;
@@ -187,7 +187,7 @@ TEST(BandedSolver, Tridiagonal1DLaplacian) {
 TEST(BandedSolver, Pentadiagonal) {
     // 2nd order compact finite difference stencil (pentadiagonal)
     idx n = 10;
-    BandedMatrix A(n, 2, 2, 0.0);
+    band_mat A(n, 2, 2, 0.0);
 
     // Pattern: 1, -4, 6, -4, 1 (biharmonic operator)
     for (idx i = 0; i < n; ++i) {
@@ -211,15 +211,15 @@ TEST(BandedSolver, Pentadiagonal) {
         A(i, i) = 10.0; // Override for numerical stability
     }
 
-    Vector b(n, 1.0);
-    Vector x(n, 0.0);
+    vec b(n, 1.0);
+    vec x(n, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Verify residual
-    Vector r(n);
+    vec r(n);
     banded_matvec(A, x, r);
 
     real norm_r = 0.0;
@@ -229,12 +229,12 @@ TEST(BandedSolver, Pentadiagonal) {
     EXPECT_LT(std::sqrt(norm_r), 1e-10);
 }
 
-// General Banded System Tests
+// General banded System Tests
 
 TEST(BandedSolver, GeneralBanded) {
     // General banded system with kl=3, ku=2
     idx n = 15;
-    BandedMatrix A(n, 3, 2, 0.0);
+    band_mat A(n, 3, 2, 0.0);
 
     // Create a diagonally dominant system
     for (idx j = 0; j < n; ++j) {
@@ -250,19 +250,19 @@ TEST(BandedSolver, GeneralBanded) {
         A(j, j) = diag_sum + 1.0; // Diagonally dominant
     }
 
-    Vector b(n);
+    vec b(n);
     for (idx i = 0; i < n; ++i) {
         b[i] = static_cast<real>(i + 1);
     }
 
-    Vector x(n, 0.0);
+    vec x(n, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Verify residual
-    Vector r(n);
+    vec r(n);
     banded_matvec(A, x, r);
 
     real norm_r = 0.0;
@@ -279,7 +279,7 @@ TEST(BandedSolver, GeneralBanded) {
 TEST(BandedSolver, LUFactorizationReuse) {
     // Test that we can factor once and solve multiple times
     idx n = 10;
-    BandedMatrix A(n, 1, 1, 0.0);
+    band_mat A(n, 1, 1, 0.0);
 
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 4.0;
@@ -292,25 +292,25 @@ TEST(BandedSolver, LUFactorizationReuse) {
     }
 
     // Keep original for verification
-    BandedMatrix A_orig = A;
+    band_mat A_orig = A;
 
     // Factor
     std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
-    BandedSolverResult result = banded_lu(A, ipiv.get());
+    banded_solver_result result = banded_lu(A, ipiv.get());
     EXPECT_TRUE(result.success);
 
     // Solve with different RHS vectors
     for (int trial = 0; trial < 5; ++trial) {
-        Vector b(n);
+        vec b(n);
         for (idx i = 0; i < n; ++i) {
             b[i] = static_cast<real>((trial + 1) * (i + 1));
         }
 
-        Vector x = b; // Copy RHS
+        vec x = b; // Copy RHS
         banded_lu_solve(A, ipiv.get(), x);
 
         // Verify with original matrix
-        Vector r(n);
+        vec r(n);
         banded_matvec(A_orig, x, r);
 
         real max_err = 0.0;
@@ -326,7 +326,7 @@ TEST(BandedSolver, MultipleRHS) {
     idx n = 8;
     idx nrhs = 4;
 
-    BandedMatrix A(n, 1, 1, 0.0);
+    band_mat A(n, 1, 1, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 3.0;
         if (i > 0) {
@@ -337,11 +337,11 @@ TEST(BandedSolver, MultipleRHS) {
         }
     }
 
-    BandedMatrix A_orig = A;
+    band_mat A_orig = A;
 
     // Factor
     std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
-    BandedSolverResult result = banded_lu(A, ipiv.get());
+    banded_solver_result result = banded_lu(A, ipiv.get());
     EXPECT_TRUE(result.success);
 
     // Multiple RHS (column-major)
@@ -361,14 +361,14 @@ TEST(BandedSolver, MultipleRHS) {
 
     // Verify each solution
     for (idx rhs = 0; rhs < nrhs; ++rhs) {
-        Vector x(n);
-        Vector b(n);
+        vec x(n);
+        vec b(n);
         for (idx i = 0; i < n; ++i) {
             x[i] = B[i + (rhs * n)];
             b[i] = B_orig[i + (rhs * n)];
         }
 
-        Vector r(n);
+        vec r(n);
         banded_matvec(A_orig, x, r);
 
         real max_err = 0.0;
@@ -379,10 +379,10 @@ TEST(BandedSolver, MultipleRHS) {
     }
 }
 
-// Matrix-Vector Product Tests
+// mat-vec Product Tests
 
 TEST(BandedMatvec, Basic) {
-    BandedMatrix A(4, 1, 1, 0.0);
+    band_mat A(4, 1, 1, 0.0);
     A(0, 0) = 2.0;
     A(0, 1) = -1.0;
     A(1, 0) = -1.0;
@@ -394,8 +394,8 @@ TEST(BandedMatvec, Basic) {
     A(3, 2) = -1.0;
     A(3, 3) = 2.0;
 
-    Vector x{1.0, 2.0, 3.0, 4.0};
-    Vector y(4);
+    vec x{1.0, 2.0, 3.0, 4.0};
+    vec y(4);
 
     banded_matvec(A, x, y);
 
@@ -411,7 +411,7 @@ TEST(BandedMatvec, Basic) {
 }
 
 TEST(BandedMatvec, GEMV) {
-    BandedMatrix A(3, 1, 1, 0.0);
+    band_mat A(3, 1, 1, 0.0);
     A(0, 0) = 1.0;
     A(0, 1) = 2.0;
     A(1, 0) = 3.0;
@@ -420,8 +420,8 @@ TEST(BandedMatvec, GEMV) {
     A(2, 1) = 6.0;
     A(2, 2) = 7.0;
 
-    Vector x{1.0, 1.0, 1.0};
-    Vector y{10.0, 20.0, 30.0};
+    vec x{1.0, 1.0, 1.0};
+    vec y{10.0, 20.0, 30.0};
 
     // y = 2*A*x + 3*y
     banded_gemv(2.0, A, x, 3.0, y);
@@ -438,7 +438,7 @@ TEST(BandedMatvec, GEMV) {
 TEST(BandedSolver, LargeTridiagonal) {
     // Large system to verify correctness at scale
     idx n = 10000;
-    BandedMatrix A(n, 1, 1, 0.0);
+    band_mat A(n, 1, 1, 0.0);
 
     // 1D Laplacian
     for (idx i = 0; i < n; ++i) {
@@ -451,16 +451,16 @@ TEST(BandedSolver, LargeTridiagonal) {
         }
     }
 
-    Vector b(n, 1.0);
-    Vector x(n, 0.0);
+    vec b(n, 1.0);
+    vec x(n, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Spot check residual at several points
     // Tolerance relaxed for large systems due to floating-point accumulation
-    Vector r(n);
+    vec r(n);
     banded_matvec(A, x, r);
 
     real max_err = 0.0;
@@ -473,7 +473,7 @@ TEST(BandedSolver, LargeTridiagonal) {
 TEST(BandedSolver, LargePentadiagonal) {
     // Large pentadiagonal system
     idx n = 5000;
-    BandedMatrix A(n, 2, 2, 0.0);
+    band_mat A(n, 2, 2, 0.0);
 
     // Diagonally dominant pentadiagonal
     for (idx i = 0; i < n; ++i) {
@@ -492,15 +492,15 @@ TEST(BandedSolver, LargePentadiagonal) {
         }
     }
 
-    Vector b(n, 1.0);
-    Vector x(n, 0.0);
+    vec b(n, 1.0);
+    vec x(n, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Verify residual
-    Vector r(n);
+    vec r(n);
     banded_matvec(A, x, r);
 
     real norm_r = 0.0;
@@ -515,7 +515,7 @@ TEST(BandedSolver, LargePentadiagonal) {
 // Condition Number and Norm Tests
 
 TEST(BandedNorm, Norm1) {
-    BandedMatrix A(3, 1, 1, 0.0);
+    band_mat A(3, 1, 1, 0.0);
     A(0, 0) = 1.0;
     A(0, 1) = 2.0;
     A(1, 0) = 3.0;
@@ -530,23 +530,23 @@ TEST(BandedNorm, Norm1) {
     EXPECT_NEAR(norm, 12.0, 1e-10);
 }
 
-// Edge Cases
+// graph_edge Cases
 
 TEST(BandedSolver, Size1) {
-    BandedMatrix A(1, 0, 0, 0.0);
+    band_mat A(1, 0, 0, 0.0);
     A(0, 0) = 5.0;
 
-    Vector b{10.0};
-    Vector x(1, 0.0);
+    vec b{10.0};
+    vec x(1, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
     EXPECT_NEAR(x[0], 2.0, 1e-10);
 }
 
 TEST(BandedSolver, Size2) {
-    BandedMatrix A(2, 1, 1, 0.0);
+    band_mat A(2, 1, 1, 0.0);
     A(0, 0) = 3.0;
     A(0, 1) = 1.0;
     A(1, 0) = 2.0;
@@ -554,10 +554,10 @@ TEST(BandedSolver, Size2) {
 
     // System: 3x + y = 5, 2x + 4y = 6
     // Solution: x = 1.4, y = 0.8
-    Vector b{5.0, 6.0};
-    Vector x(2, 0.0);
+    vec b{5.0, 6.0};
+    vec x(2, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
     EXPECT_NEAR(x[0], 1.4, 1e-10);
@@ -567,16 +567,16 @@ TEST(BandedSolver, Size2) {
 TEST(BandedSolver, DiagonalMatrix) {
     // Pure diagonal (kl=ku=0)
     idx n = 5;
-    BandedMatrix A(n, 0, 0, 0.0);
+    band_mat A(n, 0, 0, 0.0);
 
     for (idx i = 0; i < n; ++i) {
         A(i, i) = static_cast<real>(i + 1);
     }
 
-    Vector b{1.0, 2.0, 3.0, 4.0, 5.0};
-    Vector x(n, 0.0);
+    vec b{1.0, 2.0, 3.0, 4.0, 5.0};
+    vec x(n, 0.0);
 
-    BandedSolverResult result = banded_solve(A, b, x);
+    banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
     for (idx i = 0; i < n; ++i) {

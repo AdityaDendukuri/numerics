@@ -38,18 +38,18 @@ Numerics provides cache-aligned, continuous memory containers for linear algebra
 #include <numerics.hpp>
 
 // Standard direct construction
-num::Vector x{1.0, 2.0, 3.0}; // Length-3 vector
-num::Matrix A(3, 3, 0.0);      // 3x3 row-major dense matrix initialized to zero
+num::vec x{1.0, 2.0, 3.0}; // Length-3 vector
+num::mat A(3, 3, 0.0);      // 3x3 row-major dense matrix initialized to zero
 
-// Matrix and vector element access
+// mat and vector element access
 A(0, 0) = 4.0;
 A(0, 1) = 1.0;
 x[0] = 2.0;
 
 // Factory constructors and utilities
-num::Matrix Z = num::zeros(3, 3);       // Zero matrix
-num::Matrix I = num::eye(3);            // Identity matrix
-num::Vector v = num::linspace(0.0, 1.0, 5); // [0.0, 0.25, 0.5, 0.75, 1.0]
+num::mat Z = num::zeros(3, 3);       // Zero matrix
+num::mat I = num::eye(3);            // Identity matrix
+num::vec v = num::linspace(0.0, 1.0, 5); // [0.0, 0.25, 0.5, 0.75, 1.0]
 num::real s   = num::accu(A);           // Sum of all elements
 ```
 
@@ -65,13 +65,13 @@ For rapid prototyping, test assertions, and textbook formula readability, enable
 ```cpp
 using namespace num::ops;
 
-num::Matrix A = num::ones(3, 3);
-num::Matrix B = num::eye(3);
-num::Vector x{1.0, 2.0, 3.0};
+num::mat A = num::ones(3, 3);
+num::mat B = num::eye(3);
+num::vec x{1.0, 2.0, 3.0};
 
 // Natural algebraic expressions
-num::Matrix C = A * B + 2.0 * B;
-num::Vector y = A * x - x / 2.0;
+num::mat C = A * B + 2.0 * B;
+num::vec y = A * x - x / 2.0;
 ```
 
 ### High-Performance Zero-Allocation Kernels (Production Simulations)
@@ -79,8 +79,8 @@ In performance-critical simulation loops, ODE integrators, and inner iterative s
 
 ```cpp
 // Allocate once outside the simulation loop
-num::Vector y(3, 0.0);
-num::Vector z(3, 1.0);
+num::vec y(3, 0.0);
+num::vec z(3, 1.0);
 
 for (num::idx step = 0; step < total_steps; ++step) {
     // Zero dynamic allocations inside the loop
@@ -107,7 +107,7 @@ Passing an uncertified general matrix to `num::cg` or `num::cholesky` produces a
 When you know from domain physics that a matrix is positive-definite, attach evidence explicitly:
 
 ```cpp
-num::Matrix A(3, 3, 0.0);
+num::mat A(3, 3, 0.0);
 // fill symmetric positive-definite entries...
 
 // 1. Tag by claim (verified probabilistically under active diagnostic preset)
@@ -117,8 +117,8 @@ auto spd_A = num::assume_spd(A);
 auto spd_validated = num::make_spd(A);
 
 // Now accepted by CG and Cholesky
-num::Vector b{1.0, 2.0, 3.0};
-num::Vector x(3, 0.0);
+num::vec b{1.0, 2.0, 3.0};
+num::vec x(3, 0.0);
 num::cg(spd_A, b, x);
 ```
 
@@ -127,19 +127,19 @@ num::cg(spd_A, b, x);
 Physical discretizations that mathematically guarantee a property carry proof in their type automatically:
 
 ```cpp
-const num::Grid2D grid{32, 1.0 / 33.0};
+const num::grid2d grid{32, 1.0 / 33.0};
 
 // A backward-Euler discretization of Dirichlet diffusion is SPD by construction:
-const num::operators::BackwardEuler2D system(grid.N, /*dt=*/0.05);
+const num::operators::backward_euler_2d system(grid.N, /*dt=*/0.05);
 
-num::Vector rhs(grid.size(), 1.0);
-num::Vector solution(grid.size(), 0.0);
+num::vec rhs(grid.size(), 1.0);
+num::vec solution(grid.size(), 0.0);
 
 // Accepted directly by CG without any manual assume_spd() tagging:
 const auto result = num::cg(system, rhs, solution);
 ```
 
-See @ref page_concepts "Concepts, Invariants & Diagnostics" for details on property lattices and diagnostic presets.
+See @ref page_concepts "Concepts, Invariants & Diagnostics" for details on property hierarchys and diagnostic presets.
 
 ---
 
@@ -160,15 +160,15 @@ num::lu_solve(lu_factor, b, x);
 For high-level algorithms and configuration-driven workflows, Numerics provides a unified problem abstraction:
 
 ```cpp
-auto op = num::operators::DenseOp(A);
+auto op = num::operators::dense_op(A);
 auto result = num::solve(
-    num::LinearProblem{op, b},
-    num::GMRES{.tol = 1e-10, .max_iter = 200});
+    num::linear_problem{op, b},
+    num::gmres_method{.tol = 1e-10, .max_iter = 200});
 ```
 
 ---
 
-## 6. Standalone Raw Compute Tier (num::kernel::raw)
+## 6. Standalone Raw Compute Tier (num::kernel)
 
 If your project already manages its own memory (via raw pointers `double*`, `std::vector`, Eigen matrices, or custom buffers), operates under real-time / embedded constraints, or requires zero dynamic heap allocations and zero external dependencies, you can directly use the standalone Tier-0 compute layer:
 
@@ -180,8 +180,8 @@ If your project already manages its own memory (via raw pointers `double*`, `std
 std::vector<double> A = {4.0, 1.0, 1.0, 3.0};
 std::vector<double> L(4, 0.0), b = {1.0, 2.0}, x(2, 0.0);
 
-if (num::kernel::raw::cholesky(L.data(), A.data(), 2)) {
-    num::kernel::raw::cholesky_solve(x.data(), L.data(), b.data(), 2);
+if (num::kernel::cholesky(L.data(), A.data(), 2)) {
+    num::kernel::cholesky_solve(x.data(), L.data(), b.data(), 2);
 }
 ```
 
@@ -192,12 +192,12 @@ See @ref page_architecture "Library Structure & Architecture" for details on the
 ## 7. Result Introspection & Terminal Documentation
 
 ### In-Code Stream Printing
-All solver and algorithm result structures (`num::SolverResult`, `num::kernel::raw::KrylovResult`, `num::ODEResult`, `num::SymplecticResult`, `num::RootResult`, `num::SVDResult`, `num::EigenResult`, `num::PowerResult`, `num::BandedSolverResult`, `num::ClusterResult`) implement standard `operator<<` stream formatting:
+All solver and algorithm result structures (`num::solver_result`, `num::kernel::krylov_result`, `num::ode_result`, `num::symplectic_result`, `num::root_result`, `num::svd_result`, `num::eigen_result`, `num::power_result`, `num::banded_solver_result`, `num::cluster_result`) implement standard `operator<<` stream formatting:
 
 ```cpp
 auto res = num::cg(A, b, x);
 std::cout << res << "\n";
-// Output: SolverResult{ converged: true, iterations: 24, residual: 1.42e-11 }
+// Output: solver_result{ converged: true, iterations: 24, residual: 1.42e-11 }
 ```
 
 ### CLI Documentation Lookup
@@ -208,9 +208,9 @@ Building the documentation target automatically compiles Section-3 UNIX man page
 cmake --build build --target docs
 
 # 2. Query any symbol with the included helper script:
-./tools/doc SolverResult
-./tools/doc KrylovResult
-./tools/doc ODEResult
+./tools/doc solver_result
+./tools/doc krylov_result
+./tools/doc ode_result
 ./tools/doc cg
 
 # Or query directly via standard man:

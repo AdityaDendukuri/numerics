@@ -1,5 +1,5 @@
 /// @file bench_plot.hpp
-/// @brief SIAM-style benchmark plots built on num::Gnuplot (plot/plot.hpp).
+/// @brief SIAM-style benchmark plots built on num::gnuplot (plot/plot.hpp).
 ///
 /// Usage from a custom benchmark main:
 ///
@@ -24,9 +24,9 @@ namespace bench_plot {
 
 using Run = benchmark::BenchmarkReporter::Run;
 using num::apply_siam_style;
-using num::Gnuplot;
-using num::Point;
-using num::Series;
+using num::gnuplot;
+using num::plot_point;
+using num::series;
 using num::set_loglog;
 using num::set_logx;
 
@@ -78,9 +78,9 @@ static double counter(const Run &r, const std::string &key) {
 }
 
 /// Build a (size, value) series from runs matching a name substring.
-static Series series_by_counter(const std::vector<Run> &runs, const std::string &name_substr,
+static series series_by_counter(const std::vector<Run> &runs, const std::string &name_substr,
                                 const std::string &counter_key) {
-    Series s;
+    series s;
     for (auto &r : runs) {
         if (r.benchmark_name().find(name_substr) == std::string::npos)
             continue;
@@ -96,8 +96,8 @@ static Series series_by_counter(const std::vector<Run> &runs, const std::string 
     return s;
 }
 
-static Series series_by_time(const std::vector<Run> &runs, const std::string &name_substr) {
-    Series s;
+static series series_by_time(const std::vector<Run> &runs, const std::string &name_substr) {
+    series s;
     for (auto &r : runs) {
         if (r.benchmark_name().find(name_substr) == std::string::npos)
             continue;
@@ -129,7 +129,7 @@ static std::string plot_cmd(const std::vector<std::pair<std::string, int>> &seri
 // -------------------------------------------------
 
 /// matmul.pdf  -- GFLOP/s vs n for every matmul variant
-static void plot_matmul(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_matmul(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                         const std::string &ext = ".pdf") {
     struct Variant {
         std::string key;
@@ -140,13 +140,13 @@ static void plot_matmul(Gnuplot &gp, const std::vector<Run> &runs, const std::st
         {"Matmul_Naive", "naive", 1},
         {"Matmul_Blocked", "blocked", 2},
         {"Matmul_RegBlocked", "reg-blocked", 3},
-        {"BM_Matmul<backend::simd", "simd", 4},
-        {"BM_Matmul<backend::blas", "blas", 5},
-        {"BM_Matmul<backend::omp", "omp", 6},
+        {"BM_Matmul_Simd", "simd", 4},
+        {"BM_Matmul_Blas", "blas", 5},
+        {"BM_Matmul_Omp", "omp", 6},
     };
 
     // collect non-empty series first
-    std::vector<std::pair<Variant, Series>> data;
+    std::vector<std::pair<Variant, series>> data;
     for (auto &v : variants) {
         auto s = series_by_counter(runs, v.key, "GFLOP/s");
         if (!s.empty())
@@ -156,7 +156,7 @@ static void plot_matmul(Gnuplot &gp, const std::vector<Run> &runs, const std::st
         return;
 
     gp << "set output '" + outdir + "/matmul" + ext + "'\n"
-       << "set title 'Matrix Multiply: policy comparison' font "
+       << "set title 'mat Multiply: policy comparison' font "
           "'Times-Bold,14'\n"
        << "set xlabel 'n' font 'Times,12'\n"
        << "set ylabel 'GFLOP/s' font 'Times,12'\n";
@@ -171,7 +171,7 @@ static void plot_matmul(Gnuplot &gp, const std::vector<Run> &runs, const std::st
 }
 
 /// matvec.pdf  -- GB/s vs n for every matvec policy
-static void plot_matvec(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_matvec(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                         const std::string &ext = ".pdf") {
     struct Variant {
         std::string key;
@@ -179,16 +179,16 @@ static void plot_matvec(Gnuplot &gp, const std::vector<Run> &runs, const std::st
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_Matvec<backend::seq", "seq", 1},
-        {"BM_Matvec<backend::blocked", "blocked", 2},
-        {"BM_Matvec<backend::simd", "simd", 3},
-        {"BM_Matvec<backend::blas", "blas", 4},
-        {"BM_Matvec<backend::omp", "omp", 5},
+        {"BM_Matvec_Seq", "seq", 1},
+        {"BM_Matvec_Blocked", "blocked", 2},
+        {"BM_Matvec_Simd", "simd", 3},
+        {"BM_Matvec_Blas", "blas", 4},
+        {"BM_Matvec_Omp", "omp", 5},
     };
 
-    std::vector<std::pair<Variant, Series>> data;
+    std::vector<std::pair<Variant, series>> data;
     for (auto &v : variants) {
-        Series s;
+        series s;
         for (auto &r : runs) {
             if (r.benchmark_name().find(v.key) == std::string::npos)
                 continue;
@@ -204,7 +204,7 @@ static void plot_matvec(Gnuplot &gp, const std::vector<Run> &runs, const std::st
         return;
 
     gp << "set output '" + outdir + "/matvec" + ext + "'\n"
-       << "set title 'Matrix-Vector Multiply: memory bandwidth' font "
+       << "set title 'mat-vec Multiply: memory bandwidth' font "
           "'Times-Bold,14'\n"
        << "set xlabel 'n' font 'Times,12'\n"
        << "set ylabel 'GB/s' font 'Times,12'\n";
@@ -219,7 +219,7 @@ static void plot_matvec(Gnuplot &gp, const std::vector<Run> &runs, const std::st
 }
 
 /// dot.pdf  -- GB/s vs n for dot/axpy
-static void plot_dot_axpy(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_dot_axpy(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                           const std::string &ext = ".pdf") {
     struct Op {
         std::string op_key;
@@ -232,14 +232,14 @@ static void plot_dot_axpy(Gnuplot &gp, const std::vector<Run> &runs, const std::
             int ls;
         };
         std::vector<V> variants = {
-            {"BM_" + op.op_key + "<backend::seq", "seq", 1},
-            {"BM_" + op.op_key + "<backend::blas", "blas", 2},
-            {"BM_" + op.op_key + "<backend::omp", "omp", 3},
+            {"BM_" + op.op_key + "_Seq", "seq", 1},
+            {"BM_" + op.op_key + "_Blas", "blas", 2},
+            {"BM_" + op.op_key + "_Omp", "omp", 3},
         };
 
-        std::vector<std::pair<V, Series>> data;
+        std::vector<std::pair<V, series>> data;
         for (auto &v : variants) {
-            Series s;
+            series s;
             for (auto &r : runs) {
                 if (r.benchmark_name().find(v.key) == std::string::npos)
                     continue;
@@ -270,7 +270,7 @@ static void plot_dot_axpy(Gnuplot &gp, const std::vector<Run> &runs, const std::
 }
 
 /// cg.pdf  -- time (mus) vs n for CG solver
-static void plot_cg(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_cg(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                     const std::string &ext = ".pdf") {
     auto cpu = series_by_time(runs, "BM_CG/");
     auto gpu = series_by_time(runs, "BM_CG_GPU");
@@ -289,7 +289,7 @@ static void plot_cg(Gnuplot &gp, const std::vector<Run> &runs, const std::string
         gp.send1d(cpu);
         gp.send1d(gpu);
     } else if (!cpu.empty()) {
-        gp << plot_cmd({{"CG", 1}});
+        gp << plot_cmd({{"cg_method", 1}});
         gp.send1d(cpu);
     } else {
         gp << plot_cmd({{"GPU", 2}});
@@ -298,7 +298,7 @@ static void plot_cg(Gnuplot &gp, const std::vector<Run> &runs, const std::string
 }
 
 /// thomas.pdf  -- time (mus) vs n for Thomas algorithm
-static void plot_thomas(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_thomas(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                         const std::string &ext = ".pdf") {
     auto data = series_by_time(runs, "BM_Thomas/");
     if (data.empty())
@@ -314,7 +314,7 @@ static void plot_thomas(Gnuplot &gp, const std::vector<Run> &runs, const std::st
 }
 
 /// fft.pdf  -- GB/s vs n: seq vs fftw for one-shot and plan FFT
-static void plot_fft(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_fft(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                      const std::string &ext = ".pdf") {
     struct Variant {
         std::string key;
@@ -325,14 +325,14 @@ static void plot_fft(Gnuplot &gp, const std::vector<Run> &runs, const std::strin
     // -- forward FFT: one-shot -----------------------------------------------
     {
         std::vector<Variant> variants = {
-            {"BM_FFT<FFTBackend::seq", "seq (Cooley-Tukey)", 1},
-            {"BM_FFT<FFTBackend::simd", "simd (AVX2/NEON)", 2},
-            {"BM_FFT<FFTBackend::stdsimd", "std::simd", 3},
-            {"BM_FFT<FFTBackend::fftw", "fftw (FFTW3)", 4},
+            {"BM_FFT<fft_backend::seq", "seq (Cooley-Tukey)", 1},
+            {"BM_FFT<fft_backend::simd", "simd (AVX2/NEON)", 2},
+            {"BM_FFT<fft_backend::stdsimd", "std::simd", 3},
+            {"BM_FFT<fft_backend::fftw", "fftw (FFTW3)", 4},
         };
-        std::vector<std::pair<Variant, Series>> data;
+        std::vector<std::pair<Variant, series>> data;
         for (auto &v : variants) {
-            Series s;
+            series s;
             for (auto &r : runs) {
                 if (r.benchmark_name().find(v.key) == std::string::npos)
                     continue;
@@ -367,14 +367,14 @@ static void plot_fft(Gnuplot &gp, const std::vector<Run> &runs, const std::strin
     // -- reusable plan: seq vs fftw ------------------------------------------
     {
         std::vector<Variant> variants = {
-            {"BM_FFTPlan<FFTBackend::seq", "seq plan (Cooley-Tukey)", 1},
-            {"BM_FFTPlan<FFTBackend::simd", "simd plan (AVX2/NEON)", 2},
-            {"BM_FFTPlan<FFTBackend::stdsimd", "std::simd plan", 3},
-            {"BM_FFTPlan<FFTBackend::fftw", "fftw plan (FFTW3)", 4},
+            {"BM_FFTPlan<fft_backend::seq", "seq plan (Cooley-Tukey)", 1},
+            {"BM_FFTPlan<fft_backend::simd", "simd plan (AVX2/NEON)", 2},
+            {"BM_FFTPlan<fft_backend::stdsimd", "std::simd plan", 3},
+            {"BM_FFTPlan<fft_backend::fftw", "fftw plan (FFTW3)", 4},
         };
-        std::vector<std::pair<Variant, Series>> data;
+        std::vector<std::pair<Variant, series>> data;
         for (auto &v : variants) {
-            Series s;
+            series s;
             for (auto &r : runs) {
                 if (r.benchmark_name().find(v.key) == std::string::npos)
                     continue;
@@ -409,14 +409,14 @@ static void plot_fft(Gnuplot &gp, const std::vector<Run> &runs, const std::strin
     // -- rfft: seq vs fftw ---------------------------------------------------
     {
         std::vector<Variant> variants = {
-            {"BM_RFFT<FFTBackend::seq", "seq (Cooley-Tukey)", 1},
-            {"BM_RFFT<FFTBackend::simd", "simd (AVX2/NEON)", 2},
-            {"BM_RFFT<FFTBackend::stdsimd", "std::simd", 3},
-            {"BM_RFFT<FFTBackend::fftw", "fftw (FFTW3)", 4},
+            {"BM_RFFT<fft_backend::seq", "seq (Cooley-Tukey)", 1},
+            {"BM_RFFT<fft_backend::simd", "simd (AVX2/NEON)", 2},
+            {"BM_RFFT<fft_backend::stdsimd", "std::simd", 3},
+            {"BM_RFFT<fft_backend::fftw", "fftw (FFTW3)", 4},
         };
-        std::vector<std::pair<Variant, Series>> data;
+        std::vector<std::pair<Variant, series>> data;
         for (auto &v : variants) {
-            Series s;
+            series s;
             for (auto &r : runs) {
                 if (r.benchmark_name().find(v.key) == std::string::npos)
                     continue;
@@ -450,7 +450,7 @@ static void plot_fft(Gnuplot &gp, const std::vector<Run> &runs, const std::strin
 }
 
 /// banded.pdf  -- time (mus) vs n for banded solver variants
-static void plot_banded(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_banded(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                         const std::string &ext = ".pdf") {
     struct Variant {
         std::string key;
@@ -463,7 +463,7 @@ static void plot_banded(Gnuplot &gp, const std::vector<Run> &runs, const std::st
         {"BM_BandedSolve_General_KL2", "general (kl=2)", 3},
         {"BM_BandedSolve_General_KL5", "general (kl=5)", 4},
     };
-    std::vector<std::pair<Variant, Series>> data;
+    std::vector<std::pair<Variant, series>> data;
     for (auto &v : variants) {
         auto s = series_by_time(runs, v.key);
         if (!s.empty())
@@ -472,7 +472,7 @@ static void plot_banded(Gnuplot &gp, const std::vector<Run> &runs, const std::st
     if (data.empty())
         return;
     gp << "set output '" + outdir + "/banded" + ext + "'\n"
-       << "set title 'Banded Solver: time vs system size' font "
+       << "set title 'banded Solver: time vs system size' font "
           "'Times-Bold,14'\n"
        << "set xlabel 'n' font 'Times,12'\n"
        << "set ylabel 'Time ({/Symbol m}s)' font 'Times,12'\n";
@@ -486,7 +486,7 @@ static void plot_banded(Gnuplot &gp, const std::vector<Run> &runs, const std::st
 }
 
 /// lu.pdf  -- GFLOP/s vs n: our seq vs our omp vs LAPACK
-static void plot_lu(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_lu(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                     const std::string &ext = ".pdf") {
     struct Variant {
         std::string key;
@@ -494,11 +494,10 @@ static void plot_lu(Gnuplot &gp, const std::vector<Run> &runs, const std::string
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_LU<backend::seq", "our (seq)", 1},
-        {"BM_LU<backend::omp", "our (omp)", 2},
-        {"BM_LU<backend::lapack", "LAPACK dgetrf", 3},
+        {"BM_LU_Seq", "our (seq)", 1},
+        {"BM_LU_Lapack", "LAPACK dgetrf", 2},
     };
-    std::vector<std::pair<Variant, Series>> data;
+    std::vector<std::pair<Variant, series>> data;
     for (auto &v : variants) {
         auto s = series_by_counter(runs, v.key, "GFLOP/s");
         if (!s.empty())
@@ -520,7 +519,7 @@ static void plot_lu(Gnuplot &gp, const std::vector<Run> &runs, const std::string
 }
 
 /// qr.pdf  -- GFLOP/s vs n: our seq vs our omp vs LAPACK
-static void plot_qr(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_qr(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                     const std::string &ext = ".pdf") {
     struct Variant {
         std::string key;
@@ -528,11 +527,10 @@ static void plot_qr(Gnuplot &gp, const std::vector<Run> &runs, const std::string
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_QR<backend::seq", "our (seq)", 1},
-        {"BM_QR<backend::omp", "our (omp)", 2},
-        {"BM_QR<backend::lapack", "LAPACK dgeqrf", 3},
+        {"BM_QR_Seq", "our (seq)", 1},
+        {"BM_QR_Lapack", "LAPACK dgeqrf", 2},
     };
-    std::vector<std::pair<Variant, Series>> data;
+    std::vector<std::pair<Variant, series>> data;
     for (auto &v : variants) {
         auto s = series_by_counter(runs, v.key, "GFLOP/s");
         if (!s.empty())
@@ -554,7 +552,7 @@ static void plot_qr(Gnuplot &gp, const std::vector<Run> &runs, const std::string
 }
 
 /// svd.pdf  -- time (mus) vs n: Jacobi vs randomized vs LAPACK
-static void plot_svd(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_svd(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                      const std::string &ext = ".pdf") {
     struct Variant {
         std::string key;
@@ -562,11 +560,11 @@ static void plot_svd(Gnuplot &gp, const std::vector<Run> &runs, const std::strin
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_SVD<backend::seq", "our Jacobi", 1},
+        {"BM_SVD_Seq", "our Jacobi", 1},
         {"BM_SVD_Randomized", "randomized (k=n/8)", 2},
-        {"BM_SVD<backend::lapack", "LAPACK dgesdd", 3},
+        {"BM_SVD_Lapack", "LAPACK dgesdd", 3},
     };
-    std::vector<std::pair<Variant, Series>> data;
+    std::vector<std::pair<Variant, series>> data;
     for (auto &v : variants) {
         auto s = series_by_counter(runs, v.key, "GFLOP/s");
         if (s.empty())
@@ -591,7 +589,7 @@ static void plot_svd(Gnuplot &gp, const std::vector<Run> &runs, const std::strin
 }
 
 /// eigen.pdf  -- time (mus) vs n: Jacobi vs Lanczos vs LAPACK
-static void plot_eigen(Gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
+static void plot_eigen(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                        const std::string &ext = ".pdf") {
     struct Variant {
         std::string key;
@@ -599,11 +597,11 @@ static void plot_eigen(Gnuplot &gp, const std::vector<Run> &runs, const std::str
         int ls;
     };
     std::vector<Variant> variants = {
-        {"BM_EigSym<backend::seq", "our Jacobi", 1},
+        {"BM_EigSym_Seq", "our Jacobi", 1},
         {"BM_Lanczos", "Lanczos (k=10)", 2},
-        {"BM_EigSym<backend::lapack", "LAPACK dsyevd", 3},
+        {"BM_EigSym_Lapack", "LAPACK dsyevd", 3},
     };
-    std::vector<std::pair<Variant, Series>> data;
+    std::vector<std::pair<Variant, series>> data;
     for (auto &v : variants) {
         auto s = series_by_time(runs, v.key);
         if (!s.empty())
@@ -632,7 +630,7 @@ static void plot_eigen(Gnuplot &gp, const std::vector<Run> &runs, const std::str
 /// @param runs    Results from CollectingReporter.
 /// @param outdir  Directory to write PDF files into (must exist).
 inline void plot_all(const std::vector<Run> &runs, const std::string &outdir = "plots") {
-    Gnuplot gp;
+    gnuplot gp;
     gp << "set terminal pdfcairo enhanced font 'Times,12' size 4in,3in "
           "linewidth 1.5\n";
     apply_siam_style(gp);
@@ -652,7 +650,7 @@ inline void plot_all(const std::vector<Run> &runs, const std::string &outdir = "
 
 /// Same as plot_all but writes PNGs for report embedding.
 inline void plot_all_png(const std::vector<Run> &runs, const std::string &outdir = "plots") {
-    Gnuplot gp;
+    gnuplot gp;
     gp << "set terminal pngcairo enhanced font 'Liberation Sans,11' size "
           "800,600\n";
     apply_siam_style(gp);
@@ -686,7 +684,7 @@ class GnuplotAscii {
         return *this;
     }
 
-    void send1d(const Series &data) {
+    void send1d(const series &data) {
         for (auto &[x, y] : data)
             script_ += std::to_string(x) + " " + std::to_string(y) + "\n";
         script_ += "e\n";
@@ -711,9 +709,9 @@ ascii_throughput(const std::vector<Run> &runs, const std::string &outpath, const
                  const std::string &ylabel,
                  const std::vector<std::pair<std::string, std::string>> &variants, // key, label
                  bool loglog = true) {
-    std::vector<std::pair<std::string, Series>> data;
+    std::vector<std::pair<std::string, series>> data;
     for (auto &[key, label] : variants) {
-        Series s;
+        series s;
         for (auto &r : runs) {
             if (r.benchmark_name().find(key) == std::string::npos)
                 continue;
@@ -756,9 +754,9 @@ ascii_throughput(const std::vector<Run> &runs, const std::string &outpath, const
 static void ascii_time(const std::vector<Run> &runs, const std::string &outpath,
                        const std::string &title,
                        const std::vector<std::pair<std::string, std::string>> &variants) {
-    std::vector<std::pair<std::string, Series>> data;
+    std::vector<std::pair<std::string, series>> data;
     for (auto &[key, label] : variants) {
-        Series s;
+        series s;
         for (auto &r : runs) {
             if (r.benchmark_name().find(key) == std::string::npos)
                 continue;
@@ -804,11 +802,11 @@ inline void plot_all_ascii(const std::vector<Run> &runs,
             {"Matmul_Naive", "naive"},
             {"Matmul_Blocked", "blocked"},
             {"Matmul_RegBlocked", "reg-blocked"},
-            {"backend::simd", "simd"},
-            {"backend::blas", "blas"},
-            {"backend::omp", "omp"},
+            {"Matmul_Simd", "simd"},
+            {"Matmul_Blas", "blas"},
+            {"Matmul_Omp", "omp"},
         };
-        std::vector<std::pair<std::string, Series>> data;
+        std::vector<std::pair<std::string, series>> data;
         for (auto &[key, label] : v) {
             auto s = series_by_counter(runs, key, "GFLOP/s");
             if (!s.empty())
@@ -816,7 +814,7 @@ inline void plot_all_ascii(const std::vector<Run> &runs,
         }
         if (!data.empty()) {
             GnuplotAscii gp;
-            gp << "set title 'Matrix Multiply: GFLOP/s vs n'\n"
+            gp << "set title 'mat Multiply: GFLOP/s vs n'\n"
                << "set xlabel 'n'\nset ylabel 'GFLOP/s'\nset grid\n"
                << "set key top left\nset logscale xy\n";
             std::string cmd = "plot ";
@@ -832,28 +830,28 @@ inline void plot_all_ascii(const std::vector<Run> &runs,
         }
     }
 
-    ascii_throughput(runs, outdir + "/matvec.txt", "Matrix-Vector Multiply: GB/s vs n", "GB/s",
+    ascii_throughput(runs, outdir + "/matvec.txt", "mat-vec Multiply: GB/s vs n", "GB/s",
                      {
-                         {"BM_Matvec<backend::seq", "seq"},
-                         {"BM_Matvec<backend::blocked", "blocked"},
-                         {"BM_Matvec<backend::simd", "simd"},
-                         {"BM_Matvec<backend::blas", "blas"},
-                         {"BM_Matvec<backend::omp", "omp"},
+                         {"BM_Matvec_Seq", "seq"},
+                         {"BM_Matvec_Blocked", "blocked"},
+                         {"BM_Matvec_Simd", "simd"},
+                         {"BM_Matvec_Blas", "blas"},
+                         {"BM_Matvec_Omp", "omp"},
                      });
 
     for (auto &op :
          std::vector<std::pair<std::string, std::string>>{{"Dot", "dot"}, {"Axpy", "axpy"}})
         ascii_throughput(runs, outdir + "/" + op.second + ".txt", op.second + ": GB/s vs n", "GB/s",
                          {
-                             {"BM_" + op.first + "<backend::seq", "seq"},
-                             {"BM_" + op.first + "<backend::blas", "blas"},
-                             {"BM_" + op.first + "<backend::omp", "omp"},
+                             {"BM_" + op.first + "_Seq", "seq"},
+                             {"BM_" + op.first + "_Blas", "blas"},
+                             {"BM_" + op.first + "_Omp", "omp"},
                          });
 
-    ascii_time(runs, outdir + "/cg.txt", "Conjugate Gradient: time vs n", {{"BM_CG/", "CG"}});
+    ascii_time(runs, outdir + "/cg.txt", "Conjugate Gradient: time vs n", {{"BM_CG/", "cg_method"}});
     ascii_time(runs, outdir + "/thomas.txt", "Thomas Algorithm: time vs n",
                {{"BM_Thomas/", "Thomas"}});
-    ascii_time(runs, outdir + "/banded.txt", "Banded Solver: time vs n", {{"BM_Band", "banded"}});
+    ascii_time(runs, outdir + "/banded.txt", "banded Solver: time vs n", {{"BM_Band", "banded"}});
 
     // FFT: forward, plan, rfft -- one file each
     for (auto &[bm, file, title] : std::vector<std::tuple<std::string, std::string, std::string>>{
@@ -863,10 +861,10 @@ inline void plot_all_ascii(const std::vector<Run> &runs,
          }) {
         ascii_throughput(runs, outdir + "/" + file, title, "GB/s",
                          {
-                             {bm + "FFTBackend::seq", "seq"},
-                             {bm + "FFTBackend::simd", "simd"},
-                             {bm + "FFTBackend::stdsimd", "std::simd"},
-                             {bm + "FFTBackend::fftw", "fftw"},
+                             {bm + "fft_backend::seq", "seq"},
+                             {bm + "fft_backend::simd", "simd"},
+                             {bm + "fft_backend::stdsimd", "std::simd"},
+                             {bm + "fft_backend::fftw", "fftw"},
                          });
     }
 }

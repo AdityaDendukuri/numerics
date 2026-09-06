@@ -10,6 +10,6 @@
 
 namespace num {
 
-template class BasicVector<double>;
+template class basic_vec<double>;
 
 } // namespace num

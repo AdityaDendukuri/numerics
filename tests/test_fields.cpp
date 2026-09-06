@@ -1,5 +1,5 @@
 /// @file tests/test_fields.cpp
-/// @brief 3D field container + FieldSolver coverage (Phase 3 rewrite).
+/// @brief 3D field container + field_solver coverage (Phase 3 rewrite).
 #include "fields/field3d.hpp"
 #include "container/vector_ops.hpp"
 #include "pde/field_solver.hpp"
@@ -8,10 +8,10 @@
 
 using namespace num;
 
-// Values written through operator()/fill are visible through vec() at the
-// grid's flat index -- i.e. the field's storage really is one num::Vector.
-TEST(ScalarField3D, StorageRoundTrip) {
-    ScalarField3D f(4, 5, 6, 1.0f);
+// Values written through operator()/fill are visible through as_vec() at the
+// grid's flat index -- i.e. the field's storage really is one num::vec.
+TEST(scalar_field_3d, StorageRoundTrip) {
+    scalar_field_3d f(4, 5, 6, 1.0f);
     EXPECT_EQ(f.size(), static_cast<idx>(4 * 5 * 6));
 
     f.fill([](int i, int j, int k) { return (100 * i) + (10 * j) + k; });
@@ -21,14 +21,14 @@ TEST(ScalarField3D, StorageRoundTrip) {
             for (int i = 0; i < f.nx(); ++i) {
                 const double expected = (100 * i) + (10 * j) + k;
                 EXPECT_DOUBLE_EQ(f(i, j, k), expected);
-                EXPECT_DOUBLE_EQ(f.vec()[f.grid().flat(i, j, k)], expected);
+                EXPECT_DOUBLE_EQ(f.as_vec()[f.grid().flat(i, j, k)], expected);
             }
         }
     }
 }
 
-TEST(VectorField3D, Scale) {
-    VectorField3D v(3, 3, 3, 1.0f);
+TEST(vector_field_3d, Scale) {
+    vector_field_3d v(3, 3, 3, 1.0f);
     v.x.fill(1.0);
     v.y.fill(-2.0);
     v.z.fill(0.5);
@@ -40,8 +40,8 @@ TEST(VectorField3D, Scale) {
 
 // Manufactured solution: for any phi that is zero on the boundary, feeding the
 // discrete Laplacian of phi as the source must recover phi. This exercises the
-// in-place solve into phi.vec() (no to_vector/from_vector copy).
-TEST(FieldSolver, PoissonManufacturedSolution) {
+// in-place solve into phi.as_vec() (no to_vector/from_vector copy).
+TEST(field_solver, PoissonManufacturedSolution) {
     const int n = 8;
     const float dx = 1.0f; // dx = 1 => operator works in pure index space.
 
@@ -52,10 +52,10 @@ TEST(FieldSolver, PoissonManufacturedSolution) {
     };
     auto phi_exact = [&](int i, int j, int k) { return para(i) * para(j) * para(k); };
 
-    ScalarField3D exact(n, n, n, dx, [&](int i, int j, int k) { return phi_exact(i, j, k); });
+    scalar_field_3d exact(n, n, n, dx, [&](int i, int j, int k) { return phi_exact(i, j, k); });
 
     // source = discrete Laplacian of phi_exact on the interior (dx^2 = 1).
-    ScalarField3D source(n, n, n, dx);
+    scalar_field_3d source(n, n, n, dx);
     for (int k = 1; k < n - 1; ++k) {
         for (int j = 1; j < n - 1; ++j) {
             for (int i = 1; i < n - 1; ++i) {
@@ -68,8 +68,8 @@ TEST(FieldSolver, PoissonManufacturedSolution) {
         }
     }
 
-    ScalarField3D phi(n, n, n, dx); // initial guess: 0
-    const auto result = FieldSolver::solve_poisson(phi, source, 1e-9, 2000);
+    scalar_field_3d phi(n, n, n, dx); // initial guess: 0
+    const auto result = field_solver::solve_poisson(phi, source, 1e-9, 2000);
     ASSERT_TRUE(result.converged);
 
     double max_err = 0.0;
@@ -91,12 +91,12 @@ TEST(FieldSolver, PoissonManufacturedSolution) {
 }
 
 // Central-difference gradient of phi = x (i.e. i*dx) is exactly 1 in x, 0 else.
-TEST(FieldSolver, GradientOfLinearFieldIsConstant) {
+TEST(field_solver, GradientOfLinearFieldIsConstant) {
     const int n = 6;
     const float dx = 2.0f;
-    ScalarField3D phi(n, n, n, dx, [dx](int i, int, int) { return i * static_cast<double>(dx); });
+    scalar_field_3d phi(n, n, n, dx, [dx](int i, int, int) { return i * static_cast<double>(dx); });
 
-    const VectorField3D g = FieldSolver::gradient(phi);
+    const vector_field_3d g = field_solver::gradient(phi);
     EXPECT_NEAR(g.x(2, 2, 2), 1.0, 1e-9);
     EXPECT_NEAR(g.y(2, 2, 2), 0.0, 1e-9);
     EXPECT_NEAR(g.z(2, 2, 2), 0.0, 1e-9);

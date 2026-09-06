@@ -39,10 +39,10 @@ set(NUMERICS_INSTANTIATION_SOURCES
 # Distributed-memory bindings. Built as numerics::mpi, never folded into the
 # main library, so linking numerics does not pull in an MPI dependency.
 set(NUMERICS_MPI_SOURCES
-    src/container/parallel/mpi_ops.cpp
+    include/mpi/mpi_ops.cpp
 )
 
 # Device bindings. Built as numerics::cuda only when a toolkit was found.
 set(NUMERICS_CUDA_SOURCES
-    src/container/parallel/cuda_ops.cu
+    include/cuda/cuda_ops.cu
 )

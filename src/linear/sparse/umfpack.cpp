@@ -9,7 +9,7 @@
 
 namespace num {
 
-struct UMFPACKFactor::Impl {
+struct umfpack_factor::Impl {
     idx n = 0;
 #if defined(NUMERICS_HAS_UMFPACK)
     std::vector<int> ap, ai;
@@ -35,7 +35,7 @@ bool umfpack_available() noexcept {
 #endif
 }
 
-UMFPACKFactor::UMFPACKFactor(const SparseMatrix &matrix) : impl_(std::make_unique<Impl>()) {
+umfpack_factor::umfpack_factor(const spmat &matrix) : impl_(std::make_unique<Impl>()) {
 #if defined(NUMERICS_HAS_UMFPACK)
     if (matrix.n_rows() != matrix.n_cols()) {
         throw std::invalid_argument("UMFPACK factorization requires a square matrix");
@@ -81,19 +81,19 @@ UMFPACKFactor::UMFPACKFactor(const SparseMatrix &matrix) : impl_(std::make_uniqu
 #endif
 }
 
-UMFPACKFactor::~UMFPACKFactor() = default;
-UMFPACKFactor::UMFPACKFactor(UMFPACKFactor &&) noexcept = default;
-UMFPACKFactor &UMFPACKFactor::operator=(UMFPACKFactor &&) noexcept = default;
-idx UMFPACKFactor::size() const noexcept {
+umfpack_factor::~umfpack_factor() = default;
+umfpack_factor::umfpack_factor(umfpack_factor &&) noexcept = default;
+umfpack_factor &umfpack_factor::operator=(umfpack_factor &&) noexcept = default;
+idx umfpack_factor::size() const noexcept {
     return impl_ ? impl_->n : 0;
 }
 
-void UMFPACKFactor::solve(const Vector &rhs, Vector &solution) const {
+void umfpack_factor::solve(const vec &rhs, vec &solution) const {
 #if defined(NUMERICS_HAS_UMFPACK)
     if (rhs.size() != impl_->n) {
         throw std::invalid_argument("UMFPACK solve dimension mismatch");
     }
-    solution = Vector(impl_->n, 0.0);
+    solution = vec(impl_->n, 0.0);
     const int status =
         umfpack_di_solve(UMFPACK_A, impl_->ap.data(), impl_->ai.data(), impl_->ax.data(),
                          solution.data(), rhs.data(), impl_->numeric, nullptr, nullptr);
@@ -107,13 +107,13 @@ void UMFPACKFactor::solve(const Vector &rhs, Vector &solution) const {
 #endif
 }
 
-void UMFPACKFactor::solve(const Matrix &rhs, Matrix &solution) const {
+void umfpack_factor::solve(const mat &rhs, mat &solution) const {
 #if defined(NUMERICS_HAS_UMFPACK)
     if (rhs.rows() != impl_->n) {
         throw std::invalid_argument("UMFPACK block solve dimension mismatch");
     }
-    solution = Matrix(rhs.rows(), rhs.cols(), 0.0);
-    Vector b(impl_->n, 0.0), x(impl_->n, 0.0);
+    solution = mat(rhs.rows(), rhs.cols(), 0.0);
+    vec b(impl_->n, 0.0), x(impl_->n, 0.0);
     for (idx col = 0; col < rhs.cols(); ++col) {
         for (idx row = 0; row < rhs.rows(); ++row) {
             b[row] = rhs(row, col);

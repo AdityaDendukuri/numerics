@@ -1,7 +1,7 @@
 /// @file quadrature/concepts.hpp
 /// @brief Contracts for quadrature rules.
 ///
-/// The integrand itself is an `num::ScalarFunction`, defined in
+/// The integrand itself is an `num::scalar_function`, defined in
 /// `algebra/concepts.hpp` because a map on a scalar field is algebra vocabulary
 /// rather than something quadrature introduces.
 #pragma once
@@ -17,7 +17,7 @@ namespace num {
 /// A rule reports one value for a bounded interval. Adaptive rules satisfy this
 /// too, since the refinement is internal to the call.
 template <class R, class F, class T = real>
-concept QuadratureRule = ScalarFunction<F, T> && requires(const R &rule, F f, T a, T b) {
+concept quadrature_rule = scalar_function<F, T> && requires(const R &rule, F f, T a, T b) {
     { rule(f, a, b) } -> std::convertible_to<T>;
 };
 
@@ -26,8 +26,8 @@ concept QuadratureRule = ScalarFunction<F, T> && requires(const R &rule, F f, T 
 /// Used for inverse Laplace transforms, where the integral runs along a contour
 /// rather than an interval. The rule never sees the integrand: the caller
 /// evaluates the transform at each node and accumulates.
-template <class R>
-concept ContourRule = requires(const R &rule, real t) {
+template <class R, class T = real>
+concept contour_rule = field<T> && requires(const R &rule, T t) {
     { rule.nodes(t) };
 };
 

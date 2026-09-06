@@ -1,5 +1,5 @@
 /// @file algebra/scalar.hpp
-/// @brief Scalar field traits shared by concepts and runtime invariant sampling.
+/// @brief scalar field traits shared by concepts and runtime invariant sampling.
 ///
 /// Numerical structure is stated over a scalar field \f$\mathbb{K}\f$ (typically
 /// \f$\mathbb{R}\f$ or \f$\mathbb{C}\f$). These traits let structure and diagnostics
@@ -53,7 +53,7 @@ using real_t = typename real_of<std::remove_cvref_t<T>>::type;
 ///
 /// @tparam T Candidate scalar type.
 template <class T>
-concept Field = std::floating_point<real_t<T>> && requires(T a, T b) {
+concept field = std::floating_point<real_t<T>> && requires(T a, T b) {
     { a + b } -> std::convertible_to<T>;
     { a - b } -> std::convertible_to<T>;
     { a *b } -> std::convertible_to<T>;

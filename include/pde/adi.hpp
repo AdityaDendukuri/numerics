@@ -12,20 +12,20 @@
 
 namespace num {
 
-struct CrankNicolsonADI {
+struct crank_nicolson_adi {
     int N = 0;
     double dt = 0.0;
     double h = 0.0;
 
-    CrankNicolsonADI() = default;
+    crank_nicolson_adi() = default;
 
-    CrankNicolsonADI(int N_, double dt_, double h_) : N(N_), dt(dt_), h(h_) {
+    crank_nicolson_adi(int N_, double dt_, double h_) : N(N_), dt(dt_), h(h_) {
         using cplx = std::complex<double>;
         auto factor = [&](double tau) {
             double alpha = tau / (4.0 * h * h);
             cplx a(0.0, -alpha);
             cplx b(1.0, 2.0 * alpha);
-            ComplexTriDiag td;
+            complex_tri_diag td;
             td.factor(N, a, b, a);
             return td;
         };
@@ -33,9 +33,9 @@ struct CrankNicolsonADI {
         td_full_ = factor(dt);
     }
 
-    void sweep(CVector &psi, bool x_axis, double tau) const {
+    void sweep(cvec &psi, bool x_axis, double tau) const {
         using cplx = std::complex<double>;
-        const ComplexTriDiag &td = (tau < dt * 0.75) ? td_half_ : td_full_;
+        const complex_tri_diag &td = (tau < dt * 0.75) ? td_half_ : td_full_;
         const cplx ia(0.0, tau / (4.0 * h * h));
         const cplx diag(1.0, -2.0 * tau / (4.0 * h * h));
 
@@ -58,8 +58,8 @@ struct CrankNicolsonADI {
     }
 
   private:
-    ComplexTriDiag td_half_;
-    ComplexTriDiag td_full_;
+    complex_tri_diag td_half_;
+    complex_tri_diag td_full_;
 };
 
 } // namespace num

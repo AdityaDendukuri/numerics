@@ -1,7 +1,7 @@
 /// @file sparse.hpp
 /// @brief Compressed Sparse Row (CSR) matrix and operations
 #pragma once
-#include "kernel/raw.hpp"
+#include "kernel/kernel.hpp"
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -18,16 +18,16 @@ namespace num {
 ///
 /// Non-zero values for row i are stored in vals_[row_ptr_[i] .. row_ptr_[i+1]).
 /// Corresponding column indices are in col_idx_[row_ptr_[i] .. row_ptr_[i+1]).
-class SparseMatrix {
+class spmat {
   public:
     /// @brief Construct from raw CSR arrays (takes ownership)
-    SparseMatrix(idx n_rows, idx n_cols, std::vector<real> vals, std::vector<idx> col_idx,
+    spmat(idx n_rows, idx n_cols, std::vector<real> vals, std::vector<idx> col_idx,
                  std::vector<idx> row_ptr);
 
     /// @brief Build from coordinate (COO / triplet) lists
     ///
     /// Duplicate (row, col) entries are summed. Entries need not be sorted.
-    static SparseMatrix from_triplets(idx n_rows, idx n_cols, const std::vector<idx> &rows,
+    static spmat from_triplets(idx n_rows, idx n_cols, const std::vector<idx> &rows,
                                       const std::vector<idx> &cols, const std::vector<real> &vals);
 
     /// @brief Build from zero-based compressed-column (CSC) arrays.
@@ -36,7 +36,7 @@ class SparseMatrix {
     /// payload arrays may contain a trailing unused entry, as produced by the
     /// Armadillo sparse serializer; only the first `col_ptrs.back()` entries
     /// are consumed.  All indices and pointers are zero-based.
-    static SparseMatrix from_csc(idx n_rows, idx n_cols, const std::vector<real> &vals,
+    static spmat from_csc(idx n_rows, idx n_cols, const std::vector<real> &vals,
                                  const std::vector<idx> &row_indices,
                                  const std::vector<idx> &col_ptrs);
 
@@ -55,9 +55,9 @@ class SparseMatrix {
     [[nodiscard]] const idx *row_ptr() const { return row_ptr_.data(); }
 
     /// Operator protocol application: y <- A * x
-    template <class X = Vector, class Y = Vector>
+    template <class X = vec, class Y = vec>
     void apply(const X &x, Y &y) const {
-        if constexpr (std::is_same_v<X, Vector> && std::is_same_v<Y, Vector>) {
+        if constexpr (std::is_same_v<X, vec> && std::is_same_v<Y, vec>) {
             sparse_matvec(*this, x, y);
         } else {
             for (idx i = 0; i < n_rows_; ++i) {
@@ -83,62 +83,62 @@ class SparseMatrix {
 /// @param x Input vector of dimension \f$A.\text{cols()}\f$.
 /// @param y Output vector of dimension \f$A.\text{rows()}\f$.
 /// @throws std::invalid_argument If dimensions do not match.
-void sparse_matvec(const SparseMatrix &A, const Vector &x, Vector &y);
+void sparse_matvec(const spmat &A, const vec &x, vec &y);
 
 /// @brief Return scaled sparse matrix \f$\alpha A\f$ while preserving the exact CSR sparsity structure.
 /// @param A Input CSR matrix.
 /// @param alpha Scaling scalar.
-/// @return Scaled `SparseMatrix`.
-[[nodiscard]] SparseMatrix scaled(const SparseMatrix &A, real alpha);
+/// @return Scaled `spmat`.
+[[nodiscard]] spmat scaled(const spmat &A, real alpha);
 
 /// @brief Return the CSR transpose \f$A^T\f$ computed in \f$\mathcal{O}(\text{nnz} + n)\f$ time.
 /// @param A Input CSR matrix.
-/// @return Transposed `SparseMatrix` in CSR format.
-[[nodiscard]] SparseMatrix transpose(const SparseMatrix &A);
+/// @return Transposed `spmat` in CSR format.
+[[nodiscard]] spmat transpose(const spmat &A);
 
 /// @brief Convert a sparse matrix in CSR format to dense matrix storage.
 /// @param A Input CSR matrix.
-/// @return Dense `Matrix` of dimension \f$m \times n\f$.
-[[nodiscard]] Matrix dense(const SparseMatrix &A);
+/// @return Dense `mat` of dimension \f$m \times n\f$.
+[[nodiscard]] mat dense(const spmat &A);
 
 /// @brief Extract the main diagonal entries of a sparse matrix: \f$d_i = A_{ii}\f$.
 /// @param A Input sparse matrix.
-/// @return Vector of length \f$\min(m, n)\f$ containing diagonal entries (0 for unstored elements).
-[[nodiscard]] Vector diagonal(const SparseMatrix &A);
+/// @return vec of length \f$\min(m, n)\f$ containing diagonal entries (0 for unstored elements).
+[[nodiscard]] vec diagonal(const spmat &A);
 
 /// @brief Compute diagonal similarity transform \f$D^{-1} A D\f$ where \f$D = \text{diag}(\mathbf{w})\f$.
 /// @param A Square CSR matrix.
 /// @param weights Positive diagonal weight entries \f$w_i > 0\f$.
 /// @return Dense similarity transformed matrix \f$D^{-1} A D\f$.
 /// @throws std::invalid_argument If dimensions mismatch or any weight is non-positive.
-[[nodiscard]] Matrix diagonal_similarity(const SparseMatrix &A, std::span<const real> weights);
+[[nodiscard]] mat diagonal_similarity(const spmat &A, std::span<const real> weights);
 
 
 
-inline SparseMatrix::SparseMatrix(idx n_rows, idx n_cols, std::vector<real> vals, std::vector<idx> col_idx,
+inline spmat::spmat(idx n_rows, idx n_cols, std::vector<real> vals, std::vector<idx> col_idx,
                            std::vector<idx> row_ptr)
     : n_rows_(n_rows), n_cols_(n_cols), vals_(std::move(vals)), col_idx_(std::move(col_idx)),
       row_ptr_(std::move(row_ptr)) {
     if (row_ptr_.size() != n_rows_ + 1) {
-        throw std::invalid_argument("SparseMatrix: row_ptr must have length n_rows+1");
+        throw std::invalid_argument("spmat: row_ptr must have length n_rows+1");
     }
     if (col_idx_.size() != vals_.size()) {
-        throw std::invalid_argument("SparseMatrix: col_idx and vals must have equal length");
+        throw std::invalid_argument("spmat: col_idx and vals must have equal length");
     }
 }
 
-inline SparseMatrix SparseMatrix::from_triplets(idx n_rows, idx n_cols, const std::vector<idx> &rows,
+inline spmat spmat::from_triplets(idx n_rows, idx n_cols, const std::vector<idx> &rows,
                                          const std::vector<idx> &cols,
                                          const std::vector<real> &vals) {
     if (rows.size() != cols.size() || rows.size() != vals.size()) {
-        throw std::invalid_argument("SparseMatrix::from_triplets: inconsistent input sizes");
+        throw std::invalid_argument("spmat::from_triplets: inconsistent input sizes");
     }
 
     // Count entries per row
     std::vector<idx> row_count(n_rows, 0);
     for (idx k = 0; k < rows.size(); ++k) {
         if (rows[k] >= n_rows || cols[k] >= n_cols) {
-            throw std::out_of_range("SparseMatrix::from_triplets: index out of range");
+            throw std::out_of_range("spmat::from_triplets: index out of range");
         }
         ++row_count[rows[k]];
     }
@@ -211,22 +211,22 @@ inline SparseMatrix SparseMatrix::from_triplets(idx n_rows, idx n_cols, const st
         }
     }
 
-    return SparseMatrix(n_rows, n_cols, std::move(out_vals), std::move(out_col),
+    return spmat(n_rows, n_cols, std::move(out_vals), std::move(out_col),
                         std::move(row_ptr));
 }
 
-inline SparseMatrix SparseMatrix::from_csc(idx n_rows, idx n_cols, const std::vector<real> &vals,
+inline spmat spmat::from_csc(idx n_rows, idx n_cols, const std::vector<real> &vals,
                                     const std::vector<idx> &row_indices,
                                     const std::vector<idx> &col_ptrs) {
     if (col_ptrs.size() != n_cols + 1) {
-        throw std::invalid_argument("SparseMatrix::from_csc: col_ptrs must have length n_cols+1");
+        throw std::invalid_argument("spmat::from_csc: col_ptrs must have length n_cols+1");
     }
     if (col_ptrs.empty() || col_ptrs.front() != 0) {
-        throw std::invalid_argument("SparseMatrix::from_csc: col_ptrs must start at zero");
+        throw std::invalid_argument("spmat::from_csc: col_ptrs must start at zero");
     }
     for (idx j = 0; j < n_cols; ++j) {
         if (col_ptrs[j] > col_ptrs[j + 1]) {
-            throw std::invalid_argument("SparseMatrix::from_csc: col_ptrs must be nondecreasing");
+            throw std::invalid_argument("spmat::from_csc: col_ptrs must be nondecreasing");
         }
     }
 
@@ -235,13 +235,13 @@ inline SparseMatrix SparseMatrix::from_csc(idx n_rows, idx n_cols, const std::ve
     // the pointer, rather than payload length, as the authoritative nnz.
     const idx nnz = col_ptrs.back();
     if (nnz > vals.size() || nnz > row_indices.size()) {
-        throw std::invalid_argument("SparseMatrix::from_csc: payload shorter than col_ptrs.back()");
+        throw std::invalid_argument("spmat::from_csc: payload shorter than col_ptrs.back()");
     }
 
     std::vector<idx> row_ptr(n_rows + 1, 0);
     for (idx k = 0; k < nnz; ++k) {
         if (row_indices[k] >= n_rows) {
-            throw std::out_of_range("SparseMatrix::from_csc: row index out of range");
+            throw std::out_of_range("spmat::from_csc: row index out of range");
         }
         ++row_ptr[row_indices[k] + 1];
     }
@@ -261,11 +261,11 @@ inline SparseMatrix SparseMatrix::from_csc(idx n_rows, idx n_cols, const std::ve
         }
     }
 
-    return SparseMatrix(n_rows, n_cols, std::move(out_vals), std::move(out_col),
+    return spmat(n_rows, n_cols, std::move(out_vals), std::move(out_col),
                         std::move(row_ptr));
 }
 
-inline real SparseMatrix::operator()(idx i, idx j) const {
+inline real spmat::operator()(idx i, idx j) const {
     for (idx k = row_ptr_[i]; k < row_ptr_[i + 1]; ++k) {
         if (col_idx_[k] == j) {
             return vals_[k];
@@ -274,14 +274,14 @@ inline real SparseMatrix::operator()(idx i, idx j) const {
     return 0.0;
 }
 
-inline void sparse_matvec(const SparseMatrix &A, const Vector &x, Vector &y) {
+inline void sparse_matvec(const spmat &A, const vec &x, vec &y) {
     if (A.n_cols() != x.size() || A.n_rows() != y.size()) {
         throw std::invalid_argument("Dimension mismatch in sparse_matvec");
     }
-    kernel::raw::spmv(y.data(), A.values(), A.row_ptr(), A.col_idx(), x.data(), A.n_rows());
+    kernel::spmv(y.data(), A.values(), A.row_ptr(), A.col_idx(), x.data(), A.n_rows());
 }
 
-inline SparseMatrix scaled(const SparseMatrix &A, real alpha) {
+inline spmat scaled(const spmat &A, real alpha) {
     std::vector<real> values(A.values(), A.values() + A.nnz());
     for (real &value : values) {
         value *= alpha;
@@ -291,7 +291,7 @@ inline SparseMatrix scaled(const SparseMatrix &A, real alpha) {
             std::vector<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
 }
 
-inline SparseMatrix transpose(const SparseMatrix &A) {
+inline spmat transpose(const spmat &A) {
     std::vector<idx> column_ptr(A.n_cols() + 1, 0);
     for (idx entry = 0; entry < A.nnz(); ++entry) {
         ++column_ptr[A.col_idx()[entry] + 1];
@@ -313,8 +313,8 @@ inline SparseMatrix transpose(const SparseMatrix &A) {
     return {A.n_cols(), A.n_rows(), std::move(values), std::move(columns), std::move(column_ptr)};
 }
 
-inline Matrix dense(const SparseMatrix &A) {
-    Matrix result(A.n_rows(), A.n_cols(), 0.0);
+inline mat dense(const spmat &A) {
+    mat result(A.n_rows(), A.n_cols(), 0.0);
     for (idx row = 0; row < A.n_rows(); ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
             result(row, A.col_idx()[entry]) = A.values()[entry];
@@ -323,9 +323,9 @@ inline Matrix dense(const SparseMatrix &A) {
     return result;
 }
 
-inline Vector diagonal(const SparseMatrix &A) {
+inline vec diagonal(const spmat &A) {
     const idx n = std::min(A.n_rows(), A.n_cols());
-    Vector result(n, 0.0);
+    vec result(n, 0.0);
     for (idx row = 0; row < n; ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
             if (A.col_idx()[entry] == row) {
@@ -337,14 +337,14 @@ inline Vector diagonal(const SparseMatrix &A) {
     return result;
 }
 
-inline Matrix diagonal_similarity(const SparseMatrix &A, std::span<const real> weights) {
+inline mat diagonal_similarity(const spmat &A, std::span<const real> weights) {
     if (A.n_rows() != A.n_cols() || weights.size() != A.n_rows()) {
         throw std::invalid_argument("diagonal_similarity: dimensions must match");
     }
     if (!std::all_of(weights.begin(), weights.end(), [](real value) { return value > 0.0; })) {
         throw std::invalid_argument("diagonal_similarity: weights must be positive");
     }
-    Matrix result(A.n_rows(), A.n_cols(), 0.0);
+    mat result(A.n_rows(), A.n_cols(), 0.0);
     for (idx row = 0; row < A.n_rows(); ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
             const idx column = A.col_idx()[entry];

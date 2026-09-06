@@ -14,14 +14,14 @@ namespace num {
 /// @brief Create a lazy forward Euler trajectory iterator for \f$\dot{y} = f(t, y)\f$.
 ///
 /// @tparam RHS Callable type with signature `void(real t, const State& y, State& dy)`.
-/// @tparam State State container type (defaults to `Vector`).
+/// @tparam State State container type (defaults to `vec`).
 /// @param f Right-hand side derivative function.
 /// @param y0 Initial state vector \f$y(t_0)\f$.
 /// @param p Integration parameters (start time, end time, time step).
-/// @return `BasicEulerSteps` lazy iterable sequence of integration steps.
-template <typename RHS = ODERhsFn, typename State = Vector>
-inline BasicEulerSteps<RHS, State> euler(RHS f, State y0, ODEParams p = {}) {
-    return BasicEulerSteps<RHS, State>(std::move(f), std::move(y0), p);
+/// @return `basic_euler_steps` lazy iterable sequence of integration steps.
+template <typename RHS = ode_rhs_fn, typename State = vec>
+inline basic_euler_steps<RHS, State> euler(RHS f, State y0, ode_params p = {}) {
+    return basic_euler_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
 /// @brief Create a lazy classical 4th-order Runge-Kutta (RK4) trajectory iterator.
@@ -33,10 +33,10 @@ inline BasicEulerSteps<RHS, State> euler(RHS f, State y0, ODEParams p = {}) {
 /// @param f Right-hand side derivative function.
 /// @param y0 Initial state vector \f$y(t_0)\f$.
 /// @param p Integration parameters (`t0`, `tf`, `dt`).
-/// @return `BasicRK4Steps` lazy iterable sequence of integration steps.
-template <typename RHS = ODERhsFn, typename State = Vector>
-inline BasicRK4Steps<RHS, State> rk4(RHS f, State y0, ODEParams p = {}) {
-    return BasicRK4Steps<RHS, State>(std::move(f), std::move(y0), p);
+/// @return `basic_rk4_steps` lazy iterable sequence of integration steps.
+template <typename RHS = ode_rhs_fn, typename State = vec>
+inline basic_rk4_steps<RHS, State> rk4(RHS f, State y0, ode_params p = {}) {
+    return basic_rk4_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
 /// @brief Create a lazy adaptive Dormand-Prince (RK45) trajectory iterator with PI step control.
@@ -49,10 +49,10 @@ inline BasicRK4Steps<RHS, State> rk4(RHS f, State y0, ODEParams p = {}) {
 /// @param f Right-hand side derivative function.
 /// @param y0 Initial state vector \f$y(t_0)\f$.
 /// @param p Integration parameters (`t0`, `tf`, `rtol`, `atol`, `max_steps`).
-/// @return `BasicRK45Steps` lazy iterable sequence of adaptive steps.
-template <typename RHS = ODERhsFn, typename State = Vector>
-inline BasicRK45Steps<RHS, State> rk45(RHS f, State y0, ODEParams p = {}) {
-    return BasicRK45Steps<RHS, State>(std::move(f), std::move(y0), p);
+/// @return `basic_rk45_steps` lazy iterable sequence of adaptive steps.
+template <typename RHS = ode_rhs_fn, typename State = vec>
+inline basic_rk45_steps<RHS, State> rk45(RHS f, State y0, ode_params p = {}) {
+    return basic_rk45_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
 /// @brief Create a lazy second-order velocity-Verlet trajectory iterator for Hamiltonian systems \f$\ddot{q} = a(q)\f$.
@@ -65,10 +65,10 @@ inline BasicRK45Steps<RHS, State> rk45(RHS f, State y0, ODEParams p = {}) {
 /// @param q0 Initial generalized coordinates.
 /// @param v0 Initial generalized velocities.
 /// @param p Integration parameters (`t0`, `tf`, `dt`).
-/// @return `BasicVerletSteps` lazy iterable sequence of symplectic steps.
-template <typename Accel = AccelFn, typename State = Vector>
-inline BasicVerletSteps<Accel, State> verlet(Accel accel, State q0, State v0, ODEParams p = {}) {
-    return BasicVerletSteps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
+/// @return `basic_verlet_steps` lazy iterable sequence of symplectic steps.
+template <typename Accel = accel_fn, typename State = vec>
+inline basic_verlet_steps<Accel, State> verlet(Accel accel, State q0, State v0, ode_params p = {}) {
+    return basic_verlet_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
 /// @brief Create a lazy 4th-order symplectic Yoshida integrator trajectory for \f$\ddot{q} = a(q)\f$.
@@ -81,10 +81,10 @@ inline BasicVerletSteps<Accel, State> verlet(Accel accel, State q0, State v0, OD
 /// @param q0 Initial coordinates.
 /// @param v0 Initial velocities.
 /// @param p Integration parameters (`t0`, `tf`, `dt`).
-/// @return `BasicYoshida4Steps` lazy iterable sequence of 4th-order symplectic steps.
-template <typename Accel = AccelFn, typename State = Vector>
-inline BasicYoshida4Steps<Accel, State> yoshida4(Accel accel, State q0, State v0, ODEParams p = {}) {
-    return BasicYoshida4Steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
+/// @return `basic_yoshida4_steps` lazy iterable sequence of 4th-order symplectic steps.
+template <typename Accel = accel_fn, typename State = vec>
+inline basic_yoshida4_steps<Accel, State> yoshida4(Accel accel, State q0, State v0, ode_params p = {}) {
+    return basic_yoshida4_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
 /// @brief Create a lazy 4th-order Nystrom integrator trajectory for second-order ODEs \f$\ddot{q} = a(q)\f$.
@@ -95,10 +95,10 @@ inline BasicYoshida4Steps<Accel, State> yoshida4(Accel accel, State q0, State v0
 /// @param q0 Initial coordinates.
 /// @param v0 Initial velocities.
 /// @param p Integration parameters.
-/// @return `BasicRK4_2ndSteps` lazy iterable sequence.
-template <typename Accel = AccelFn, typename State = Vector>
-inline BasicRK4_2ndSteps<Accel, State> rk4_2nd(Accel accel, State q0, State v0, ODEParams p = {}) {
-    return BasicRK4_2ndSteps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
+/// @return `basic_rk4_2nd_steps` lazy iterable sequence.
+template <typename Accel = accel_fn, typename State = vec>
+inline basic_rk4_2nd_steps<Accel, State> rk4_2nd(Accel accel, State q0, State v0, ode_params p = {}) {
+    return basic_rk4_2nd_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
 /// @brief Integrate first-order ODE \f$\dot{y} = f(t, y)\f$ using fixed-step forward Euler.
@@ -108,10 +108,10 @@ inline BasicRK4_2ndSteps<Accel, State> rk4_2nd(Accel accel, State q0, State v0, 
 /// @param f Right-hand side function.
 /// @param y0 Initial state \f$y(t_0)\f$.
 /// @param p Integration parameters (`t0`, `tf`, `dt`).
-/// @param observer Optional callback `void(real t, const Vector& u)` invoked at each step.
-/// @return `ODEResult` with final state `u`, final time `t`, total `steps`, and convergence flag.
-template <typename RHS = ODERhsFn, typename State = Vector>
-inline ODEResult ode_euler(RHS f, State y0, ODEParams p = {}, const ObserverFn &observer = {}) {
+/// @param observer Optional callback `void(real t, const vec& u)` invoked at each step.
+/// @return `ode_result` with final state `u`, final time `t`, total `steps`, and convergence flag.
+template <typename RHS = ode_rhs_fn, typename State = vec>
+inline ode_result ode_euler(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
     auto s = euler(std::move(f), std::move(y0), p);
     if (!observer) {
         return s.run();
@@ -129,10 +129,10 @@ inline ODEResult ode_euler(RHS f, State y0, ODEParams p = {}, const ObserverFn &
 /// @param f Right-hand side function.
 /// @param y0 Initial state \f$y(t_0)\f$.
 /// @param p Integration parameters (`t0`, `tf`, `dt`).
-/// @param observer Optional callback `void(real t, const Vector& u)` invoked at each step.
-/// @return `ODEResult` with final state `u`, final time `t`, total `steps`, and convergence flag.
-template <typename RHS = ODERhsFn, typename State = Vector>
-inline ODEResult ode_rk4(RHS f, State y0, ODEParams p = {}, const ObserverFn &observer = {}) {
+/// @param observer Optional callback `void(real t, const vec& u)` invoked at each step.
+/// @return `ode_result` with final state `u`, final time `t`, total `steps`, and convergence flag.
+template <typename RHS = ode_rhs_fn, typename State = vec>
+inline ode_result ode_rk4(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
     auto s = rk4(std::move(f), std::move(y0), p);
     if (!observer) {
         return s.run();
@@ -150,10 +150,10 @@ inline ODEResult ode_rk4(RHS f, State y0, ODEParams p = {}, const ObserverFn &ob
 /// @param f Right-hand side function.
 /// @param y0 Initial state \f$y(t_0)\f$.
 /// @param p Integration parameters (`t0`, `tf`, `rtol`, `atol`, `max_steps`).
-/// @param observer Optional callback `void(real t, const Vector& u)` invoked at each step.
-/// @return `ODEResult` with final state `u`, final time `t`, total `steps`, and convergence flag.
-template <typename RHS = ODERhsFn, typename State = Vector>
-inline ODEResult ode_rk45(RHS f, State y0, ODEParams p = {}, const ObserverFn &observer = {}) {
+/// @param observer Optional callback `void(real t, const vec& u)` invoked at each step.
+/// @return `ode_result` with final state `u`, final time `t`, total `steps`, and convergence flag.
+template <typename RHS = ode_rhs_fn, typename State = vec>
+inline ode_result ode_rk45(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
     auto s = rk45(std::move(f), std::move(y0), p);
     if (!observer) {
         return s.run();
@@ -172,11 +172,11 @@ inline ODEResult ode_rk45(RHS f, State y0, ODEParams p = {}, const ObserverFn &o
 /// @param q0 Initial coordinates \f$q(t_0)\f$.
 /// @param v0 Initial velocities \f$v(t_0)\f$.
 /// @param p Integration parameters (`t0`, `tf`, `dt`).
-/// @param observer Optional callback `void(real t, const Vector& q, const Vector& v)` invoked at each step.
-/// @return `SymplecticResult` with final coordinates `q`, velocities `v`, time `t`, and `steps`.
-template <typename Accel = AccelFn, typename State = Vector>
-inline SymplecticResult ode_verlet(Accel accel, State q0, State v0, ODEParams p = {},
-                                   const SympObserverFn &observer = {}) {
+/// @param observer Optional callback `void(real t, const vec& q, const vec& v)` invoked at each step.
+/// @return `symplectic_result` with final coordinates `q`, velocities `v`, time `t`, and `steps`.
+template <typename Accel = accel_fn, typename State = vec>
+inline symplectic_result ode_verlet(Accel accel, State q0, State v0, ode_params p = {},
+                                   const symp_observer_fn &observer = {}) {
     auto s = verlet(std::move(accel), std::move(q0), std::move(v0), p);
     if (!observer) {
         return s.run();
@@ -195,11 +195,11 @@ inline SymplecticResult ode_verlet(Accel accel, State q0, State v0, ODEParams p 
 /// @param q0 Initial coordinates \f$q(t_0)\f$.
 /// @param v0 Initial velocities \f$v(t_0)\f$.
 /// @param p Integration parameters (`t0`, `tf`, `dt`).
-/// @param observer Optional callback `void(real t, const Vector& q, const Vector& v)` invoked at each step.
-/// @return `SymplecticResult` with final coordinates `q`, velocities `v`, time `t`, and `steps`.
-template <typename Accel = AccelFn, typename State = Vector>
-inline SymplecticResult ode_yoshida4(Accel accel, State q0, State v0, ODEParams p = {},
-                                     const SympObserverFn &observer = {}) {
+/// @param observer Optional callback `void(real t, const vec& q, const vec& v)` invoked at each step.
+/// @return `symplectic_result` with final coordinates `q`, velocities `v`, time `t`, and `steps`.
+template <typename Accel = accel_fn, typename State = vec>
+inline symplectic_result ode_yoshida4(Accel accel, State q0, State v0, ode_params p = {},
+                                     const symp_observer_fn &observer = {}) {
     auto s = yoshida4(std::move(accel), std::move(q0), std::move(v0), p);
     if (!observer) {
         return s.run();
@@ -218,11 +218,11 @@ inline SymplecticResult ode_yoshida4(Accel accel, State q0, State v0, ODEParams 
 /// @param q0 Initial coordinates \f$q(t_0)\f$.
 /// @param v0 Initial velocities \f$v(t_0)\f$.
 /// @param p Integration parameters (`t0`, `tf`, `dt`).
-/// @param observer Optional callback `void(real t, const Vector& q, const Vector& v)` invoked at each step.
-/// @return `SymplecticResult` with final coordinates `q`, velocities `v`, time `t`, and `steps`.
-template <typename Accel = AccelFn, typename State = Vector>
-inline SymplecticResult ode_rk4_2nd(Accel accel, State q0, State v0, ODEParams p = {},
-                                    const SympObserverFn &observer = {}) {
+/// @param observer Optional callback `void(real t, const vec& q, const vec& v)` invoked at each step.
+/// @return `symplectic_result` with final coordinates `q`, velocities `v`, time `t`, and `steps`.
+template <typename Accel = accel_fn, typename State = vec>
+inline symplectic_result ode_rk4_2nd(Accel accel, State q0, State v0, ode_params p = {},
+                                    const symp_observer_fn &observer = {}) {
     auto s = rk4_2nd(std::move(accel), std::move(q0), std::move(v0), p);
     if (!observer) {
         return s.run();

@@ -21,7 +21,7 @@ cmake --build build -j$(nproc)
 Google Benchmark targets measure throughput, cache scalability, and acceleration speedup:
 
 ```bash
-# Matrix Multiplication (Seq vs Blocked vs SIMD vs BLAS vs OpenMP)
+# Matrix Multiplication (kernel vs OpenMP vs BLAS)
 ./build/benchmarks/numerics_bench --benchmark_filter=BM_Matmul
 
 # Matrix-Vector Multiplication & Level-1 BLAS
@@ -52,30 +52,37 @@ The report includes:
 ## 4. Kernel Architecture & Implementation Boundaries
 
 ```text
-src/container/backends/seq/matrix.cpp     Portable sequential and cache-blocked kernels
-src/container/backends/opt/matrix.cpp     Explicit SIMD vectorization kernels (AVX2 / NEON)
-src/container/backends/blas/matrix.cpp    Vendor BLAS dgemm/dgemv/daxpy wrappers
-src/container/backends/omp/matrix.cpp     Multi-threaded OpenMP parallel wrappers
-src/container/backends/gpu/matrix.cpp     CUDA GPU execution paths
-include/kernel/raw.hpp               Zero-allocation, inlined raw-pointer loops
+include/kernel/{vector,dense,sparse,rotations,factor,krylov}.hpp   Zero-allocation, inlined raw-pointer loops
+include/seq/            (in container/{vector,matrix,dense,reduce}_ops.hpp)  vec-aware wrappers over num::kernel
+include/omp/{vector_ops,matrix_ops,parallel_ops}.hpp                OpenMP-parallel loops
+include/blas/{vector_ops,matrix_ops}.hpp                            cblas_* wrappers
+include/cuda/{cuda_ops,container_ops}.hpp                           CUDA device kernels
+include/lapack/lapack_wrapper.hpp                                   LAPACKE wrappers
 ```
 
 ### Separation of Concerns
 
-* **`kernel::raw`** contains pure scalar arithmetic loops and does not call external libraries (BLAS/LAPACK/CUDA).
-* **Vendor acceleration calls** (OpenBLAS, LAPACKE, CUDA) are isolated in `src/container/backends/` and `src/linear/factorization/`.
+* **`num::kernel`** contains pure arithmetic loops over raw pointers and does not call external libraries or know about `vec`/`mat`.
+* It carries **no intrinsics and no runtime CPU dispatch.** Vectorization is the compiler's job; the kernel's job is to write loops it can vectorize, and to block them for the register file and the cache. `kernel::gemm` sizes its register tile from `NUM_K_VECTOR_REGISTERS` and its cache panel from a byte budget, both at compile time. Hand-written AVX2 and NEON products lived here once and were removed: the portable tiled `gemm` measured 30.0 GFLOP/s against their 23.7 on the same machine, and the intrinsic versions had a leading-dimension bug that made them silently wrong for any non-square shape.
+* Every accelerator is a plain namespace of free functions matching `num::kernel`'s signatures: `num::seq` (the `vec`/`mat`-aware fallback), `num::omp`, `num::blas`, `num::cuda`. There is no tag or enum layer between a caller and these — call a backend by name (`num::omp::dot(x, y)`), or let the untagged `num::dot(x, y)` resolve through `num::accel`, the single compile-time default (CUDA > BLAS > OMP > seq, whichever was configured).
 * This isolation guarantees that custom algorithms can be benchmarked against vendor BLAS/LAPACK cleanly and reproducibly.
 
 ---
 
-## 5. Runtime Backend Comparison
+## 5. Backend Comparison
 
 ```cpp
 #include <numerics.hpp>
 
-// Verify correctness and compare wall-clock timing across all active backends:
-for (num::Backend b : {num::seq, num::blocked, num::simd, num::blas, num::omp}) {
-    num::matmul(A, B, C, b);
-    check_residual(A, B, C);
-}
+// Compare wall-clock timing and correctness across every configured backend:
+num::seq::matmul(A, B, C);
+check_residual(A, B, C);
+#if defined(NUMERICS_HAS_BLAS)
+num::blas::matmul(A, B, C);
+check_residual(A, B, C);
+#endif
+#if defined(NUMERICS_HAS_OMP)
+num::omp::matmul(A, B, C);
+check_residual(A, B, C);
+#endif
 ```

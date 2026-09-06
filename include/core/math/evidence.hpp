@@ -1,5 +1,11 @@
 /// @file evidence.hpp
-/// @brief Immutable evidence for mathematical propositions about runtime values.
+/// @brief Immutable evidence that a runtime value satisfies a law.
+///
+/// `claims<T, L>` (models.hpp) asks what a *type* asserts. This header is about what a
+/// particular *value* has been shown to satisfy, and by what means: `assume<L>(x)` records
+/// a caller's promise, `require<L>(x)` records an exhaustive check. Both carry an
+/// `evidence_provenance` naming the origin and the source location, so a later failure can
+/// be traced to the line that made the claim.
 #pragma once
 
 #include "core/math/associated.hpp"
@@ -10,69 +16,23 @@
 #include <string_view>
 #include <type_traits>
 
-namespace num::axiom {
-
-struct linear {};
-struct square_operator : linear {};
-struct self_adjoint : square_operator {};
-struct positive_semidefinite : self_adjoint {};
-struct positive_definite : positive_semidefinite {};
-
-/// The restriction of an operator to Subspace is self-adjoint and maps the
-/// subspace into itself.
-template <class Subspace>
-struct self_adjoint_on : square_operator {};
-
-/// The restriction of an operator to Subspace is positive semidefinite.
-template <class Subspace>
-struct positive_semidefinite_on : self_adjoint_on<Subspace> {};
-
-/// The restriction of an operator to Subspace is positive definite.
-template <class Subspace>
-struct positive_definite_on : positive_semidefinite_on<Subspace> {};
-
-} // namespace num::axiom
-
 namespace num::math {
 
 enum class evidence_origin { assumed, verified };
 
 /// How and where a runtime value acquired mathematical evidence.
-struct EvidenceProvenance final {
+struct evidence_provenance final {
     evidence_origin origin;
     std::source_location location;
     std::string_view method;
 };
 
-template <class T>
-struct intrinsic_propositions {
-    using type = type_list<>;
-};
-
-namespace detail {
-
-template <class T, class = void>
-struct declared_propositions {
-    using type = typename intrinsic_propositions<std::remove_cvref_t<T>>::type;
-};
-
-template <class T>
-struct declared_propositions<T, std::void_t<typename std::remove_cvref_t<T>::math_propositions>> {
-    using type = typename std::remove_cvref_t<T>::math_propositions;
-};
-
-template <class P, class... Ps>
-consteval bool carries_in(type_list<Ps...>) {
-    return (std::derived_from<Ps, P> || ...);
-}
-
-} // namespace detail
-
-template <class T, class P>
-concept Carries = detail::carries_in<P>(typename detail::declared_propositions<T>::type{});
-
+/// @brief A law that can be attached to a runtime value as evidence.
+///
+/// Only operator laws qualify: evidence is about a specific object, and the space laws
+/// describe a type. `law_tag` (models.hpp) is the broader membership in the hierarchy.
 template <class P>
-concept MathematicalProposition = std::derived_from<P, axiom::linear>;
+concept mathematical_proposition = std::derived_from<P, law::linear_map>;
 
 template <class T, class P>
 struct evidence_validator {
@@ -84,19 +44,19 @@ struct evidence_access;
 }
 
 template <class T, class... Properties>
-class CertifiedRef final {
+class certified_ref final {
   public:
     using value_type = T;
-    using math_propositions = type_list<Properties...>;
+    using math_laws = type_list<Properties...>;
 
     template <class... OtherProperties>
-    requires(Carries<CertifiedRef<T, OtherProperties...>, Properties> &&...) constexpr CertifiedRef(
-        const CertifiedRef<T, OtherProperties...> &stronger) noexcept
+    requires(claims<certified_ref<T, OtherProperties...>, Properties> &&...) constexpr certified_ref(
+        const certified_ref<T, OtherProperties...> &stronger) noexcept
         : value_(&stronger.get()), provenance_(stronger.provenance()) {}
 
     [[nodiscard]] constexpr const T &get() const noexcept { return *value_; }
     [[nodiscard]] constexpr const T &base() const noexcept { return *value_; }
-    [[nodiscard]] constexpr const EvidenceProvenance &provenance() const noexcept {
+    [[nodiscard]] constexpr const evidence_provenance &provenance() const noexcept {
         return provenance_;
     }
 
@@ -113,46 +73,46 @@ class CertifiedRef final {
   private:
     friend struct detail::evidence_access;
 
-    constexpr CertifiedRef(const T &value, EvidenceProvenance provenance) noexcept
+    constexpr certified_ref(const T &value, evidence_provenance provenance) noexcept
         : value_(&value), provenance_(provenance) {}
 
     const T *value_;
-    EvidenceProvenance provenance_;
+    evidence_provenance provenance_;
 };
 
 namespace detail {
 
 struct evidence_access final {
     template <class T, class... Properties>
-    [[nodiscard]] static constexpr CertifiedRef<T, Properties...>
-    make(const T &value, EvidenceProvenance provenance) noexcept {
-        return CertifiedRef<T, Properties...>(value, provenance);
+    [[nodiscard]] static constexpr certified_ref<T, Properties...>
+    make(const T &value, evidence_provenance provenance) noexcept {
+        return certified_ref<T, Properties...>(value, provenance);
     }
 };
 
 } // namespace detail
 
 template <class T, class... Ps>
-struct model_of<CertifiedRef<T, Ps...>> : model_of<T> {};
+struct claims_of<certified_ref<T, Ps...>> : claims_of<T> {};
 
 namespace detail {
 
 template <class T, class... Ps>
-struct scalar_of<CertifiedRef<T, Ps...>, void> : scalar_of<T> {};
+struct scalar_of<certified_ref<T, Ps...>, void> : scalar_of<T> {};
 
 template <class T, class... Ps>
-struct domain_of<CertifiedRef<T, Ps...>, void> : domain_of<T> {};
+struct domain_of<certified_ref<T, Ps...>, void> : domain_of<T> {};
 
 template <class T, class... Ps>
-struct codomain_of<CertifiedRef<T, Ps...>, void> : codomain_of<T> {};
+struct codomain_of<certified_ref<T, Ps...>, void> : codomain_of<T> {};
 
 } // namespace detail
 
 /// Attach caller-supplied evidence. Decidable shape prerequisites remain enforced.
 template <class P, class T>
-requires MathematicalProposition<P> [[nodiscard]] CertifiedRef<T, P>
+requires mathematical_proposition<P> [[nodiscard]] certified_ref<T, P>
 assume(const T &value, std::source_location location = std::source_location::current()) {
-    if constexpr (std::derived_from<P, axiom::square_operator>) {
+    if constexpr (std::derived_from<P, law::endomorphism>) {
         if (value.rows() != value.cols()) {
             throw std::invalid_argument(
                 "cannot certify a self-adjoint property on a non-square value");
@@ -162,17 +122,17 @@ assume(const T &value, std::source_location location = std::source_location::cur
         value, {evidence_origin::assumed, location, "explicit caller assumption"});
 }
 
-// CertifiedRef is non-owning.  Binding it to a temporary would leave dangling
+// certified_ref is non-owning.  Binding it to a temporary would leave dangling
 // evidence at the end of the full expression, so rvalues are rejected even
 // though a const reference could otherwise bind to them.
 template <class P, class T>
-requires MathematicalProposition<P> CertifiedRef<T, P>
+requires mathematical_proposition<P> certified_ref<T, P>
 assume(const T &&, std::source_location = std::source_location::current()) = delete;
 
 /// Exhaustively validate P using a type-specific validator before attaching evidence.
 template <class P, class T>
-requires MathematicalProposition<P> &&evidence_validator<T, P>::available
-    [[nodiscard]] CertifiedRef<T, P>
+requires mathematical_proposition<P> &&evidence_validator<T, P>::available
+    [[nodiscard]] certified_ref<T, P>
     require(const T &value, std::source_location location = std::source_location::current()) {
     if (!evidence_validator<T, P>::verify(value)) {
         throw std::invalid_argument("value does not satisfy the required mathematical proposition");
@@ -182,7 +142,7 @@ requires MathematicalProposition<P> &&evidence_validator<T, P>::available
 }
 
 template <class P, class T>
-requires MathematicalProposition<P> &&evidence_validator<T, P>::available CertifiedRef<T, P>
+requires mathematical_proposition<P> &&evidence_validator<T, P>::available certified_ref<T, P>
 require(const T &&, std::source_location = std::source_location::current()) = delete;
 
 } // namespace num::math

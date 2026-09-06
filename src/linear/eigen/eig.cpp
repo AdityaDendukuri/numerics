@@ -4,14 +4,14 @@
 
 #include "linear/eigen/jacobi_eig.hpp"
 #include "core/debug.hpp"
-#include "kernel/raw.hpp"
+#include "kernel/kernel.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <string>
 
 #if defined(NUMERICS_HAS_LAPACK)
-#include "container/parallel/lapack_wrapper.hpp"
+#include "lapack/lapack_wrapper.hpp"
 #endif
 
 #if defined(NUMERICS_HAS_OMP)
@@ -20,18 +20,16 @@
 
 namespace num {
 
-namespace backends {
-
 namespace seq {
-EigenResult eig_sym(const Matrix &A_in, real tol, idx max_sweeps) {
+eigen_result eig_sym(const mat &A_in, real tol, idx max_sweeps) {
     if (A_in.rows() != A_in.cols()) {
         throw std::invalid_argument("eig_sym: matrix must be square");
     }
 
     constexpr real rotation_tol = 1e-15;
     idx n = A_in.rows();
-    Matrix A = A_in;
-    Matrix V(n, n, 0.0);
+    mat A = A_in;
+    mat V(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         V(i, i) = 1.0;
     }
@@ -61,7 +59,7 @@ EigenResult eig_sym(const Matrix &A_in, real tol, idx max_sweeps) {
 
                 real app = A(p, p), aqq = A(q, q);
                 real c = 1.0, s = 0.0;
-                kernel::raw::jacobi_rotation(app, aqq, apq, c, s);
+                kernel::jacobi_rotation(app, aqq, apq, c, s);
 
                 A(p, p) = (c * c * app) - (2.0 * c * s * apq) + (s * s * aqq);
                 A(q, q) = (s * s * app) + (2.0 * c * s * apq) + (c * c * aqq);
@@ -86,7 +84,7 @@ EigenResult eig_sym(const Matrix &A_in, real tol, idx max_sweeps) {
         ++sweeps;
     }
 
-    Vector values(n);
+    vec values(n);
     for (idx i = 0; i < n; ++i) {
         values[i] = A(i, i);
     }
@@ -111,15 +109,15 @@ EigenResult eig_sym(const Matrix &A_in, real tol, idx max_sweeps) {
 } // namespace seq
 
 namespace omp {
-EigenResult eig_sym(const Matrix &A_in, real tol, idx max_sweeps) {
+eigen_result eig_sym(const mat &A_in, real tol, idx max_sweeps) {
     if (A_in.rows() != A_in.cols()) {
         throw std::invalid_argument("eig_sym: matrix must be square");
     }
 
     constexpr real rotation_tol = 1e-15;
     idx n = A_in.rows();
-    Matrix A = A_in;
-    Matrix V(n, n, 0.0);
+    mat A = A_in;
+    mat V(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         V(i, i) = 1.0;
     }
@@ -182,7 +180,7 @@ EigenResult eig_sym(const Matrix &A_in, real tol, idx max_sweeps) {
         ++sweeps;
     }
 
-    Vector values(n);
+    vec values(n);
     for (idx i = 0; i < n; ++i) {
         values[i] = A(i, i);
     }
@@ -207,14 +205,14 @@ EigenResult eig_sym(const Matrix &A_in, real tol, idx max_sweeps) {
 } // namespace omp
 
 namespace lapack {
-EigenResult eig_sym(const Matrix &A) {
+eigen_result eig_sym(const mat &A) {
 #if defined(NUMERICS_HAS_LAPACK)
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("eig_sym: matrix must be square");
     }
     idx n = A.rows();
-    Matrix Aw = A;
-    Vector w(n);
+    mat Aw = A;
+    vec w(n);
     int info = LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', static_cast<lapack_int>(n), Aw.data(),
                               static_cast<lapack_int>(n), w.data());
     if (info != 0) {
@@ -227,23 +225,20 @@ EigenResult eig_sym(const Matrix &A) {
 }
 } // namespace lapack
 
-} // namespace backends
-
-EigenResult eig_sym(const linear::SymmetricMatrix<Matrix> &A, real tol, idx max_sweeps, Backend backend) {
-    switch (backend) {
-    case backend::lapack:
-        return backends::lapack::eig_sym(A.base());
-    case backend::omp:
-        return backends::omp::eig_sym(A.base(), tol, max_sweeps);
-    default:
-        return backends::seq::eig_sym(A.base(), tol, max_sweeps);
-    }
+eigen_result eig_sym(const linear::sym_mat<mat> &A, real tol, idx max_sweeps) {
+#if defined(NUMERICS_HAS_LAPACK)
+    return lapack::eig_sym(A.base());
+#elif defined(NUMERICS_HAS_OMP)
+    return omp::eig_sym(A.base(), tol, max_sweeps);
+#else
+    return seq::eig_sym(A.base(), tol, max_sweeps);
+#endif
 }
 
 namespace unsafe {
 
-EigenResult eig_sym(const Matrix &A, real tol, idx max_sweeps, Backend backend) {
-    return num::eig_sym(linear::SymmetricMatrix<Matrix>(A), tol, max_sweeps, backend);
+eigen_result eig_sym(const mat &A, real tol, idx max_sweeps) {
+    return num::eig_sym(linear::sym_mat<mat>(A), tol, max_sweeps);
 }
 
 } // namespace unsafe

@@ -8,38 +8,38 @@
 namespace num {
 
 /// First-order system callback that writes dy/dt for (t,y).
-using ODERhsFn = std::function<void(real t, const Vector &y, Vector &dydt)>;
+using ode_rhs_fn = std::function<void(real t, const vec &y, vec &dydt)>;
 /// Position-dependent acceleration callback for second-order systems.
-using AccelFn = std::function<void(const Vector &q, Vector &acc)>;
+using accel_fn = std::function<void(const vec &q, vec &acc)>;
 /// Optional callback invoked after accepted first-order steps.
-using ObserverFn = std::function<void(real t, const Vector &y)>;
+using observer_fn = std::function<void(real t, const vec &y)>;
 /// Optional callback invoked after accepted symplectic steps.
-using SympObserverFn = std::function<void(real t, const Vector &q, const Vector &v)>;
+using symp_observer_fn = std::function<void(real t, const vec &q, const vec &v)>;
 
 /// Snapshot yielded by a first-order lazy integrator.
-struct Step {
+struct ode_step {
     real t = 0.0;
-    Vector u;
+    vec u;
 };
 
 /// Snapshot yielded by a second-order lazy integrator.
-struct SymplecticStep {
+struct symplectic_step {
     real t = 0.0;
-    Vector q;
-    Vector v;
+    vec q;
+    vec v;
 };
 
 #include <ostream>
 
 /// Final state and convergence metadata for a first-order integration.
-struct ODEResult {
-    Vector u;
+struct ode_result {
+    vec u;
     real t = 0.0;
     idx steps = 0;
     bool converged = false;
 
-    friend std::ostream &operator<<(std::ostream &os, const ODEResult &r) {
-        os << "ODEResult{ t: " << r.t
+    friend std::ostream &operator<<(std::ostream &os, const ode_result &r) {
+        os << "ode_result{ t: " << r.t
            << ", steps: " << r.steps
            << ", converged: " << (r.converged ? "true" : "false")
            << ", u: [" << r.u.size() << " elements] }";
@@ -48,14 +48,14 @@ struct ODEResult {
 };
 
 /// Final position and velocity from a second-order integration.
-struct SymplecticResult {
-    Vector q;
-    Vector v;
+struct symplectic_result {
+    vec q;
+    vec v;
     real t = 0.0;
     idx steps = 0;
 
-    friend std::ostream &operator<<(std::ostream &os, const SymplecticResult &r) {
-        os << "SymplecticResult{ t: " << r.t
+    friend std::ostream &operator<<(std::ostream &os, const symplectic_result &r) {
+        os << "symplectic_result{ t: " << r.t
            << ", steps: " << r.steps
            << ", q: [" << r.q.size() << " elements]"
            << ", v: [" << r.v.size() << " elements] }";
@@ -64,7 +64,7 @@ struct SymplecticResult {
 };
 
 /// Shared integration interval, step-size, tolerance, and work limits.
-struct ODEParams {
+struct ode_params {
     real t0 = 0.0;
     real tf = 1.0;
     real h = 1e-3;
@@ -74,6 +74,6 @@ struct ODEParams {
 };
 
 /// Sentinel marking the end of a lazy integration range.
-struct StepEnd {};
+struct step_end {};
 
 } // namespace num

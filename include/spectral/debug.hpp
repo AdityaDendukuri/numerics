@@ -12,7 +12,7 @@
 
 namespace num::spectral::debug {
 
-using num::debug::DiagnosticLevel;
+using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
@@ -23,10 +23,13 @@ using num::debug::panic;
 /// A transform that violates it is not unitary after normalization, and a
 /// spectral method built on it will gain or lose energy every step.
 template <class Plan>
-requires TransformPlan<Plan>
-inline void verify_parseval(const Plan &plan, real tol = 1e-10,
-                            std::source_location loc = std::source_location::current()) {
-    if (get_level() != DiagnosticLevel::full) {
+requires transform_plan<Plan> inline void
+verify_parseval(const Plan &plan, real tol = 1e-10,
+                std::source_location loc = std::source_location::current()) {
+    if constexpr (!num::debug::sampling_compiled_in) {
+        return;
+    }
+    if (num::debug::get_level() != num::debug::diagnostic_level::full) {
         return;
     }
     const int n = plan.size();
@@ -34,8 +37,8 @@ inline void verify_parseval(const Plan &plan, real tol = 1e-10,
         return;
     }
 
-    CVector in(static_cast<idx>(n));
-    CVector out(static_cast<idx>(n));
+    cvec in(static_cast<idx>(n));
+    cvec out(static_cast<idx>(n));
     std::uint64_t state = 0x9E3779B97F4A7C15ULL;
     const auto next = [&state]() {
         state ^= state << 13;

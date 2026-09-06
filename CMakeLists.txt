@@ -45,12 +45,6 @@ add_library(numerics::core ALIAS numerics_core)
 set_target_properties(numerics_core PROPERTIES EXPORT_NAME core)
 target_link_libraries(numerics_core INTERFACE numerics_kernel)
 
-# Kept for source compatibility with builds that named the old target.
-add_library(numerics_raw_kernel INTERFACE)
-add_library(numerics::raw_kernel ALIAS numerics_raw_kernel)
-set_target_properties(numerics_raw_kernel PROPERTIES EXPORT_NAME raw_kernel)
-target_link_libraries(numerics_raw_kernel INTERFACE numerics_kernel)
-
 # 2. Optional capabilities. Detection modules configure only these targets; the
 #    kernel and core above never receive vendor headers, libraries, definitions,
 #    or architecture flags.
@@ -108,6 +102,13 @@ target_compile_features(numerics PUBLIC cxx_std_20)
 # headers copied out of this tree must instantiate implicitly.
 target_compile_definitions(numerics PUBLIC
     $<BUILD_INTERFACE:NUMERICS_EXTERN_TEMPLATES>
+)
+
+# Storage alignment, by contrast, must reach consumers: it is an argument to the
+# aligned operator delete, so a consumer compiling with a different value would
+# deallocate with the wrong alignment. Exported on both interfaces.
+target_compile_definitions(numerics PUBLIC
+    NUMERICS_STORAGE_ALIGNMENT=${NUMERICS_STORAGE_ALIGNMENT}
 )
 
 # 4. Optional compiled capabilities.
@@ -182,4 +183,18 @@ endif()
 
 if(NUMERICS_BUILD_REPORT)
     add_subdirectory(cmake/report)
+endif()
+
+# The docs carry ~1500 lines of example code. Nothing compiled it until this target
+# existed, so an API rename could leave the documentation describing a library that no
+# longer exists. Not wired into ctest: it compiles the umbrella header once per block and
+# takes minutes, where the whole suite takes seconds.
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    add_custom_target(check-docs
+        COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_doc_examples.py
+                --source-dir ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Compiling every C++ example in docs/pages"
+        VERBATIM)
 endif()

@@ -12,7 +12,7 @@
 
 namespace num {
 
-struct PCGOptions {
+struct pcg_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;
 };
@@ -20,9 +20,9 @@ struct PCGOptions {
 namespace math_krylov_detail {
 
 template <class Op, class M, class V, class Invariant>
-requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&math::EndomorphismOn<M, V> &&
-    std::floating_point<math::scalar_t<V>> [[nodiscard]] SolverResult
-    pcg_recurrence(const Op &A, const M &preconditioner, const V &b, V &x, PCGOptions options,
+requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::endomorphism_on<M, V> &&
+    std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
+    pcg_recurrence(const Op &A, const M &preconditioner, const V &b, V &x, pcg_options options,
                    const Invariant &check_invariant) {
     using S = math::scalar_t<V>;
     const auto n = math::dimension(b);
@@ -45,7 +45,7 @@ requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&math::Endomo
     math::linear_combination(S(1), b, S(-1), residual);
     check_invariant(residual, "pcg: residual left the certified subspace");
 
-    SolverResult result{0, static_cast<real>(math::norm(residual)), false};
+    solver_result result{0, static_cast<real>(math::norm(residual)), false};
     if (result.residual < options.tolerance) {
         result.converged = true;
         return result;
@@ -106,10 +106,10 @@ requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&math::Endomo
 /// PCG on the whole vector space. Both A and the approximate inverse M must be
 /// globally positive definite.
 template <class Op, class M, class V>
-requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&math::EndomorphismOn<M, V> &&
-    math::Carries<Op, axiom::positive_definite> &&math::Carries<M, axiom::positive_definite> &&
-        std::floating_point<math::scalar_t<V>> [[nodiscard]] SolverResult
-        pcg(const Op &A, const M &preconditioner, const V &b, V &x, PCGOptions options = {}) {
+requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::endomorphism_on<M, V> &&
+    claims<Op, law::spd> &&claims<M, law::spd> &&
+        std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
+        pcg(const Op &A, const M &preconditioner, const V &b, V &x, pcg_options options = {}) {
     const auto no_restriction = [](const V &, const char *) {};
     return math_krylov_detail::pcg_recurrence(A, preconditioner, b, x, options, no_restriction);
 }
@@ -117,13 +117,13 @@ requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&math::Endomo
 /// PCG on a named invariant subspace. Evidence for A and M is tied to the exact
 /// same Subspace type, and membership is checked throughout the recurrence.
 template <class Subspace, class Op, class M, class V>
-requires math::InnerProductSpace<V> &&math::LinearSubspaceOf<Subspace, V> &&
-    math::EndomorphismOn<Op, V> &&math::EndomorphismOn<M, V> &&
-        math::Carries<Op, axiom::positive_definite_on<Subspace>> &&
-            math::Carries<M, axiom::positive_definite_on<Subspace>> &&
-                std::floating_point<math::scalar_t<V>> [[nodiscard]] SolverResult
+requires math::inner_product_space<V> &&math::linear_subspace_of<Subspace, V> &&
+    math::endomorphism_on<Op, V> &&math::endomorphism_on<M, V> &&
+        claims<Op, law::spd_on<Subspace>> &&
+            claims<M, law::spd_on<Subspace>> &&
+                std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
                 pcg(const Op &A, const M &preconditioner, const V &b, V &x,
-                    const Subspace &subspace, PCGOptions options = {}) {
+                    const Subspace &subspace, pcg_options options = {}) {
     if (!math::contains(subspace, b)) {
         throw std::invalid_argument("pcg: right-hand side is outside the certified subspace");
     }

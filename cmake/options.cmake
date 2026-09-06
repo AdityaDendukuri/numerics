@@ -24,5 +24,12 @@ option(NUMERICS_USE_FFTW     "Link FFTW3 for spectral/"           ON)
 option(NUMERICS_USE_SUITESPARSE "Enable optional SuiteSparse KLU sparse-direct backend" ON)
 option(NUMERICS_BUILD_IO "Build the optional file-I/O target when available" ON)
 
+# Alignment, in bytes, of the storage owned by vec and mat. 64 is the
+# x86-64 cache line and a multiple of every SIMD register width in common use.
+# It takes part in the deallocation call, so it is exported PUBLIC: every
+# translation unit that sees these headers must agree on the value.
+set(NUMERICS_STORAGE_ALIGNMENT "64" CACHE STRING
+    "Byte alignment of dense container storage (power of two, >= 16)")
+
 # Sanitizers — comma-separated list: asan, lsan, ubsan, tsan
 set(NUMERICS_SANITIZE "" CACHE STRING "Comma-separated sanitizers to enable (asan|lsan|ubsan|tsan)")

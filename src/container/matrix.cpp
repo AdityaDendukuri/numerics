@@ -8,6 +8,6 @@
 
 namespace num {
 
-template class BasicMatrix<double>;
+template class basic_mat<double>;
 
 } // namespace num

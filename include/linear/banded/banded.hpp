@@ -1,9 +1,9 @@
 /// @file banded.hpp
-/// @brief Banded matrix storage and solvers.
+/// @brief banded matrix storage and solvers.
 #pragma once
 
 #include "kernel/factor.hpp"
-#include "kernel/raw.hpp"
+#include "kernel/kernel.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -11,7 +11,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "container/parallel/cuda_ops.hpp"
+#include "cuda/cuda_ops.hpp"
 
 #include "core/policy.hpp"
 #include "core/types.hpp"
@@ -24,20 +24,20 @@ namespace num {
 ///
 /// Stores \f$A_{ij}\f$ at \f$\text{band}(k_l+k_u+i-j,j)\f$ when
 /// \f$\max(0,j-k_u)\le i\le \min(n-1,j+k_l)\f$.
-class BandedMatrix {
+class band_mat {
   public:
     /// Construct a zero-filled n-by-n matrix with lower/upper bandwidths kl/ku.
-    BandedMatrix(idx n, idx kl, idx ku);
+    band_mat(idx n, idx kl, idx ku);
 
     /// Construct a banded matrix with every stored entry initialized to val.
-    BandedMatrix(idx n, idx kl, idx ku, real val);
+    band_mat(idx n, idx kl, idx ku, real val);
 
-    ~BandedMatrix();
+    ~band_mat();
 
-    BandedMatrix(const BandedMatrix &);
-    BandedMatrix(BandedMatrix &&) noexcept;
-    BandedMatrix &operator=(const BandedMatrix &);
-    BandedMatrix &operator=(BandedMatrix &&) noexcept;
+    band_mat(const band_mat &);
+    band_mat(band_mat &&) noexcept;
+    band_mat &operator=(const band_mat &);
+    band_mat &operator=(band_mat &&) noexcept;
 
     /// Return the square matrix order.
     [[nodiscard]] idx size() const { return n_; }
@@ -88,77 +88,75 @@ class BandedMatrix {
 #include <ostream>
 
 /// Status and diagnostics from a banded factorization or solve.
-struct BandedSolverResult {
+struct banded_solver_result {
     bool success = false;
     idx pivot_row = 0;
     real rcond = 0.0;
 
-    friend std::ostream &operator<<(std::ostream &os, const BandedSolverResult &r) {
-        os << "BandedSolverResult{ success: " << (r.success ? "true" : "false")
+    friend std::ostream &operator<<(std::ostream &os, const banded_solver_result &r) {
+        os << "banded_solver_result{ success: " << (r.success ? "true" : "false")
            << ", rcond: " << r.rcond << " }";
         return os;
     }
 };
 
 /// @brief In-place banded \f$PA=LU\f$ factorization.
-BandedSolverResult banded_lu(BandedMatrix &A, idx *ipiv);
+banded_solver_result banded_lu(band_mat &A, idx *ipiv);
 
 /// @brief Solve \f$Ax=b\f$ using a precomputed banded LU factorization.
-void banded_lu_solve(const BandedMatrix &A, const idx *ipiv, Vector &b);
+void banded_lu_solve(const band_mat &A, const idx *ipiv, vec &b);
 
 /// @brief Solve \f$AX=B\f$ using a precomputed banded LU factorization.
-void banded_lu_solve_multi(const BandedMatrix &A, const idx *ipiv, real *B, idx nrhs);
+void banded_lu_solve_multi(const band_mat &A, const idx *ipiv, real *B, idx nrhs);
 
 /// @brief Factor and solve \f$Ax=b\f$.
-BandedSolverResult banded_solve(const BandedMatrix &A, const Vector &b, Vector &x);
+banded_solver_result banded_solve(const band_mat &A, const vec &b, vec &x);
 
 /// @brief Compute \f$y=Ax\f$.
-void banded_matvec(const BandedMatrix &A, const Vector &x, Vector &y,
-                   Backend backend = backend::dflt);
+void banded_matvec(const band_mat &A, const vec &x, vec &y);
 
 /// @brief Compute \f$y=\alpha Ax+\beta y\f$.
-void banded_gemv(real alpha, const BandedMatrix &A, const Vector &x, real beta, Vector &y,
-                 Backend backend = backend::dflt);
+void banded_gemv(real alpha, const band_mat &A, const vec &x, real beta, vec &y);
 
 /// @brief Estimate \f$1/\kappa_1(A)\f$.
-real banded_rcond(const BandedMatrix &A, const idx *ipiv, real anorm);
+real banded_rcond(const band_mat &A, const idx *ipiv, real anorm);
 
 /// @brief Compute \f$\|A\|_1\f$.
-real banded_norm1(const BandedMatrix &A);
+real banded_norm1(const band_mat &A);
 
-inline BandedMatrix::BandedMatrix(idx n, idx kl, idx ku)
+inline band_mat::band_mat(idx n, idx kl, idx ku)
     : n_(n), kl_(kl), ku_(ku), ldab_((2 * kl) + ku + 1) {
     if (n == 0) {
-        throw std::invalid_argument("BandedMatrix: n must be positive");
+        throw std::invalid_argument("band_mat: n must be positive");
     }
     data_ = std::make_unique<real[]>(ldab_ * n_);
 }
 
-inline BandedMatrix::BandedMatrix(idx n, idx kl, idx ku, real val) : BandedMatrix(n, kl, ku) {
+inline band_mat::band_mat(idx n, idx kl, idx ku, real val) : band_mat(n, kl, ku) {
     std::fill_n(data_.get(), ldab_ * n_, val);
 }
 
-inline BandedMatrix::~BandedMatrix() {
+inline band_mat::~band_mat() {
 #ifdef NUMERICS_HAS_CUDA
     if (d_data_)
         cuda::free(d_data_);
 #endif
 }
 
-inline BandedMatrix::BandedMatrix(const BandedMatrix &other)
+inline band_mat::band_mat(const band_mat &other)
     : n_(other.n_), kl_(other.kl_), ku_(other.ku_), ldab_(other.ldab_) {
     data_ = std::make_unique<real[]>(ldab_ * n_);
     std::memcpy(data_.get(), other.data_.get(), ldab_ * n_ * sizeof(real));
 }
 
-inline BandedMatrix::BandedMatrix(BandedMatrix &&other) noexcept
+inline band_mat::band_mat(band_mat &&other) noexcept
     : n_(other.n_), kl_(other.kl_), ku_(other.ku_), ldab_(other.ldab_),
       data_(std::move(other.data_)), d_data_(other.d_data_) {
     other.n_ = 0;
     other.d_data_ = nullptr;
 }
 
-inline BandedMatrix &BandedMatrix::operator=(const BandedMatrix &other) {
+inline band_mat &band_mat::operator=(const band_mat &other) {
     if (this != &other) {
         n_ = other.n_;
         kl_ = other.kl_;
@@ -176,7 +174,7 @@ inline BandedMatrix &BandedMatrix::operator=(const BandedMatrix &other) {
     return *this;
 }
 
-inline BandedMatrix &BandedMatrix::operator=(BandedMatrix &&other) noexcept {
+inline band_mat &band_mat::operator=(band_mat &&other) noexcept {
     if (this != &other) {
 #ifdef NUMERICS_HAS_CUDA
         if (d_data_)
@@ -194,27 +192,27 @@ inline BandedMatrix &BandedMatrix::operator=(BandedMatrix &&other) noexcept {
     return *this;
 }
 
-inline real &BandedMatrix::operator()(idx i, idx j) {
+inline real &band_mat::operator()(idx i, idx j) {
     return data_[(kl_ + ku_ + i - j) + (j * ldab_)];
 }
 
-inline real BandedMatrix::operator()(idx i, idx j) const {
+inline real band_mat::operator()(idx i, idx j) const {
     return data_[(kl_ + ku_ + i - j) + (j * ldab_)];
 }
 
-inline real &BandedMatrix::band(idx band_row, idx col) {
+inline real &band_mat::band(idx band_row, idx col) {
     return data_[band_row + (col * ldab_)];
 }
 
-inline real BandedMatrix::band(idx band_row, idx col) const {
+inline real band_mat::band(idx band_row, idx col) const {
     return data_[band_row + (col * ldab_)];
 }
 
-inline bool BandedMatrix::in_band(idx i, idx j) const {
+inline bool band_mat::in_band(idx i, idx j) const {
     return (j <= i + ku_) && (i <= j + kl_);
 }
 
-inline void BandedMatrix::to_gpu() {
+inline void band_mat::to_gpu() {
 #ifdef NUMERICS_HAS_CUDA
     if (!d_data_)
         d_data_ = cuda::alloc(ldab_ * n_);
@@ -222,7 +220,7 @@ inline void BandedMatrix::to_gpu() {
 #endif
 }
 
-inline void BandedMatrix::to_cpu() {
+inline void band_mat::to_cpu() {
 #ifdef NUMERICS_HAS_CUDA
     if (d_data_)
         cuda::to_host(data_.get(), d_data_, ldab_ * n_);
@@ -231,12 +229,12 @@ inline void BandedMatrix::to_cpu() {
 
 // LU Factorization with Partial Pivoting
 
-inline BandedSolverResult banded_lu(BandedMatrix &A, idx *ipiv) {
+inline banded_solver_result banded_lu(band_mat &A, idx *ipiv) {
     const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
     real *ab = A.data();
-    BandedSolverResult result{true, 0, 0.0};
+    banded_solver_result result{true, 0, 0.0};
 
-    const bool ok = kernel::raw::banded_factor(ab, ldab, n, kl, ku, ipiv);
+    const bool ok = kernel::banded_factor(ab, ldab, n, kl, ku, ipiv);
     if (!ok) {
         result.success = false;
         return result;
@@ -246,7 +244,7 @@ inline BandedSolverResult banded_lu(BandedMatrix &A, idx *ipiv) {
 
 // Solve Using LU Factorization
 
-inline void banded_lu_solve(const BandedMatrix &A, const idx *ipiv, Vector &b) {
+inline void banded_lu_solve(const band_mat &A, const idx *ipiv, vec &b) {
     const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
     const real *ab = A.data();
     real *x = b.data();
@@ -254,10 +252,10 @@ inline void banded_lu_solve(const BandedMatrix &A, const idx *ipiv, Vector &b) {
         throw std::invalid_argument("banded_lu_solve: dimension mismatch");
     }
 
-    kernel::raw::banded_solve(x, ab, ldab, n, kl, ku, ipiv);
+    kernel::banded_solve(x, ab, ldab, n, kl, ku, ipiv);
 }
 
-inline void banded_lu_solve_multi(const BandedMatrix &A, const idx *ipiv, real *B, idx nrhs) {
+inline void banded_lu_solve_multi(const band_mat &A, const idx *ipiv, real *B, idx nrhs) {
     const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
     const real *ab = A.data();
     const idx kv = ku + kl;
@@ -295,15 +293,15 @@ inline void banded_lu_solve_multi(const BandedMatrix &A, const idx *ipiv, real *
     }
 }
 
-inline BandedSolverResult banded_solve(const BandedMatrix &A, const Vector &b, Vector &x) {
+inline banded_solver_result banded_solve(const band_mat &A, const vec &b, vec &x) {
     const idx n = A.size();
     if (b.size() != n || x.size() != n) {
         throw std::invalid_argument("banded_solve: dimension mismatch");
     }
 
-    BandedMatrix a_work = A;
+    band_mat a_work = A;
     auto ipiv = std::make_unique<idx[]>(n);
-    BandedSolverResult result = banded_lu(a_work, ipiv.get());
+    banded_solver_result result = banded_lu(a_work, ipiv.get());
     if (!result.success) {
         return result;
     }
@@ -315,32 +313,29 @@ inline BandedSolverResult banded_solve(const BandedMatrix &A, const Vector &b, V
     return result;
 }
 
-// Matrix-Vector Products
+// mat-vec Products
 
-inline void banded_matvec(const BandedMatrix &A, const Vector &x, Vector &y, Backend backend) {
-    banded_gemv(1.0, A, x, 0.0, y, backend);
+inline void banded_matvec(const band_mat &A, const vec &x, vec &y) {
+    banded_gemv(1.0, A, x, 0.0, y);
 }
 
-inline void banded_gemv(real alpha, const BandedMatrix &A, const Vector &x, real beta, Vector &y,
-                 Backend backend) {
+inline void banded_gemv(real alpha, const band_mat &A, const vec &x, real beta, vec &y) {
     const idx n = A.size(), kl = A.kl(), ku = A.ku();
     if (x.size() != n || y.size() != n) {
         throw std::invalid_argument("banded_gemv: dimension mismatch");
     }
 
-    if (backend != backend::gpu) {
-        const idx ldab = A.ldab();
-        const real *ab = A.data();
-        const real *xp = x.data();
-        real *yp = y.data();
+    const idx ldab = A.ldab();
+    const real *ab = A.data();
+    const real *xp = x.data();
+    real *yp = y.data();
 
-        kernel::raw::gbmv(yp, alpha, ab, ldab, kl, ku, xp, beta, n);
-    }
+    kernel::gbmv(yp, alpha, ab, ldab, kl, ku, xp, beta, n);
 }
 
 // Condition Number Estimation
 
-inline real banded_norm1(const BandedMatrix &A) {
+inline real banded_norm1(const band_mat &A) {
     const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
     const real *ab = A.data();
     const idx kv = ku + kl;
@@ -357,13 +352,13 @@ inline real banded_norm1(const BandedMatrix &A) {
     return max_sum;
 }
 
-inline real banded_rcond(const BandedMatrix &A, const idx *ipiv, real anorm) {
+inline real banded_rcond(const band_mat &A, const idx *ipiv, real anorm) {
     const idx n = A.size();
     if (n == 0 || anorm == 0.0) {
         return 0.0;
     }
-    Vector y(n, 1.0 / static_cast<real>(n));
-    const BandedMatrix &a_copy = A;
+    vec y(n, 1.0 / static_cast<real>(n));
+    const band_mat &a_copy = A;
     banded_lu_solve(a_copy, ipiv, y);
     real ainv_norm = 0.0;
     for (idx i = 0; i < n; ++i) {

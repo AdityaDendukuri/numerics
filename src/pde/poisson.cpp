@@ -28,7 +28,7 @@ static void check_n(int N) {
     }
 }
 
-static std::vector<double> flatten(const Matrix &M, int N) {
+static std::vector<double> flatten(const mat &M, int N) {
     std::vector<double> v(static_cast<std::size_t>(N) * static_cast<std::size_t>(N));
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
@@ -39,8 +39,8 @@ static std::vector<double> flatten(const Matrix &M, int N) {
     return v;
 }
 
-static Matrix unflatten(const std::vector<double> &v, int N) {
-    Matrix M(static_cast<idx>(N), static_cast<idx>(N));
+static mat unflatten(const std::vector<double> &v, int N) {
+    mat M(static_cast<idx>(N), static_cast<idx>(N));
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             M(static_cast<idx>(i), static_cast<idx>(j)) =
@@ -53,7 +53,7 @@ static Matrix unflatten(const std::vector<double> &v, int N) {
 
 } // anonymous namespace
 
-Matrix poisson2d_fd(const Matrix &f, int N) {
+mat poisson2d_fd(const mat &f, int N) {
     check_n(N);
     const double h = 1.0 / (N + 1);
     const double pi = M_PI;
@@ -85,7 +85,7 @@ Matrix poisson2d_fd(const Matrix &f, int N) {
     return unflatten(buf, N);
 }
 
-Matrix poisson2d(const Matrix &f, int N) {
+mat poisson2d(const mat &f, int N) {
     check_n(N);
     const double pi = M_PI;
     const double N1sq = static_cast<double>(N + 1) * (N + 1);

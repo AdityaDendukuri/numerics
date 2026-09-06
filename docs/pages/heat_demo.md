@@ -23,12 +23,12 @@ int main() {
     const int    nstep = static_cast<int>(T_end / dt) + 1;
     const double coeff = kappa * dt / (h * h);
 
-    num::Vector u(static_cast<std::size_t>(N) * N);
+    num::vec u(static_cast<std::size_t>(N) * N);
     num::fill_grid(u, N, h, [=](double x, double y) {
         return num::gaussian2d(x, y, 0.5, 0.5, sigma);
     });
 
-    num::Vector u0 = u, u_mid;
+    num::vec u0 = u, u_mid;
     for (int s = 0; s < nstep; ++s) {
         if (s == nstep / 2) { u_mid = u; }
         num::pde::diffusion_step_2d_dirichlet(u, N, coeff);

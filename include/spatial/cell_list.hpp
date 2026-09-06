@@ -13,7 +13,7 @@
 namespace num {
 
 /// Lightweight non-owning range of integer particle indices.
-struct IntRange {
+struct integer_range {
     const int *first;
     const int *last;
     [[nodiscard]] const int *begin() const noexcept { return first; }
@@ -22,12 +22,12 @@ struct IntRange {
     [[nodiscard]] bool empty() const noexcept { return first == last; }
 };
 
-template <scalars::Field Scalar>
+template <scalars::field scalar>
 /// Counting-sorted 2D spatial bins for local-neighbor iteration.
-class CellList2D {
+class cell_list_2d {
   public:
     /// Cover the bounding box with padded square cells.
-    CellList2D(Scalar cell_size, Scalar xmin, Scalar xmax, Scalar ymin, Scalar ymax)
+    cell_list_2d(scalar cell_size, scalar xmin, scalar xmax, scalar ymin, scalar ymax)
         : cs_(cell_size), xmin_(xmin), ymin_(ymin) {
         // Padding cells avoid boundary checks in the hot query loops.
         nx_ = static_cast<int>(std::ceil((xmax - xmin) / cs_)) + 2;
@@ -38,7 +38,7 @@ class CellList2D {
     }
 
     /// @brief Rebuild by counting-sort over cell ids.
-    template <PositionAccessor2D<Scalar> PosAccessor>
+    template <position_accessor_2d<scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n) {
         sorted_.resize(n);
         const int total = nx_ * ny_;
@@ -63,7 +63,7 @@ class CellList2D {
 
     /// @brief Call f(j) for candidate particles near (px, py).
     template <typename F>
-    void query(Scalar px, Scalar py, F &&f) const {
+    void query(scalar px, scalar py, F &&f) const {
         const int cx = cell_x(px);
         const int cy = cell_y(py);
         for (int dy = -1; dy <= 1; ++dy) {
@@ -129,7 +129,7 @@ class CellList2D {
     }
 
     /// Return the particles stored in one cell.
-    [[nodiscard]] IntRange cell_particles(int cx, int cy) const noexcept {
+    [[nodiscard]] integer_range cell_particles(int cx, int cy) const noexcept {
         const int cid = (cy * nx_) + cx;
         return {sorted_.data() + start_[cid], sorted_.data() + start_[cid + 1]};
     }
@@ -139,22 +139,22 @@ class CellList2D {
     [[nodiscard]] int n_particles() const noexcept { return static_cast<int>(sorted_.size()); }
 
   private:
-    Scalar cs_ = 0, xmin_ = 0, ymin_ = 0;
+    scalar cs_ = 0, xmin_ = 0, ymin_ = 0;
     int nx_ = 0, ny_ = 0;
 
     std::vector<int> sorted_;
     std::vector<int> start_;
     std::vector<int> count_;
 
-    int cell_x(Scalar x) const noexcept {
+    int cell_x(scalar x) const noexcept {
         const int cx = static_cast<int>(std::floor((x - xmin_) / cs_)) + 1;
         return cx < 0 ? 0 : (cx >= nx_ ? nx_ - 1 : cx);
     }
-    int cell_y(Scalar y) const noexcept {
+    int cell_y(scalar y) const noexcept {
         const int cy = static_cast<int>(std::floor((y - ymin_) / cs_)) + 1;
         return cy < 0 ? 0 : (cy >= ny_ ? ny_ - 1 : cy);
     }
-    int cell_id_of(std::pair<Scalar, Scalar> p) const noexcept {
+    int cell_id_of(std::pair<scalar, scalar> p) const noexcept {
         return (cell_y(p.second) * nx_) + cell_x(p.first);
     }
 };

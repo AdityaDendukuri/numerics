@@ -23,7 +23,7 @@ namespace num::concepts {
 /// the finest relation containing it in which \f$u \sim v\f$. `count()` is the
 /// size of the quotient and drops by one per successful `unite`.
 template <typename T, typename Index = num::idx>
-concept EquivalenceRelation = requires(T ds, Index u, Index v) {
+concept equivalence_relation = requires(T ds, Index u, Index v) {
     { ds.find(u) } -> std::same_as<Index>;
     { ds.unite(u, v) } -> std::same_as<bool>;
     { ds.connected(u, v) } -> std::same_as<bool>;
@@ -37,7 +37,7 @@ concept EquivalenceRelation = requires(T ds, Index u, Index v) {
 /// `pop`, and `update`. `update` revises a key in place, which is what Dijkstra
 /// and Prim need and a plain priority queue cannot do.
 template <typename T, typename Key = double, typename Index = num::idx>
-concept AddressablePriorityQueue = std::totally_ordered<Key> &&
+concept addressable_priority_queue = std::totally_ordered<Key> &&
     requires(T pq, Index index, const Key &key) {
     { pq.push(index, key) } -> std::same_as<void>;
     { pq.pop() } -> std::same_as<void>;
@@ -51,7 +51,7 @@ concept AddressablePriorityQueue = std::totally_ordered<Key> &&
 
 /// @brief Directed incidence \f$u \to v\f$ carrying a weight in a scalar field.
 template <typename E, typename Index = num::idx, typename Weight = double>
-concept WeightedIncidence = scalars::Field<Weight> && requires(E e) {
+concept weighted_incidence = scalars::field<Weight> && requires(E e) {
     { e.to } -> std::convertible_to<Index>;
     { e.weight } -> std::convertible_to<Weight>;
 };
@@ -62,7 +62,7 @@ concept WeightedIncidence = scalars::Field<Weight> && requires(E e) {
 /// set's cardinality. The two must agree, and for an undirected graph the
 /// handshake lemma \f$\sum_u \deg(u) = 2|E|\f$ must hold.
 template <typename G, typename Index = num::idx>
-concept IncidenceStructure = requires(const G g, Index u) {
+concept incidence_structure = requires(const G g, Index u) {
     { g.n_vertices() } -> std::same_as<Index>;
     { g.n_edges() } -> std::same_as<Index>;
     { g.degree(u) } -> std::same_as<Index>;
@@ -72,8 +72,8 @@ concept IncidenceStructure = requires(const G g, Index u) {
 } // namespace num::concepts
 
 namespace num {
-using concepts::AddressablePriorityQueue;
-using concepts::EquivalenceRelation;
-using concepts::IncidenceStructure;
-using concepts::WeightedIncidence;
+using concepts::addressable_priority_queue;
+using concepts::equivalence_relation;
+using concepts::incidence_structure;
+using concepts::weighted_incidence;
 } // namespace num

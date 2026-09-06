@@ -14,6 +14,10 @@
 /// files, or a single routine out of them, without adopting anything else.
 #pragma once
 
+#include "kernel/complex.hpp"
+#include "kernel/dense.hpp"
 #include "kernel/factor.hpp"
 #include "kernel/krylov.hpp"
-#include "kernel/raw.hpp"
+#include "kernel/rotations.hpp"
+#include "kernel/sparse.hpp"
+#include "kernel/vector.hpp"

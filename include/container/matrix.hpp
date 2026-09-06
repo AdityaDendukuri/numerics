@@ -4,37 +4,39 @@
 
 #include "core/types.hpp"
 
-#include "container/parallel/cuda_ops.hpp"
+#include "cuda/cuda_ops.hpp"
+#include "container/util/aligned_storage.hpp"
 #include "container/vector.hpp"
 #include <algorithm>
 #include <concepts>
+#include <limits>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 namespace num {
 
 /// @brief Dense row-major owning matrix.
 template <std::floating_point T>
-class BasicMatrix {
+class basic_mat {
   public:
     using value_type = T;
 
     /// Construct an empty matrix.
-    BasicMatrix() : rows_(0), cols_(0), data_(nullptr) {}
+    basic_mat() : rows_(0), cols_(0), data_(nullptr) {}
 
     /// Construct a zero-initialized rows-by-cols matrix.
-    BasicMatrix(idx rows, idx cols)
-        : rows_(rows), cols_(cols),
-          data_((rows * cols > 0) ? new T[rows * cols]() : nullptr) {}
+    basic_mat(idx rows, idx cols)
+        : rows_(rows), cols_(cols), data_(make_aligned<T>(checked_size(rows, cols))) {}
 
     /// Construct a rows-by-cols matrix filled with val.
-    BasicMatrix(idx rows, idx cols, T val)
+    basic_mat(idx rows, idx cols, T val)
         : rows_(rows), cols_(cols),
-          data_((rows * cols > 0) ? new T[rows * cols] : nullptr) {
+          data_(make_aligned_for_overwrite<T>(checked_size(rows, cols))) {
         if (size() > 0) std::fill_n(data_.get(), size(), val);
     }
 
-    ~BasicMatrix() {
+    ~basic_mat() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
             if (d_data_) {
@@ -45,21 +47,21 @@ class BasicMatrix {
 #endif
     }
 
-    BasicMatrix(const BasicMatrix &o)
+    basic_mat(const basic_mat &o)
         : rows_(o.rows_), cols_(o.cols_),
-          data_((o.size() > 0 && o.data_) ? new T[o.size()] : nullptr) {
+          data_(make_aligned_for_overwrite<T>(o.data_ ? o.size() : 0)) {
         if (size() > 0 && o.data_) {
             std::copy_n(o.data_.get(), size(), data_.get());
         }
     }
 
-    BasicMatrix(BasicMatrix &&o) noexcept
+    basic_mat(basic_mat &&o) noexcept
         : rows_(o.rows_), cols_(o.cols_), data_(std::move(o.data_)), d_data_(o.d_data_) {
         o.rows_ = o.cols_ = 0;
         o.d_data_ = nullptr;
     }
 
-    BasicMatrix &operator=(const BasicMatrix &o) {
+    basic_mat &operator=(const basic_mat &o) {
         if (this != &o) {
 #if defined(NUMERICS_HAS_CUDA)
             if constexpr (std::is_same_v<T, real>) {
@@ -72,7 +74,7 @@ class BasicMatrix {
             rows_ = o.rows_;
             cols_ = o.cols_;
             if (size() > 0 && o.data_) {
-                data_.reset(new T[size()]);
+                data_ = make_aligned_for_overwrite<T>(size());
                 std::copy_n(o.data_.get(), size(), data_.get());
             } else {
                 data_.reset();
@@ -81,7 +83,7 @@ class BasicMatrix {
         return *this;
     }
 
-    BasicMatrix &operator=(BasicMatrix &&o) noexcept {
+    basic_mat &operator=(basic_mat &&o) noexcept {
         if (this != &o) {
 #if defined(NUMERICS_HAS_CUDA)
             if constexpr (std::is_same_v<T, real>) {
@@ -105,9 +107,12 @@ class BasicMatrix {
     [[nodiscard]] constexpr idx cols() const noexcept { return cols_; }
     [[nodiscard]] constexpr idx size() const noexcept { return rows_ * cols_; }
 
-    /// Return contiguous row-major host storage.
-    T *data() { return data_.get(); }
-    [[nodiscard]] const T *data() const { return data_.get(); }
+    /// Return contiguous row-major host storage, aligned to `num::storage_alignment`.
+    ///
+    /// The row stride is `cols()`, so only row 0 is guaranteed to start on that
+    /// boundary; the alignment claim is about the base pointer.
+    T *data() noexcept { return assume_storage_aligned(data_.get()); }
+    [[nodiscard]] const T *data() const noexcept { return assume_storage_aligned(data_.get()); }
 
     T &operator()(idx i, idx j) { return data_[(i * cols_) + j]; }
     T operator()(idx i, idx j) const { return data_[(i * cols_) + j]; }
@@ -143,20 +148,32 @@ class BasicMatrix {
     [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
 
     /// Operator protocol application: y <- A * x
-    template <class X = Vector, class Y = Vector>
+    template <class X = vec, class Y = vec>
     void apply(const X &x, Y &y) const;
 
   private:
+    /// Element count of a rows-by-cols matrix, rejecting a product that would wrap.
+    ///
+    /// The three SuiteSparse bindings already guard their int32 interfaces this
+    /// way; without the check here a wrapped product allocates a short buffer
+    /// that `operator()` then indexes past.
+    static idx checked_size(idx rows, idx cols) {
+        if (rows != 0 && cols > std::numeric_limits<idx>::max() / rows) {
+            throw std::overflow_error("basic_mat: rows * cols exceeds the index range");
+        }
+        return rows * cols;
+    }
+
     idx rows_ = 0, cols_ = 0;
-    std::unique_ptr<T[]> data_;
+    aligned_array<T> data_;
     T *d_data_ = nullptr;
 };
 
 /// @brief Double-precision dense matrix with full backend dispatch (CPU + GPU).
-using Matrix = BasicMatrix<real>;
+using mat = basic_mat<real>;
 
 #if defined(NUMERICS_EXTERN_TEMPLATES)
-extern template class BasicMatrix<double>;
+extern template class basic_mat<double>;
 #endif
 
 } // namespace num

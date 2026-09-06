@@ -66,18 +66,25 @@ inline Float adaptive_helper(Func &&f, Float a, Float b, Float fa, Float fm, Flo
 /// @param a Lower integration limit.
 /// @param b Upper integration limit.
 /// @param n Number of uniform subintervals / panels (default: 100).
-/// @param backend Optional OpenMP parallelization backend (`backend::omp`, `backend::seq`).
+/// @tparam Parallel Thread the panel sum with OpenMP (default: sequential).
 /// @return Approximated integral value.
 /// @see simpson, gauss_legendre, romberg
-template <typename Float = double, std::invocable<Float> Func = ScalarFn>
-inline Float trapz(Func &&f, Float a, Float b, idx n = 100, Backend backend = backend::seq) {
+template <bool Parallel = false, typename Float = double, std::invocable<Float> Func = scalar_fn>
+inline Float trapz(Func &&f, Float a, Float b, idx n = 100) {
     Float h = (b - a) / static_cast<Float>(n);
     Float sum = Float{0};
-#ifdef NUMERICS_HAS_OMP
-#pragma omp parallel for reduction(+ : sum) schedule(static) if (backend == backend::omp)
+#if defined(NUMERICS_HAS_OMP)
+    if constexpr (Parallel) {
+#pragma omp parallel for reduction(+ : sum) schedule(static)
+        for (idx i = 1; i < n; ++i) {
+            sum += f(a + (static_cast<Float>(i) * h));
+        }
+    } else
 #endif
-    for (idx i = 1; i < n; ++i) {
-        sum += f(a + (static_cast<Float>(i) * h));
+    {
+        for (idx i = 1; i < n; ++i) {
+            sum += f(a + (static_cast<Float>(i) * h));
+        }
     }
     return h * ((Float{0.5} * (f(a) + f(b))) + sum);
 }
@@ -92,22 +99,29 @@ inline Float trapz(Func &&f, Float a, Float b, idx n = 100, Backend backend = ba
 /// @param a Lower limit.
 /// @param b Upper limit.
 /// @param n Number of panels (must be even, default: 100).
-/// @param backend Parallel execution backend (`backend::omp`, `backend::seq`).
+/// @tparam Parallel Thread the panel sum with OpenMP (default: sequential).
 /// @return Approximated integral value.
 /// @throws std::invalid_argument If `n` is not even.
 /// @see trapz, adaptive_simpson, gauss_legendre
-template <typename Float = double, std::invocable<Float> Func = ScalarFn>
-inline Float simpson(Func &&f, Float a, Float b, idx n = 100, Backend backend = backend::seq) {
+template <bool Parallel = false, typename Float = double, std::invocable<Float> Func = scalar_fn>
+inline Float simpson(Func &&f, Float a, Float b, idx n = 100) {
     if (n % 2 != 0) {
         throw std::invalid_argument("simpson: n must be even");
     }
     Float h = (b - a) / static_cast<Float>(n);
     Float sum = f(a) + f(b);
-#ifdef NUMERICS_HAS_OMP
-#pragma omp parallel for reduction(+ : sum) schedule(static) if (backend == backend::omp)
+#if defined(NUMERICS_HAS_OMP)
+    if constexpr (Parallel) {
+#pragma omp parallel for reduction(+ : sum) schedule(static)
+        for (idx i = 1; i < n; ++i) {
+            sum += f(a + (static_cast<Float>(i) * h)) * (i % 2 == 0 ? Float{2.0} : Float{4.0});
+        }
+    } else
 #endif
-    for (idx i = 1; i < n; ++i) {
-        sum += f(a + (static_cast<Float>(i) * h)) * (i % 2 == 0 ? Float{2.0} : Float{4.0});
+    {
+        for (idx i = 1; i < n; ++i) {
+            sum += f(a + (static_cast<Float>(i) * h)) * (i % 2 == 0 ? Float{2.0} : Float{4.0});
+        }
     }
     return (h / Float{3.0}) * sum;
 }
@@ -124,7 +138,7 @@ inline Float simpson(Func &&f, Float a, Float b, idx n = 100, Backend backend = 
 /// @param p Number of quadrature nodes (\f$1 \le p \le 5\f$, default: 5).
 /// @return Exact or high-precision approximation of the integral.
 /// @throws std::invalid_argument If `p` is not in range \f$[1, 5]\f$.
-template <typename Float = double, std::invocable<Float> Func = ScalarFn>
+template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float gauss_legendre(Func &&f, Float a, Float b, idx p = 5) {
     if (p < 1 || p > 5) {
         throw std::invalid_argument("gauss_legendre: p must be 1..5");
@@ -151,7 +165,7 @@ inline Float gauss_legendre(Func &&f, Float a, Float b, idx p = 5) {
 /// @param tol Error tolerance for adaptive refinement (default: 1e-8).
 /// @param max_depth Maximum recursion depth before termination (default: 50).
 /// @return High-accuracy integral approximation satisfying error tolerance.
-template <typename Float = double, std::invocable<Float> Func = ScalarFn>
+template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8}, idx max_depth = 50) {
     Float fa = f(a), fb = f(b), fm = f(Float{0.5} * (a + b));
     Float est = (b - a) / Float{6.0} * (fa + (Float{4.0} * fm) + fb);
@@ -170,7 +184,7 @@ inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8
 /// @param tol Convergence tolerance on diagonal tableau entries (default: 1e-10).
 /// @param max_levels Maximum tableau extrapolation levels (default: 12).
 /// @return Extrapolated integral approximation.
-template <typename Float = double, std::invocable<Float> Func = ScalarFn>
+template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float romberg(Func &&f, Float a, Float b, Float tol = Float{1e-10}, idx max_levels = 12) {
     std::vector<std::vector<Float>> R(max_levels, std::vector<Float>(max_levels, Float{0}));
     R[0][0] = Float{0.5} * (b - a) * (f(a) + f(b));

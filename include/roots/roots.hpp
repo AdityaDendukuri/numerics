@@ -12,14 +12,14 @@
 namespace num {
 
 template <typename Float = double>
-struct BasicRootResult {
+struct basic_root_result {
     Float root{};
     idx iterations{};
     Float residual{}; ///< Absolute residual \f$|f(x^*)||\f$
     bool converged{};
 
-    friend std::ostream &operator<<(std::ostream &os, const BasicRootResult &r) {
-        os << "RootResult{ root: " << r.root
+    friend std::ostream &operator<<(std::ostream &os, const basic_root_result &r) {
+        os << "root_result{ root: " << r.root
            << ", iterations: " << r.iterations
            << ", residual: " << r.residual
            << ", converged: " << (r.converged ? "true" : "false") << " }";
@@ -27,24 +27,24 @@ struct BasicRootResult {
     }
 };
 
-using RootResult = BasicRootResult<real>;
+using root_result = basic_root_result<real>;
 
 /// @brief Bisection method for finding a root on a bracketing interval \f$[a, b]\f$ where \f$f(a) f(b) \le 0\f$.
 ///
 /// Guaranteed linear convergence halving the interval width at each step: \f$|x_k - x^*| \le \frac{b-a}{2^k}\f$.
 ///
-/// @tparam Float Scalar floating-point type (`double`, `float`).
+/// @tparam Float scalar floating-point type (`double`, `float`).
 /// @tparam Func Function callable `Float(Float x)`.
 /// @param f Target continuous function.
 /// @param a Left interval endpoint.
 /// @param b Right interval endpoint.
 /// @param tol Error tolerance on interval radius and residual \f$|f(x)|\f$ (default: 1e-10).
 /// @param max_iter Maximum iterations (default: 1000).
-/// @return `BasicRootResult<Float>` with root approximation, iteration count, final residual, and convergence status.
+/// @return `basic_root_result<Float>` with root approximation, iteration count, final residual, and convergence status.
 /// @throws std::invalid_argument If \f$f(a)\f$ and \f$f(b)\f$ have the same sign.
 /// @see brent, newton, secant
-template <typename Float = double, std::invocable<Float> Func = ScalarFn>
-inline BasicRootResult<Float> bisection(Func &&f, Float a, Float b,
+template <typename Float = double, std::invocable<Float> Func = scalar_fn>
+inline basic_root_result<Float> bisection(Func &&f, Float a, Float b,
                                        Float tol = Float{1e-10}, idx max_iter = 1000) {
     Float fa = f(a), fb = f(b);
     if (fa * fb > Float{0}) {
@@ -81,11 +81,11 @@ inline BasicRootResult<Float> bisection(Func &&f, Float a, Float b,
 /// @param x0 Initial root estimate.
 /// @param tol Residual convergence tolerance \f$|f(x)| < \text{tol}\f$ (default: 1e-10).
 /// @param max_iter Maximum iterations (default: 1000).
-/// @return `BasicRootResult<Float>` with root estimate and convergence info.
+/// @return `basic_root_result<Float>` with root estimate and convergence info.
 /// @see secant, brent, bisection
-template <typename Float = double, std::invocable<Float> Func = ScalarFn,
-          std::invocable<Float> DFunc = ScalarFn>
-inline BasicRootResult<Float> newton(Func &&f, DFunc &&df, Float x0,
+template <typename Float = double, std::invocable<Float> Func = scalar_fn,
+          std::invocable<Float> DFunc = scalar_fn>
+inline basic_root_result<Float> newton(Func &&f, DFunc &&df, Float x0,
                                      Float tol = Float{1e-10}, idx max_iter = 1000) {
     Float x = x0;
     for (idx i = 0; i < max_iter; ++i) {
@@ -113,10 +113,10 @@ inline BasicRootResult<Float> newton(Func &&f, DFunc &&df, Float x0,
 /// @param x1 Second initial guess.
 /// @param tol Residual tolerance (default: 1e-10).
 /// @param max_iter Maximum iterations (default: 1000).
-/// @return `BasicRootResult<Float>` with root estimate and convergence metadata.
+/// @return `basic_root_result<Float>` with root estimate and convergence metadata.
 /// @see newton, brent
-template <typename Float = double, std::invocable<Float> Func = ScalarFn>
-inline BasicRootResult<Float> secant(Func &&f, Float x0, Float x1,
+template <typename Float = double, std::invocable<Float> Func = scalar_fn>
+inline basic_root_result<Float> secant(Func &&f, Float x0, Float x1,
                                      Float tol = Float{1e-10}, idx max_iter = 1000) {
     Float f0 = f(x0), f1 = f(x1);
     for (idx i = 0; i < max_iter; ++i) {
@@ -148,11 +148,11 @@ inline BasicRootResult<Float> secant(Func &&f, Float x0, Float x1,
 /// @param b Right interval endpoint.
 /// @param tol Convergence tolerance on bracket width and residual (default: 1e-10).
 /// @param max_iter Maximum iterations (default: 1000).
-/// @return `BasicRootResult<Float>` with root estimate and convergence metadata.
+/// @return `basic_root_result<Float>` with root estimate and convergence metadata.
 /// @throws std::invalid_argument If \f$f(a) f(b) > 0\f$ (no sign change).
 /// @see bisection, newton, secant
-template <typename Float = double, std::invocable<Float> Func = ScalarFn>
-inline BasicRootResult<Float> brent(Func &&f, Float a, Float b,
+template <typename Float = double, std::invocable<Float> Func = scalar_fn>
+inline basic_root_result<Float> brent(Func &&f, Float a, Float b,
                                     Float tol = Float{1e-10}, idx max_iter = 1000) {
     Float fa = f(a), fb = f(b);
     if (fa * fb > Float{0}) {

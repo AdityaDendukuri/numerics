@@ -1,5 +1,5 @@
 /// @file algebra/ops.hpp
-/// @brief Vector space operations, resolved to whichever form a type provides.
+/// @brief vec space operations, resolved to whichever form a type provides.
 ///
 /// A concept requiring `size()` and `operator[]` describes a *coordinate array*.
 /// It does not describe a vector space, because it says nothing about closure —
@@ -24,7 +24,7 @@
 
 
 #include "algebra/scalar.hpp"
-#include "kernel/raw.hpp"
+#include "kernel/kernel.hpp"
 #include "core/types.hpp"
 #include <concepts>
 #include <type_traits>
@@ -37,7 +37,7 @@ namespace num::algebra {
 // =============================================================================
 //
 // Three presentations of the same algebra coexist in this library: free functions
-// (num::Vector), operators (num::SmallVec), and neither (std::vector). These
+// (num::vec), operators (num::small_vec), and neither (std::vector). These
 // adaptors resolve to whichever a type provides, so the concepts and law samplers
 // below are written once.
 
@@ -84,8 +84,8 @@ template <class V>
     if constexpr (detail::has_free_dot<V>) {
         return static_cast<T>(dot(x, y));
     } else if constexpr (detail::raw_reducible<V>) {
-        // Contiguous real storage: defer to the kernel rather than restating the loop.
-        return kernel::raw::dot(x.data(), y.data(), x.size());
+        // contiguous real storage: defer to the kernel rather than restating the loop.
+        return kernel::dot(x.data(), y.data(), x.size());
     } else {
         T sum = T(0);
         for (idx i = 0; i < x.size(); ++i) {
@@ -101,7 +101,7 @@ template <class V>
     if constexpr (detail::has_free_norm<V>) {
         return static_cast<scalars::real_t<scalar_t<V>>>(norm(x));
     } else if constexpr (detail::raw_reducible<V>) {
-        return kernel::raw::norm(x.data(), x.size());
+        return kernel::norm(x.data(), x.size());
     } else {
         return std::sqrt(scalars::re(inner(x, x)));
     }

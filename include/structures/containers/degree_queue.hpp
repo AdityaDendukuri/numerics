@@ -16,13 +16,13 @@ namespace num::structures {
 /// @brief Bucket-based degree priority queue maintaining vertices ordered by integer degree.
 /// Provides O(1) insert, erase, rekey, and O(1) amortized pop_min for bounded integer degrees.
 template <std::integral Index = num::idx>
-class BasicDegreeQueue {
+class basic_degree_queue {
   public:
     using index_type = Index;
     static constexpr Index none = static_cast<Index>(-1);
 
     /// Construct an empty queue with capacity for n vertices.
-    explicit BasicDegreeQueue(Index n = 0) {
+    explicit basic_degree_queue(Index n = 0) {
         head_.assign(static_cast<std::size_t>(n) + 1, none);
         next_.assign(static_cast<std::size_t>(n), none);
         prev_.assign(static_cast<std::size_t>(n), none);
@@ -34,7 +34,7 @@ class BasicDegreeQueue {
     /// Construct and initialize from a container of degrees.
     template <typename DegreeRange>
     requires (!std::integral<DegreeRange>)
-    explicit BasicDegreeQueue(const DegreeRange &degrees) {
+    explicit basic_degree_queue(const DegreeRange &degrees) {
         const Index n = static_cast<Index>(degrees.size());
         head_.assign(static_cast<std::size_t>(n) + 1, none);
         next_.assign(static_cast<std::size_t>(n), none);
@@ -50,7 +50,7 @@ class BasicDegreeQueue {
 
     /// Insert vertex v with degree d.
     void insert(Index v, Index d) {
-        debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "DegreeQueue::insert");
+        debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "degree_queue::insert");
         if (d >= head_.size()) {
             head_.resize(std::max(static_cast<std::size_t>(d) + 1, 2 * head_.size()), none);
         }
@@ -69,7 +69,7 @@ class BasicDegreeQueue {
 
     /// Erase vertex v from the queue.
     void erase(Index v) {
-        debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "DegreeQueue::erase");
+        debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "degree_queue::erase");
         const Index d = degree_[v];
         if (prev_[v] == none) {
             head_[d] = next_[v];
@@ -93,13 +93,13 @@ class BasicDegreeQueue {
     /// Pop vertex with minimum degree.
     Index pop_min() {
         if (empty()) {
-            throw std::runtime_error("DegreeQueue::pop_min: queue is empty");
+            throw std::runtime_error("degree_queue::pop_min: queue is empty");
         }
         while (low_ < head_.size() && head_[low_] == none) {
             ++low_;
         }
         if (low_ == head_.size()) {
-            throw std::runtime_error("DegreeQueue::pop_min: corrupted bucket state");
+            throw std::runtime_error("degree_queue::pop_min: corrupted bucket state");
         }
         const Index v = head_[low_];
         erase(v);
@@ -108,14 +108,14 @@ class BasicDegreeQueue {
 
     /// Degree of vertex v.
     [[nodiscard]] Index degree_of(Index v) const {
-        debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "DegreeQueue::degree_of");
+        debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "degree_queue::degree_of");
         return degree_[v];
     }
 
     /// Current minimum degree.
     [[nodiscard]] Index min_degree() const {
         if (empty()) {
-            throw std::runtime_error("DegreeQueue::min_degree: queue is empty");
+            throw std::runtime_error("degree_queue::min_degree: queue is empty");
         }
         Index l = low_;
         while (l < head_.size() && head_[l] == none) {
@@ -145,13 +145,13 @@ class BasicDegreeQueue {
     Index size_ = 0;
 };
 
-using DegreeQueue = BasicDegreeQueue<num::idx>;
-using DegreeQueue32 = BasicDegreeQueue<std::uint32_t>;
+using degree_queue = basic_degree_queue<num::idx>;
+using degree_queue_32 = basic_degree_queue<std::uint32_t>;
 
 } // namespace num::structures
 
 namespace num {
-using structures::BasicDegreeQueue;
-using structures::DegreeQueue;
-using structures::DegreeQueue32;
+using structures::basic_degree_queue;
+using structures::degree_queue;
+using structures::degree_queue_32;
 } // namespace num

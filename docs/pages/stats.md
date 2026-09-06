@@ -4,7 +4,7 @@ Streaming accumulators for moments (Welford's algorithm) and empirical probabili
 
 ---
 
-## 1. Running Statistics (num::RunningStats)
+## 1. Running Statistics (num::running_stats)
 
 Single-pass \f$\mathcal{O}(1)\f$ memory accumulation of mean, variance, and standard error using Welford's recurrence:
 \f[
@@ -14,7 +14,7 @@ Single-pass \f$\mathcal{O}(1)\f$ memory accumulation of mean, variance, and stan
 ```cpp
 #include <numerics.hpp>
 
-num::RunningStats stats;
+num::running_stats stats;
 
 for (double x : samples) {
     stats.update(x);
@@ -28,12 +28,12 @@ double stderr_mean = stats.stderr_mean(); // s / sqrt(n)
 
 ---
 
-## 2. Empirical Histogram (num::Histogram)
+## 2. Empirical histogram (num::histogram)
 
 Binned empirical probability density function (PDF).
 
 ```cpp
-num::Histogram hist(/*n_bins=*/100, /*min=*/-1.0, /*max=*/1.0);
+num::histogram hist(/*n_bins=*/100, /*min=*/-1.0, /*max=*/1.0);
 
 for (double x : samples) {
     hist.fill(x);
@@ -47,7 +47,7 @@ std::vector<double> pdf = hist.pdf(); // Normalized so sum(p_i * dx) == 1.0
 ## 3. Concepts
 
 ```cpp
-static_assert(num::StreamingAccumulator<num::RunningStats>);
-static_assert(num::MomentAccumulator<num::RunningStats>);
+static_assert(num::streaming_accumulator<num::running_stats>);
+static_assert(num::moment_accumulator<num::running_stats>);
 ```
 

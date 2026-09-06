@@ -1,6 +1,6 @@
-# PBCLattice2D {#page_pbc_lattice}
+# pbc_lattice_2d {#page_pbc_lattice}
 
-`include/spatial/pbc_lattice.hpp` provides `num::PBCLattice2D`, a small struct that
+`include/spatial/pbc_lattice.hpp` provides `num::pbc_lattice_2d`, a small struct that
 precomputes the four periodic-boundary neighbor index arrays for an \f$N \times N\f$
 square lattice.
 
@@ -17,11 +17,11 @@ sweeps and cluster traversals.
 ## Routine Reference
 
 ```cpp
-struct num::PBCLattice2D {
+struct num::pbc_lattice_2d {
     int N;
     std::vector<int> up, dn, lt, rt;   // N*N each
 
-    explicit PBCLattice2D(int N);
+    explicit pbc_lattice_2d(int N);
 };
 ```
 
@@ -51,7 +51,7 @@ Flat row-major layout: site \f$(row, col)\f$ has flat index \f$i = row \cdot N +
 ## Example
 
 ```cpp
-num::PBCLattice2D nbr(N);
+num::pbc_lattice_2d nbr(N);
 
 // Metropolis sweep -- neighbor sum with no modulo arithmetic
 real ns = spins[nbr.up[i]] + spins[nbr.dn[i]]

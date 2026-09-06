@@ -13,13 +13,13 @@ namespace num::operators {
 
 /// Non-owning representation of P_S A, where P_S is projection onto S.
 template <class Op, class Subspace>
-requires math::LinearOperator<Op>
-    &&math::LinearSubspaceOf<Subspace, math::codomain_t<Op>> class ProjectedOp final {
+requires math::linear_operator<Op>
+    &&math::linear_subspace_of<Subspace, math::codomain_t<Op>> class projected_op final {
   public:
     using domain_type = math::domain_t<Op>;
     using codomain_type = math::codomain_t<Op>;
 
-    ProjectedOp(const Op &op, Subspace subspace) : op_(&op), subspace_(std::move(subspace)) {}
+    projected_op(const Op &op, Subspace subspace) : op_(&op), subspace_(std::move(subspace)) {}
 
     void apply(const domain_type &x, codomain_type &y) const {
         math::apply(*op_, x, y);
@@ -38,7 +38,7 @@ requires math::LinearOperator<Op>
 
 template <class Op, class Subspace>
 [[nodiscard]] auto projected(const Op &op, Subspace subspace) {
-    return ProjectedOp<Op, Subspace>(op, std::move(subspace));
+    return projected_op<Op, Subspace>(op, std::move(subspace));
 }
 
 template <class Op, class Subspace>
@@ -49,8 +49,8 @@ requires(!std::is_lvalue_reference_v<Op>) auto projected(Op &&, Subspace) = dele
 namespace num::math {
 
 template <class Op, class Subspace>
-struct model_of<operators::ProjectedOp<Op, Subspace>> {
-    using laws = type_list<law::linear_map>;
+struct claims_of<operators::projected_op<Op, Subspace>> {
+    using type = type_list<law::linear_map>;
 };
 
 } // namespace num::math

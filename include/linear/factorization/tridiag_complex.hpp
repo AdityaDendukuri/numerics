@@ -11,7 +11,7 @@
 namespace num {
 
 /// Reusable factorization of a constant-coefficient complex tridiagonal matrix.
-struct ComplexTriDiag {
+struct complex_tri_diag {
     using cplx = std::complex<double>;
 
     std::vector<cplx> c_mod;
@@ -28,7 +28,7 @@ struct ComplexTriDiag {
 
 
 
-inline void ComplexTriDiag::factor(int n_, cplx a_, cplx b_, cplx c_) {
+inline void complex_tri_diag::factor(int n_, cplx a_, cplx b_, cplx c_) {
     n = n_;
     a_coeff = a_;
 
@@ -47,7 +47,7 @@ inline void ComplexTriDiag::factor(int n_, cplx a_, cplx b_, cplx c_) {
     }
 }
 
-inline void ComplexTriDiag::solve(std::vector<cplx> &d) const {
+inline void complex_tri_diag::solve(std::vector<cplx> &d) const {
     // Forward sweep
     d[0] *= inv_b[0];
     for (int k = 1; k < n; ++k) {

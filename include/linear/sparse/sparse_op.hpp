@@ -1,8 +1,8 @@
 /// @file linear/sparse/sparse_op.hpp
-/// @brief SparseMatrix adapter for the operator protocol.
+/// @brief spmat adapter for the operator protocol.
 ///
-/// Lives beside SparseMatrix (rather than under operator/) so the operator
-/// module stays free of any linear-algebra dependency; the LinearOperator contract it
+/// Lives beside spmat (rather than under operator/) so the operator
+/// module stays free of any linear-algebra dependency; the linear_operator contract it
 /// models is defined in operator/concepts.hpp.
 #pragma once
 
@@ -14,31 +14,32 @@
 
 namespace num::operators {
 
-/// @brief Adapt a SparseMatrix to the operator protocol.
-struct SparseOp final {
-    using domain_type = Vector;
-    using codomain_type = Vector;
+/// @brief Adapt a spmat to the operator protocol.
+struct sparse_op final {
+    using math_laws = math::type_list<law::linear_map>;
+    using domain_type = vec;
+    using codomain_type = vec;
 
     /// Store a non-owning reference to a CSR matrix.
-    explicit SparseOp(const SparseMatrix &A) : A_(A) {}
+    explicit sparse_op(const spmat &A) : A_(A) {}
 
     /// Compute y=A*x.
-    void apply(const Vector &x, Vector &y) const;
+    void apply(const vec &x, vec &y) const;
     [[nodiscard]] idx rows() const noexcept { return A_.n_rows(); }
     [[nodiscard]] idx cols() const noexcept { return A_.n_cols(); }
 
   private:
-    const SparseMatrix &A_;
+    const spmat &A_;
 };
 
-static_assert(LinearOperator<SparseOp>);
+static_assert(linear_operator<sparse_op>);
 
-inline void SparseOp::apply(const Vector &x, Vector &y) const {
+inline void sparse_op::apply(const vec &x, vec &y) const {
     if (x.size() != A_.n_cols()) {
-        throw std::invalid_argument("SparseOp::apply: input dimension mismatch");
+        throw std::invalid_argument("sparse_op::apply: input dimension mismatch");
     }
     if (y.size() != A_.n_rows()) {
-        y = Vector(A_.n_rows());
+        y = vec(A_.n_rows());
     }
     sparse_matvec(A_, x, y);
 }
@@ -47,9 +48,5 @@ inline void SparseOp::apply(const Vector &x, Vector &y) const {
 
 namespace num::math {
 
-template <>
-struct model_of<operators::SparseOp> {
-    using laws = type_list<law::linear_map>;
-};
 
 } // namespace num::math

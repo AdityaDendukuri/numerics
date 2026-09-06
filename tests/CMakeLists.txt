@@ -17,6 +17,17 @@ if(NOT _core_links STREQUAL "numerics_kernel" OR _core_definitions OR _core_opti
 endif()
 
 add_executable(numerics_tests
+    test_alignment.cpp
+    test_biclique_tree.cpp
+    test_block_tridiagonal.cpp
+    test_chebyshev.cpp
+    test_clique_tree.cpp
+    test_ilu.cpp
+    test_lu_no_pivot.cpp
+    test_kernel_reductions.cpp
+    test_ode_guards.cpp
+    test_concept_hierarchy.cpp
+    test_diagnostics.cpp
     test_vector.cpp
     test_matrix.cpp
     test_solvers.cpp
@@ -46,6 +57,16 @@ if(TARGET numerics_io)
     target_link_libraries(numerics_tests PRIVATE numerics_io)
     target_compile_definitions(numerics_tests PRIVATE NUMERICS_HAS_JSON=1)
 endif()
+
+# test_concept_hierarchy.cpp parses the headers to assert the shape of the concept graph,
+# so it needs to find them at run time.
+#
+# NUMERICS_DIAGNOSTICS=2 raises the diagnostic ceiling to include property sampling, which
+# an optimized build otherwise leaves out. The suite exists to exercise the checks, so it
+# opts into the strongest configuration regardless of build type.
+target_compile_definitions(numerics_tests
+    PRIVATE NUMERICS_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+            NUMERICS_DIAGNOSTICS=2)
 
 include(GoogleTest)
 gtest_discover_tests(numerics_tests)

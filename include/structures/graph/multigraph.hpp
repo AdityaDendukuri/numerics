@@ -15,7 +15,7 @@ namespace num::structures {
 
 /// Weighted multi-edge with multiplicity count.
 template <typename Weight = double, std::integral Index = num::idx>
-struct MultiEdge {
+struct multi_edge {
     Index to{};
     Weight weight{1};
     std::uint8_t count = 1;
@@ -23,14 +23,14 @@ struct MultiEdge {
 
 /// @brief Weighted multigraph representation supporting parallel edges and integer counts.
 template <typename Weight = double, std::integral Index = num::idx>
-class BasicMultigraph {
+class basic_multigraph {
   public:
     using weight_type = Weight;
     using index_type = Index;
-    using edge_type = MultiEdge<Weight, Index>;
+    using edge_type = multi_edge<Weight, Index>;
 
     /// Construct an empty multigraph with n vertices.
-    explicit BasicMultigraph(Index n = 0) : adj_(n) {}
+    explicit basic_multigraph(Index n = 0) : adj_(n) {}
 
     /// Number of vertices.
     [[nodiscard]] Index n_vertices() const noexcept {
@@ -40,7 +40,7 @@ class BasicMultigraph {
     /// Add an undirected multi-edge between u and v.
     void add_edge(Index u, Index v, Weight weight = Weight{1}, std::uint8_t count = 1) {
         if (u >= adj_.size() || v >= adj_.size()) {
-            throw std::out_of_range("BasicMultigraph::add_edge: vertex index out of range");
+            throw std::out_of_range("basic_multigraph::add_edge: vertex index out of range");
         }
         adj_[u].push_back({v, weight, count});
         adj_[v].push_back({u, weight, count});
@@ -49,7 +49,7 @@ class BasicMultigraph {
     /// Add a directed multi-edge from u to v.
     void add_directed_edge(Index u, Index v, Weight weight = Weight{1}, std::uint8_t count = 1) {
         if (u >= adj_.size() || v >= adj_.size()) {
-            throw std::out_of_range("BasicMultigraph::add_directed_edge: vertex index out of range");
+            throw std::out_of_range("basic_multigraph::add_directed_edge: vertex index out of range");
         }
         adj_[u].push_back({v, weight, count});
     }
@@ -57,7 +57,7 @@ class BasicMultigraph {
     /// Const access to neighbor list of vertex u.
     [[nodiscard]] const std::vector<edge_type> &neighbors(Index u) const {
         if (u >= adj_.size()) {
-            throw std::out_of_range("BasicMultigraph::neighbors: vertex index out of range");
+            throw std::out_of_range("basic_multigraph::neighbors: vertex index out of range");
         }
         return adj_[u];
     }
@@ -65,7 +65,7 @@ class BasicMultigraph {
     /// Mutable access to neighbor list of vertex u.
     [[nodiscard]] std::vector<edge_type> &neighbors(Index u) {
         if (u >= adj_.size()) {
-            throw std::out_of_range("BasicMultigraph::neighbors: vertex index out of range");
+            throw std::out_of_range("basic_multigraph::neighbors: vertex index out of range");
         }
         return adj_[u];
     }
@@ -88,10 +88,10 @@ class BasicMultigraph {
         return adj_[u];
     }
 
-    /// Convert to simple BasicGraph (consolidating parallel edges).
-    [[nodiscard]] BasicGraph<Weight, Index> to_simple_graph() const {
+    /// Convert to simple basic_graph (consolidating parallel edges).
+    [[nodiscard]] basic_graph<Weight, Index> to_simple_graph() const {
         const Index n = n_vertices();
-        BasicGraph<Weight, Index> G(n);
+        basic_graph<Weight, Index> G(n);
         for (Index u = 0; u < n; ++u) {
             for (const auto &e : adj_[u]) {
                 if (u < e.to) {
@@ -107,15 +107,15 @@ class BasicMultigraph {
     std::vector<std::vector<edge_type>> adj_;
 };
 
-using Multigraph = BasicMultigraph<double, num::idx>;
-using FloatMultigraph = BasicMultigraph<float, std::uint32_t>;
+using multigraph = basic_multigraph<double, num::idx>;
+using float_multigraph = basic_multigraph<float, std::uint32_t>;
 
-/// Convert a BasicGraph to a BasicMultigraph.
+/// Convert a basic_graph to a basic_multigraph.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline BasicMultigraph<Weight, Index>
-to_multigraph(const BasicGraph<Weight, Index> &G) {
+[[nodiscard]] inline basic_multigraph<Weight, Index>
+to_multigraph(const basic_graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
-    BasicMultigraph<Weight, Index> mg(n);
+    basic_multigraph<Weight, Index> mg(n);
     for (Index u = 0; u < n; ++u) {
         for (const auto &e : G.neighbors(u)) {
             if (u < e.to) {
@@ -131,8 +131,8 @@ to_multigraph(const BasicGraph<Weight, Index> &G) {
 } // namespace num::structures
 
 namespace num {
-using structures::BasicMultigraph;
-using structures::FloatMultigraph;
-using structures::MultiEdge;
-using structures::Multigraph;
+using structures::basic_multigraph;
+using structures::float_multigraph;
+using structures::multi_edge;
+using structures::multigraph;
 } // namespace num

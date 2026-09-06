@@ -17,26 +17,26 @@
 
 namespace num {
 
-struct MINRESOptions {
+struct minres_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;
 };
 
 namespace math_krylov_detail {
 
-inline Vector minres_projected_solve(const std::vector<real> &alpha, const std::vector<real> &beta,
+inline vec minres_projected_solve(const std::vector<real> &alpha, const std::vector<real> &beta,
                                      real beta0, idx m) {
-    Matrix H(m + 1, m, 0.0);
+    mat H(m + 1, m, 0.0);
     for (idx j = 0; j < m; ++j) {
         H(j, j) = alpha[j];
         if (j > 0)
             H(j - 1, j) = beta[j - 1];
         H(j + 1, j) = beta[j];
     }
-    Vector rhs(m + 1, 0.0);
+    vec rhs(m + 1, 0.0);
     rhs[0] = beta0;
-    const QRResult factor = qr(H);
-    Vector y(m, 0.0);
+    const qr_result factor = qr(H);
+    vec y(m, 0.0);
     qr_solve(factor, rhs, y);
     return y;
 }
@@ -45,10 +45,10 @@ inline Vector minres_projected_solve(const std::vector<real> &alpha, const std::
 
 /// Minimum residual projection for a certified self-adjoint endomorphism.
 template <class Op, class V>
-requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&
-    math::Carries<Op, axiom::self_adjoint> &&
-        std::same_as<math::scalar_t<V>, real> [[nodiscard]] SolverResult
-        minres(const Op &A, const V &b, V &x, MINRESOptions options = {}) {
+requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
+    claims<Op, law::self_adjoint> &&
+        std::same_as<math::scalar_t<V>, real> [[nodiscard]] solver_result
+        minres(const Op &A, const V &b, V &x, minres_options options = {}) {
     const auto n = math::dimension(b);
     if (math::dimension(x) != n || A.rows() != n || A.cols() != n) {
         throw std::invalid_argument("minres: incompatible operator and vector dimensions");
@@ -64,7 +64,7 @@ requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&
     math::linear_combination(real(1), b, real(-1), residual);
 
     const real beta0 = math::norm(residual);
-    SolverResult result{0, beta0, beta0 < options.tolerance};
+    solver_result result{0, beta0, beta0 < options.tolerance};
     if (result.converged || options.max_iterations == 0)
         return result;
 
@@ -99,7 +99,7 @@ requires math::InnerProductSpace<V> &&math::EndomorphismOn<Op, V> &&
         }
         beta.push_back(next_beta);
 
-        const Vector y = math_krylov_detail::minres_projected_solve(alpha, beta, beta0, j + 1);
+        const vec y = math_krylov_detail::minres_projected_solve(alpha, beta, beta0, j + 1);
         V candidate = x;
         for (idx column = 0; column <= j; ++column)
             math::axpy(y[column], basis[column], candidate);

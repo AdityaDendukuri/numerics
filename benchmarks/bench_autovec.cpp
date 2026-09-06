@@ -1,34 +1,31 @@
 /// @file bench_autovec.cpp
-/// @brief Scalar baseline benchmarks  -- compiled WITHOUT auto-vectorization
+/// @brief scalar baseline benchmarks  -- compiled WITHOUT auto-vectorization
 ///
-/// This file is compiled with -fno-tree-vectorize -fno-slp-vectorize so the
-/// compiler emits only scalar instructions, even though -mavx2 is active.
-/// The distinction matters:
+/// This file is compiled with -fno-tree-vectorize -fno-slp-vectorize, so the
+/// compiler emits only scalar instructions however wide the target's registers
+/// are. That isolates one variable: what the auto-vectorizer is worth. It is a
+/// baseline, not a kernel -- nothing in the library takes this path.
 ///
-///   -mavx2               -> "AVX2 instructions exist on this CPU"
-///   -fno-tree-vectorize  -> "don't use the auto-vectoriser to emit them"
+/// Together with bench_linalg.cpp it gives a four-step comparison:
 ///
-/// Combined with bench_linalg.cpp this gives a three-tier comparison:
+///   1. BM_Matmul_Scalar / BM_Matmul_Scalar_Blocked   (this file)
+///      No SIMD at all. One FP multiply-add per cycle is the ceiling.
 ///
-///   Tier 1  BM_Matmul_Scalar / BM_Matmul_Scalar_Blocked  (this file)
-///           No SIMD at all.  Pure scalar throughput.
-///           Bottleneck: one FP multiply-add per cycle.
+///   2. BM_Matmul_Kernel                              (bench_linalg.cpp)
+///      `num::kernel::gemm` on one thread: the same loops written so the
+///      compiler can vectorize them, over a register tile sized to the
+///      target's register file and a cache panel sized to L2.
 ///
-///   Tier 2  BM_Matmul_Naive / BM_Matmul_Blocked          (bench_linalg.cpp)
-///           Compiled with -mavx2.  Compiler auto-vectorises what it can.
-///           Shows how much the compiler can do on its own with good loop
-///           order.
+///   3. BM_Matmul_Omp                                 (bench_linalg.cpp)
+///      That kernel per row tile, across cores.
 ///
-///   Tier 3  BM_Matmul<backend::simd>                      (bench_linalg.cpp)
-///           Explicit AVX2 intrinsics + cache tiling written by hand.
-///           Shows the ceiling of CPU matmul without a tuned BLAS.
-///
-///   Tier 4  BM_Matmul<backend::blas>                      (bench_linalg.cpp)
-///           OpenBLAS: hand-written assembly kernels, runtime CPU dispatch.
-///           Maintained externally; the practical production ceiling.
+///   4. BM_Matmul_Blas                                (bench_linalg.cpp)
+///      OpenBLAS/Accelerate: hand-written assembly, runtime CPU dispatch, and
+///      on Apple silicon the AMX coprocessor that portable C++ cannot reach.
+///      Maintained externally; the practical production ceiling.
 ///
 /// Run just these:
-///   ./build/benchmarks/numerics_bench --benchmark_filter=Scalar
+///   ./build/benchmarks/numerics_bench --benchmark_filter=scalar
 
 #include "container/matrix.hpp"
 #include <algorithm>
@@ -36,11 +33,11 @@
 
 using namespace num;
 
-// Scalar implementations  -- no vectorisation
+// scalar implementations  -- no vectorisation
 
 /// Naive i-j-k triple loop, purely scalar.
 /// Inner k-loop reads B column-wise (stride N)  -- cache-hostile.
-static void matmul_scalar(const Matrix &A, const Matrix &B, Matrix &C) {
+static void matmul_scalar(const mat &A, const mat &B, mat &C) {
     const idx M = A.rows(), K = A.cols(), N = B.cols();
     for (idx i = 0; i < M; ++i)
         for (idx j = 0; j < N; ++j) {
@@ -53,7 +50,7 @@ static void matmul_scalar(const Matrix &A, const Matrix &B, Matrix &C) {
 
 /// Cache-blocked i-k-j with 64-wide tiles, purely scalar.
 /// Shows that cache efficiency alone gives a large speedup even without SIMD.
-static void matmul_scalar_blocked(const Matrix &A, const Matrix &B, Matrix &C) {
+static void matmul_scalar_blocked(const mat &A, const mat &B, mat &C) {
     constexpr idx BS = 64;
     const idx M = A.rows(), K = A.cols(), N = B.cols();
     std::fill_n(C.data(), M * N, real(0));
@@ -84,7 +81,7 @@ static double flops(idx n) {
 
 static void BM_Matmul_Scalar(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    Matrix A(n, n, 1.0), B(n, n, 1.0), C(n, n);
+    mat A(n, n, 1.0), B(n, n, 1.0), C(n, n);
     for (auto _ : state) {
         matmul_scalar(A, B, C);
         benchmark::DoNotOptimize(C.data());
@@ -97,7 +94,7 @@ BENCHMARK(BM_Matmul_Scalar)->RangeMultiplier(2)->Range(64, 512)->Complexity();
 
 static void BM_Matmul_Scalar_Blocked(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    Matrix A(n, n, 1.0), B(n, n, 1.0), C(n, n);
+    mat A(n, n, 1.0), B(n, n, 1.0), C(n, n);
     for (auto _ : state) {
         matmul_scalar_blocked(A, B, C);
         benchmark::DoNotOptimize(C.data());

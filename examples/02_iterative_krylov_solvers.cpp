@@ -1,5 +1,5 @@
 /// @file 02_iterative_krylov_solvers.cpp
-/// @brief CG, PCG, MINRES, GMRES, and Matrix-Free Operators.
+/// @brief CG, PCG, MINRES, GMRES, and mat-Free Operators.
 #include <iostream>
 #include <numerics.hpp>
 #include <vector>
@@ -25,21 +25,21 @@ int main() {
             vals.push_back(-1.0);
         }
     }
-    SparseMatrix A = SparseMatrix::from_triplets(n, n, rows, cols, vals);
+    spmat A = spmat::from_triplets(n, n, rows, cols, vals);
 
-    Vector b(n, 1.0);
-    Vector x0(n, 0.0);
+    vec b(n, 1.0);
+    vec x0(n, 0.0);
 
     // 1. Conjugate Gradient (CG)
-    operators::SparseOp aop(A);
+    operators::sparse_op aop(A);
     auto spd_a = operators::assume_spd(aop);
     auto cg_res = cg(spd_a, b, x0, 1e-8, 500);
-    std::cout << "CG Converged: " << (cg_res.converged ? "YES" : "NO") << " in "
+    std::cout << "cg_method Converged: " << (cg_res.converged ? "YES" : "NO") << " in "
               << cg_res.iterations << " iters. Residual = " << cg_res.residual << "\n";
 
     // 2. GMRES Solver
     auto gmres_res = gmres(aop, b, x0, 1e-8, 500, 30);
-    std::cout << "GMRES Converged: " << (gmres_res.converged ? "YES" : "NO") << " in "
+    std::cout << "gmres_method Converged: " << (gmres_res.converged ? "YES" : "NO") << " in "
               << gmres_res.iterations << " iters. Residual = " << gmres_res.residual << "\n";
 
     // Plot solution vector x over grid (140x35)
@@ -49,7 +49,7 @@ int main() {
         sol.push_back(x0[i]);
     }
     plt::plot(grid, sol, "x_cg", "lines");
-    plt::title("02 Krylov Iterative Solvers: Solution Vector x");
+    plt::title("02 Krylov Iterative Solvers: Solution vec x");
     plt::xlabel("Grid Node i");
     plt::ylabel("Solution x_i");
     plt::show_dumb(140, 35);

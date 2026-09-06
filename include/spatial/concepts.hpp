@@ -2,11 +2,12 @@
 /// @brief Contracts for spatial acceleration structures and smoothing kernels.
 ///
 /// Coordinates live in a scalar field, so the structures here are stated over
-/// `num::Field`. An integer coordinate type would place particles in the wrong
+/// `num::field`. An integer coordinate type would place particles in the wrong
 /// cells and report nothing, and the constraint rejects it.
 #pragma once
 
 #include "algebra/concepts.hpp"
+#include "core/index_space.hpp"
 #include "core/types.hpp"
 #include <concepts>
 #include <utility>
@@ -19,7 +20,7 @@ namespace num {
 /// accessor, so positions may live in a struct of arrays, an array of structs,
 /// or a simulation's own particle type.
 template <class A, class Scalar = real>
-concept PositionAccessor2D = scalars::Field<Scalar> && requires(const A &get_pos, int i) {
+concept position_accessor_2d = scalars::field<Scalar> && requires(const A &get_pos, int i) {
     { get_pos(i) } -> std::convertible_to<std::pair<Scalar, Scalar>>;
 };
 
@@ -28,7 +29,7 @@ concept PositionAccessor2D = scalars::Field<Scalar> && requires(const A &get_pos
 /// The contract is a visitor rather than a returned container: `query` calls
 /// `f(j)` for each candidate, so nothing allocates in the inner loop.
 template <class L, class Scalar = real>
-concept NeighborQuery2D = scalars::Field<Scalar> &&
+concept neighbor_query_2d = scalars::field<Scalar> &&
     requires(const L &list, Scalar px, Scalar py) {
     list.query(px, py, [](int) {});
 };
@@ -39,7 +40,7 @@ concept NeighborQuery2D = scalars::Field<Scalar> &&
 /// vanishes beyond \f$r = 2h\f$. Both are properties of the values rather than the
 /// type, and `num::spatial::debug::verify_kernel_normalization` samples them.
 template <class K, class Scalar = float>
-concept SmoothingKernel = scalars::Field<Scalar> && requires(Scalar r, Scalar h) {
+concept smoothing_kernel = scalars::field<Scalar> && requires(Scalar r, Scalar h) {
     { K::W(r, h) } -> std::convertible_to<Scalar>;
     { K::dW_dr(r, h) } -> std::convertible_to<Scalar>;
 };
@@ -50,12 +51,6 @@ concept SmoothingKernel = scalars::Field<Scalar> && requires(Scalar r, Scalar h)
 /// stepping one row or column with wraparound. The tables are precomputed so a
 /// sweep never evaluates a modulus.
 template <class P>
-concept PeriodicLattice2D = requires(const P &lattice, int i) {
-    { lattice.N } -> std::convertible_to<int>;
-    { lattice.up[i] } -> std::convertible_to<int>;
-    { lattice.dn[i] } -> std::convertible_to<int>;
-    { lattice.lt[i] } -> std::convertible_to<int>;
-    { lattice.rt[i] } -> std::convertible_to<int>;
-};
+concept periodic_lattice_2d = periodic_neighbourhood_2d<P>;
 
 } // namespace num

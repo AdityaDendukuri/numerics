@@ -4,7 +4,7 @@
 
 #include "core/math/evidence.hpp"
 #include "core/math/operations.hpp"
-#include "kernel/raw.hpp"
+#include "kernel/kernel.hpp"
 #include "linear/matrix_properties.hpp"
 #include <stdexcept>
 
@@ -13,15 +13,15 @@ namespace num {
 /// Dense storage participates in the map protocol without pretending that every
 /// matrix value is positive definite or even square.
 template <std::floating_point T>
-inline void tag_invoke(math::apply_t, const BasicMatrix<T> &matrix, const BasicVector<T> &x,
-                       BasicVector<T> &y) {
+inline void tag_invoke(math::apply_t, const basic_mat<T> &matrix, const basic_vec<T> &x,
+                       basic_vec<T> &y) {
     if (x.size() != matrix.cols()) {
         throw std::invalid_argument("math::apply: dense matrix input dimension mismatch");
     }
     if (y.size() != matrix.rows()) {
-        y = BasicVector<T>(matrix.rows());
+        y = basic_vec<T>(matrix.rows());
     }
-    kernel::raw::matvec(y.data(), matrix.data(), x.data(), matrix.rows(), matrix.cols());
+    kernel::matvec(y.data(), matrix.data(), x.data(), matrix.rows(), matrix.cols());
 }
 
 } // namespace num
@@ -29,7 +29,7 @@ inline void tag_invoke(math::apply_t, const BasicMatrix<T> &matrix, const BasicV
 namespace num::linear {
 
 template <class Mat, class Ax, class X, class Y>
-inline void tag_invoke(math::apply_t, const StructuredMatrix<Mat, Ax> &matrix, const X &x, Y &y) {
+inline void tag_invoke(math::apply_t, const structured_mat<Mat, Ax> &matrix, const X &x, Y &y) {
     math::apply(matrix.base(), x, y);
 }
 
@@ -38,48 +38,47 @@ inline void tag_invoke(math::apply_t, const StructuredMatrix<Mat, Ax> &matrix, c
 namespace num::math {
 
 template <std::floating_point T>
-struct model_of<BasicMatrix<T>> {
-    using laws = type_list<law::linear_map>;
+struct claims_of<basic_mat<T>> {
+    using type = type_list<law::linear_map>;
 };
 
+/// A structured matrix claims exactly the law it was tagged with. Because the lattice
+/// carries implication, that one entry also supplies `linear_map` and everything else
+/// weaker — there is no mapping table to keep in step, and nothing is lost in
+/// translation the way it was when operator laws and evidence axioms were separate
+/// hierarchies (`unitary`, `skew_adjoint` and `projection` all used to collapse to
+/// `linear_map` crossing that boundary).
 template <class Mat, class Ax>
-struct model_of<linear::StructuredMatrix<Mat, Ax>> : model_of<Mat> {};
+struct claims_of<linear::structured_mat<Mat, Ax>> {
+    using type = type_list<Ax>;
+};
 
 namespace detail {
 
 template <std::floating_point T>
-struct domain_of<BasicMatrix<T>, void> {
-    using type = BasicVector<T>;
+struct domain_of<basic_mat<T>, void> {
+    using type = basic_vec<T>;
 };
 
 template <std::floating_point T>
-struct codomain_of<BasicMatrix<T>, void> {
-    using type = BasicVector<T>;
+struct codomain_of<basic_mat<T>, void> {
+    using type = basic_vec<T>;
 };
 
 template <class Mat, class Ax>
-struct domain_of<linear::StructuredMatrix<Mat, Ax>, void> : domain_of<Mat> {};
+struct domain_of<linear::structured_mat<Mat, Ax>, void> : domain_of<Mat> {};
 
 template <class Mat, class Ax>
-struct codomain_of<linear::StructuredMatrix<Mat, Ax>, void> : codomain_of<Mat> {};
+struct codomain_of<linear::structured_mat<Mat, Ax>, void> : codomain_of<Mat> {};
 
 } // namespace detail
 
-template <class Mat, class Ax>
-struct intrinsic_propositions<linear::StructuredMatrix<Mat, Ax>> {
-    using type = std::conditional_t<
-        std::derived_from<Ax, property::spd>, type_list<axiom::positive_definite>,
-        std::conditional_t<
-            std::derived_from<Ax, property::psd>, type_list<axiom::positive_semidefinite>,
-            std::conditional_t<std::derived_from<Ax, property::self_adjoint>,
-                               type_list<axiom::self_adjoint>, type_list<axiom::linear>>>>;
-};
 
 template <>
-struct evidence_validator<Matrix, axiom::positive_definite> {
+struct evidence_validator<mat, law::spd> {
     static constexpr bool available = true;
 
-    [[nodiscard]] static bool verify(const Matrix &matrix) { return linear::is_spd(matrix); }
+    [[nodiscard]] static bool verify(const mat &matrix) { return linear::is_spd(matrix); }
 };
 
 } // namespace num::math

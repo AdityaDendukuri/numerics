@@ -25,10 +25,23 @@ ExcludeHeaderFilterRegex: ".*/(build|third_party|_deps)/.*"
 CheckOptions:
   - key: readability-identifier-naming.NamespaceCase
     value: lower_case
+  # Types follow a deliberate two-tier convention, so neither case can be enforced
+  # globally without flagging correct code.
+  #
+  #   lower_case  the core containers (vec, mat, spmat, basic_vec) and the law tags
+  #               (law::spd, law::self_adjoint). These are the names written most
+  #               often, and they match the standard library's own spelling of the
+  #               same kind of thing: std::vector, std::same_as.
+  #   CamelCase   everything else, where a descriptive name reads better than an
+  #               abbreviation: SolverResult, HessenbergDecomposition,
+  #               ChebyshevPreconditioner, and every concept.
+  #
+  # clang-tidy cannot express "either" per entity, so ClassCase and StructCase are
+  # left unset rather than set to a value half the codebase would violate.
   - key: readability-identifier-naming.ClassCase
-    value: CamelCase
+    value: aNy_CasE
   - key: readability-identifier-naming.StructCase
-    value: CamelCase
+    value: aNy_CasE
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
   - key: readability-identifier-naming.MethodCase

@@ -15,7 +15,7 @@ namespace test {
 struct DiagonalMap {
     using domain_type = std::vector<double>;
     using codomain_type = std::vector<double>;
-    using math_propositions = num::math::type_list<num::axiom::positive_definite>;
+    using math_laws = num::math::type_list<num::law::spd>;
 
     std::vector<double> diagonal;
 
@@ -40,20 +40,20 @@ struct DiagonalMap {
 namespace num::math {
 
 template <>
-struct model_of<std::vector<double>> {
-    using laws = type_list<law::inner_product_space>;
+struct claims_of<std::vector<double>> {
+    using type = type_list<law::inner_product_space>;
 };
 
 template <>
-struct model_of<test::DiagonalMap> {
-    using laws = type_list<law::linear_map>;
+struct claims_of<test::DiagonalMap> {
+    using type = type_list<law::linear_map>;
 };
 
 } // namespace num::math
 
-static_assert(num::math::InnerProductSpace<std::vector<double>>);
-static_assert(num::math::LinearMap<test::DiagonalMap>);
-static_assert(num::math::Carries<test::DiagonalMap, num::axiom::positive_definite>);
+static_assert(num::math::inner_product_space<std::vector<double>>);
+static_assert(num::math::linear_map<test::DiagonalMap>);
+static_assert(num::claims<test::DiagonalMap, num::law::spd>);
 
 int main() {
     const test::DiagonalMap map{{2.0, 3.0}};

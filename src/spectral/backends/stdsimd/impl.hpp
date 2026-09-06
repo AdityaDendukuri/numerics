@@ -12,14 +12,14 @@ namespace stdx = std::experimental;
 
 static constexpr double TWO_PI = 6.283185307179586476925286766559;
 
-struct FFTPlanImpl : public num::spectral::FFTPlanImpl {
+struct fft_plan_impl : public num::spectral::fft_plan_impl {
     int n;
     bool invert;
     std::vector<std::vector<num::cplx>> twiddles;
 
-    FFTPlanImpl(int n_, bool inv) : n(n_), invert(inv) {
+    fft_plan_impl(int n_, bool inv) : n(n_), invert(inv) {
         if (n_ == 0 || (n_ & (n_ - 1)))
-            throw std::invalid_argument("FFTPlan: length must be a power of two");
+            throw std::invalid_argument("fft_plan: length must be a power of two");
         for (int len = 2; len <= n_; len <<= 1) {
             double ang = TWO_PI / static_cast<double>(len) * (inv ? 1.0 : -1.0);
             num::cplx wlen{std::cos(ang), std::sin(ang)};
@@ -33,7 +33,7 @@ struct FFTPlanImpl : public num::spectral::FFTPlanImpl {
         }
     }
 
-    void execute(const num::CVector &in, num::CVector &out) const override {
+    void execute(const num::cvec &in, num::cvec &out) const override {
         using vd = stdx::simd<double, stdx::simd_abi::native<double>>;
         constexpr int W = static_cast<int>(vd::size());
 
@@ -79,38 +79,38 @@ struct FFTPlanImpl : public num::spectral::FFTPlanImpl {
     }
 };
 
-inline void fft(const num::CVector &in, num::CVector &out) {
+inline void fft(const num::cvec &in, num::cvec &out) {
     int n = static_cast<int>(in.size());
-    FFTPlanImpl plan(n, false);
+    fft_plan_impl plan(n, false);
     plan.execute(in, out);
 }
 
-inline void ifft(const num::CVector &in, num::CVector &out) {
+inline void ifft(const num::cvec &in, num::cvec &out) {
     int n = static_cast<int>(in.size());
-    FFTPlanImpl plan(n, true);
+    fft_plan_impl plan(n, true);
     plan.execute(in, out);
 }
 
-inline void rfft(const num::Vector &in, num::CVector &out) {
+inline void rfft(const num::vec &in, num::cvec &out) {
     int n = static_cast<int>(in.size());
-    num::CVector tmp(static_cast<num::idx>(n), num::cplx{0, 0});
+    num::cvec tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (int i = 0; i < n; ++i)
         tmp[i] = {in[i], 0.0};
-    num::CVector tmp_out(static_cast<num::idx>(n), num::cplx{0, 0});
-    FFTPlanImpl plan(n, false);
+    num::cvec tmp_out(static_cast<num::idx>(n), num::cplx{0, 0});
+    fft_plan_impl plan(n, false);
     plan.execute(tmp, tmp_out);
     for (int k = 0; k < n / 2 + 1; ++k)
         out[k] = tmp_out[k];
 }
 
-inline void irfft(const num::CVector &in, int n, num::Vector &out) {
-    num::CVector tmp(static_cast<num::idx>(n), num::cplx{0, 0});
+inline void irfft(const num::cvec &in, int n, num::vec &out) {
+    num::cvec tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (int k = 0; k < n / 2 + 1; ++k)
         tmp[k] = in[k];
     for (int k = 1; k < (n - 1) / 2 + 1; ++k)
         tmp[n - k] = std::conj(in[k]);
-    num::CVector tmp_out(static_cast<num::idx>(n), num::cplx{0, 0});
-    FFTPlanImpl plan(n, true);
+    num::cvec tmp_out(static_cast<num::idx>(n), num::cplx{0, 0});
+    fft_plan_impl plan(n, true);
     plan.execute(tmp, tmp_out);
     for (int i = 0; i < n; ++i)
         out[i] = tmp_out[i].real();

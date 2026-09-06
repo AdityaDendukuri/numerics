@@ -56,8 +56,8 @@ struct SpikyDW<3> {
 ///
 /// @tparam Dim Spatial dimension (2 or 3).
 template <int Dim>
-struct SPHKernel {
-    static_assert(Dim == 2 || Dim == 3, "SPHKernel: Dim must be 2 or 3");
+struct sph_kernel {
+    static_assert(Dim == 2 || Dim == 3, "sph_kernel: Dim must be 2 or 3");
 
     /// @brief Evaluate Monaghan cubic spline kernel \f$W(r, h)\f$ at distance \f$r\f$ with smoothing length \f$h\f$.
     /// @param r Radial distance between particles \f$\|\mathbf{r}_i - \mathbf{r}_j\|\f$.
@@ -79,7 +79,7 @@ struct SPHKernel {
     /// @brief Evaluate radial derivative of the cubic spline kernel \f$\frac{\partial W}{\partial r}\f$.
     /// @param r Radial distance.
     /// @param h Smoothing radius.
-    /// @return Scalar derivative \f$\frac{\partial W}{\partial r}\f$.
+    /// @return scalar derivative \f$\frac{\partial W}{\partial r}\f$.
     static float dW_dr(float r, float h) {
         const float sigma = detail::CubicSigma<Dim>::compute(h);
         const float q = r / h;

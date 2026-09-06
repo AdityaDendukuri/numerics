@@ -18,11 +18,11 @@ namespace num::structures {
 
 /// Check if graph is connected.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline bool is_connected(const BasicGraph<Weight, Index> &G) {
+[[nodiscard]] inline bool is_connected(const basic_graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
     if (n <= 1) return true;
 
-    BasicDisjointSet<Index> ds(n);
+    basic_disjoint_set<Index> ds(n);
     for (Index u = 0; u < n; ++u) {
         for (const auto &e : G.neighbors(u)) {
             ds.unite(u, e.to);
@@ -33,9 +33,9 @@ template <typename Weight, std::integral Index>
 
 /// Compute connected components partition.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline std::vector<std::vector<Index>> connected_components(const BasicGraph<Weight, Index> &G) {
+[[nodiscard]] inline std::vector<std::vector<Index>> connected_components(const basic_graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
-    BasicDisjointSet<Index> ds(n);
+    basic_disjoint_set<Index> ds(n);
     for (Index u = 0; u < n; ++u) {
         for (const auto &e : G.neighbors(u)) {
             ds.unite(u, e.to);
@@ -46,7 +46,7 @@ template <typename Weight, std::integral Index>
 
 /// Compute single-source shortest path distances using Dijkstra with an Indexed Priority Queue.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline std::vector<Weight> dijkstra(const BasicGraph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline std::vector<Weight> dijkstra(const basic_graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::dijkstra source");
@@ -55,7 +55,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
     std::vector<Weight> dist(n, inf);
     dist[source] = Weight{0};
 
-    MinIndexedPQ<Weight, Index> pq(n);
+    min_indexed_pq<Weight, Index> pq(n);
     pq.push(source, Weight{0});
 
     while (!pq.empty()) {
@@ -77,7 +77,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
 
 /// Breadth-first search traversal order starting from source.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline std::vector<Index> bfs(const BasicGraph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline std::vector<Index> bfs(const basic_graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::bfs source");
@@ -107,7 +107,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
 
 /// Depth-first search traversal order starting from source.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline std::vector<Index> dfs(const BasicGraph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline std::vector<Index> dfs(const basic_graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::dfs source");
@@ -135,17 +135,17 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
     return order;
 }
 
-/// Compute Minimum Spanning Tree (MST) using Kruskal's algorithm with DisjointSet.
+/// Compute Minimum Spanning Tree (MST) using Kruskal's algorithm with disjoint_set.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline BasicGraph<Weight, Index> minimum_spanning_tree(const BasicGraph<Weight, Index> &G) {
+[[nodiscard]] inline basic_graph<Weight, Index> minimum_spanning_tree(const basic_graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
-    struct KruskalEdge {
+    struct kruskal_edge {
         Index u, v;
         Weight weight;
-        bool operator<(const KruskalEdge &o) const { return weight < o.weight; }
+        bool operator<(const kruskal_edge &o) const { return weight < o.weight; }
     };
 
-    std::vector<KruskalEdge> edges;
+    std::vector<kruskal_edge> edges;
     for (Index u = 0; u < n; ++u) {
         for (const auto &e : G.neighbors(u)) {
             if (u < e.to || G.is_directed()) {
@@ -155,8 +155,8 @@ template <typename Weight, std::integral Index>
     }
     std::sort(edges.begin(), edges.end());
 
-    BasicDisjointSet<Index> ds(n);
-    BasicGraph<Weight, Index> mst(n, G.is_directed());
+    basic_disjoint_set<Index> ds(n);
+    basic_graph<Weight, Index> mst(n, G.is_directed());
 
     for (const auto &e : edges) {
         if (ds.unite(e.u, e.v)) {

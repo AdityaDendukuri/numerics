@@ -6,7 +6,7 @@
 namespace num::markov {
 
 /// Accepted and attempted proposal counts for a Metropolis sweep.
-struct MetropolisStats {
+struct metropolis_stats {
     idx accepted = 0;
     idx total = 0;
     /// Return accepted/total, or zero when no proposals were attempted.
@@ -16,14 +16,14 @@ struct MetropolisStats {
 };
 
 /// Metropolis statistics plus umbrella-window rollback state.
-struct UmbrellaStats {
-    MetropolisStats mc;
+struct umbrella_stats {
+    metropolis_stats mc;
     bool reverted = false;
     idx order_param = 0;
 };
 
 /// Inclusive interval for an umbrella-sampling order parameter.
-struct UmbrellaWindow {
+struct umbrella_window {
     idx lo = 0;
     idx hi = 0;
     /// Test whether an order parameter lies in the window.

@@ -9,7 +9,7 @@ For rapid mathematical prototyping, concise unit testing, and formula readabilit
 While the core `numerics` architecture is strictly designed around zero-allocation, out-parameter kernels (such as `matvec(A, x, y)` and `axpy(a, x, y)`), mathematical prototyping and test assertions often benefit from natural value-returning infix expressions.
 
 The convenience layer provides:
-1. **Convenience Matrix & Vector Constructors:** `zeros`, `ones`, `eye`, `linspace`, `accu`.
+1. **Convenience mat & vec Constructors:** `zeros`, `ones`, `eye`, `linspace`, `accu`.
 2. **Infix Operator Overloads:** `+`, `-`, `*`, `/` over matrices, vectors, and scalars via `using namespace num::ops;`.
 3. **Value-Returning Arithmetic:** Functions that allocate and return results directly.
 
@@ -20,16 +20,16 @@ The convenience layer provides:
 ```cpp
 #include <numerics.hpp>
 
-// Matrix constructors
-num::Matrix Z = num::zeros(4, 4);      // 4x4 matrix initialized to 0.0
-num::Matrix O = num::ones(3, 2);       // 3x2 matrix initialized to 1.0
-num::Matrix I = num::eye(4);           // 4x4 identity matrix
-num::Matrix E = num::eye(3, 5);        // 3x5 rectangular identity-like matrix
+// mat constructors
+num::mat Z = num::zeros(4, 4);      // 4x4 matrix initialized to 0.0
+num::mat O = num::ones(3, 2);       // 3x2 matrix initialized to 1.0
+num::mat I = num::eye(4);           // 4x4 identity matrix
+num::mat E = num::eye(3, 5);        // 3x5 rectangular identity-like matrix
 
-// Vector constructors
-num::Vector vz = num::zeros(5);        // Length-5 zero vector
-num::Vector vo = num::ones(3);         // Length-3 ones vector
-num::Vector v  = num::linspace(0, 1, 5);// [0.0, 0.25, 0.5, 0.75, 1.0]
+// vec constructors
+num::vec vz = num::zeros(5);        // Length-5 zero vector
+num::vec vo = num::ones(3);         // Length-3 ones vector
+num::vec v  = num::linspace(0, 1, 5);// [0.0, 0.25, 0.5, 0.75, 1.0]
 
 // Reductions
 num::real s1 = num::accu(Z);           // Sum of all elements in matrix
@@ -47,18 +47,18 @@ To avoid polluting the global or `num` namespace with unintended operator overlo
 
 using namespace num::ops;
 
-num::Matrix A = num::ones(3, 3);
-num::Matrix B = num::eye(3);
-num::Vector x = num::linspace(1.0, 3.0, 3);
+num::mat A = num::ones(3, 3);
+num::mat B = num::eye(3);
+num::vec x = num::linspace(1.0, 3.0, 3);
 
-// Matrix-matrix multiplication and addition
-num::Matrix C = A * B + 2.0 * B;
+// mat-matrix multiplication and addition
+num::mat C = A * B + 2.0 * B;
 
-// Matrix-vector multiplication and scaling
-num::Vector y = A * x - x / 2.0;
+// mat-vector multiplication and scaling
+num::vec y = A * x - x / 2.0;
 
-// Vector arithmetic
-num::Vector z = 2.0 * x + y;
+// vec arithmetic
+num::vec z = 2.0 * x + y;
 ```
 
 ---
@@ -71,7 +71,7 @@ While value-returning infix syntax is intuitive for small scripts and unit tests
 Every binary operator creates and returns a newly heap-allocated object (`new double[n]`):
 ```cpp
 // Evaluating this expression:
-num::Vector r = b - A * x - 0.5 * C * x;
+num::vec r = b - A * x - 0.5 * C * x;
 
 // Results in:
 // 1. Heap allocation for (A * x)
@@ -100,8 +100,8 @@ In production code and simulation loops, allocate destination buffers once outsi
 
 ```cpp
 // Pre-allocate once outside the hot loop
-num::Vector y(n, 0.0);
-num::Vector tmp(n, 0.0);
+num::vec y(n, 0.0);
+num::vec tmp(n, 0.0);
 
 for (num::idx step = 0; step < total_steps; ++step) {
     // Zero dynamic allocations inside the loop

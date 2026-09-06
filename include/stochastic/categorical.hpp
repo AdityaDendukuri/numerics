@@ -35,9 +35,9 @@ template <typename RNG>
 }
 
 /// Reusable categorical distribution for repeated draws from fixed weights.
-class CategoricalSampler {
+class categorical_sampler {
   public:
-    explicit CategoricalSampler(std::span<const real> weights)
+    explicit categorical_sampler(std::span<const real> weights)
         : distribution_(weights.begin(), weights.end()) {}
 
     template <typename RNG>

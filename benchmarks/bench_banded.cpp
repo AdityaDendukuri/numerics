@@ -19,7 +19,7 @@ using namespace num;
 
 // Helper Functions
 
-static void setup_tridiagonal(BandedMatrix &A, idx n) {
+static void setup_tridiagonal(band_mat &A, idx n) {
     // 1D Laplacian pattern: -1, 2, -1
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 2.0;
@@ -30,7 +30,7 @@ static void setup_tridiagonal(BandedMatrix &A, idx n) {
     }
 }
 
-static void setup_pentadiagonal(BandedMatrix &A, idx n) {
+static void setup_pentadiagonal(band_mat &A, idx n) {
     // Biharmonic-like pattern with diagonal dominance
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 10.0;
@@ -45,7 +45,7 @@ static void setup_pentadiagonal(BandedMatrix &A, idx n) {
     }
 }
 
-static void setup_general_banded(BandedMatrix &A, idx n, idx kl, idx ku) {
+static void setup_general_banded(band_mat &A, idx n, idx kl, idx ku) {
     // Diagonally dominant general banded matrix
     for (idx j = 0; j < n; ++j) {
         real off_diag_sum = 0.0;
@@ -61,16 +61,16 @@ static void setup_general_banded(BandedMatrix &A, idx n, idx kl, idx ku) {
     }
 }
 
-// Tridiagonal Solver Benchmarks
+// tridiagonal Solver Benchmarks
 
 static void BM_BandedSolve_Tridiagonal(benchmark::State &state) {
     idx n = state.range(0);
 
-    BandedMatrix A(n, 1, 1, 0.0);
+    band_mat A(n, 1, 1, 0.0);
     setup_tridiagonal(A, n);
 
-    Vector b(n, 1.0);
-    Vector x(n, 0.0);
+    vec b(n, 1.0);
+    vec x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -83,7 +83,7 @@ static void BM_BandedSolve_Tridiagonal(benchmark::State &state) {
     }
 
     // Report metrics
-    // Tridiagonal LU: ~5n ops for factorization, ~3n for solve
+    // tridiagonal LU: ~5n ops for factorization, ~3n for solve
     idx flops = 8 * n;
     state.SetItemsProcessed(state.iterations() * n);
     state.counters["FLOPS"] =
@@ -98,11 +98,11 @@ BENCHMARK(BM_BandedSolve_Tridiagonal)
 static void BM_Thomas_Baseline(benchmark::State &state) {
     idx n = state.range(0);
 
-    Vector a(n - 1, -1.0); // Lower diagonal
-    Vector b(n, 2.0);      // Main diagonal
-    Vector c(n - 1, -1.0); // Upper diagonal
-    Vector d(n, 1.0);      // RHS
-    Vector x(n);
+    vec a(n - 1, -1.0); // Lower diagonal
+    vec b(n, 2.0);      // Main diagonal
+    vec c(n - 1, -1.0); // Upper diagonal
+    vec d(n, 1.0);      // RHS
+    vec x(n);
 
     for (auto _ : state) {
         thomas(a, b, c, d, x);
@@ -124,11 +124,11 @@ BENCHMARK(BM_Thomas_Baseline)
 static void BM_BandedSolve_Pentadiagonal(benchmark::State &state) {
     idx n = state.range(0);
 
-    BandedMatrix A(n, 2, 2, 0.0);
+    band_mat A(n, 2, 2, 0.0);
     setup_pentadiagonal(A, n);
 
-    Vector b(n, 1.0);
-    Vector x(n, 0.0);
+    vec b(n, 1.0);
+    vec x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -151,17 +151,17 @@ BENCHMARK(BM_BandedSolve_Pentadiagonal)
     ->Range(64, 1 << 16)
     ->Unit(benchmark::kMicrosecond);
 
-// General Banded Solver Benchmarks
+// General banded Solver Benchmarks
 
 static void BM_BandedSolve_General_KL2_KU4(benchmark::State &state) {
     idx n = state.range(0);
     idx kl = 2, ku = 4;
 
-    BandedMatrix A(n, kl, ku, 0.0);
+    band_mat A(n, kl, ku, 0.0);
     setup_general_banded(A, n, kl, ku);
 
-    Vector b(n, 1.0);
-    Vector x(n, 0.0);
+    vec b(n, 1.0);
+    vec x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -188,11 +188,11 @@ static void BM_BandedSolve_General_KL5_KU5(benchmark::State &state) {
     idx n = state.range(0);
     idx kl = 5, ku = 5;
 
-    BandedMatrix A(n, kl, ku, 0.0);
+    band_mat A(n, kl, ku, 0.0);
     setup_general_banded(A, n, kl, ku);
 
-    Vector b(n, 1.0);
-    Vector x(n, 0.0);
+    vec b(n, 1.0);
+    vec x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -219,14 +219,14 @@ BENCHMARK(BM_BandedSolve_General_KL5_KU5)
 static void BM_BandedLU_Factorization(benchmark::State &state) {
     idx n = state.range(0);
 
-    BandedMatrix A_template(n, 2, 2, 0.0);
+    band_mat A_template(n, 2, 2, 0.0);
     setup_pentadiagonal(A_template, n);
 
     std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
 
     for (auto _ : state) {
         state.PauseTiming();
-        BandedMatrix A = A_template; // Fresh copy each iteration
+        band_mat A = A_template; // Fresh copy each iteration
         state.ResumeTiming();
 
         banded_lu(A, ipiv.get());
@@ -243,17 +243,17 @@ BENCHMARK(BM_BandedLU_Factorization)
 static void BM_BandedLU_Solve(benchmark::State &state) {
     idx n = state.range(0);
 
-    BandedMatrix A(n, 2, 2, 0.0);
+    band_mat A(n, 2, 2, 0.0);
     setup_pentadiagonal(A, n);
 
     std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
     banded_lu(A, ipiv.get()); // Factor once
 
-    Vector b(n, 1.0);
+    vec b(n, 1.0);
 
     for (auto _ : state) {
         state.PauseTiming();
-        Vector x = b; // Copy RHS
+        vec x = b; // Copy RHS
         state.ResumeTiming();
 
         banded_lu_solve(A, ipiv.get(), x);
@@ -270,7 +270,7 @@ static void BM_BandedSolve_MultiRHS(benchmark::State &state) {
     idx n = state.range(0);
     idx nrhs = 16; // Common for radiative transfer (spectral bands)
 
-    BandedMatrix A(n, 2, 2, 0.0);
+    band_mat A(n, 2, 2, 0.0);
     setup_pentadiagonal(A, n);
 
     std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
@@ -299,16 +299,16 @@ BENCHMARK(BM_BandedSolve_MultiRHS)
     ->Range(64, 1 << 14)
     ->Unit(benchmark::kMicrosecond);
 
-// Matrix-Vector Product Benchmarks
+// mat-vec Product Benchmarks
 
 static void BM_BandedMatvec_Tridiagonal(benchmark::State &state) {
     idx n = state.range(0);
 
-    BandedMatrix A(n, 1, 1, 0.0);
+    band_mat A(n, 1, 1, 0.0);
     setup_tridiagonal(A, n);
 
-    Vector x(n, 1.0);
-    Vector y(n);
+    vec x(n, 1.0);
+    vec y(n);
 
     for (auto _ : state) {
         banded_matvec(A, x, y);
@@ -330,11 +330,11 @@ BENCHMARK(BM_BandedMatvec_Tridiagonal)
 static void BM_BandedMatvec_Pentadiagonal(benchmark::State &state) {
     idx n = state.range(0);
 
-    BandedMatrix A(n, 2, 2, 0.0);
+    band_mat A(n, 2, 2, 0.0);
     setup_pentadiagonal(A, n);
 
-    Vector x(n, 1.0);
-    Vector y(n);
+    vec x(n, 1.0);
+    vec y(n);
 
     for (auto _ : state) {
         banded_matvec(A, x, y);
@@ -361,11 +361,11 @@ static void BM_BandedSolve_Bandwidth_Scaling(benchmark::State &state) {
     idx kl = bandwidth / 2;
     idx ku = bandwidth - kl;
 
-    BandedMatrix A(n, kl, ku, 0.0);
+    band_mat A(n, kl, ku, 0.0);
     setup_general_banded(A, n, kl, ku);
 
-    Vector b(n, 1.0);
-    Vector x(n, 0.0);
+    vec b(n, 1.0);
+    vec x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -381,7 +381,7 @@ static void BM_BandedSolve_Bandwidth_Scaling(benchmark::State &state) {
     state.counters["bandwidth"] = bandwidth;
 }
 BENCHMARK(BM_BandedSolve_Bandwidth_Scaling)
-    ->Arg(3) // Tridiagonal
+    ->Arg(3) // tridiagonal
     ->Arg(5) // Pentadiagonal
     ->Arg(7)
     ->Arg(11)
@@ -399,7 +399,7 @@ static void BM_RadiativeTransfer_TwoStream(benchmark::State &state) {
 
     // Two-stream approximation gives a tridiagonal-like structure
     // but with 2x2 block structure
-    BandedMatrix A(n, 2, 2, 0.0);
+    band_mat A(n, 2, 2, 0.0);
 
     // Setup typical radiative transfer matrix structure
     for (idx layer = 0; layer < n_layers; ++layer) {
@@ -422,8 +422,8 @@ static void BM_RadiativeTransfer_TwoStream(benchmark::State &state) {
         }
     }
 
-    Vector b(n, 1.0); // Solar source term
-    Vector x(n, 0.0);
+    vec b(n, 1.0); // Solar source term
+    vec x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();

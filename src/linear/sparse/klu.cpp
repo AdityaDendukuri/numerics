@@ -10,7 +10,7 @@
 
 namespace num {
 
-struct KLUFactor::Impl {
+struct klu_factorization::Impl {
     idx n = 0;
 #if defined(NUMERICS_HAS_KLU)
     std::vector<int> column_ptr;
@@ -39,7 +39,7 @@ bool klu_available() noexcept {
 #endif
 }
 
-KLUFactor::KLUFactor(const SparseMatrix &matrix) : impl_(std::make_unique<Impl>()) {
+klu_factorization::klu_factorization(const spmat &matrix) : impl_(std::make_unique<Impl>()) {
 #if defined(NUMERICS_HAS_KLU)
     if (matrix.n_rows() != matrix.n_cols()) {
         throw std::invalid_argument("KLU factorization requires a square matrix");
@@ -89,14 +89,14 @@ KLUFactor::KLUFactor(const SparseMatrix &matrix) : impl_(std::make_unique<Impl>(
 #endif
 }
 
-KLUFactor::~KLUFactor() = default;
-KLUFactor::KLUFactor(KLUFactor &&) noexcept = default;
-KLUFactor &KLUFactor::operator=(KLUFactor &&) noexcept = default;
-idx KLUFactor::size() const noexcept {
+klu_factorization::~klu_factorization() = default;
+klu_factorization::klu_factorization(klu_factorization &&) noexcept = default;
+klu_factorization &klu_factorization::operator=(klu_factorization &&) noexcept = default;
+idx klu_factorization::size() const noexcept {
     return impl_ ? impl_->n : 0;
 }
 
-void KLUFactor::solve(const Vector &rhs, Vector &solution) const {
+void klu_factorization::solve(const vec &rhs, vec &solution) const {
 #if defined(NUMERICS_HAS_KLU)
     if (rhs.size() != impl_->n) {
         throw std::invalid_argument("KLU solve dimension mismatch");
@@ -113,7 +113,7 @@ void KLUFactor::solve(const Vector &rhs, Vector &solution) const {
 #endif
 }
 
-void KLUFactor::solve(const Matrix &rhs, Matrix &solution) const {
+void klu_factorization::solve(const mat &rhs, mat &solution) const {
 #if defined(NUMERICS_HAS_KLU)
     if (rhs.rows() != impl_->n) {
         throw std::invalid_argument("KLU block solve dimension mismatch");
@@ -128,7 +128,7 @@ void KLUFactor::solve(const Matrix &rhs, Matrix &solution) const {
                    static_cast<int>(rhs.cols()), column_major.data(), &impl_->common)) {
         throw std::runtime_error("KLU block solve failed");
     }
-    solution = Matrix(rhs.rows(), rhs.cols(), 0.0);
+    solution = mat(rhs.rows(), rhs.cols(), 0.0);
     for (idx column = 0; column < rhs.cols(); ++column) {
         for (idx row = 0; row < rhs.rows(); ++row) {
             solution(row, column) = column_major[(column * rhs.rows()) + row];
@@ -141,7 +141,7 @@ void KLUFactor::solve(const Matrix &rhs, Matrix &solution) const {
 #endif
 }
 
-void KLUFactor::solve_transpose(const Vector &rhs, Vector &solution) const {
+void klu_factorization::solve_transpose(const vec &rhs, vec &solution) const {
 #if defined(NUMERICS_HAS_KLU)
     if (rhs.size() != impl_->n) {
         throw std::invalid_argument("KLU transpose solve dimension mismatch");
@@ -158,7 +158,7 @@ void KLUFactor::solve_transpose(const Vector &rhs, Vector &solution) const {
 #endif
 }
 
-void KLUFactor::solve_transpose(const Matrix &rhs, Matrix &solution) const {
+void klu_factorization::solve_transpose(const mat &rhs, mat &solution) const {
 #if defined(NUMERICS_HAS_KLU)
     if (rhs.rows() != impl_->n) {
         throw std::invalid_argument("KLU transpose block solve dimension mismatch");
@@ -173,7 +173,7 @@ void KLUFactor::solve_transpose(const Matrix &rhs, Matrix &solution) const {
                     static_cast<int>(rhs.cols()), column_major.data(), &impl_->common)) {
         throw std::runtime_error("KLU transpose block solve failed");
     }
-    solution = Matrix(rhs.rows(), rhs.cols(), 0.0);
+    solution = mat(rhs.rows(), rhs.cols(), 0.0);
     for (idx column = 0; column < rhs.cols(); ++column) {
         for (idx row = 0; row < rhs.rows(); ++row) {
             solution(row, column) = column_major[(column * rhs.rows()) + row];
@@ -186,14 +186,14 @@ void KLUFactor::solve_transpose(const Matrix &rhs, Matrix &solution) const {
 #endif
 }
 
-void KLUFactor::solve_in_place(Vector &right_hand_side) const {
-    Vector result(right_hand_side.size(), 0.0);
+void klu_factorization::solve_in_place(vec &right_hand_side) const {
+    vec result(right_hand_side.size(), 0.0);
     solve(right_hand_side, result);
     right_hand_side = std::move(result);
 }
 
-void KLUFactor::solve_in_place(Matrix &right_hand_sides) const {
-    Matrix result;
+void klu_factorization::solve_in_place(mat &right_hand_sides) const {
+    mat result;
     solve(right_hand_sides, result);
     right_hand_sides = std::move(result);
 }

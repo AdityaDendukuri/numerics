@@ -12,7 +12,7 @@ namespace num::randommat {
 
 /// Solve (P A P^T) (P x) = P b using forward and backward substitution with L L^T.
 template <typename Float = double, std::integral Index = num::idx>
-inline void solve(const CholeskyFactor<Float, Index> &factor, const Float *b, Float *x,
+inline void solve(const cholesky_factor<Float, Index> &factor, const Float *b, Float *x,
                   std::vector<Float> &scratch) {
     const Index n = static_cast<Index>(factor.order.size());
     if (scratch.size() < n) {
@@ -60,7 +60,7 @@ inline void solve(const CholeskyFactor<Float, Index> &factor, const Float *b, Fl
 
 /// Convenience vector solve overload.
 template <typename Float = double, std::integral Index = num::idx>
-inline std::vector<Float> solve(const CholeskyFactor<Float, Index> &factor,
+inline std::vector<Float> solve(const cholesky_factor<Float, Index> &factor,
                                 const std::vector<Float> &b) {
     const Index n = static_cast<Index>(factor.order.size());
     std::vector<Float> x(n, 0.0);
@@ -69,12 +69,12 @@ inline std::vector<Float> solve(const CholeskyFactor<Float, Index> &factor,
     return x;
 }
 
-/// Convenience num::Vector solve overload.
+/// Convenience num::vec solve overload.
 template <typename Float = double, std::integral Index = num::idx>
-inline void solve(const CholeskyFactor<Float, Index> &factor,
-                  const BasicVector<Float> &b, BasicVector<Float> &x) {
+inline void solve(const cholesky_factor<Float, Index> &factor,
+                  const basic_vec<Float> &b, basic_vec<Float> &x) {
     const Index n = static_cast<Index>(factor.order.size());
-    if (x.size() != n) x = BasicVector<Float>(n, Float{0});
+    if (x.size() != n) x = basic_vec<Float>(n, Float{0});
     std::vector<Float> scratch(n, Float{0});
     solve(factor, b.data(), x.data(), scratch);
 }

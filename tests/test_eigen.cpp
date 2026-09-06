@@ -14,12 +14,12 @@ concept LanczosCallable = requires(const Op &A) {
     lanczos(A, 2);
 };
 
-static_assert(!LanczosCallable<operators::DenseOp>);
+static_assert(!LanczosCallable<operators::dense_op>);
 
 // Helpers
 
-static Matrix make_sym(idx n) {
-    Matrix A(n, n, 0.0);
+static mat make_sym(idx n) {
+    mat A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         for (idx j = i; j < n; ++j) {
             real v = 1.0 / (1.0 + i + j);
@@ -32,7 +32,7 @@ static Matrix make_sym(idx n) {
     return A;
 }
 
-static real reconstruction_error(const Matrix &A, const EigenResult &r) {
+static real reconstruction_error(const mat &A, const eigen_result &r) {
     idx n = A.rows();
     real err = 0.0;
     for (idx i = 0; i < n; ++i) {
@@ -47,7 +47,7 @@ static real reconstruction_error(const Matrix &A, const EigenResult &r) {
     return err;
 }
 
-static real orthogonality_error(const Matrix &V) {
+static real orthogonality_error(const mat &V) {
     idx n = V.rows();
     real err = 0.0;
     for (idx i = 0; i < n; ++i) {
@@ -66,7 +66,7 @@ static real orthogonality_error(const Matrix &V) {
 // Jacobi
 
 TEST(EigSym_Jacobi, Reconstruct3x3) {
-    Matrix A(3, 3, 0.0);
+    mat A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(0, 2) = 0;
@@ -76,23 +76,23 @@ TEST(EigSym_Jacobi, Reconstruct3x3) {
     A(2, 0) = 0;
     A(2, 1) = 1;
     A(2, 2) = 2;
-    auto r = eig_sym(assume_symmetric(A), 1e-12, 100, backend::seq);
+    auto r = seq::eig_sym(A, 1e-12, 100);
     EXPECT_TRUE(r.converged);
     EXPECT_LT(reconstruction_error(A, r), 1e-10);
     EXPECT_LT(orthogonality_error(r.vectors), 1e-10);
 }
 
 TEST(EigSym_Jacobi, EigenvaluesAscending) {
-    Matrix A = make_sym(8);
-    auto r = eig_sym(assume_symmetric(A), 1e-12, 100, backend::seq);
+    mat A = make_sym(8);
+    auto r = seq::eig_sym(A, 1e-12, 100);
     for (idx i = 1; i < r.values.size(); ++i) {
         EXPECT_LE(r.values[i - 1], r.values[i] + 1e-12);
     }
 }
 
 TEST(EigSym_Jacobi, ReconstructN32) {
-    Matrix A = make_sym(32);
-    auto r = eig_sym(assume_symmetric(A), 1e-12, 100, backend::seq);
+    mat A = make_sym(32);
+    auto r = seq::eig_sym(A, 1e-12, 100);
     EXPECT_LT(reconstruction_error(A, r), 1e-8);
     EXPECT_LT(orthogonality_error(r.vectors), 1e-8);
 }
@@ -102,7 +102,7 @@ TEST(EigSym_Jacobi, ReconstructN32) {
 #if defined(NUMERICS_HAS_LAPACK)
 
 TEST(EigSym_LAPACK, Reconstruct3x3) {
-    Matrix A(3, 3, 0.0);
+    mat A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(0, 2) = 0;
@@ -112,16 +112,16 @@ TEST(EigSym_LAPACK, Reconstruct3x3) {
     A(2, 0) = 0;
     A(2, 1) = 1;
     A(2, 2) = 2;
-    auto r = eig_sym(assume_symmetric(A), 1e-12, 100, backend::lapack);
+    auto r = lapack::eig_sym(A);
     EXPECT_TRUE(r.converged);
     EXPECT_LT(reconstruction_error(A, r), 1e-10);
     EXPECT_LT(orthogonality_error(r.vectors), 1e-10);
 }
 
 TEST(EigSym_LAPACK, MatchesJacobi) {
-    Matrix A = make_sym(20);
-    auto rj = eig_sym(assume_symmetric(A), 1e-12, 100, backend::seq);
-    auto rl = eig_sym(assume_symmetric(A), 1e-12, 100, backend::lapack);
+    mat A = make_sym(20);
+    auto rj = seq::eig_sym(A, 1e-12, 100);
+    auto rl = lapack::eig_sym(A);
     ASSERT_EQ(rj.values.size(), rl.values.size());
     for (idx i = 0; i < rj.values.size(); ++i) {
         EXPECT_NEAR(rj.values[i], rl.values[i], 1e-8);
@@ -129,8 +129,8 @@ TEST(EigSym_LAPACK, MatchesJacobi) {
 }
 
 TEST(EigSym_LAPACK, ReconstructN64) {
-    Matrix A = make_sym(64);
-    auto r = eig_sym(assume_symmetric(A), 1e-12, 100, backend::lapack);
+    mat A = make_sym(64);
+    auto r = lapack::eig_sym(A);
     EXPECT_LT(reconstruction_error(A, r), 1e-8);
     EXPECT_LT(orthogonality_error(r.vectors), 1e-8);
 }
@@ -142,13 +142,13 @@ TEST(EigSym_LAPACK, ReconstructN64) {
 TEST(PowerIteration, DominantEigenvalue) {
     // Diagonal matrix: dominant eigenvalue = 10
     idx n = 5;
-    Matrix A(n, n, 0.0);
+    mat A(n, n, 0.0);
     A(0, 0) = 10;
     A(1, 1) = 5;
     A(2, 2) = 3;
     A(3, 3) = 2;
     A(4, 4) = 1;
-    auto r = power_iteration(A, 1e-10, 1000, backend::seq);
+    auto r = power_iteration(A, 1e-10, 1000);
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(std::abs(r.eigenvalue), 10.0, 1e-8);
 }
@@ -157,14 +157,14 @@ TEST(PowerIteration, DominantEigenvalue) {
 
 TEST(Lanczos, TopKEigenvalues) {
     idx n = 50;
-    Matrix A = make_sym(n);
+    mat A = make_sym(n);
     auto op =
-        operators::make_op([&](const Vector &v, Vector &w) { matvec(A, v, w, backend::seq); }, n);
+        operators::make_op([&](const vec &v, vec &w) { matvec(A, v, w); }, n);
     auto r = lanczos(operators::assume_symmetric(op), 5, 1e-10);
     EXPECT_TRUE(r.converged);
 
     // Compare against Jacobi for top 5 eigenvalues
-    auto ref = eig_sym(assume_symmetric(A), 1e-12, 100, backend::seq);
+    auto ref = seq::eig_sym(A, 1e-12, 100);
     for (idx i = 0; i < 5; ++i) {
         real lref = ref.values[n - 1 - i]; // largest first from Lanczos
         bool found = false;
@@ -180,13 +180,13 @@ TEST(Lanczos, TopKEigenvalues) {
 
 TEST(Lanczos, DenseOperator) {
     idx n = 50;
-    Matrix A = make_sym(n);
-    operators::DenseOp op(A, backend::seq);
-    static_assert(SelfAdjointOperator<decltype(operators::assume_symmetric(op))>);
+    mat A = make_sym(n);
+    operators::dense_op op(A);
+    static_assert(self_adjoint_operator<decltype(operators::assume_symmetric(op))>);
     auto r = lanczos(operators::assume_symmetric(op), 5, 1e-10);
     EXPECT_TRUE(r.converged);
 
-    auto ref = eig_sym(assume_symmetric(A), 1e-12, 100, backend::seq);
+    auto ref = seq::eig_sym(A, 1e-12, 100);
     for (idx i = 0; i < 5; ++i) {
         real lref = ref.values[n - 1 - i];
         bool found = false;

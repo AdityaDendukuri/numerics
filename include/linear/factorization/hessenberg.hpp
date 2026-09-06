@@ -3,13 +3,14 @@
 #pragma once
 
 #include "container/matrix.hpp"
-#include "container/parallel/lapack_wrapper.hpp"
+#include "lapack/lapack_wrapper.hpp"
 #include "container/vector.hpp"
 #include "core/debug.hpp"
 #include "core/policy.hpp"
 #include "core/types.hpp"
+#include "kernel/complex.hpp"
 #include "kernel/factor.hpp"
-#include "kernel/raw.hpp"
+#include "kernel/kernel.hpp"
 #include <cmath>
 #include <complex>
 #include <stdexcept>
@@ -18,32 +19,48 @@
 namespace num {
 
 /// @brief Upper Hessenberg decomposition of a square matrix: A = Q H Q^T.
-class HessenbergDecomposition {
+class hessenberg_decomposition {
   public:
-    /// Compute the Hessenberg decomposition of square matrix A.
-    explicit HessenbergDecomposition(const Matrix &A, Backend backend = backend::dflt);
+    /// Compute the Hessenberg decomposition of square matrix A, preferring
+    /// LAPACK (`dgehrd`/`dorghr`) when configured, else the in-tree vectorized
+    /// Householder elimination. To force one explicitly, call
+    /// `num::lapack::hessenberg`/`num::seq::hessenberg`.
+    explicit hessenberg_decomposition(const mat &A) : hessenberg_decomposition(A, has_lapack) {}
+
+    /// Selects LAPACK vs. the sequential path explicitly. Prefer the free
+    /// functions `num::hessenberg`/`num::lapack::hessenberg`/`num::seq::hessenberg`.
+    hessenberg_decomposition(const mat &A, bool use_lapack);
 
     [[nodiscard]] idx size() const noexcept { return H_.rows(); }
-    [[nodiscard]] const Matrix &H() const noexcept { return H_; }
-    [[nodiscard]] const Matrix &Q() const noexcept { return Q_; }
+    [[nodiscard]] const mat &H() const noexcept { return H_; }
+    [[nodiscard]] const mat &Q() const noexcept { return Q_; }
 
   private:
-    Matrix H_;
-    Matrix Q_;
+    mat H_;
+    mat Q_;
 };
 
 /// Compute the upper Hessenberg decomposition of a square matrix.
-[[nodiscard]] inline HessenbergDecomposition hessenberg(const Matrix &A,
-                                                        Backend backend = backend::dflt) {
-    return HessenbergDecomposition(A, backend);
+[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat &A) {
+    return hessenberg_decomposition(A);
 }
 
+namespace lapack {
+[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat &A) {
+    return hessenberg_decomposition(A, true);
+}
+} // namespace lapack
 
+namespace seq {
+[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat &A) {
+    return hessenberg_decomposition(A, false);
+}
+} // namespace seq
 
-inline HessenbergDecomposition::HessenbergDecomposition(const Matrix &A, Backend backend)
+inline hessenberg_decomposition::hessenberg_decomposition(const mat &A, bool use_lapack)
     : H_(A), Q_(A.rows(), A.cols(), 0.0) {
-    debug::check_dim(A.rows(), A.cols(), "HessenbergDecomposition matrix must be square");
-    debug::check_non_empty(A.rows(), "HessenbergDecomposition matrix");
+    debug::check_dim(A.rows(), A.cols(), "hessenberg_decomposition matrix must be square");
+    debug::check_non_empty(A.rows(), "hessenberg_decomposition matrix");
 
     const idx n = A.rows();
     // Initialize Q as the identity matrix
@@ -56,12 +73,12 @@ inline HessenbergDecomposition::HessenbergDecomposition(const Matrix &A, Backend
     }
 
 #if defined(NUMERICS_HAS_LAPACK)
-    if (backend == backend::lapack) {
+    if (use_lapack) {
         // LAPACK dgehrd and dorghr assume column-major layout.
         // A (row-major) corresponds to A^T (column-major).
         // Transpose A to column-major buffer:
         std::vector<double> a_col(n * n);
-        kernel::raw::transpose(a_col.data(), A.data(), n, n);
+        kernel::transpose(a_col.data(), A.data(), n, n);
 
         std::vector<double> tau(n - 1, 0.0);
         lapack_int lapack_n = static_cast<lapack_int>(n);
@@ -93,7 +110,7 @@ inline HessenbergDecomposition::HessenbergDecomposition(const Matrix &A, Backend
         }
 
         // Copy Q from column-major a_col to row-major Q_
-        kernel::raw::transpose(Q_.data(), a_col.data(), n, n);
+        kernel::transpose(Q_.data(), a_col.data(), n, n);
         return;
     }
 #endif
@@ -114,20 +131,20 @@ inline HessenbergDecomposition::HessenbergDecomposition(const Matrix &A, Backend
         }
 
         double beta = 0.0;
-        kernel::raw::householder_vector(v.data(), beta, col_k.data(), m);
+        kernel::householder_vector(v.data(), beta, col_k.data(), m);
         if (beta == 0.0) {
             continue;
         }
 
         // 1. Left multiplication: H(k+1:n, k:n) <- (I - beta * v * v^T) * H(k+1:n, k:n)
-        kernel::raw::householder_left(&H_raw[((k + 1) * n) + k], n, v.data(), beta, m, n - k,
+        kernel::householder_left(&H_raw[((k + 1) * n) + k], n, v.data(), beta, m, n - k,
                                       w.data());
 
         // 2. Right multiplication: H(0:n, k+1:n) <- H(0:n, k+1:n) * (I - beta * v * v^T)
-        kernel::raw::householder_right(&H_raw[k + 1], n, v.data(), beta, n, m);
+        kernel::householder_right(&H_raw[k + 1], n, v.data(), beta, n, m);
 
         // 3. Accumulate into Q: Q(0:n, k+1:n) <- Q(0:n, k+1:n) * (I - beta * v * v^T)
-        kernel::raw::householder_right(&Q_raw[k + 1], n, v.data(), beta, n, m);
+        kernel::householder_right(&Q_raw[k + 1], n, v.data(), beta, n, m);
 
         // Set strictly zero entries below subdiagonal
         for (idx i = k + 2; i < n; ++i) {
@@ -150,7 +167,7 @@ inline HessenbergDecomposition::HessenbergDecomposition(const Matrix &A, Backend
 /// @param y Output, resized to n.
 /// @param M_buf Scratch, grown to n*n and reusable across calls.
 /// @param pivots Scratch, grown to n and reusable across calls.
-inline void hessenberg_shifted_solve(const Matrix &H, cplx shift, const std::vector<cplx> &b_tilde,
+inline void hessenberg_shifted_solve(const mat &H, cplx shift, const std::vector<cplx> &b_tilde,
                                      std::vector<cplx> &y, std::vector<cplx> &M_buf,
                                      std::vector<idx> &pivots) {
     const idx n = H.rows();
@@ -166,7 +183,7 @@ inline void hessenberg_shifted_solve(const Matrix &H, cplx shift, const std::vec
     if (y.size() != n) {
         y.resize(n);
     }
-    kernel::raw::hessenberg_shifted_solve(y.data(), H.data(), shift, b_tilde.data(), n,
+    kernel::hessenberg_shifted_solve(y.data(), H.data(), shift, b_tilde.data(), n,
                                           M_buf.data(), pivots.data());
 }
 
@@ -175,21 +192,21 @@ inline void hessenberg_shifted_solve(const Matrix &H, cplx shift, const std::vec
 /// Accepts a real or complex right-hand side. The result is complex either way,
 /// since the shift generally is.
 template <class Rhs>
-inline std::vector<cplx> hessenberg_project(const Matrix &Q, const Rhs &b) {
+inline std::vector<cplx> hessenberg_project(const mat &Q, const Rhs &b) {
     const idx n = Q.rows();
     std::vector<cplx> b_tilde(n);
-    kernel::raw::matvec_transpose_into_complex(b_tilde.data(), Q.data(), b.data(), n, n);
+    kernel::matvec_transpose_into_complex(b_tilde.data(), Q.data(), b.data(), n, n);
     return b_tilde;
 }
 
 /// @brief Carry a solution back to the original basis: \f$x = Q y\f$.
-inline void hessenberg_back_project(const Matrix &Q, const std::vector<cplx> &y,
+inline void hessenberg_back_project(const mat &Q, const std::vector<cplx> &y,
                                     std::vector<cplx> &x) {
     const idx n = Q.rows();
     if (x.size() != n) {
         x.resize(n);
     }
-    kernel::raw::matvec_real_complex(x.data(), Q.data(), y.data(), n, Q.cols());
+    kernel::matvec_real_complex(x.data(), Q.data(), y.data(), n, Q.cols());
 }
 
 } // namespace num

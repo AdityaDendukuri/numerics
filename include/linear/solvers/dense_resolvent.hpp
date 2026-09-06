@@ -11,16 +11,16 @@
 namespace num {
 
 /// Reusable dense solver for (s I - A)x = b.
-class DenseResolventSolver {
+class dense_resolvent_solver {
   public:
     /// Store A densely for repeated shifts.
-    explicit DenseResolventSolver(const Matrix &matrix);
-    explicit DenseResolventSolver(const SparseMatrix &matrix);
-    ~DenseResolventSolver();
-    DenseResolventSolver(DenseResolventSolver &&) noexcept;
-    DenseResolventSolver &operator=(DenseResolventSolver &&) noexcept;
-    DenseResolventSolver(const DenseResolventSolver &) = delete;
-    DenseResolventSolver &operator=(const DenseResolventSolver &) = delete;
+    explicit dense_resolvent_solver(const mat &matrix);
+    explicit dense_resolvent_solver(const spmat &matrix);
+    ~dense_resolvent_solver();
+    dense_resolvent_solver(dense_resolvent_solver &&) noexcept;
+    dense_resolvent_solver &operator=(dense_resolvent_solver &&) noexcept;
+    dense_resolvent_solver(const dense_resolvent_solver &) = delete;
+    dense_resolvent_solver &operator=(const dense_resolvent_solver &) = delete;
 
     /// Return the order of A.
     [[nodiscard]] idx size() const noexcept;

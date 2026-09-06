@@ -18,18 +18,18 @@
 
 namespace num::linear {
 
-/// @brief Graph from which a Laplacian can be assembled.
+/// @brief graph from which a Laplacian can be assembled.
 ///
 /// The Laplacian is symmetric positive semi-definite with \f$L\mathbf{1} = 0\f$,
 /// and its null space has one dimension per connected component. Algorithms rely
 /// on that, which is why the contract names the matrix rather than a method.
 template <typename G>
-concept LaplacianGraph = concepts::IncidenceStructure<G> && requires(const G &g) {
+concept laplacian_graph = concepts::incidence_structure<G> && requires(const G &g) {
     {laplacian(g)};
 };
 
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline SparseMatrix to_sparse_adjacency(const BasicGraph<Weight, Index> &g) {
+[[nodiscard]] inline spmat to_sparse_adjacency(const basic_graph<Weight, Index> &g) {
     std::vector<idx> row_ptr(g.n_vertices() + 1, 0);
     std::vector<idx> col_idx;
     std::vector<double> values;
@@ -41,13 +41,13 @@ template <typename Weight = real, typename Index = idx>
         }
         row_ptr[u + 1] = col_idx.size();
     }
-    return SparseMatrix(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()),
+    return spmat(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()),
                         std::move(values), std::move(col_idx), std::move(row_ptr));
 }
 
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline Matrix to_dense_adjacency(const BasicGraph<Weight, Index> &g) {
-    Matrix A(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
+[[nodiscard]] inline mat to_dense_adjacency(const basic_graph<Weight, Index> &g) {
+    mat A(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     for (Index u = 0; u < g.n_vertices(); ++u) {
         for (const auto &e : g.neighbors(u)) {
             A(static_cast<idx>(u), static_cast<idx>(e.to)) += static_cast<double>(e.weight);
@@ -57,7 +57,7 @@ template <typename Weight = real, typename Index = idx>
 }
 
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline SparseMatrix laplacian(const BasicGraph<Weight, Index> &g) {
+[[nodiscard]] inline spmat laplacian(const basic_graph<Weight, Index> &g) {
     std::vector<idx> rows;
     std::vector<idx> cols;
     std::vector<double> vals;
@@ -77,13 +77,13 @@ template <typename Weight = real, typename Index = idx>
         cols.push_back(static_cast<idx>(u));
         vals.push_back(deg);
     }
-    return SparseMatrix::from_triplets(static_cast<idx>(g.n_vertices()),
+    return spmat::from_triplets(static_cast<idx>(g.n_vertices()),
                                        static_cast<idx>(g.n_vertices()), rows, cols, vals);
 }
 
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline Matrix dense_laplacian(const BasicGraph<Weight, Index> &g) {
-    Matrix L(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
+[[nodiscard]] inline mat dense_laplacian(const basic_graph<Weight, Index> &g) {
+    mat L(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     for (Index u = 0; u < g.n_vertices(); ++u) {
         double deg = 0.0;
         for (const auto &e : g.neighbors(u)) {
@@ -98,7 +98,7 @@ template <typename Weight = real, typename Index = idx>
 }
 
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline SparseMatrix markov_generator(const BasicGraph<Weight, Index> &g,
+[[nodiscard]] inline spmat markov_generator(const basic_graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
     std::vector<idx> rows;
     std::vector<idx> cols;
@@ -123,14 +123,14 @@ template <typename Weight = real, typename Index = idx>
         cols.push_back(static_cast<idx>(u));
         vals.push_back(-deg);
     }
-    return SparseMatrix::from_triplets(static_cast<idx>(g.n_vertices()),
+    return spmat::from_triplets(static_cast<idx>(g.n_vertices()),
                                        static_cast<idx>(g.n_vertices()), rows, cols, vals);
 }
 
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline Matrix dense_markov_generator(const BasicGraph<Weight, Index> &g,
+[[nodiscard]] inline mat dense_markov_generator(const basic_graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
-    Matrix Q(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
+    mat Q(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     auto L = dense_laplacian(g);
     for (idx i = 0; i < static_cast<idx>(g.n_vertices()); ++i) {
         for (idx j = 0; j < static_cast<idx>(g.n_vertices()); ++j) {
@@ -141,7 +141,7 @@ template <typename Weight = real, typename Index = idx>
 }
 
 /// @brief Laplacian of a multigraph, summing parallel edge multiplicities.
-[[nodiscard]] inline SparseMatrix laplacian(const structures::Multigraph &g) {
+[[nodiscard]] inline spmat laplacian(const structures::multigraph &g) {
     const idx n = g.n_vertices();
     std::vector<idx> rows, cols;
     std::vector<real> vals;
@@ -160,16 +160,16 @@ template <typename Weight = real, typename Index = idx>
         cols.push_back(static_cast<idx>(u));
         vals.push_back(diag);
     }
-    return SparseMatrix::from_triplets(static_cast<idx>(n), static_cast<idx>(n), rows, cols, vals);
+    return spmat::from_triplets(static_cast<idx>(n), static_cast<idx>(n), rows, cols, vals);
 }
 
 /// @brief Recover a multigraph from a Laplacian.
-[[nodiscard]] inline structures::Multigraph to_multigraph(const SparseMatrix &L) {
+[[nodiscard]] inline structures::multigraph to_multigraph(const spmat &L) {
     const idx n = L.n_rows();
     if (L.n_cols() != n) {
         throw std::invalid_argument("to_multigraph: matrix must be square");
     }
-    Multigraph mg(n);
+    multigraph mg(n);
     for (idx i = 0; i < n; ++i) {
         const idx row_start = L.row_ptr()[i];
         const idx row_end = L.row_ptr()[i + 1];

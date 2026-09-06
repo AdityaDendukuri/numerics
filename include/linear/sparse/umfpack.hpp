@@ -13,22 +13,22 @@ namespace num {
 [[nodiscard]] bool umfpack_available() noexcept;
 
 /// Reusable sparse LU factorization backed by SuiteSparse UMFPACK.
-class UMFPACKFactor {
+class umfpack_factor {
   public:
     /// Factor a square CSR matrix; throws when UMFPACK is unavailable or factorization
     /// fails.
-    explicit UMFPACKFactor(const SparseMatrix &matrix);
-    ~UMFPACKFactor();
-    UMFPACKFactor(UMFPACKFactor &&) noexcept;
-    UMFPACKFactor &operator=(UMFPACKFactor &&) noexcept;
-    UMFPACKFactor(const UMFPACKFactor &) = delete;
-    UMFPACKFactor &operator=(const UMFPACKFactor &) = delete;
+    explicit umfpack_factor(const spmat &matrix);
+    ~umfpack_factor();
+    umfpack_factor(umfpack_factor &&) noexcept;
+    umfpack_factor &operator=(umfpack_factor &&) noexcept;
+    umfpack_factor(const umfpack_factor &) = delete;
+    umfpack_factor &operator=(const umfpack_factor &) = delete;
 
     /// Return the order of the factored matrix.
     [[nodiscard]] idx size() const noexcept;
     /// Solve Ax=B for one or more dense right-hand sides.
-    void solve(const Vector &rhs, Vector &solution) const;
-    void solve(const Matrix &rhs, Matrix &solution) const;
+    void solve(const vec &rhs, vec &solution) const;
+    void solve(const mat &rhs, mat &solution) const;
 
   private:
     struct Impl;

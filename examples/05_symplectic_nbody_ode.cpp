@@ -7,10 +7,10 @@
 int main() {
     using namespace num;
 
-    auto accel = [](const Vector &q, Vector &a) { a[0] = -q[0]; };
+    auto accel = [](const vec &q, vec &a) { a[0] = -q[0]; };
 
-    Vector q0{1.0}, v0{0.0};
-    ODEParams p;
+    vec q0{1.0}, v0{0.0};
+    ode_params p;
     p.t0 = 0.0;
     p.tf = 10.0;
     p.h = 0.05;

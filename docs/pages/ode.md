@@ -11,7 +11,7 @@ Integrates \f$\frac{d\mathbf{y}}{dt} = \mathbf{f}(t, \mathbf{y})\f$ with \f$\mat
 ### Common Parameter and Result Types
 
 ```cpp
-struct ODEParams {
+struct ode_params {
     double t0{0.0};       // Initial time
     double tf{1.0};       // Final time
     double h{1e-2};       // Initial step size
@@ -20,8 +20,8 @@ struct ODEParams {
     int max_steps{100000};// Maximum allowed steps
 };
 
-struct ODEResult {
-    num::Vector y;        // State at final time tf
+struct ode_result {
+    num::vec y;        // plot_state at final time tf
     double t_final{0.0};  // Reached time
     int steps_taken{0};   // Count of successful steps
     bool success{false};  // True if reached tf without error
@@ -36,22 +36,22 @@ struct ODEResult {
 First-order forward Euler: \f$\mathbf{y}_{n+1} = \mathbf{y}_n + h \mathbf{f}(t_n, \mathbf{y}_n)\f$.
 
 ```cpp
-num::ODEResult ode_euler(num::ODERhsFn f, num::Vector y0, num::ODEParams params);
+num::ode_result ode_euler(num::ode_rhs_fn f, num::vec y0, num::ode_params params);
 ```
 
 ### num::ode_rk4
 Classical 4th-order Runge–Kutta (\f$\mathcal{O}(h^4)\f$).
 
 ```cpp
-num::ODEResult ode_rk4(num::ODERhsFn f, num::Vector y0, num::ODEParams params);
+num::ode_result ode_rk4(num::ode_rhs_fn f, num::vec y0, num::ode_params params);
 ```
 
 ### num::ode_rk45
 5th-order Dormand–Prince with embedded 4th-order adaptive step size control.
 
 ```cpp
-num::ODEResult ode_rk45(num::ODERhsFn f, num::Vector y0, num::ODEParams params,
-                        num::ObserverFn observer = nullptr);
+num::ode_result ode_rk45(num::ode_rhs_fn f, num::vec y0, num::ode_params params,
+                        num::observer_fn observer = nullptr);
 ```
 
 ### Usage
@@ -59,21 +59,21 @@ num::ODEResult ode_rk45(num::ODERhsFn f, num::Vector y0, num::ODEParams params,
 #include <numerics.hpp>
 
 // Harmonic oscillator: y' = [v, -q]
-auto oscillator = [](double, const num::Vector& y, num::Vector& dy) {
+auto oscillator = [](double, const num::vec& y, num::vec& dy) {
     dy[0] = y[1];
     dy[1] = -y[0];
 };
 
-num::ODEParams params{.t0 = 0.0, .tf = 20.0, .h = 0.01, .rtol = 1e-8, .atol = 1e-10};
+num::ode_params params{.t0 = 0.0, .tf = 20.0, .h = 0.01, .rtol = 1e-8, .atol = 1e-10};
 
 // 1. Fixed-step RK4
-num::ODEResult r_rk4 = num::ode_rk4(oscillator, {1.0, 0.0}, params);
+num::ode_result r_rk4 = num::ode_rk4(oscillator, {1.0, 0.0}, params);
 
 // 2. Adaptive RK45 with step observer
-auto observe = [](double t, const num::Vector& y) {
+auto observe = [](double t, const num::vec& y) {
     // Invoked after each accepted step
 };
-num::ODEResult r_rk45 = num::ode_rk45(oscillator, {1.0, 0.0}, params, observe);
+num::ode_result r_rk45 = num::ode_rk45(oscillator, {1.0, 0.0}, params, observe);
 ```
 
 ---
@@ -91,12 +91,12 @@ For separable Hamiltonian systems \f$\frac{d^2\mathbf{q}}{dt^2} = \mathbf{a}(\ma
 \f]
 
 ```cpp
-auto gravity = [](const num::Vector& q, num::Vector& a) {
+auto gravity = [](const num::vec& q, num::vec& a) {
     a[0] = -q[0];
     a[1] = -q[1];
 };
 
-num::Vector q0{1.0, 0.0}, v0{0.0, 1.0};
+num::vec q0{1.0, 0.0}, v0{0.0, 1.0};
 auto res = num::ode_verlet(gravity, q0, v0, params);
 ```
 
@@ -111,7 +111,7 @@ auto res = num::ode_yoshida4(gravity, q0, v0, params);
 Streams integration steps lazily without allocating trajectory arrays:
 
 ```cpp
-for (const num::SymplecticStep& step : num::verlet(gravity, q0, v0, params)) {
+for (const num::symplectic_step& step : num::verlet(gravity, q0, v0, params)) {
     // step.t, step.q, step.v
 }
 ```
@@ -123,13 +123,15 @@ for (const num::SymplecticStep& step : num::verlet(gravity, q0, v0, params)) {
 Advances parabolic PDE fields via implicit backward Euler solves \f$(I - \Delta t \mathcal{L}) u^{n+1} = u^n\f$:
 
 ```cpp
-num::operators::SparseOp op(A);
+num::spmat A = num::pde::laplacian_sparse_2d(/*N=*/64);
+num::operators::sparse_op op(A);
 auto spd = num::operators::assume_spd(op);
 
-num::LinearSolver solver = [&](const num::Vector& rhs, num::Vector& x) {
+num::linear_solver solver = [&](const num::vec& rhs, num::vec& x) {
     return num::cg(spd, rhs, x, 1e-8, 1000);
 };
 
+num::scalar_field_2d field(num::grid2d{64});
 num::ode::advance(field, solver, {.nstep = 100, .dt = 1e-3});
 ```
 

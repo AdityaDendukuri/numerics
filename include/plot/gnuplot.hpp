@@ -11,18 +11,18 @@
 
 namespace num {
 
-using Point = std::pair<double, double>;
+using plot_point = std::pair<double, double>;
 
 /// Ordered (x,y) samples accepted by the plotting helpers.
-struct Series : std::vector<Point> {
-    using std::vector<Point>::vector;
+struct series : std::vector<plot_point> {
+    using std::vector<plot_point>::vector;
     /// Append one sample.
     void store(double x, double y) { emplace_back(x, y); }
 };
 
 /// Extract one row as (x_j,u_j) plot data.
-inline Series row_slice(const Vector &u, int N, double h, int row) {
-    Series result;
+inline series row_slice(const vec &u, int N, double h, int row) {
+    series result;
     result.reserve(static_cast<std::size_t>(N));
     for (int column = 0; column < N; ++column) {
         result.store((column + 1) * h, u[(static_cast<std::size_t>(row) * N) + column]);
@@ -31,8 +31,8 @@ inline Series row_slice(const Vector &u, int N, double h, int row) {
 }
 
 /// Extract one column as (y_i,u_i) plot data.
-inline Series col_slice(const Vector &u, int N, double h, int column) {
-    Series result;
+inline series col_slice(const vec &u, int N, double h, int column) {
+    series result;
     result.reserve(static_cast<std::size_t>(N));
     for (int row = 0; row < N; ++row) {
         result.store((row + 1) * h, u[(static_cast<std::size_t>(row) * N) + column]);
@@ -40,23 +40,23 @@ inline Series col_slice(const Vector &u, int N, double h, int column) {
     return result;
 }
 
-/// Extract one row from a field exposing vec(), N(), and h().
+/// Extract one row from a field exposing as_vec(), N(), and h().
 template <class Field>
-inline Series row_slice(const Field &field, int row) {
-    return row_slice(field.vec(), field.N(), field.h(), row);
+inline series row_slice(const Field &field, int row) {
+    return row_slice(field.as_vec(), field.N(), field.h(), row);
 }
 
-/// Extract one column from a field exposing vec(), N(), and h().
+/// Extract one column from a field exposing as_vec(), N(), and h().
 template <class Field>
-inline Series col_slice(const Field &field, int column) {
-    return col_slice(field.vec(), field.N(), field.h(), column);
+inline series col_slice(const Field &field, int column) {
+    return col_slice(field.as_vec(), field.N(), field.h(), column);
 }
 
 /// Owning pipe for issuing low-level commands directly to gnuplot.
-class Gnuplot {
+class gnuplot {
   public:
     /// Launch gnuplot with optional command-line arguments.
-    explicit Gnuplot(const std::string &args = "") {
+    explicit gnuplot(const std::string &args = "") {
         const std::string command = "gnuplot " + args;
         pipe_ = popen(command.c_str(), "w");
         if (!pipe_) {
@@ -64,23 +64,23 @@ class Gnuplot {
         }
     }
 
-    ~Gnuplot() {
+    ~gnuplot() {
         if (pipe_) {
             pclose(pipe_);
         }
     }
 
-    Gnuplot(const Gnuplot &) = delete;
-    Gnuplot &operator=(const Gnuplot &) = delete;
+    gnuplot(const gnuplot &) = delete;
+    gnuplot &operator=(const gnuplot &) = delete;
 
     /// Send a raw gnuplot command.
-    Gnuplot &operator<<(const std::string &command) {
+    gnuplot &operator<<(const std::string &command) {
         fputs(command.c_str(), pipe_);
         return *this;
     }
 
     /// Send one inline two-column data block and flush it.
-    void send1d(const Series &data) {
+    void send1d(const series &data) {
         for (const auto &[x, y] : data) {
             fprintf(pipe_, "%.15g %.15g\n", x, y);
         }
@@ -96,7 +96,7 @@ class Gnuplot {
 };
 
 /// Apply SIAM-style line, grid, border, and legend settings.
-inline void apply_siam_style(Gnuplot &gp) {
+inline void apply_siam_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.8 lc rgb 'black'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.8 lc rgb 'black'\n"
        << "set style line 3 lt 3 lw 2 pt 9  ps 0.8 lc rgb 'black'\n"
@@ -112,7 +112,7 @@ inline void apply_siam_style(Gnuplot &gp) {
 }
 
 /// Apply GitHub Primer Light style (clean white canvas, primer borders and accents).
-inline void apply_github_light_style(Gnuplot &gp) {
+inline void apply_github_light_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.75 lc rgb '#0969da'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.75 lc rgb '#1a7f37'\n"
        << "set style line 3 lt 3 lw 2 pt 9  ps 0.75 lc rgb '#cf222e'\n"
@@ -131,7 +131,7 @@ inline void apply_github_light_style(Gnuplot &gp) {
 }
 
 /// Apply GitHub Primer Dark style.
-inline void apply_github_dark_style(Gnuplot &gp) {
+inline void apply_github_dark_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.75 lc rgb '#58a6ff'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.75 lc rgb '#3fb950'\n"
        << "set style line 3 lt 3 lw 2 pt 9  ps 0.75 lc rgb '#f85149'\n"
@@ -150,17 +150,17 @@ inline void apply_github_dark_style(Gnuplot &gp) {
 }
 
 /// Configure logarithmic x and y axes on a raw pipe.
-inline void set_loglog(Gnuplot &gp) {
+inline void set_loglog(gnuplot &gp) {
     gp << "set logscale xy\nset format x '10^{%L}'\nset format y '10^{%L}'\n";
 }
 
 /// Configure a logarithmic x axis on a raw pipe.
-inline void set_logx(Gnuplot &gp) {
+inline void set_logx(gnuplot &gp) {
     gp << "set logscale x\nset format x '10^{%L}'\n";
 }
 
 /// Configure PNG output on a raw pipe.
-inline void save_png(Gnuplot &gp, const std::string &filename, int width = 900, int height = 600) {
+inline void save_png(gnuplot &gp, const std::string &filename, int width = 900, int height = 600) {
     gp << "set terminal pngcairo size " + std::to_string(width) + "," + std::to_string(height) +
               " enhanced font 'Arial,11'\n"
        << "set output '" + filename + "'\n";

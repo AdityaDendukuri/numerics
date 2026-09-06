@@ -18,7 +18,7 @@ namespace spine_test {
 struct ForeignDiagonal {
     using domain_type = std::vector<double>;
     using codomain_type = std::vector<double>;
-    using math_propositions = num::math::type_list<num::axiom::positive_definite>;
+    using math_laws = num::math::type_list<num::law::spd>;
 
     std::vector<double> diagonal;
 
@@ -44,13 +44,13 @@ struct ForeignDiagonal {
 namespace num::math {
 
 template <>
-struct model_of<std::vector<double>> {
-    using laws = type_list<law::inner_product_space>;
+struct claims_of<std::vector<double>> {
+    using type = type_list<law::inner_product_space>;
 };
 
 template <>
-struct model_of<spine_test::ForeignDiagonal> {
-    using laws = type_list<law::linear_map>;
+struct claims_of<spine_test::ForeignDiagonal> {
+    using type = type_list<law::linear_map>;
 };
 
 } // namespace num::math
@@ -58,98 +58,98 @@ struct model_of<spine_test::ForeignDiagonal> {
 namespace {
 
 template <class Op>
-concept StrictCgCallable = requires(const Op &op, const num::Vector &b, num::Vector &x) {
+concept StrictCgCallable = requires(const Op &op, const num::vec &b, num::vec &x) {
     num::cg(op, b, x);
 };
 
 template <class Op>
-concept StrictMinresCallable = requires(const Op &op, const num::Vector &b, num::Vector &x) {
+concept StrictMinresCallable = requires(const Op &op, const num::vec &b, num::vec &x) {
     num::minres(op, b, x);
 };
 
 template <class Op, class M>
 concept StrictPcgCallable =
-    requires(const Op &op, const M &preconditioner, const num::Vector &b, num::Vector &x) {
+    requires(const Op &op, const M &preconditioner, const num::vec &b, num::vec &x) {
     num::pcg(op, preconditioner, b, x);
 };
 
 template <class Op, class M>
-concept ZeroSumPcgCallable = requires(const Op &op, const M &preconditioner, const num::Vector &b,
-                                      num::Vector &x, const num::space::zero_sum &subspace) {
+concept ZeroSumPcgCallable = requires(const Op &op, const M &preconditioner, const num::vec &b,
+                                      num::vec &x, const num::space::zero_sum &subspace) {
     num::pcg(op, preconditioner, b, x, subspace);
 };
 
 template <class T>
 concept CanAssumeTemporarySpd = requires {
-    num::assume<num::axiom::positive_definite>(T{});
+    num::assume<num::law::spd>(T{});
 };
 
 template <class T>
 concept CanRequireTemporarySpd = requires {
-    num::require<num::axiom::positive_definite>(T{});
+    num::require<num::law::spd>(T{});
 };
 
-static_assert(num::math::Field<double>);
-static_assert(num::math::InnerProductSpace<num::Vector>);
-static_assert(num::math::InnerProductSpace<std::vector<double>>);
-static_assert(num::math::LinearOperator<spine_test::ForeignDiagonal>);
-static_assert(num::math::Carries<spine_test::ForeignDiagonal, num::axiom::positive_definite>);
-static_assert(num::math::LinearOperator<num::operators::BackwardEuler2D>);
-static_assert(num::math::Carries<num::operators::BackwardEuler2D, num::axiom::positive_definite>);
-static_assert(!StrictCgCallable<num::operators::DenseOp>);
-static_assert(!StrictCgCallable<num::Matrix>);
-static_assert(!StrictMinresCallable<num::operators::DenseOp>);
-static_assert(!StrictPcgCallable<num::operators::DenseOp, num::JacobiPreconditioner>);
-static_assert(StrictPcgCallable<num::operators::BackwardEuler2D, num::JacobiPreconditioner>);
+static_assert(num::math::field<double>);
+static_assert(num::math::inner_product_space<num::vec>);
+static_assert(num::math::inner_product_space<std::vector<double>>);
+static_assert(num::math::linear_operator<spine_test::ForeignDiagonal>);
+static_assert(num::claims<spine_test::ForeignDiagonal, num::law::spd>);
+static_assert(num::math::linear_operator<num::operators::backward_euler_2d>);
+static_assert(num::claims<num::operators::backward_euler_2d, num::law::spd>);
+static_assert(!StrictCgCallable<num::operators::dense_op>);
+static_assert(!StrictCgCallable<num::mat>);
+static_assert(!StrictMinresCallable<num::operators::dense_op>);
+static_assert(!StrictPcgCallable<num::operators::dense_op, num::jacobi_preconditioner>);
+static_assert(StrictPcgCallable<num::operators::backward_euler_2d, num::jacobi_preconditioner>);
 static_assert(
-    !std::constructible_from<num::math::CertifiedRef<num::Matrix, num::axiom::positive_definite>,
-                             const num::Matrix &>);
-static_assert(!CanAssumeTemporarySpd<num::Matrix>);
-static_assert(!CanRequireTemporarySpd<num::Matrix>);
-static_assert(num::math::cpo_detail::TagInvocable<num::math::scale_t, double, num::Vector &>);
-static_assert(num::math::cpo_detail::TagInvocable<num::math::axpy_t, double, const num::Vector &,
-                                                  num::Vector &>);
-static_assert(num::math::cpo_detail::TagInvocable<num::math::inner_t, const num::Vector &,
-                                                  const num::Vector &>);
-static_assert(num::math::cpo_detail::TagInvocable<num::math::norm_t, const num::Vector &>);
+    !std::constructible_from<num::math::certified_ref<num::mat, num::law::spd>,
+                             const num::mat &>);
+static_assert(!CanAssumeTemporarySpd<num::mat>);
+static_assert(!CanRequireTemporarySpd<num::mat>);
+static_assert(num::math::cpo_detail::tag_invocable<num::math::scale_t, double, num::vec &>);
+static_assert(num::math::cpo_detail::tag_invocable<num::math::axpy_t, double, const num::vec &,
+                                                  num::vec &>);
+static_assert(num::math::cpo_detail::tag_invocable<num::math::inner_t, const num::vec &,
+                                                  const num::vec &>);
+static_assert(num::math::cpo_detail::tag_invocable<num::math::norm_t, const num::vec &>);
 
 TEST(MathSpine, VerifiedEvidenceIsNonOwningAndImmutable) {
-    num::Matrix A(2, 2, 0.0);
+    num::mat A(2, 2, 0.0);
     A(0, 0) = 2.0;
     A(1, 1) = 3.0;
 
-    const auto proof = num::require<num::axiom::positive_definite>(A);
-    static_assert(num::math::Carries<decltype(proof), num::axiom::positive_definite>);
-    static_assert(std::same_as<decltype(proof.get()), const num::Matrix &>);
+    const auto proof = num::require<num::law::spd>(A);
+    static_assert(num::claims<decltype(proof), num::law::spd>);
+    static_assert(std::same_as<decltype(proof.get()), const num::mat &>);
     EXPECT_EQ(&proof.get(), &A);
     EXPECT_EQ(proof.provenance().origin, num::math::evidence_origin::verified);
 
-    const num::math::CertifiedRef<num::Matrix, num::axiom::self_adjoint> weaker = proof;
+    const num::math::certified_ref<num::mat, num::law::self_adjoint> weaker = proof;
     EXPECT_EQ(&weaker.get(), &A);
     EXPECT_EQ(weaker.provenance().origin, num::math::evidence_origin::verified);
 }
 
 TEST(MathSpine, AssumeEnforcesDecidableShapePrerequisite) {
-    num::Matrix rectangular(2, 3, 0.0);
-    EXPECT_THROW((void)num::assume<num::axiom::positive_definite>(rectangular),
+    num::mat rectangular(2, 3, 0.0);
+    EXPECT_THROW((void)num::assume<num::law::spd>(rectangular),
                  std::invalid_argument);
 }
 
 TEST(MathSpine, AssumedEvidenceRecordsItsOrigin) {
-    num::Matrix A(2, 2, 0.0);
-    const auto proof = num::assume<num::axiom::positive_definite>(A);
+    num::mat A(2, 2, 0.0);
+    const auto proof = num::assume<num::law::spd>(A);
 
     EXPECT_EQ(proof.provenance().origin, num::math::evidence_origin::assumed);
     EXPECT_EQ(proof.provenance().location.file_name(), std::string_view(__FILE__));
 }
 
 TEST(MathSpine, VerifiedDenseMatrixUsesCanonicalCg) {
-    num::Matrix A(2, 2, 0.0);
+    num::mat A(2, 2, 0.0);
     A(0, 0) = 2.0;
     A(1, 1) = 4.0;
-    const auto proof = num::require<num::axiom::positive_definite>(A);
-    num::Vector b{2.0, 8.0};
-    num::Vector x(2, 0.0);
+    const auto proof = num::require<num::law::spd>(A);
+    num::vec b{2.0, 8.0};
+    num::vec x(2, 0.0);
 
     const auto result = num::cg(proof, b, x);
 
@@ -159,19 +159,19 @@ TEST(MathSpine, VerifiedDenseMatrixUsesCanonicalCg) {
 }
 
 TEST(MathSpine, CanonicalCgReportsContradictedAssumption) {
-    num::Matrix A(2, 2, 0.0);
+    num::mat A(2, 2, 0.0);
     A(0, 0) = -1.0;
     A(1, 1) = -1.0;
-    const auto claimed = num::assume<num::axiom::positive_definite>(A);
-    num::Vector b{1.0, 1.0};
-    num::Vector x(2, 0.0);
+    const auto claimed = num::assume<num::law::spd>(A);
+    num::vec b{1.0, 1.0};
+    num::vec x(2, 0.0);
 
     EXPECT_THROW((void)num::cg(claimed, b, x), std::runtime_error);
 }
 
 TEST(MathSpine, NativeKernelAdapterChecksDimensionsBeforeLowering) {
-    const num::Vector x(2, 1.0);
-    num::Vector y(3, 0.0);
+    const num::vec x(2, 1.0);
+    num::vec y(3, 0.0);
 
     EXPECT_THROW(num::math::axpy(1.0, x, y), std::invalid_argument);
 }
@@ -217,42 +217,42 @@ TEST(MathSpine, GenericKrylovFamilySupportsForeignCertifiedTypes) {
 }
 
 TEST(MathSpine, PcgRejectsContradictedPreconditionerEvidence) {
-    num::Matrix negative(2, 2, 0.0);
+    num::mat negative(2, 2, 0.0);
     negative(0, 0) = -1.0;
     negative(1, 1) = -1.0;
-    const auto claimed = num::assume<num::axiom::positive_definite>(negative);
+    const auto claimed = num::assume<num::law::spd>(negative);
     // Use native vectors for the native matrix evidence and verify that the
     // claimed law is checked where the recurrence depends on it.
-    num::Vector native_b{1.0, 1.0};
-    num::Vector native_x(2, 0.0);
-    num::Matrix native_A(2, 2, 0.0);
+    num::vec native_b{1.0, 1.0};
+    num::vec native_x(2, 0.0);
+    num::mat native_A(2, 2, 0.0);
     native_A(0, 0) = 2.0;
     native_A(1, 1) = 4.0;
-    const auto certified_A = num::require<num::axiom::positive_definite>(native_A);
+    const auto certified_A = num::require<num::law::spd>(native_A);
     EXPECT_THROW((void)num::pcg(certified_A, claimed, native_b, native_x), std::runtime_error);
 }
 
 TEST(MathSpine, RestrictedPcgCarriesSubspaceSpecificEvidence) {
-    num::Matrix laplacian(2, 2, 0.0);
+    num::mat laplacian(2, 2, 0.0);
     laplacian(0, 0) = 1.0;
     laplacian(0, 1) = -1.0;
     laplacian(1, 0) = -1.0;
     laplacian(1, 1) = 1.0;
-    num::Matrix identity(2, 2, 0.0);
+    num::mat identity(2, 2, 0.0);
     identity(0, 0) = 1.0;
     identity(1, 1) = 1.0;
 
     const auto restricted_A =
-        num::assume<num::axiom::positive_definite_on<num::space::zero_sum>>(laplacian);
+        num::assume<num::law::spd_on<num::space::zero_sum>>(laplacian);
     const auto restricted_M =
-        num::assume<num::axiom::positive_definite_on<num::space::zero_sum>>(identity);
-    static_assert(num::math::Carries<decltype(restricted_A),
-                                     num::axiom::positive_definite_on<num::space::zero_sum>>);
-    static_assert(!num::math::Carries<decltype(restricted_A), num::axiom::positive_definite>);
+        num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
+    static_assert(num::claims<decltype(restricted_A),
+                                     num::law::spd_on<num::space::zero_sum>>);
+    static_assert(!num::claims<decltype(restricted_A), num::law::spd>);
     static_assert(ZeroSumPcgCallable<decltype(restricted_A), decltype(restricted_M)>);
 
-    num::Vector b{1.0, -1.0};
-    num::Vector x(2, 0.0);
+    num::vec b{1.0, -1.0};
+    num::vec x(2, 0.0);
     const auto result = num::pcg(restricted_A, restricted_M, b, x, num::space::zero_sum{},
                                  {.tolerance = 1e-12, .max_iterations = 10});
 
@@ -263,13 +263,13 @@ TEST(MathSpine, RestrictedPcgCarriesSubspaceSpecificEvidence) {
 }
 
 TEST(MathSpine, RestrictedPcgRejectsInputOutsideSubspace) {
-    num::Matrix identity(2, 2, 0.0);
+    num::mat identity(2, 2, 0.0);
     identity(0, 0) = 1.0;
     identity(1, 1) = 1.0;
     const auto restricted =
-        num::assume<num::axiom::positive_definite_on<num::space::zero_sum>>(identity);
-    num::Vector incompatible_rhs{1.0, 0.0};
-    num::Vector x(2, 0.0);
+        num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
+    num::vec incompatible_rhs{1.0, 0.0};
+    num::vec x(2, 0.0);
 
     EXPECT_THROW(
         (void)num::pcg(restricted, restricted, incompatible_rhs, x, num::space::zero_sum{}),
@@ -277,27 +277,27 @@ TEST(MathSpine, RestrictedPcgRejectsInputOutsideSubspace) {
 }
 
 TEST(MathSpine, RestrictedPcgChecksSubspacePreservation) {
-    num::Matrix identity(2, 2, 0.0);
+    num::mat identity(2, 2, 0.0);
     identity(0, 0) = 1.0;
     identity(1, 1) = 1.0;
-    num::Matrix bad_preconditioner(2, 2, 0.0);
+    num::mat bad_preconditioner(2, 2, 0.0);
     bad_preconditioner(0, 0) = 1.0;
     bad_preconditioner(1, 1) = 2.0;
     const auto restricted_A =
-        num::assume<num::axiom::positive_definite_on<num::space::zero_sum>>(identity);
+        num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
     const auto contradicted_M =
-        num::assume<num::axiom::positive_definite_on<num::space::zero_sum>>(bad_preconditioner);
-    num::Vector b{1.0, -1.0};
-    num::Vector x(2, 0.0);
+        num::assume<num::law::spd_on<num::space::zero_sum>>(bad_preconditioner);
+    num::vec b{1.0, -1.0};
+    num::vec x(2, 0.0);
 
     EXPECT_THROW((void)num::pcg(restricted_A, contradicted_M, b, x, num::space::zero_sum{}),
                  std::runtime_error);
 }
 
 TEST(MathSpine, PdeConstructionCarriesSpdIntoCg) {
-    num::operators::BackwardEuler2D A(4, 0.1);
-    num::Vector b(A.rows(), 1.0);
-    num::Vector x(A.rows(), 0.0);
+    num::operators::backward_euler_2d A(4, 0.1);
+    num::vec b(A.rows(), 1.0);
+    num::vec x(A.rows(), 0.0);
 
     const auto result = num::cg(A, b, x, {.tolerance = 1e-11, .max_iterations = 100});
 
@@ -306,7 +306,7 @@ TEST(MathSpine, PdeConstructionCarriesSpdIntoCg) {
 }
 
 TEST(MathSpine, PdeConstructionRejectsUnsupportedSpdClaim) {
-    EXPECT_THROW(num::operators::BackwardEuler2D(4, -0.1), std::invalid_argument);
+    EXPECT_THROW(num::operators::backward_euler_2d(4, -0.1), std::invalid_argument);
 }
 
 } // namespace

@@ -11,13 +11,13 @@
 namespace num::io {
 
 /// Decode a CSR or CSC sparse-matrix JSON object into native CSR storage.
-[[nodiscard]] SparseMatrix sparse_matrix(const json &value);
+[[nodiscard]] spmat sparse_matrix(const json &value);
 /// Encode a sparse matrix as a CSR JSON object.
-[[nodiscard]] json sparse_matrix_json(const SparseMatrix &matrix);
+[[nodiscard]] json sparse_matrix_json(const spmat &matrix);
 
 
 
-inline SparseMatrix sparse_matrix(const json &value) {
+inline spmat sparse_matrix(const json &value) {
     if (!value.is_object()) {
         throw std::invalid_argument("sparse matrix JSON must be an object");
     }
@@ -33,15 +33,15 @@ inline SparseMatrix sparse_matrix(const json &value) {
 
     if (storage == "csr") {
         if (!value.contains("col_indices") || !value.contains("row_ptrs")) {
-            throw std::invalid_argument("CSR sparse matrix JSON missing col_indices or row_ptrs");
+            throw std::invalid_argument("csr sparse matrix JSON missing col_indices or row_ptrs");
         }
         const auto columns = value["col_indices"].get<std::vector<idx>>();
         const auto pointers = value["row_ptrs"].get<std::vector<idx>>();
         if (pointers.size() != shape[0] + 1 || pointers.back() != values.size() ||
             columns.size() != values.size()) {
-            throw std::invalid_argument("invalid sparse matrix CSR arrays");
+            throw std::invalid_argument("invalid sparse matrix csr arrays");
         }
-        return SparseMatrix(shape[0], shape[1], values, columns, pointers);
+        return spmat(shape[0], shape[1], values, columns, pointers);
     }
     if (storage != "csc") {
         throw std::invalid_argument("sparse matrix format must be 'csr' or 'csc'");
@@ -54,10 +54,10 @@ inline SparseMatrix sparse_matrix(const json &value) {
     if (pointers.empty() || pointers.back() > values.size() || pointers.back() > rows.size()) {
         throw std::invalid_argument("invalid sparse matrix CSC pointers");
     }
-    return SparseMatrix::from_csc(shape[0], shape[1], values, rows, pointers);
+    return spmat::from_csc(shape[0], shape[1], values, rows, pointers);
 }
 
-inline json sparse_matrix_json(const SparseMatrix &matrix) {
+inline json sparse_matrix_json(const spmat &matrix) {
     json result;
     result["shape"] = {matrix.n_rows(), matrix.n_cols()};
     result["format"] = "csr";

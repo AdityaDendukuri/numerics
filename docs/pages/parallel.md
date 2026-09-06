@@ -1,173 +1,184 @@
-# Backend Resolution, Parallelism, & Hardware Acceleration {#page_parallel}
+# Backend Namespaces, Parallelism, & Hardware Acceleration {#page_parallel}
 
-Multi-tier hardware acceleration across BLAS/LAPACK, OpenMP, SIMD vectorization, CUDA, MPI, and FFTW. Compiles to portable standard C++20 by default with automatic compile-time capability detection.
+Optional hardware acceleration across BLAS/LAPACK, OpenMP, CUDA, MPI, and FFTW. Compiles to portable standard C++20 by default with compile-time capability detection.
+
+Vectorization is not a backend and cannot be selected. `num::kernel` contains no intrinsics and performs no runtime CPU dispatch. It writes loops the compiler can vectorize, and blocks them for the register file and the cache. Every backend below calls into it, so all of them benefit.
 
 ```cpp
 #include <numerics.hpp>
 ```
 
-
 ---
 
-## 1. Backend Tags
+## 1. Backends Are Plain Namespaces
 
-A backend is selected by passing a tag. Tags are empty types, so the selection is resolved during compilation and the chosen kernel inlines into the caller:
+There is no tag type, no enum, and no runtime dispatch switch. Every backend is a
+namespace of free functions with the same signatures as `num::kernel`'s:
 
 ```cpp
-namespace num::backend {
-struct seq_t;     // Portable scalar C++ loop.
-struct blocked_t; // Cache-blocked CPU loop.
-struct simd_t;    // Explicit AVX2 / ARM NEON intrinsics.
-struct blas_t;    // Vendor BLAS (OpenBLAS, Apple Accelerate, Intel MKL).
-struct omp_t;     // OpenMP parallel loops.
-struct lapack_t;  // Vendor LAPACK (LAPACKE).
-struct gpu_t;     // CUDA device kernels.
+namespace num {
+namespace kernel {} // The dependency-free reference: raw pointers only, no vec/mat.
+namespace seq {}    // vec/mat-aware wrapper over num::kernel. Always available.
+namespace omp {}    // OpenMP parallel loops. Falls back to num::kernel when
+                    // NUMERICS_HAS_OMP is not defined. Always compiles.
+namespace blas {}   // cblas_* calls. Falls back to num::kernel when
+                    // NUMERICS_HAS_BLAS is not defined. Always compiles.
+namespace lapack {} // LAPACKE calls. Falls back to num::seq when
+                    // NUMERICS_HAS_LAPACK is not defined. Always compiles.
+namespace cuda {}   // CUDA device kernels. Throws std::runtime_error when called
+                    // on a build without NUMERICS_HAS_CUDA. See §4.
 }
 ```
 
-Each tag has a constant of the same name without the suffix:
+Call a backend by name. The choice resolves at compile time and inlines into the
+caller.
 
 ```cpp
-num::Vector x(n, 1.0), y(n, 2.0);
+num::vec x(n, 1.0), y(n, 2.0);
 
-num::real a = num::dot(x, y);                    // Build default.
-num::real b = num::dot(x, y, num::backend::seq); // Portable loop.
-num::real c = num::dot(x, y, num::backend::blas);// cblas_ddot.
+num::real a = num::dot(x, y);        // Build default: see num::accel below.
+num::real b = num::seq::dot(x, y);   // Portable loop, forced.
+num::real c = num::blas::dot(x, y);  // cblas_ddot, forced (falls back to seq if
+                                     // BLAS wasn't configured).
 ```
 
-A tag whose backend was not detected at configure time falls back to `seq`. Code written against any tag compiles and runs everywhere.
+Code written against any backend namespace compiles in every build. The namespace
+always exists, and its functions fall back to `num::kernel` when the underlying library
+was not configured. CUDA is the exception; see §4.
 
 ### Compile-Time Feature Detection Flags
-
 
 | Feature Flag | C++ Compile-Time Constant | Target Hardware / Library |
 | :--- | :--- | :--- |
 | `NUMERICS_HAS_BLAS` | `num::has_blas` | OpenBLAS, Apple Accelerate, MKL |
 | `NUMERICS_HAS_LAPACK` | `num::has_lapack` | LAPACKE C interface |
 | `NUMERICS_HAS_OMP` | `num::has_omp` | Multi-core OpenMP thread pools |
-| `NUMERICS_HAS_SIMD` | `num::has_simd` | AVX-256, FMA, ARM NEON |
+| `NUMERICS_HAS_SIMD` | `num::has_simd` | Compiler was given AVX-256 + FMA (x86-64); NEON is baseline on AArch64. Read only by the FFT's intrinsic path. `num::kernel` needs no flag. |
 | `NUMERICS_HAS_CUDA` | `num::has_cuda` | NVIDIA GPU CUDA acceleration |
 | `NUMERICS_HAS_MPI` | (none) | Multi-node distributed memory |
 | `NUMERICS_HAS_FFTW` | `num::spectral::has_fftw` | FFTW3 optimized Fourier engine |
 
+These flags are attached only to the CMake target for that backend
+(`numerics::blas`, `numerics::omp`, and so on), not globally. See
+@ref page_architecture "the architecture page" for how `numerics::kernel` and
+`numerics::core` stay dependency-free when every backend is present on the configuring
+machine.
+
 ---
 
-## 2. Backend Resolution
+## 2. `num::accel`: the Untagged Default
 
-Routines called without a tag use the strongest backend the build detected.
-
-### Dense Level-1 and Level-2 (num::backend::dflt)
-
-\f[
-\text{BLAS} \;\longrightarrow\; \text{OpenMP} \;\longrightarrow\; \text{SIMD} \;\longrightarrow\; \text{Cache-Blocked Sequential}
-\f]
+Routines called without naming a backend (`num::dot`, `num::axpy`, `num::scale`,
+`num::norm`, `num::add`, `num::matvec`, `num::matmul`) resolve through a single
+namespace alias, chosen once at configure time in `core/policy.hpp`:
 
 ```cpp
-using default_t =
-#if defined(NUMERICS_HAS_BLAS)
-    blas_t;
+#if defined(NUMERICS_HAS_CUDA)
+namespace accel = cuda;
+#elif defined(NUMERICS_HAS_BLAS)
+namespace accel = blas;
 #elif defined(NUMERICS_HAS_OMP)
-    omp_t;
-#elif defined(NUMERICS_HAS_SIMD)
-    simd_t;
+namespace accel = omp;
 #else
-    blocked_t;
+namespace accel = seq;
 #endif
 ```
 
-### Factorizations (num::backend::factor)
+`num::dot(x, y)` is defined as `accel::dot(x, y)`. There is no runtime branch. The
+preprocessor resolves the alias before the translation unit is parsed.
 
-\f[
-\text{LAPACK (LAPACKE)} \;\longrightarrow\; \text{OpenMP} \;\longrightarrow\; \text{Inlined C++ (kernel::raw)}
-\f]
+### Factorizations pick their own default
+
+Factorizations (`lu`, `qr`, `svd`, `eig_sym`, `hessenberg`, `thomas`) are not
+routed through `num::accel`. LAPACK is a poor substitute for BLAS or OpenMP on level-1
+and level-2 operations, and the reverse also holds, so each factorization chooses
+independently.
 
 ```cpp
-using factor_t =
+inline lu_result lu(const linear::sq_mat<mat> &A) {
 #if defined(NUMERICS_HAS_LAPACK)
-    lapack_t;
-#elif defined(NUMERICS_HAS_OMP)
-    omp_t;
+    return lapack::lu(A.base());
 #else
-    seq_t;
+    return seq::lu(A.base());
+#endif
+}
+```
+
+To bypass this and force a specific implementation, call the namespace directly:
+`num::lapack::lu(A)`, `num::seq::lu(A)`, `num::lapack::eig_sym(A)`,
+`num::seq::svd(A, tol, max_sweeps)`, and so on. Each factorization's header documents
+the pair it offers.
+
+### Spectral Resolution (`num::spectral::default_fft_backend`)
+
+FFT keeps its own separate resolution and its own `fft_backend` enum (`fftw` →
+`simd`/`std::simd` → `seq`), unrelated to `num::accel`. See the FFT plan API in
+`spectral/fft.hpp`.
+
+---
+
+## 3. Worked Example: Switching One Call from `kernel` to LAPACK/CUDA
+
+`num::kernel` is the reference implementation every backend is checked against. To use a
+faster backend at one call site, name that backend's namespace.
+
+```cpp
+// Portable reference. Always compiles, no external library.
+num::lu_result ref = num::seq::lu(A);
+
+// Same algorithm through vendor LAPACK when NUMERICS_HAS_LAPACK is set.
+// Falls back to num::seq::lu otherwise, so this line never needs an #ifdef.
+num::lu_result fast = num::lapack::lu(A);
+
+// Let the build decide: LAPACK if configured, else seq. The common case.
+num::lu_result f = num::lu(num::assume_square(A));
+
+// Force OpenMP for a vector op:
+num::omp::axpy(2.0, x, y);
+
+// Force BLAS for a vector op:
+num::blas::axpy(2.0, x, y);
+```
+
+To swap which backend a whole build defaults to, change what's linked, not the
+call sites: link `numerics::blas`/`numerics::omp`/`numerics::cuda` (see
+@ref page_architecture) and `num::accel` re-resolves at the next compile.
+
+---
+
+## 4. CUDA GPU Acceleration
+
+`num::cuda`'s host-container overloads (`num::cuda::scale(vec&, real)`,
+`num::cuda::axpy(...)`, `num::cuda::dot(...)`, `num::cuda::matvec(...)`,
+`num::cuda::matmul(...)`) sit over a raw device-pointer API
+(`num::cuda::scale(real*, idx, real)`, ...) meant for callers who manage device
+buffers directly across a whole algorithm. See `unsafe::cuda::cg` in
+`linear/solvers/cg.hpp` for the pattern.
+
+Unlike `omp`/`blas`/`lapack`, **`num::cuda` does not silently degrade**: on a
+build without `NUMERICS_HAS_CUDA`, every function in the namespace throws
+`std::runtime_error("CUDA not available")` if actually called. This is
+deliberate. A GPU call that silently ran on the CPU would produce a correct result and a
+misleading measurement. Guard
+CUDA-specific code with `#if defined(NUMERICS_HAS_CUDA)` (or `num::has_cuda`)
+if it must also build without a device toolkit:
+
+```cpp
+#if defined(NUMERICS_HAS_CUDA)
+x.to_gpu();
+y.to_gpu();
+num::cuda::axpy(3.0, x, y);
+double r = num::cuda::norm(y);
 #endif
 ```
 
-### Spectral Resolution (num::spectral::default_fft_backend)
-
-\f[
-\text{FFTW3} \;\longrightarrow\; \text{SIMD Radix-2} \;\longrightarrow\; \text{Scalar Radix-2 Cooley–Tukey}
-\f]
-
 ---
 
-### Selecting a Backend at Run Time
+## 5. Distributed Memory via MPI (`num::mpi`)
 
-`num::Backend` is an enum of the same alternatives, for values that are not known until run time. `num::with_backend` converts one into a tag:
-
-```cpp
-num::Backend chosen = parse_backend(argv[1]);
-
-num::with_backend(chosen, [&](auto tag) {
-    num::matvec(A, x, y, tag); // Compiles one instantiation per alternative.
-});
-```
-
-The switch runs once. Inside the lambda the tag is a compile-time type again, so the kernel inlines as it would with a literal tag.
-
-## 3. Explicit Backend Selection & Graceful Degradation
-
-Every major algorithm (e.g. `num::lu`, `num::cholesky`, `num::matmul`, `num::cg`, `num::trapz`) allows explicit backend overrides at the call site:
-
-```cpp
-// 1. Force vendor LAPACK / BLAS
-num::LUResult factor = num::lu(num::assume_square(A), num::backend::lapack);
-num::matmul(A, B, C, num::backend::blas);
-
-// 2. Force OpenMP multi-core parallelization
-double integral = num::trapz(f, 0.0, 1.0, 1000000, num::backend::omp);
-num::cg(Aop, b, x, 1e-8, 1000, num::backend::omp);
-
-// 3. Force pure sequential reference path (for debugging / verification)
-num::LUResult ref_factor = num::lu(num::assume_square(A), num::backend::seq);
-```
-
-### Graceful Fallback Guarantee
-
-If user code requests a backend that was not compiled into the binary (e.g., passing `num::backend::lapack` on a build without LAPACK, or `num::backend::gpu` without CUDA):
-* The dispatcher **never throws a missing-symbol or segmentation fault error**.
-* It automatically falls back to the best available CPU implementation (`seq` or `blocked`) and logs a diagnostic when runtime checking is active.
-
----
-
-## 4. OpenMP Policy Dispatch (num::seq vs num::par)
-
-For container-level vector and matrix kernels, policy tags provide zero-overhead compile-time dispatch:
-
-```cpp
-// Explicit sequential execution
-num::container/array.hpp::axpby(2.0, x, 0.5, y, num::seq);
-
-// Explicit OpenMP parallel execution
-num::container/array.hpp::axpby(2.0, x, 0.5, y, num::par);
-```
-
----
-
-## 5. CUDA GPU Acceleration
-
-GPU entry points operate on host containers or device buffers:
-
-```cpp
-num::axpy(3.0, x, y, num::backend::gpu);
-double r = num::norm(y, num::backend::gpu);
-num::matvec(A, x, y, num::backend::gpu);
-```
-
----
-
-## 6. Distributed Memory via MPI (num::mpi)
-
-MPI communication helpers are exposed under `num::mpi`:
+MPI communication helpers are exposed under `num::mpi`, built only into the
+separate `numerics::mpi` target so linking `numerics::core`/`numerics::numerics`
+never pulls in an MPI dependency:
 
 ```cpp
 int rank = num::mpi::rank();

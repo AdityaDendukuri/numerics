@@ -12,12 +12,12 @@ Inverse transform: \f$x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k e^{i 2\pi k n / N}\
 ```cpp
 #include <numerics.hpp>
 
-num::CVector x{{1.0, 0.0}, {0.0, 0.0}, {-1.0, 0.0}, {0.0, 0.0}};
-num::CVector X(x.size());
+num::cvec x{{1.0, 0.0}, {0.0, 0.0}, {-1.0, 0.0}, {0.0, 0.0}};
+num::cvec X(x.size());
 
 num::spectral::fft(x, X); // Forward FFT (unnormalized)
 
-num::CVector x_rec(x.size());
+num::cvec x_rec(x.size());
 num::spectral::ifft(X, x_rec);
 num::scale(x_rec, 1.0 / x.size()); // Normalized inverse (1/N)
 ```
@@ -30,26 +30,26 @@ Exploits Hermitian conjugate symmetry \f$X_{N-k} = X_k^*\f$ to compute only non-
 
 ```cpp
 constexpr int n = 1024;
-num::Vector x(n, 0.0);
-num::CVector X(n / 2 + 1); // Only non-negative frequencies
+num::vec x(n, 0.0);
+num::cvec X(n / 2 + 1); // Only non-negative frequencies
 
 num::spectral::rfft(x, X);
 
 // Inverse transform
-num::Vector x_rec(n);
+num::vec x_rec(n);
 num::spectral::irfft(X, n, x_rec);
 num::scale(x_rec, 1.0 / n);
 ```
 
 ---
 
-## 3. Plan-Based Execution (num::spectral::FFTPlan)
+## 3. Plan-Based Execution (num::spectral::fft_plan)
 
 Precomputes twiddles and bit-reversal tables for repeated transforms of length \f$N\f$:
 
 ```cpp
-num::spectral::FFTPlan plan(n);
-num::CVector in(n), out(n);
+num::spectral::fft_plan plan(n);
+num::cvec in(n), out(n);
 
 plan.execute(in, out); // Reuses twiddle factors; zero allocations
 ```
@@ -66,8 +66,8 @@ X_k = \sum_{j=1}^{N} x_j \sin\left(\frac{j k \pi}{N+1}\right), \qquad k = 1, \do
 
 ```cpp
 // 1D DST-I
-num::Vector x{1.0, 2.0, 3.0};
-num::Vector X = num::spectral::dst1(x);
+num::vec x{1.0, 2.0, 3.0};
+num::vec X = num::spectral::dst1(x);
 
 // 2D DST-I in place on an N x N row-major grid
 constexpr int N = 7;
@@ -81,9 +81,9 @@ num::spectral::dst2d(grid, N);
 
 | Backend Tag | Description | Requirements |
 | :--- | :--- | :--- |
-| `FFTBackend::seq` | Scalar Cooley–Tukey Radix-2 | Standard C++ |
-| `FFTBackend::simd` | Explicit AVX2 / ARM NEON vectorization | Target CPU flags |
-| `FFTBackend::fftw` | Vendor FFTW3 library | `NUMERICS_HAS_FFTW` |
+| `fft_backend::seq` | scalar Cooley–Tukey Radix-2 | Standard C++ |
+| `fft_backend::simd` | Explicit AVX2 / ARM NEON vectorization | Target CPU flags |
+| `fft_backend::fftw` | Vendor FFTW3 library | `NUMERICS_HAS_FFTW` |
 
 ```cpp
 num::spectral::fft(in, out, num::spectral::default_fft_backend);

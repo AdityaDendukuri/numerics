@@ -81,7 +81,7 @@ BM_Matmul_Scalar_Blocked/128               0.50         24.0 KB        384.6 KB 
 
 - `allocs/iter ≈ 0.5` means roughly half an allocation per iteration.
   Google Benchmark's memory pass runs 16 iterations of the benchmark function.
-  `0.5 × 16 = 8` total allocations — these are the three `Matrix` objects
+  `0.5 × 16 = 8` total allocations — these are the three `mat` objects
   (`A`, `B`, `C`) constructed *once before the timing loop*, plus a few bytes of
   benchmark-internal overhead.
 - `bytes/iter = 24.0 KB` = 393 KB ÷ 16 iterations.  Three 128×128 `double`
@@ -112,7 +112,7 @@ BM_Thomas/4096             2.69         74.0 KB         1.16 MB         1.16 MB
 ```
 
 `bytes/iter` scales linearly with `N`.  The allocations again come from the setup
-vectors (`a`, `b`, `c`, `d`, `x` for Thomas; four work vectors inside CG), not
+vectors (`a`, `b`, `c`, `d`, `x` for Thomas; four work vectors inside cg_method), not
 from the algorithms themselves.  Both are allocation-free in their hot paths.
 
 ### What to watch for when parallelizing
@@ -175,7 +175,7 @@ cmake -B build-san \
 ```
 ==12345==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x...
 READ of size 8 at 0x... thread T0
-    #0 0x... in num::matmul(Matrix const&, ...) bench_linalg.cpp:52
+    #0 0x... in num::matmul(mat const&, ...) bench_linalg.cpp:52
     #1 0x... in BM_Matmul_Naive ...
 ```
 
@@ -285,7 +285,7 @@ for b in data["benchmarks"]:
 Copy the pattern from `bench_linalg.cpp`:
 
 ```cpp
-static void BM_MyKernel(benchmark::State& state) {
+static void BM_MyKernel(benchmark::plot_state& state) {
     idx n = static_cast<idx>(state.range(0));
 
     // Setup: allocate outside the loop — this is NOT in the hot path.

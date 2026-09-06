@@ -19,7 +19,7 @@ namespace num::linear::debug {
 
 using num::debug::check_dim;
 using num::debug::check_non_empty;
-using num::debug::DiagnosticLevel;
+using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
@@ -27,7 +27,7 @@ using num::debug::panic;
 template <class SparseType>
 inline void verify_sparse_structure(const SparseType &A,
                                     std::source_location loc = std::source_location::current()) {
-    if (get_level() == DiagnosticLevel::off) {
+    if (get_level() == diagnostic_level::off) {
         return;
     }
     const idx nrows = A.n_rows();
@@ -70,7 +70,7 @@ inline void verify_square(const MatrixType &A,
 template <class VecType>
 inline void verify_tridiagonal_structure(const VecType &dl, const VecType &d, const VecType &du,
                                          std::source_location loc = std::source_location::current()) {
-    if (get_level() == DiagnosticLevel::off) {
+    if (get_level() == diagnostic_level::off) {
         return;
     }
     const idx n = d.size();
@@ -83,7 +83,7 @@ inline void verify_tridiagonal_structure(const VecType &dl, const VecType &d, co
 template <class BandedType>
 inline void verify_banded_structure(const BandedType &B,
                                     std::source_location loc = std::source_location::current()) {
-    if (get_level() == DiagnosticLevel::off) {
+    if (get_level() == diagnostic_level::off) {
         return;
     }
     check_dim(B.rows(), B.cols(), "banded matrix dimension", loc);
@@ -108,7 +108,7 @@ inline void verify_banded_structure(const BandedType &B,
 template <class BandedType>
 inline void verify_band_occupancy(const BandedType &B, double tol = 0.0,
                                   std::source_location loc = std::source_location::current()) {
-    if (get_level() == DiagnosticLevel::off) {
+    if (get_level() == diagnostic_level::off) {
         return;
     }
     const num::idx kl = repr::lower_bandwidth_of(B);

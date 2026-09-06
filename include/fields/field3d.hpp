@@ -1,9 +1,9 @@
 /// @file fields/field3d.hpp
 /// @brief 3D scalar and vector fields on uniform Cartesian grids.
 ///
-/// A ScalarField3D is geometry (Grid3D) + values (num::Vector), mirroring the
-/// 2D ScalarField2D design. Because the values live in a num::Vector, the field
-/// plugs straight into linear solvers and operators via .vec() with no copy.
+/// A scalar_field_3d is geometry (grid_3d) + values (num::vec), mirroring the
+/// 2D scalar_field_2d design. Because the values live in a num::vec, the field
+/// plugs straight into linear solvers and operators via .as_vec() with no copy.
 #pragma once
 
 #include "container/vector_ops.hpp"
@@ -15,11 +15,11 @@
 
 namespace num {
 
-/// Scalar values stored on a uniform Cartesian grid.
-class ScalarField3D {
+/// scalar values stored on a uniform Cartesian grid.
+class scalar_field_3d {
   public:
     /// Allocate a zero-filled field with optional physical origin.
-    ScalarField3D(int nx, int ny, int nz, float dx, float ox = 0.0f, float oy = 0.0f,
+    scalar_field_3d(int nx, int ny, int nz, float dx, float ox = 0.0f, float oy = 0.0f,
                   float oz = 0.0f)
         : grid_{nx,
                 ny,
@@ -32,14 +32,14 @@ class ScalarField3D {
 
     template <typename F>
     /// Sample f(i,j,k) at every grid node during construction.
-    ScalarField3D(int nx, int ny, int nz, float dx, F &&f, float ox = 0.0f, float oy = 0.0f,
+    scalar_field_3d(int nx, int ny, int nz, float dx, F &&f, float ox = 0.0f, float oy = 0.0f,
                   float oz = 0.0f)
-        : ScalarField3D(nx, ny, nz, dx, ox, oy, oz) {
+        : scalar_field_3d(nx, ny, nz, dx, ox, oy, oz) {
         fill(std::forward<F>(f));
     }
 
     /// Return the field geometry.
-    [[nodiscard]] const Grid3D &grid() const { return grid_; }
+    [[nodiscard]] const grid_3d &grid() const { return grid_; }
 
     [[nodiscard]] int nx() const { return grid_.nx; }
     [[nodiscard]] int ny() const { return grid_.ny; }
@@ -74,8 +74,8 @@ class ScalarField3D {
     }
 
     /// Access the contiguous values in grid flattening order.
-    Vector &vec() { return data_; }
-    [[nodiscard]] const Vector &vec() const { return data_; }
+    vec &as_vec() { return data_; }
+    [[nodiscard]] const vec &as_vec() const { return data_; }
     real *data() { return data_.data(); }
     [[nodiscard]] const real *data() const { return data_.data(); }
     [[nodiscard]] idx size() const { return data_.size(); }
@@ -84,15 +84,15 @@ class ScalarField3D {
     [[nodiscard]] float sample(float x, float y, float z) const;
 
   private:
-    Grid3D grid_;
-    Vector data_;
+    grid_3d grid_;
+    vec data_;
 };
 
 /// Three-component vector field sharing a common 3D grid.
-struct VectorField3D {
-    ScalarField3D x, y, z;
+struct vector_field_3d {
+    scalar_field_3d x, y, z;
 
-    VectorField3D(int nx, int ny, int nz, float dx, float ox = 0.0f, float oy = 0.0f,
+    vector_field_3d(int nx, int ny, int nz, float dx, float ox = 0.0f, float oy = 0.0f,
                   float oz = 0.0f);
 
     /// Trilinearly interpolate all components at a physical point.
@@ -104,7 +104,7 @@ struct VectorField3D {
 
 
 
-inline float ScalarField3D::sample(float x, float y, float z) const {
+inline float scalar_field_3d::sample(float x, float y, float z) const {
     const float gx = (x - ox()) / dx();
     const float gy = (y - oy()) / dx();
     const float gz = (z - oz()) / dx();
@@ -127,17 +127,17 @@ inline float ScalarField3D::sample(float x, float y, float z) const {
                   (ty * (((1 - tx) * v(0, 1, 1)) + (tx * v(1, 1, 1))))));
 }
 
-inline VectorField3D::VectorField3D(int nx, int ny, int nz, float dx, float ox, float oy, float oz)
+inline vector_field_3d::vector_field_3d(int nx, int ny, int nz, float dx, float ox, float oy, float oz)
     : x(nx, ny, nz, dx, ox, oy, oz), y(nx, ny, nz, dx, ox, oy, oz), z(nx, ny, nz, dx, ox, oy, oz) {}
 
-inline std::array<float, 3> VectorField3D::sample(float px, float py, float pz) const {
+inline std::array<float, 3> vector_field_3d::sample(float px, float py, float pz) const {
     return {x.sample(px, py, pz), y.sample(px, py, pz), z.sample(px, py, pz)};
 }
 
-inline void VectorField3D::scale(float s) {
-    num::scale(x.vec(), static_cast<real>(s));
-    num::scale(y.vec(), static_cast<real>(s));
-    num::scale(z.vec(), static_cast<real>(s));
+inline void vector_field_3d::scale(float s) {
+    num::scale(x.as_vec(), static_cast<real>(s));
+    num::scale(y.as_vec(), static_cast<real>(s));
+    num::scale(z.as_vec(), static_cast<real>(s));
 }
 
 } // namespace num
