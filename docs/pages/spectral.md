@@ -71,7 +71,7 @@ num::vec X = num::spectral::dst1(x);
 
 // 2D DST-I in place on an N x N row-major grid
 constexpr int N = 7;
-std::vector<double> grid(N * N, 1.0);
+num::array<double> grid(N * N, 1.0);
 num::spectral::dst2d(grid, N);
 ```
 

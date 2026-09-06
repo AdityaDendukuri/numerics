@@ -89,7 +89,7 @@ class basic_graph {
     }
 
     /// Return view of neighbor edges for vertex u.
-    [[nodiscard]] std::span<const graph_edge> neighbors(Index u) const {
+    [[nodiscard]] view<const graph_edge> neighbors(Index u) const {
         structures::debug::check_vertex_bounds(u, n_, "graph::neighbors");
         return adj_[u];
     }
@@ -113,7 +113,7 @@ class basic_graph {
     Index n_ = 0;
     Index m_ = 0;
     bool directed_ = false;
-    std::vector<std::vector<graph_edge>> adj_;
+    array<array<graph_edge>> adj_;
 };
 
 /// Default double-precision 64-bit graph alias

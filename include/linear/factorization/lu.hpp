@@ -2,6 +2,7 @@
 /// @brief LU factorization with partial pivoting.
 #pragma once
 
+#include "core/types.hpp"
 #include "core/debug.hpp"
 #include "kernel/factor.hpp"
 #include "kernel/kernel.hpp"
@@ -23,7 +24,7 @@ namespace num {
 /// @brief Packed factorization \f$PA=LU\f$.
 struct lu_result {
     mat LU;             ///< Packed unit-lower and upper factors.
-    std::vector<idx> piv;  ///< Zero-based row swaps applied during factorization.
+    array<idx> piv;  ///< Zero-based row swaps applied during factorization.
     bool singular = false; ///< True when a zero pivot was encountered.
 
     friend std::ostream &operator<<(std::ostream &os, const lu_result &r) {
@@ -92,8 +93,8 @@ inline lu_result lu(const mat &A) {
     f.singular = false;
 
     mat &M = f.LU;
-    std::vector<real> col_k(n);
-    std::vector<real> lik_col(n);
+    array<real> col_k(n);
+    array<real> lik_col(n);
 
     for (idx k = 0; k < n; ++k) {
         const idx len = n - k;
@@ -139,7 +140,7 @@ inline lu_result lu(const mat &A) {
     f.piv.resize(n);
     f.singular = false;
 
-    std::vector<lapack_int> ipiv(n);
+    array<lapack_int> ipiv(n);
     int info =
         LAPACKE_dgetrf(LAPACK_ROW_MAJOR, static_cast<lapack_int>(n), static_cast<lapack_int>(n),
                        f.LU.data(), static_cast<lapack_int>(n), ipiv.data());
@@ -204,7 +205,7 @@ inline void lu_solve(const lu_result &f, const mat &B, mat &X) {
     }
     X = B;
 #if defined(NUMERICS_HAS_LAPACK)
-    std::vector<lapack_int> pivots(n);
+    array<lapack_int> pivots(n);
     for (idx index = 0; index < n; ++index) {
         pivots[index] = static_cast<lapack_int>(f.piv[index] + 1);
     }
@@ -321,12 +322,12 @@ inline mat lu_inv(const lu_result &f) {
     const idx n = f.LU.rows();
     mat inv = f.LU;
 #if defined(NUMERICS_HAS_LAPACK)
-    std::vector<lapack_int> ipiv(n);
+    array<lapack_int> ipiv(n);
     for (idx i = 0; i < n; ++i) ipiv[i] = static_cast<lapack_int>(f.piv[i] + 1);
     LAPACKE_dgetri(LAPACK_ROW_MAJOR, static_cast<lapack_int>(n), inv.data(),
                    static_cast<lapack_int>(n), ipiv.data());
 #else
-    std::vector<real> work(n);
+    array<real> work(n);
     kernel::lu_invert(inv.data(), f.piv.data(), n, work.data());
 #endif
     return inv;

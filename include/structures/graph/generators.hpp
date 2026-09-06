@@ -92,8 +92,8 @@ template <typename Weight = double, std::integral Index = num::idx, typename RNG
                                                        static_cast<double>(max_weight));
 
     // Wilson's algorithm / Loop-Erased Random Walk for uniform spanning tree in O(n)
-    std::vector<bool> in_tree(n, false);
-    std::vector<Index> next(n);
+    array<bool> in_tree(n, false);
+    array<Index> next(n);
 
     // Root the tree at vertex 0
     in_tree[0] = true;

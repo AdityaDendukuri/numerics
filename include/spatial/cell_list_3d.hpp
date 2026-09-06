@@ -2,6 +2,7 @@
 /// @brief Cache-coherent 3D cell list for O(1) amortized neighbour queries
 #pragma once
 
+#include "core/types.hpp"
 #include "spatial/concepts.hpp"
 
 #include <algorithm>
@@ -144,7 +145,7 @@ class cell_list_3d {
     scalar cs_ = 0, xmin_ = 0, ymin_ = 0, zmin_ = 0;
     int nx_ = 0, ny_ = 0, nz_ = 0;
 
-    std::vector<int> sorted_, start_, count_;
+    array<int> sorted_, start_, count_;
 
     int cell_x(scalar x) const noexcept {
         const int cx = static_cast<int>(std::floor((x - xmin_) / cs_)) + 1;

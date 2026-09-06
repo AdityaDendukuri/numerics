@@ -65,11 +65,11 @@ namespace num {
 /// diagonal, `upper` off it).
 struct block_lu_factor {
     idx size = 0;                  ///< Order of the original matrix.
-    std::vector<idx> offsets;      ///< `nb + 1` block boundaries in reordered indexing.
-    std::vector<idx> order;        ///< `order[p]` is the original row at reordered position `p`.
-    std::vector<no_pivot_lu> diagonal; ///< No-pivot factors of the diagonal Schur blocks.
-    std::vector<mat> upper;     ///< `upper[k]`: block (k, k+1). Size `nb - 1`.
-    std::vector<mat> lower;     ///< `lower[k]`: block (k+1, k), already scaled. Size `nb - 1`.
+    array<idx> offsets;      ///< `nb + 1` block boundaries in reordered indexing.
+    array<idx> order;        ///< `order[p]` is the original row at reordered position `p`.
+    array<no_pivot_lu> diagonal; ///< No-pivot factors of the diagonal Schur blocks.
+    array<mat> upper;     ///< `upper[k]`: block (k, k+1). Size `nb - 1`.
+    array<mat> lower;     ///< `lower[k]`: block (k+1, k), already scaled. Size `nb - 1`.
 
     /// @brief Number of blocks.
     [[nodiscard]] idx blocks() const noexcept {
@@ -92,10 +92,10 @@ struct block_lu_factor {
 /// \f$L_k^{-T}\f$.
 struct block_cholesky_factor {
     idx size = 0;
-    std::vector<idx> offsets;
-    std::vector<idx> order;
-    std::vector<cholesky_result> diagonal;
-    std::vector<mat> lower; ///< `lower[k]`: block (k+1, k). Size `nb - 1`.
+    array<idx> offsets;
+    array<idx> order;
+    array<cholesky_result> diagonal;
+    array<mat> lower; ///< `lower[k]`: block (k+1, k). Size `nb - 1`.
 
     [[nodiscard]] idx blocks() const noexcept {
         return offsets.empty() ? 0 : offsets.size() - 1;
@@ -112,10 +112,10 @@ namespace detail {
 
 /// @brief Reordering induced by a level labelling.
 struct block_layout {
-    std::vector<idx> offsets;  ///< `nb + 1` boundaries.
-    std::vector<idx> order;    ///< reordered position -> original row.
-    std::vector<idx> position; ///< original row -> reordered position.
-    std::vector<idx> block_of; ///< original row -> block index.
+    array<idx> offsets;  ///< `nb + 1` boundaries.
+    array<idx> order;    ///< reordered position -> original row.
+    array<idx> position; ///< original row -> reordered position.
+    array<idx> block_of; ///< original row -> block index.
 };
 
 /// @brief Compress arbitrary level labels into contiguous blocks and build the permutation.
@@ -124,9 +124,9 @@ struct block_layout {
 /// distinct values become blocks `0, 1, ...` in that order. Rows keep their
 /// original relative order within a block, so the permutation is deterministic
 /// and a run of already-sorted labels is the identity.
-[[nodiscard]] inline block_layout build_block_order(std::span<const idx> levels) {
+[[nodiscard]] inline block_layout build_block_order(view<const idx> levels) {
     const idx n = levels.size();
-    std::vector<idx> distinct(levels.begin(), levels.end());
+    array<idx> distinct(levels.begin(), levels.end());
     std::sort(distinct.begin(), distinct.end());
     distinct.erase(std::unique(distinct.begin(), distinct.end()), distinct.end());
 
@@ -146,7 +146,7 @@ struct block_layout {
         layout.offsets[k + 1] += layout.offsets[k];
     }
 
-    std::vector<idx> cursor(layout.offsets.begin(), layout.offsets.end() - 1);
+    array<idx> cursor(layout.offsets.begin(), layout.offsets.end() - 1);
     for (idx row = 0; row < n; ++row) {
         const idx slot = cursor[layout.block_of[row]]++;
         layout.order[slot] = row;
@@ -187,9 +187,9 @@ inline void validate_block_structure(const spmat &A, const block_layout &layout)
 
 /// @brief Dense diagonal, super- and sub-diagonal blocks in reordered indexing.
 struct assembled_blocks {
-    std::vector<mat> diagonal;
-    std::vector<mat> upper;
-    std::vector<mat> lower;
+    array<mat> diagonal;
+    array<mat> upper;
+    array<mat> lower;
 };
 
 /// @brief Scatter the sparse entries into dense blocks, scaling as it goes.
@@ -237,7 +237,7 @@ struct assembled_blocks {
 }
 
 /// @brief Permute a right-hand side into block order.
-[[nodiscard]] inline mat gather_rows(const mat &B, const std::vector<idx> &order) {
+[[nodiscard]] inline mat gather_rows(const mat &B, const array<idx> &order) {
     mat out(B.rows(), B.cols(), 0.0);
     for (idx p = 0; p < B.rows(); ++p) {
         for (idx c = 0; c < B.cols(); ++c) {
@@ -248,7 +248,7 @@ struct assembled_blocks {
 }
 
 /// @brief Undo `gather_rows`.
-inline void scatter_rows(const mat &in, const std::vector<idx> &order, mat &out) {
+inline void scatter_rows(const mat &in, const array<idx> &order, mat &out) {
     for (idx p = 0; p < in.rows(); ++p) {
         for (idx c = 0; c < in.cols(); ++c) {
             out(order[p], c) = in(p, c);
@@ -256,7 +256,7 @@ inline void scatter_rows(const mat &in, const std::vector<idx> &order, mat &out)
     }
 }
 
-[[nodiscard]] inline vec gather_rows(const vec &b, const std::vector<idx> &order) {
+[[nodiscard]] inline vec gather_rows(const vec &b, const array<idx> &order) {
     vec out(b.size(), 0.0);
     for (idx p = 0; p < b.size(); ++p) {
         out[p] = b[order[p]];
@@ -264,7 +264,7 @@ inline void scatter_rows(const mat &in, const std::vector<idx> &order, mat &out)
     return out;
 }
 
-inline void scatter_rows(const vec &in, const std::vector<idx> &order, vec &out) {
+inline void scatter_rows(const vec &in, const array<idx> &order, vec &out) {
     for (idx p = 0; p < in.size(); ++p) {
         out[order[p]] = in[p];
     }
@@ -329,7 +329,7 @@ inline void subtract_from(vec &target, const vec &update) {
 }
 
 /// @brief Common validation and layout construction for both factorizations.
-[[nodiscard]] inline block_layout prepare(const spmat &A, std::span<const idx> levels) {
+[[nodiscard]] inline block_layout prepare(const spmat &A, view<const idx> levels) {
     if (A.n_rows() != A.n_cols()) {
         throw std::invalid_argument("block_tridiagonal: matrix must be square");
     }
@@ -410,7 +410,7 @@ inline void subtract_from(vec &target, const vec &update) {
 ///         or a nonzero couples non-adjacent blocks.
 /// @throws std::runtime_error If a diagonal Schur block has a zero pivot.
 [[nodiscard]] inline block_lu_factor factor_block_lu(const spmat &A,
-                                                   std::span<const idx> levels,
+                                                   view<const idx> levels,
                                                    real scale = 1.0) {
     const detail::block_layout layout = detail::prepare(A, levels);
     detail::assembled_blocks blocks = detail::gather_blocks(A, layout, scale);
@@ -603,7 +603,7 @@ inline void solve_transpose(const block_lu_factor &factor, const vec &b, vec &x)
 ///         or a nonzero couples non-adjacent blocks.
 /// @throws std::runtime_error If a diagonal block is not positive definite.
 [[nodiscard]] inline block_cholesky_factor factor_block_cholesky(const spmat &A,
-                                                               std::span<const idx> levels) {
+                                                               view<const idx> levels) {
     const detail::block_layout layout = detail::prepare(A, levels);
     detail::assembled_blocks blocks = detail::gather_blocks(A, layout, real(1));
     const idx count = layout.offsets.size() - 1;

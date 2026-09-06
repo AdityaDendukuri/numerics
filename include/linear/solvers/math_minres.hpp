@@ -2,6 +2,7 @@
 /// @brief Generic MINRES constrained by self-adjoint evidence.
 #pragma once
 
+#include "core/types.hpp"
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
 #include "core/math/concepts.hpp"
@@ -24,7 +25,7 @@ struct minres_options {
 
 namespace math_krylov_detail {
 
-inline vec minres_projected_solve(const std::vector<real> &alpha, const std::vector<real> &beta,
+inline vec minres_projected_solve(const array<real> &alpha, const array<real> &beta,
                                      real beta0, idx m) {
     mat H(m + 1, m, 0.0);
     for (idx j = 0; j < m; ++j) {
@@ -69,13 +70,13 @@ requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
         return result;
 
     const idx mmax = std::min<idx>(options.max_iterations, static_cast<idx>(n));
-    std::vector<V> basis;
+    array<V> basis;
     basis.reserve(mmax + 1);
     basis.push_back(residual);
     math::scale(real(1) / beta0, basis[0]);
 
-    std::vector<real> alpha;
-    std::vector<real> beta;
+    array<real> alpha;
+    array<real> beta;
     alpha.reserve(mmax);
     beta.reserve(mmax);
     V previous = math::zero_like(b);

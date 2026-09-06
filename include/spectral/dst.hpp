@@ -51,7 +51,7 @@ inline vec dst1(const vec &x) {
     return out;
 }
 
-inline void dst_rows(std::vector<double> &A, int N) {
+inline void dst_rows(array<double> &A, int N) {
     vec row(static_cast<std::size_t>(N));
     for (int i = 0; i < N; ++i) {
         const std::size_t base = static_cast<std::size_t>(i) * static_cast<std::size_t>(N);
@@ -65,7 +65,7 @@ inline void dst_rows(std::vector<double> &A, int N) {
     }
 }
 
-inline void dst_cols(std::vector<double> &A, int N) {
+inline void dst_cols(array<double> &A, int N) {
     vec col(static_cast<std::size_t>(N));
     for (int j = 0; j < N; ++j) {
         const std::size_t sj = static_cast<std::size_t>(j);
@@ -81,7 +81,7 @@ inline void dst_cols(std::vector<double> &A, int N) {
     }
 }
 
-inline void dst2d(std::vector<double> &A, int N) {
+inline void dst2d(array<double> &A, int N) {
     dst_check_size(N);
     dst_cols(A, N);
     dst_rows(A, N);

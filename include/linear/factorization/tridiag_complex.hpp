@@ -14,8 +14,8 @@ namespace num {
 struct complex_tri_diag {
     using cplx = std::complex<double>;
 
-    std::vector<cplx> c_mod;
-    std::vector<cplx> inv_b;
+    array<cplx> c_mod;
+    array<cplx> inv_b;
     int n = 0;
     cplx a_coeff = {};
 
@@ -23,7 +23,7 @@ struct complex_tri_diag {
     void factor(int n_, cplx a_, cplx b_, cplx c_);
 
     /// Replace a matching right-hand side with its solution.
-    void solve(std::vector<cplx> &d) const;
+    void solve(array<cplx> &d) const;
 };
 
 
@@ -47,7 +47,7 @@ inline void complex_tri_diag::factor(int n_, cplx a_, cplx b_, cplx c_) {
     }
 }
 
-inline void complex_tri_diag::solve(std::vector<cplx> &d) const {
+inline void complex_tri_diag::solve(array<cplx> &d) const {
     // Forward sweep
     d[0] *= inv_b[0];
     for (int k = 1; k < n; ++k) {

@@ -109,12 +109,12 @@ class basic_disjoint_set {
     }
 
     /// Return all connected components as lists of element indices.
-    [[nodiscard]] std::vector<std::vector<Index>> components() {
-        std::vector<std::vector<Index>> comp_map(parent_.size());
+    [[nodiscard]] array<array<Index>> components() {
+        array<array<Index>> comp_map(parent_.size());
         for (Index i = 0; i < static_cast<Index>(parent_.size()); ++i) {
             comp_map[find(i)].push_back(i);
         }
-        std::vector<std::vector<Index>> result;
+        array<array<Index>> result;
         result.reserve(count_);
         for (auto &c : comp_map) {
             if (!c.empty()) {
@@ -125,9 +125,9 @@ class basic_disjoint_set {
     }
 
   private:
-    std::vector<Index> parent_;
-    std::vector<Index> rank_;
-    std::vector<Index> size_;
+    array<Index> parent_;
+    array<Index> rank_;
+    array<Index> size_;
     Index count_ = 0;
 };
 

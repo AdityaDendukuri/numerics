@@ -2,6 +2,7 @@
 /// @brief Matplotlib-style plotting via a gnuplot pipe with ASCII terminal support.
 #pragma once
 
+#include "core/types.hpp"
 #include "plot/gnuplot.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -24,7 +25,7 @@ struct series_entry {
 
 /// 2-D field snapshot for heatmap rendering via gnuplot pm3d map.
 struct heatmap_entry {
-    std::vector<double> data; // NxN row-major values
+    array<double> data; // NxN row-major values
     int N = 0;
     double h = 1.0;
     double vmin = 0.0;
@@ -32,8 +33,8 @@ struct heatmap_entry {
 };
 
 struct plot_panel {
-    std::vector<series_entry> series;
-    std::vector<heatmap_entry> heatmaps;
+    array<series_entry> series;
+    array<heatmap_entry> heatmaps;
     std::string title_, xlabel_, ylabel_;
     std::string xrange_, yrange_;
     std::string palette_; // gnuplot palette string; empty = hot/fire
@@ -45,7 +46,7 @@ struct plot_panel {
 
 struct plot_state {
     plot_panel current;
-    std::vector<plot_panel> panels;       // accumulated panels in multiplot mode
+    array<plot_panel> panels;       // accumulated panels in multiplot mode
     int mp_rows_ = 0, mp_cols_ = 0;  // 0 = single-plot mode
     std::string term_override_ = ""; // "dumb", "qt", "pngcairo"
     int term_w_ = 140, term_h_ = 35;
@@ -165,7 +166,7 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
 inline void flush_to(FILE *pipe, const std::string &outfile) {
     auto &s = state();
 
-    std::vector<plot_panel> all = s.panels;
+    array<plot_panel> all = s.panels;
     all.push_back(s.current);
 
     bool multiplot = (s.mp_rows_ > 0);
@@ -316,18 +317,18 @@ inline void plot_paths(const Paths &paths, const Labels &labels, const Colors &c
         last_end = std::max(last_end, path.times.back());
     }
 
-    std::vector<double> times(samples);
+    array<double> times(samples);
     for (std::size_t i = 0; i < samples; ++i) {
         times[i] = last_end * static_cast<double>(i) / static_cast<double>(samples - 1);
     }
 
     const std::size_t components = labels.size();
-    std::vector<std::vector<double>> lower(
-        components, std::vector<double>(samples, std::numeric_limits<double>::max()));
-    std::vector<std::vector<double>> upper(
-        components, std::vector<double>(samples, std::numeric_limits<double>::lowest()));
-    std::vector<std::vector<double>> mean(components, std::vector<double>(samples, 0.0));
-    std::vector<std::size_t> active(samples, 0);
+    array<array<double>> lower(
+        components, array<double>(samples, std::numeric_limits<double>::max()));
+    array<array<double>> upper(
+        components, array<double>(samples, std::numeric_limits<double>::lowest()));
+    array<array<double>> mean(components, array<double>(samples, 0.0));
+    array<std::size_t> active(samples, 0);
 
     for (const auto &path : paths) {
         std::size_t state = 0;

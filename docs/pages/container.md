@@ -15,7 +15,7 @@ Construct from existing contiguous values:
 
 ```cpp
 std::array<num::real, 3> source{1.0, 2.0, 3.0};
-num::vec x(std::span<const num::real>(source)); // Copy source.
+num::vec x(num::view<const num::real>(source)); // Copy source.
 ```
 
 ### Read and write entries
@@ -92,8 +92,8 @@ std::array<num::real, 3> x{1.0, 2.0, 3.0};
 std::array<num::real, 3> y{4.0, 5.0, 6.0};
 
 num::real product = num::dot(
-    std::span<const num::real>(x),
-    std::span<const num::real>(y)); // No vec allocation.
+    num::view<const num::real>(x),
+    num::view<const num::real>(y)); // No vec allocation.
 ```
 
 ### View interleaved coordinates
@@ -214,7 +214,7 @@ num::mat E = num::identity_columns(5, 1, 2);
 ```cpp
 num::vec diagonal = num::diagonal(A); // Copy A's main diagonal.
 num::mat D = num::diagonal_matrix(
-    std::span<const num::real>(diagonal.data(), diagonal.size()));
+    num::view<const num::real>(diagonal.data(), diagonal.size()));
 ```
 
 ```cpp
@@ -286,9 +286,9 @@ num::scatter<num::real>(values, indices, output, true); // Add into output.
 ```cpp
 auto A = num::spmat::from_triplets(
     3, 3,
-    std::vector<num::idx>{0, 0, 1, 2},
-    std::vector<num::idx>{0, 1, 1, 2},
-    std::vector<num::real>{2.0, 1.0, 3.0, 4.0});
+    num::array<num::idx>{0, 0, 1, 2},
+    num::array<num::idx>{0, 1, 1, 2},
+    num::array<num::real>{2.0, 1.0, 3.0, 4.0});
 // Duplicate triplets are summed and stored as CSR.
 ```
 
@@ -405,7 +405,7 @@ compile time.
 
 ```cpp
 std::array<num::real, 4> values{1.0, 4.0, 4.0, 2.0};
-num::idx best = num::argmax(std::span<const num::real>(values)); // 1
+num::idx best = num::argmax(num::view<const num::real>(values)); // 1
 ```
 
 ### Maximize a projected score
@@ -420,7 +420,7 @@ num::idx best = num::argmax(values.size(), [&](num::idx index) {
 
 ```cpp
 auto indices = num::smallest_indices(
-    std::span<const num::real>(values), 2); // Indices sorted by value.
+    num::view<const num::real>(values), 2); // Indices sorted by value.
 ```
 
 ### Normalize nonnegative mass

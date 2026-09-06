@@ -8,6 +8,7 @@
 /// Flat layout: i = row * N + col,  row and col in [0, N).
 #pragma once
 
+#include "core/types.hpp"
 #include <vector>
 
 namespace num {
@@ -15,7 +16,7 @@ namespace num {
 /// 4-neighbor periodic-boundary index arrays for an NxN lattice.
 struct pbc_lattice_2d {
     int N; ///< Side length; total sites = N*N
-    std::vector<int> up, dn, lt,
+    array<int> up, dn, lt,
         rt; ///< up/dn = row +/-1, lt/rt = col +/-1 (PBC)
 
     explicit pbc_lattice_2d(int N) : N(N), up(N * N), dn(N * N), lt(N * N), rt(N * N) {

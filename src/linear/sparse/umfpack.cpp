@@ -12,8 +12,8 @@ namespace num {
 struct umfpack_factor::Impl {
     idx n = 0;
 #if defined(NUMERICS_HAS_UMFPACK)
-    std::vector<int> ap, ai;
-    std::vector<double> ax;
+    array<int> ap, ai;
+    array<double> ax;
     void *symbolic = nullptr;
     void *numeric = nullptr;
     ~Impl() {
@@ -56,7 +56,7 @@ umfpack_factor::umfpack_factor(const spmat &matrix) : impl_(std::make_unique<Imp
     }
     impl_->ai.resize(matrix.nnz());
     impl_->ax.resize(matrix.nnz());
-    std::vector<int> next = impl_->ap;
+    array<int> next = impl_->ap;
     for (idx row = 0; row < matrix.n_rows(); ++row) {
         for (idx k = matrix.row_ptr()[row]; k < matrix.row_ptr()[row + 1]; ++k) {
             const int col = static_cast<int>(matrix.col_idx()[k]);

@@ -102,15 +102,15 @@ Reduces square \f$A\f$ to upper Hessenberg form \f$A = Q H Q^T\f$ in \f$\mathcal
 num::hessenberg_resolvent_solver solver(A); // Computes A = Q*H*Q^T in O(n^3)
 
 num::cplx z{1.0, 2.0};
-std::vector<num::cplx> rhs(A.rows(), num::cplx{1.0, 0.0});
-std::vector<num::cplx> x = solver.solve(z, rhs); // O(n^2) shifted solve
+num::array<num::cplx> rhs(A.rows(), num::cplx{1.0, 0.0});
+num::array<num::cplx> x = solver.solve(z, rhs); // O(n^2) shifted solve
 ```
 
 For manual buffer reuse across shifts:
 ```cpp
 num::hessenberg_decomposition decomp(A);
-std::vector<num::cplx> work, y, x;
-std::vector<num::idx> pivots;
+num::array<num::cplx> work, y, x;
+num::array<num::idx> pivots;
 
 auto b_tilde = num::hessenberg_project(decomp.Q(), b); // b_tilde = Q^T * b
 num::hessenberg_shifted_solve(decomp.H(), z, b_tilde, y, work, pivots);
@@ -172,12 +172,12 @@ num::vec diag(A.rows(), 0.0);
 num::inverse_diagonal(factor, diag, work);
 
 // 2. Selected entries A^{-1}(rows[i], cols[i])
-std::vector<num::idx> rows{0, 2}, cols{0, 2};
+num::array<num::idx> rows{0, 2}, cols{0, 2};
 num::vec entries(2, 0.0);
 num::selected_inverse(factor, rows, cols, entries, work);
 
 // 3. Principal k x k block [A^{-1}]_{S, S}
-std::vector<num::idx> subset{0, 1};
+num::array<num::idx> subset{0, 1};
 num::mat block;
 num::inverse_principal_block(factor, subset, block, work);
 ```

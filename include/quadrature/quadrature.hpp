@@ -186,7 +186,7 @@ inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8
 /// @return Extrapolated integral approximation.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float romberg(Func &&f, Float a, Float b, Float tol = Float{1e-10}, idx max_levels = 12) {
-    std::vector<std::vector<Float>> R(max_levels, std::vector<Float>(max_levels, Float{0}));
+    array<array<Float>> R(max_levels, array<Float>(max_levels, Float{0}));
     R[0][0] = Float{0.5} * (b - a) * (f(a) + f(b));
 
     for (idx i = 1; i < max_levels; ++i) {

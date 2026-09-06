@@ -21,14 +21,14 @@ namespace num {
 class spmat {
   public:
     /// @brief Construct from raw CSR arrays (takes ownership)
-    spmat(idx n_rows, idx n_cols, std::vector<real> vals, std::vector<idx> col_idx,
-                 std::vector<idx> row_ptr);
+    spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx,
+                 array<idx> row_ptr);
 
     /// @brief Build from coordinate (COO / triplet) lists
     ///
     /// Duplicate (row, col) entries are summed. Entries need not be sorted.
-    static spmat from_triplets(idx n_rows, idx n_cols, const std::vector<idx> &rows,
-                                      const std::vector<idx> &cols, const std::vector<real> &vals);
+    static spmat from_triplets(idx n_rows, idx n_cols, const array<idx> &rows,
+                                      const array<idx> &cols, const array<real> &vals);
 
     /// @brief Build from zero-based compressed-column (CSC) arrays.
     ///
@@ -36,9 +36,9 @@ class spmat {
     /// payload arrays may contain a trailing unused entry, as produced by the
     /// Armadillo sparse serializer; only the first `col_ptrs.back()` entries
     /// are consumed.  All indices and pointers are zero-based.
-    static spmat from_csc(idx n_rows, idx n_cols, const std::vector<real> &vals,
-                                 const std::vector<idx> &row_indices,
-                                 const std::vector<idx> &col_ptrs);
+    static spmat from_csc(idx n_rows, idx n_cols, const array<real> &vals,
+                                 const array<idx> &row_indices,
+                                 const array<idx> &col_ptrs);
 
     [[nodiscard]] idx n_rows() const { return n_rows_; }
     [[nodiscard]] idx n_cols() const { return n_cols_; }
@@ -72,9 +72,9 @@ class spmat {
 
   private:
     idx n_rows_ = 0, n_cols_ = 0;
-    std::vector<real> vals_;
-    std::vector<idx> col_idx_;
-    std::vector<idx> row_ptr_; // size n_rows_ + 1
+    array<real> vals_;
+    array<idx> col_idx_;
+    array<idx> row_ptr_; // size n_rows_ + 1
 };
 
 /// @brief Sparse matrix-vector product \f$\mathbf{y} \leftarrow A \mathbf{x}\f$ in \f$\mathcal{O}(\text{nnz})\f$ time.
@@ -111,12 +111,12 @@ void sparse_matvec(const spmat &A, const vec &x, vec &y);
 /// @param weights Positive diagonal weight entries \f$w_i > 0\f$.
 /// @return Dense similarity transformed matrix \f$D^{-1} A D\f$.
 /// @throws std::invalid_argument If dimensions mismatch or any weight is non-positive.
-[[nodiscard]] mat diagonal_similarity(const spmat &A, std::span<const real> weights);
+[[nodiscard]] mat diagonal_similarity(const spmat &A, view<const real> weights);
 
 
 
-inline spmat::spmat(idx n_rows, idx n_cols, std::vector<real> vals, std::vector<idx> col_idx,
-                           std::vector<idx> row_ptr)
+inline spmat::spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx,
+                           array<idx> row_ptr)
     : n_rows_(n_rows), n_cols_(n_cols), vals_(std::move(vals)), col_idx_(std::move(col_idx)),
       row_ptr_(std::move(row_ptr)) {
     if (row_ptr_.size() != n_rows_ + 1) {
@@ -127,15 +127,15 @@ inline spmat::spmat(idx n_rows, idx n_cols, std::vector<real> vals, std::vector<
     }
 }
 
-inline spmat spmat::from_triplets(idx n_rows, idx n_cols, const std::vector<idx> &rows,
-                                         const std::vector<idx> &cols,
-                                         const std::vector<real> &vals) {
+inline spmat spmat::from_triplets(idx n_rows, idx n_cols, const array<idx> &rows,
+                                         const array<idx> &cols,
+                                         const array<real> &vals) {
     if (rows.size() != cols.size() || rows.size() != vals.size()) {
         throw std::invalid_argument("spmat::from_triplets: inconsistent input sizes");
     }
 
     // Count entries per row
-    std::vector<idx> row_count(n_rows, 0);
+    array<idx> row_count(n_rows, 0);
     for (idx k = 0; k < rows.size(); ++k) {
         if (rows[k] >= n_rows || cols[k] >= n_cols) {
             throw std::out_of_range("spmat::from_triplets: index out of range");
@@ -144,17 +144,17 @@ inline spmat spmat::from_triplets(idx n_rows, idx n_cols, const std::vector<idx>
     }
 
     // Build row_ptr
-    std::vector<idx> row_ptr(n_rows + 1, 0);
+    array<idx> row_ptr(n_rows + 1, 0);
     for (idx i = 0; i < n_rows; ++i) {
         row_ptr[i + 1] = row_ptr[i] + row_count[i];
     }
 
     idx nnz = row_ptr[n_rows];
-    std::vector<real> out_vals(nnz, 0.0);
-    std::vector<idx> out_col(nnz);
+    array<real> out_vals(nnz, 0.0);
+    array<idx> out_col(nnz);
 
     // Fill entries (stable insertion within each row)
-    std::vector<idx> fill_pos = row_ptr;
+    array<idx> fill_pos = row_ptr;
     for (idx k = 0; k < rows.size(); ++k) {
         idx pos = fill_pos[rows[k]]++;
         out_col[pos] = cols[k];
@@ -165,13 +165,13 @@ inline spmat spmat::from_triplets(idx n_rows, idx n_cols, const std::vector<idx>
     for (idx i = 0; i < n_rows; ++i) {
         idx start = row_ptr[i], end = row_ptr[i + 1];
         // Sort by column index
-        std::vector<idx> order(end - start);
+        array<idx> order(end - start);
         std::iota(order.begin(), order.end(), 0);
         std::sort(order.begin(), order.end(),
                   [&](idx a, idx b) { return out_col[start + a] < out_col[start + b]; });
 
-        std::vector<real> sv(end - start);
-        std::vector<idx> sc(end - start);
+        array<real> sv(end - start);
+        array<idx> sc(end - start);
         for (idx k = 0; k < order.size(); ++k) {
             sv[k] = out_vals[start + order[k]];
             sc[k] = out_col[start + order[k]];
@@ -215,9 +215,9 @@ inline spmat spmat::from_triplets(idx n_rows, idx n_cols, const std::vector<idx>
                         std::move(row_ptr));
 }
 
-inline spmat spmat::from_csc(idx n_rows, idx n_cols, const std::vector<real> &vals,
-                                    const std::vector<idx> &row_indices,
-                                    const std::vector<idx> &col_ptrs) {
+inline spmat spmat::from_csc(idx n_rows, idx n_cols, const array<real> &vals,
+                                    const array<idx> &row_indices,
+                                    const array<idx> &col_ptrs) {
     if (col_ptrs.size() != n_cols + 1) {
         throw std::invalid_argument("spmat::from_csc: col_ptrs must have length n_cols+1");
     }
@@ -238,7 +238,7 @@ inline spmat spmat::from_csc(idx n_rows, idx n_cols, const std::vector<real> &va
         throw std::invalid_argument("spmat::from_csc: payload shorter than col_ptrs.back()");
     }
 
-    std::vector<idx> row_ptr(n_rows + 1, 0);
+    array<idx> row_ptr(n_rows + 1, 0);
     for (idx k = 0; k < nnz; ++k) {
         if (row_indices[k] >= n_rows) {
             throw std::out_of_range("spmat::from_csc: row index out of range");
@@ -249,9 +249,9 @@ inline spmat spmat::from_csc(idx n_rows, idx n_cols, const std::vector<real> &va
         row_ptr[i + 1] += row_ptr[i];
     }
 
-    std::vector<real> out_vals(nnz);
-    std::vector<idx> out_col(nnz);
-    std::vector<idx> next = row_ptr;
+    array<real> out_vals(nnz);
+    array<idx> out_col(nnz);
+    array<idx> next = row_ptr;
     for (idx j = 0; j < n_cols; ++j) {
         for (idx k = col_ptrs[j]; k < col_ptrs[j + 1]; ++k) {
             const idx i = row_indices[k];
@@ -282,17 +282,17 @@ inline void sparse_matvec(const spmat &A, const vec &x, vec &y) {
 }
 
 inline spmat scaled(const spmat &A, real alpha) {
-    std::vector<real> values(A.values(), A.values() + A.nnz());
+    array<real> values(A.values(), A.values() + A.nnz());
     for (real &value : values) {
         value *= alpha;
     }
     return {A.n_rows(), A.n_cols(), std::move(values),
-            std::vector<idx>(A.col_idx(), A.col_idx() + A.nnz()),
-            std::vector<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
+            array<idx>(A.col_idx(), A.col_idx() + A.nnz()),
+            array<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
 }
 
 inline spmat transpose(const spmat &A) {
-    std::vector<idx> column_ptr(A.n_cols() + 1, 0);
+    array<idx> column_ptr(A.n_cols() + 1, 0);
     for (idx entry = 0; entry < A.nnz(); ++entry) {
         ++column_ptr[A.col_idx()[entry] + 1];
     }
@@ -300,9 +300,9 @@ inline spmat transpose(const spmat &A) {
         column_ptr[column + 1] += column_ptr[column];
     }
 
-    std::vector<real> values(A.nnz());
-    std::vector<idx> columns(A.nnz());
-    std::vector<idx> next = column_ptr;
+    array<real> values(A.nnz());
+    array<idx> columns(A.nnz());
+    array<idx> next = column_ptr;
     for (idx row = 0; row < A.n_rows(); ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
             const idx destination = next[A.col_idx()[entry]]++;
@@ -337,7 +337,7 @@ inline vec diagonal(const spmat &A) {
     return result;
 }
 
-inline mat diagonal_similarity(const spmat &A, std::span<const real> weights) {
+inline mat diagonal_similarity(const spmat &A, view<const real> weights) {
     if (A.n_rows() != A.n_cols() || weights.size() != A.n_rows()) {
         throw std::invalid_argument("diagonal_similarity: dimensions must match");
     }

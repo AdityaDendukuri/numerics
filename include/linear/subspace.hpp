@@ -15,8 +15,8 @@ namespace num::dispatch::subspace {
 
 /// @brief Modified Gram–Schmidt orthogonalization against basis vectors \f$\mathbf{v}_0, \dots,
 /// \mathbf{v}_{k-1}\f$.
-[[nodiscard]] real mgs_orthogonalize(const std::vector<vec> &basis, vec &v,
-                                     std::vector<real> &h, idx k);
+[[nodiscard]] real mgs_orthogonalize(const array<vec> &basis, vec &v,
+                                     array<real> &h, idx k);
 
 /// @brief Modified Gram–Schmidt orthogonalization against columns \f$0, \dots, k-1\f$ of a
 /// row-major matrix.
@@ -27,7 +27,7 @@ template <class Op>
 requires requires(const Op &A, const vec &x, vec &y) {
     A.apply(x, y);
 }
-[[nodiscard]] real arnoldi_step(const Op &A, std::vector<vec> &basis, std::vector<real> &h,
+[[nodiscard]] real arnoldi_step(const Op &A, array<vec> &basis, array<real> &h,
                                 idx k, vec &scratch, real breakdown_tol = real(1e-14)) {
     // w <- A*v_k
     A.apply(basis[k], scratch);
@@ -45,7 +45,7 @@ requires requires(const Op &A, const vec &x, vec &y) {
     return beta;
 }
 
-inline real mgs_orthogonalize(const std::vector<vec> &basis, vec &v, std::vector<real> &h,
+inline real mgs_orthogonalize(const array<vec> &basis, vec &v, array<real> &h,
                               idx k) {
     for (idx i = 0; i < k; ++i) {
         // h_i <- v_i^T*v

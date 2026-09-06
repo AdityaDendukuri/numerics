@@ -2,6 +2,7 @@
 /// @brief Verlet neighbour list with skin-radius temporal caching
 #pragma once
 
+#include "core/types.hpp"
 #include "spatial/concepts.hpp"
 
 #include "cell_list.hpp"
@@ -83,10 +84,10 @@ class verlet_list_2d {
 
   private:
     scalar cutoff_, skin_, ext_sq_;
-    std::vector<int> flat_;
-    std::vector<int> starts_;
-    std::vector<scalar> ref_x_;
-    std::vector<scalar> ref_y_;
+    array<int> flat_;
+    array<int> starts_;
+    array<scalar> ref_x_;
+    array<scalar> ref_y_;
 };
 
 } // namespace num

@@ -55,7 +55,7 @@ class basic_multigraph {
     }
 
     /// Const access to neighbor list of vertex u.
-    [[nodiscard]] const std::vector<edge_type> &neighbors(Index u) const {
+    [[nodiscard]] const array<edge_type> &neighbors(Index u) const {
         if (u >= adj_.size()) {
             throw std::out_of_range("basic_multigraph::neighbors: vertex index out of range");
         }
@@ -63,7 +63,7 @@ class basic_multigraph {
     }
 
     /// Mutable access to neighbor list of vertex u.
-    [[nodiscard]] std::vector<edge_type> &neighbors(Index u) {
+    [[nodiscard]] array<edge_type> &neighbors(Index u) {
         if (u >= adj_.size()) {
             throw std::out_of_range("basic_multigraph::neighbors: vertex index out of range");
         }
@@ -71,20 +71,20 @@ class basic_multigraph {
     }
 
     /// Raw underlying adjacency list.
-    [[nodiscard]] const std::vector<std::vector<edge_type>> &adjacency() const noexcept {
+    [[nodiscard]] const array<array<edge_type>> &adjacency() const noexcept {
         return adj_;
     }
 
     /// Mutable raw underlying adjacency list.
-    [[nodiscard]] std::vector<std::vector<edge_type>> &adjacency() noexcept {
+    [[nodiscard]] array<array<edge_type>> &adjacency() noexcept {
         return adj_;
     }
 
     /// Subscript operator for vertex neighbors.
-    [[nodiscard]] const std::vector<edge_type> &operator[](Index u) const {
+    [[nodiscard]] const array<edge_type> &operator[](Index u) const {
         return adj_[u];
     }
-    [[nodiscard]] std::vector<edge_type> &operator[](Index u) {
+    [[nodiscard]] array<edge_type> &operator[](Index u) {
         return adj_[u];
     }
 
@@ -104,7 +104,7 @@ class basic_multigraph {
 
 
   private:
-    std::vector<std::vector<edge_type>> adj_;
+    array<array<edge_type>> adj_;
 };
 
 using multigraph = basic_multigraph<double, num::idx>;

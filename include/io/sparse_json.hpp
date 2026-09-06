@@ -2,6 +2,7 @@
 /// @brief Generic JSON serialization for Numerics sparse matrices using nlohmann::json.
 #pragma once
 
+#include "core/types.hpp"
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -24,19 +25,19 @@ inline spmat sparse_matrix(const json &value) {
     if (!value.contains("shape") || !value.contains("values")) {
         throw std::invalid_argument("sparse matrix JSON missing required fields");
     }
-    const auto shape = value["shape"].get<std::vector<idx>>();
+    const auto shape = value["shape"].get<array<idx>>();
     if (shape.size() != 2) {
         throw std::invalid_argument("sparse matrix shape must have two entries");
     }
-    const auto values = value["values"].get<std::vector<real>>();
+    const auto values = value["values"].get<array<real>>();
     const std::string storage = value.value("format", "csc");
 
     if (storage == "csr") {
         if (!value.contains("col_indices") || !value.contains("row_ptrs")) {
             throw std::invalid_argument("csr sparse matrix JSON missing col_indices or row_ptrs");
         }
-        const auto columns = value["col_indices"].get<std::vector<idx>>();
-        const auto pointers = value["row_ptrs"].get<std::vector<idx>>();
+        const auto columns = value["col_indices"].get<array<idx>>();
+        const auto pointers = value["row_ptrs"].get<array<idx>>();
         if (pointers.size() != shape[0] + 1 || pointers.back() != values.size() ||
             columns.size() != values.size()) {
             throw std::invalid_argument("invalid sparse matrix csr arrays");
@@ -49,8 +50,8 @@ inline spmat sparse_matrix(const json &value) {
     if (!value.contains("row_indices") || !value.contains("col_ptrs")) {
         throw std::invalid_argument("CSC sparse matrix JSON missing row_indices or col_ptrs");
     }
-    const auto rows = value["row_indices"].get<std::vector<idx>>();
-    const auto pointers = value["col_ptrs"].get<std::vector<idx>>();
+    const auto rows = value["row_indices"].get<array<idx>>();
+    const auto pointers = value["col_ptrs"].get<array<idx>>();
     if (pointers.empty() || pointers.back() > values.size() || pointers.back() > rows.size()) {
         throw std::invalid_argument("invalid sparse matrix CSC pointers");
     }
@@ -62,9 +63,9 @@ inline json sparse_matrix_json(const spmat &matrix) {
     result["shape"] = {matrix.n_rows(), matrix.n_cols()};
     result["format"] = "csr";
 
-    std::vector<real> values;
-    std::vector<idx> columns;
-    std::vector<idx> pointers;
+    array<real> values;
+    array<idx> columns;
+    array<idx> pointers;
     pointers.reserve(matrix.n_rows() + 1);
     pointers.push_back(0);
 

@@ -39,7 +39,7 @@ for (double x : samples) {
     hist.fill(x);
 }
 
-std::vector<double> pdf = hist.pdf(); // Normalized so sum(p_i * dx) == 1.0
+num::array<double> pdf = hist.pdf(); // Normalized so sum(p_i * dx) == 1.0
 ```
 
 ---

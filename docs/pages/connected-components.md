@@ -21,8 +21,8 @@ neighbor traversal.
 
 ```cpp
 struct num::cluster_result {
-    std::vector<int> id;        // id[i]: -2 = excluded, >=0 = cluster index
-    std::vector<int> sizes;     // sizes[c] = number of sites in cluster c
+    num::array<int> id;        // id[i]: -2 = excluded, >=0 = cluster index
+    num::array<int> sizes;     // sizes[c] = number of sites in cluster c
     int largest_id   = -1;
     int largest_size = 0;
 };

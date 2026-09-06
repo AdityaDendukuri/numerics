@@ -9,6 +9,7 @@
 /// order derivative operators for gradient, divergence, curl, and Laplacian.
 #pragma once
 
+#include "core/types.hpp"
 #include "container/vector.hpp"
 #include "fields/field3d.hpp"
 #include "fields/grid2d.hpp"
@@ -155,7 +156,7 @@ inline real sample_2d_periodic(const vec &field, idx N, real h, real px, real py
 /// @brief Apply a mutable 1D operation to each column fiber.
 template <typename T, typename F>
 void col_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
-    std::vector<T> fiber(N);
+    array<T> fiber(N);
     for (int j = 0; j < N; ++j) {
         for (int i = 0; i < N; ++i) {
             fiber[i] = data[(i * N) + j];
@@ -170,7 +171,7 @@ void col_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
 /// @brief Apply a mutable 1D operation to each row fiber.
 template <typename T, typename F>
 void row_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
-    std::vector<T> fiber(N);
+    array<T> fiber(N);
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             fiber[j] = data[(i * N) + j];

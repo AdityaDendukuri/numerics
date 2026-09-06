@@ -18,52 +18,52 @@ hessenberg_resolvent_solver::hessenberg_resolvent_solver(const mat &A) : decomp_
 hessenberg_resolvent_solver::hessenberg_resolvent_solver(hessenberg_decomposition decomp)
     : decomp_(std::move(decomp)) {}
 
-std::vector<cplx> hessenberg_resolvent_solver::solve(cplx shift, const vec &b) const {
+array<cplx> hessenberg_resolvent_solver::solve(cplx shift, const vec &b) const {
     debug::check_dim(decomp_.size(), b.size(), "hessenberg_resolvent_solver RHS");
     const idx n = decomp_.size();
     const auto b_tilde = hessenberg_project(decomp_.Q(), b);
 
-    std::vector<cplx> y(n);
-    std::vector<cplx> M_buf(n * n);
-    std::vector<idx> pivots(n);
+    array<cplx> y(n);
+    array<cplx> M_buf(n * n);
+    array<idx> pivots(n);
     hessenberg_shifted_solve(decomp_.H(), shift, b_tilde, y, M_buf, pivots);
 
-    std::vector<cplx> x(n);
+    array<cplx> x(n);
     hessenberg_back_project(decomp_.Q(), y, x);
     return x;
 }
 
-std::vector<cplx> hessenberg_resolvent_solver::solve(cplx shift,
-                                                  const std::vector<cplx> &b) const {
+array<cplx> hessenberg_resolvent_solver::solve(cplx shift,
+                                                  const array<cplx> &b) const {
     debug::check_dim(decomp_.size(), static_cast<idx>(b.size()), "hessenberg_resolvent_solver RHS");
     const idx n = decomp_.size();
     const auto b_tilde = hessenberg_project(decomp_.Q(), b);
 
-    std::vector<cplx> y(n);
-    std::vector<cplx> M_buf(n * n);
-    std::vector<idx> pivots(n);
+    array<cplx> y(n);
+    array<cplx> M_buf(n * n);
+    array<idx> pivots(n);
     hessenberg_shifted_solve(decomp_.H(), shift, b_tilde, y, M_buf, pivots);
 
-    std::vector<cplx> x(n);
+    array<cplx> x(n);
     hessenberg_back_project(decomp_.Q(), y, x);
     return x;
 }
 
-std::vector<std::vector<cplx>>
-hessenberg_resolvent_solver::solve_batch(const std::vector<cplx> &shifts, const vec &b) const {
+array<array<cplx>>
+hessenberg_resolvent_solver::solve_batch(const array<cplx> &shifts, const vec &b) const {
     debug::check_dim(decomp_.size(), b.size(), "hessenberg_resolvent_solver RHS");
     const idx n = decomp_.size();
     const auto b_tilde = hessenberg_project(decomp_.Q(), b);
 
-    std::vector<std::vector<cplx>> results(shifts.size(), std::vector<cplx>(n));
+    array<array<cplx>> results(shifts.size(), array<cplx>(n));
 
 #if defined(_OPENMP)
 #pragma omp parallel if (shifts.size() > 2)
 #endif
     {
-        std::vector<cplx> y(n);
-        std::vector<cplx> M_buf(n * n);
-        std::vector<idx> pivots(n);
+        array<cplx> y(n);
+        array<cplx> M_buf(n * n);
+        array<idx> pivots(n);
 
 #if defined(_OPENMP)
 #pragma omp for
@@ -77,27 +77,27 @@ hessenberg_resolvent_solver::solve_batch(const std::vector<cplx> &shifts, const 
     return results;
 }
 
-std::vector<std::vector<std::vector<cplx>>>
-hessenberg_resolvent_solver::solve_batch(const std::vector<cplx> &shifts,
-                                      const std::vector<vec> &rhs_list) const {
+array<array<array<cplx>>>
+hessenberg_resolvent_solver::solve_batch(const array<cplx> &shifts,
+                                      const array<vec> &rhs_list) const {
     const idx n = decomp_.size();
     const std::size_t num_rhs = rhs_list.size();
-    std::vector<std::vector<cplx>> b_tilde_list(num_rhs);
+    array<array<cplx>> b_tilde_list(num_rhs);
     for (std::size_t r = 0; r < num_rhs; ++r) {
         debug::check_dim(n, rhs_list[r].size(), "hessenberg_resolvent_solver RHS list");
         b_tilde_list[r] = hessenberg_project(decomp_.Q(), rhs_list[r]);
     }
 
-    std::vector<std::vector<std::vector<cplx>>> results(
-        shifts.size(), std::vector<std::vector<cplx>>(num_rhs, std::vector<cplx>(n)));
+    array<array<array<cplx>>> results(
+        shifts.size(), array<array<cplx>>(num_rhs, array<cplx>(n)));
 
 #if defined(_OPENMP)
 #pragma omp parallel if (shifts.size() > 2)
 #endif
     {
-        std::vector<cplx> y(n);
-        std::vector<cplx> M_buf(n * n);
-        std::vector<idx> pivots(n);
+        array<cplx> y(n);
+        array<cplx> M_buf(n * n);
+        array<idx> pivots(n);
 
 #if defined(_OPENMP)
 #pragma omp for collapse(2)

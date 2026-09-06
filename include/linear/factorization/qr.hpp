@@ -2,6 +2,7 @@
 /// @brief QR factorization via Householder reflections.
 #pragma once
 
+#include "core/types.hpp"
 #include "kernel/kernel.hpp"
 #include <algorithm>
 #include <cmath>
@@ -47,9 +48,9 @@ inline qr_result qr(const mat &A) {
     const idx r = (m > n) ? n : m - 1;
 
     mat R = A;
-    std::vector<std::vector<real>> vs(r);
-    std::vector<real> betas(r, 0.0);
-    std::vector<real> tau(r), v(m), work(n);
+    array<array<real>> vs(r);
+    array<real> betas(r, 0.0);
+    array<real> tau(r), v(m), work(n);
     // A <- compact Householder QR; reflector tails remain below R's diagonal.
     kernel::qr_factor_blocked(R.data(), n, m, n, tau.data(), v.data(), work.data());
     for (idx k = 0; k < r; ++k) {
@@ -69,9 +70,9 @@ inline qr_result qr(const mat &A) {
         if (betas[k] == 0.0) {
             continue;
         }
-        const std::vector<real> &v = vs[k];
+        const array<real> &v = vs[k];
         const idx len = static_cast<idx>(v.size());
-        std::vector<real> work(m - k);
+        array<real> work(m - k);
         kernel::householder_left(&Q(k, k), m, v.data(), betas[k], len, m - k, work.data());
     }
 
@@ -92,7 +93,7 @@ inline qr_result qr(const mat &A) {
     const idx k = std::min(m, n);
 
     mat R = A;
-    std::vector<double> tau(k);
+    array<double> tau(k);
 
     int info =
         LAPACKE_dgeqrf(LAPACK_ROW_MAJOR, static_cast<lapack_int>(m), static_cast<lapack_int>(n),

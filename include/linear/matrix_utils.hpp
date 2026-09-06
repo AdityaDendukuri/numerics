@@ -2,6 +2,7 @@
 /// @brief Small dense matrix construction and diagonal utilities.
 #pragma once
 
+#include "core/types.hpp"
 #include "container/matrix.hpp"
 #include <algorithm>
 #include <span>
@@ -101,7 +102,7 @@ namespace num {
 }
 
 /// Construct a square matrix with the supplied main diagonal.
-[[nodiscard]] inline mat diagonal_matrix(std::span<const real> values) {
+[[nodiscard]] inline mat diagonal_matrix(view<const real> values) {
     mat result(values.size(), values.size(), 0.0);
     for (idx index = 0; index < values.size(); ++index) {
         result(index, index) = values[index];
@@ -121,7 +122,7 @@ namespace num {
 }
 
 /// Replace a matrix's full main diagonal.
-inline void set_diagonal(mat &matrix, std::span<const real> values) {
+inline void set_diagonal(mat &matrix, view<const real> values) {
     if (values.size() != std::min(matrix.rows(), matrix.cols())) {
         throw std::invalid_argument("set_diagonal: diagonal size mismatch");
     }
@@ -131,7 +132,7 @@ inline void set_diagonal(mat &matrix, std::span<const real> values) {
 }
 
 /// Multiply a vector elementwise by matching weights in place.
-inline void scale_elements(vec &vector, std::span<const real> weights) {
+inline void scale_elements(vec &vector, view<const real> weights) {
     if (vector.size() != weights.size()) {
         throw std::invalid_argument("scale_elements: vector sizes must match");
     }
@@ -141,7 +142,7 @@ inline void scale_elements(vec &vector, std::span<const real> weights) {
 }
 
 /// Divide a vector elementwise by matching divisors in place.
-inline void divide_elements(vec &vector, std::span<const real> divisors) {
+inline void divide_elements(vec &vector, view<const real> divisors) {
     if (vector.size() != divisors.size()) {
         throw std::invalid_argument("divide_elements: vector sizes must match");
     }
@@ -151,7 +152,7 @@ inline void divide_elements(vec &vector, std::span<const real> divisors) {
 }
 
 /// Multiply each matrix row by its corresponding weight in place.
-inline void scale_rows(mat &matrix, std::span<const real> weights) {
+inline void scale_rows(mat &matrix, view<const real> weights) {
     if (matrix.rows() != weights.size()) {
         throw std::invalid_argument("scale_rows: weight count must match matrix rows");
     }
@@ -163,7 +164,7 @@ inline void scale_rows(mat &matrix, std::span<const real> weights) {
 }
 
 /// Divide each matrix row by its corresponding divisor in place.
-inline void divide_rows(mat &matrix, std::span<const real> divisors) {
+inline void divide_rows(mat &matrix, view<const real> divisors) {
     if (matrix.rows() != divisors.size()) {
         throw std::invalid_argument("divide_rows: divisor count must match matrix rows");
     }
@@ -176,7 +177,7 @@ inline void divide_rows(mat &matrix, std::span<const real> divisors) {
 
 template <typename T>
 /// Write values at the supplied indices, optionally accumulating into output.
-void scatter(std::span<const T> values, std::span<const idx> indices, std::span<T> output,
+void scatter(view<const T> values, view<const idx> indices, view<T> output,
              bool add = false) {
     if (values.size() != indices.size()) {
         throw std::invalid_argument("scatter: values and indices must have the same size");
@@ -195,8 +196,8 @@ void scatter(std::span<const T> values, std::span<const idx> indices, std::span<
 
 template <typename T>
 /// Copy the indexed input entries into a compact vector.
-[[nodiscard]] std::vector<T> gather(std::span<const T> input, std::span<const idx> indices) {
-    std::vector<T> result;
+[[nodiscard]] array<T> gather(view<const T> input, view<const idx> indices) {
+    array<T> result;
     result.reserve(indices.size());
     for (idx index : indices) {
         if (index >= input.size()) {

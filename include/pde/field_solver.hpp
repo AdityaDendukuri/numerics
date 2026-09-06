@@ -2,6 +2,7 @@
 /// @brief Elliptic solvers and vector calculus on 3D field containers.
 #pragma once
 
+#include "core/types.hpp"
 #include "operator/operator.hpp"
 #include "pde/stencil.hpp"
 #include <algorithm>
@@ -29,7 +30,7 @@ class field_solver {
     /// @brief Solve \f$\nabla\cdot(c\nabla\phi)=0\f$ with Dirichlet data.
     /// @return `solver_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
     static solver_result solve_var_poisson(scalar_field_3d &phi, const scalar_field_3d &coeff,
-                                          const std::vector<dirichlet_bc> &bcs, double tol = 1e-6,
+                                          const array<dirichlet_bc> &bcs, double tol = 1e-6,
                                           int max_iter = 500);
 
     /// @brief Compute \f$\nabla\phi\f$.
@@ -80,7 +81,7 @@ inline solver_result field_solver::solve_poisson(scalar_field_3d &phi, const sca
 }
 
 inline solver_result field_solver::solve_var_poisson(scalar_field_3d &phi, const scalar_field_3d &coeff,
-                                            const std::vector<dirichlet_bc> &bcs, double tol,
+                                            const array<dirichlet_bc> &bcs, double tol,
                                             int max_iter) {
     const int nx = phi.nx(), ny = phi.ny(), nz = phi.nz();
     const idx N = phi.size();
@@ -90,7 +91,7 @@ inline solver_result field_solver::solve_var_poisson(scalar_field_3d &phi, const
         return static_cast<idx>((k * ny * nx) + (j * nx) + i);
     };
 
-    std::unordered_map<int, double> bc_map;
+    table<int, double> bc_map;
     bc_map.reserve(bcs.size());
     for (const auto &e : bcs) {
         bc_map[e.flat_idx] = e.value;

@@ -19,8 +19,8 @@ struct dense_resolvent_solver::Impl {
 
     hessenberg_decomposition decomp;
     cplx current_shift{0.0, 0.0};
-    std::vector<cplx> M_buf;
-    std::vector<idx> pivots;
+    array<cplx> M_buf;
+    array<idx> pivots;
     bool factored = false;
 };
 
@@ -46,13 +46,13 @@ void dense_resolvent_solver::factorize(cplx shift) {
     impl_->factored = true;
 }
 
-std::vector<cplx> dense_resolvent_solver::solve(const std::vector<cplx> &rhs) const {
-    std::vector<cplx> result;
+array<cplx> dense_resolvent_solver::solve(const array<cplx> &rhs) const {
+    array<cplx> result;
     solve(rhs, result);
     return result;
 }
 
-void dense_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &result) const {
+void dense_resolvent_solver::solve(const array<cplx> &rhs, array<cplx> &result) const {
     const idx n = impl_->decomp.size();
     if (!impl_->factored) {
         throw std::invalid_argument("dense_resolvent_solver: factorization required before solve");
@@ -60,12 +60,12 @@ void dense_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vector<cpl
     debug::check_dim(n, static_cast<idx>(rhs.size()), "dense_resolvent_solver RHS");
 
     // 1. Project RHS to Hessenberg coordinates: b_tilde = Q^T * rhs (O(n^2))
-    std::vector<cplx> b_tilde(n);
+    array<cplx> b_tilde(n);
     kernel::matvec_transpose_into_complex(b_tilde.data(), impl_->decomp.Q().data(),
                                                rhs.data(), n, n);
 
     // 2. Substitute through the cached factorization (O(n^2))
-    std::vector<cplx> y(n);
+    array<cplx> y(n);
     kernel::hessenberg_shifted_substitute(y.data(), impl_->M_buf.data(),
                                                impl_->pivots.data(), b_tilde.data(), n);
 
@@ -73,9 +73,9 @@ void dense_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vector<cpl
     hessenberg_back_project(impl_->decomp.Q(), y, result);
 }
 
-std::vector<std::vector<cplx>>
-dense_resolvent_solver::solve(const std::vector<std::vector<cplx>> &right_hand_sides) const {
-    std::vector<std::vector<cplx>> result(right_hand_sides.size());
+array<array<cplx>>
+dense_resolvent_solver::solve(const array<array<cplx>> &right_hand_sides) const {
+    array<array<cplx>> result(right_hand_sides.size());
     for (idx index = 0; index < right_hand_sides.size(); ++index) {
         solve(right_hand_sides[index], result[index]);
     }

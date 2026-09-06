@@ -30,9 +30,9 @@ concept laplacian_graph = concepts::incidence_structure<G> && requires(const G &
 
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat to_sparse_adjacency(const basic_graph<Weight, Index> &g) {
-    std::vector<idx> row_ptr(g.n_vertices() + 1, 0);
-    std::vector<idx> col_idx;
-    std::vector<double> values;
+    array<idx> row_ptr(g.n_vertices() + 1, 0);
+    array<idx> col_idx;
+    array<double> values;
 
     for (Index u = 0; u < g.n_vertices(); ++u) {
         for (const auto &e : g.neighbors(u)) {
@@ -58,9 +58,9 @@ template <typename Weight = real, typename Index = idx>
 
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat laplacian(const basic_graph<Weight, Index> &g) {
-    std::vector<idx> rows;
-    std::vector<idx> cols;
-    std::vector<double> vals;
+    array<idx> rows;
+    array<idx> cols;
+    array<double> vals;
 
     for (Index u = 0; u < g.n_vertices(); ++u) {
         double deg = 0.0;
@@ -100,9 +100,9 @@ template <typename Weight = real, typename Index = idx>
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat markov_generator(const basic_graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
-    std::vector<idx> rows;
-    std::vector<idx> cols;
-    std::vector<double> vals;
+    array<idx> rows;
+    array<idx> cols;
+    array<double> vals;
 
     for (Index u = 0; u < g.n_vertices(); ++u) {
         double deg = 0.0;
@@ -143,8 +143,8 @@ template <typename Weight = real, typename Index = idx>
 /// @brief Laplacian of a multigraph, summing parallel edge multiplicities.
 [[nodiscard]] inline spmat laplacian(const structures::multigraph &g) {
     const idx n = g.n_vertices();
-    std::vector<idx> rows, cols;
-    std::vector<real> vals;
+    array<idx> rows, cols;
+    array<real> vals;
 
     for (idx u = 0; u < n; ++u) {
         real diag = 0.0;

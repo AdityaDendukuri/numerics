@@ -31,15 +31,15 @@ template <typename Score>
 
 /// Return the first index of the largest value.
 template <typename T>
-[[nodiscard]] idx argmax(std::span<const T> values) {
+[[nodiscard]] idx argmax(view<const T> values) {
     return argmax(values.size(), [&](idx index) -> const T & { return values[index]; });
 }
 
 /// Return indices of the k smallest values, ordered by increasing value.
 template <typename T>
-[[nodiscard]] std::vector<idx> smallest_indices(std::span<const T> values, idx count) {
+[[nodiscard]] array<idx> smallest_indices(view<const T> values, idx count) {
     count = std::min(count, values.size());
-    std::vector<idx> indices(values.size());
+    array<idx> indices(values.size());
     std::iota(indices.begin(), indices.end(), idx{0});
     const auto less = [&](idx left, idx right) {
         if (values[left] == values[right]) {

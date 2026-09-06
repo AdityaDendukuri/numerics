@@ -8,6 +8,7 @@
 /// to whichever `num::accel` resolved to at configure time.
 #pragma once
 
+#include "core/types.hpp"
 #include "container/vector.hpp"
 #include "core/policy.hpp"
 #include "kernel/kernel.hpp"
@@ -73,7 +74,7 @@ inline void axpy(real alpha, const vec &x, vec &y) noexcept { accel::axpy(alpha,
 [[nodiscard]] inline real dot(const vec &x, const vec &y) noexcept { return accel::dot(x, y); }
 
 /// @brief Sequential dot product over non-owning spans.
-[[nodiscard]] inline real dot(std::span<const real> x, std::span<const real> y) {
+[[nodiscard]] inline real dot(view<const real> x, view<const real> y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("dot: vector sizes must match");
     }

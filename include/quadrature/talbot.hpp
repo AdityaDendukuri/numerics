@@ -28,11 +28,11 @@ struct talbot_quadrature {
     talbot_quadrature() = default;
     /* implicit */ talbot_quadrature(idx n_modes) : modes(n_modes) {}
 
-    [[nodiscard]] std::vector<contour_node> nodes(real t) const {
+    [[nodiscard]] array<contour_node> nodes(real t) const {
         if (!(t > 0.0) || modes < 2) {
             throw std::invalid_argument("talbot_quadrature: invalid time or mode count");
         }
-        std::vector<contour_node> result;
+        array<contour_node> result;
         result.reserve(modes);
         const real pi = std::acos(-1.0);
         for (idx k = 0; k < modes; ++k) {
@@ -63,11 +63,11 @@ struct talbot_quadrature {
 
 /// Return quadrature nodes and weights on the Weideman--Talbot inversion contour for \f$f(t) = \mathcal{L}^{-1}[F](t), \; t > 0\f$.
 /// The contour is scaled per requested time; weights include \f$1/(2\pi i)\f$.
-inline std::vector<contour_node> talbot_contour(real t, idx modes = 16) {
+inline array<contour_node> talbot_contour(real t, idx modes = 16) {
     return talbot_quadrature{modes}.nodes(t);
 }
 
-inline std::vector<contour_node> talbot_nodes(real t, idx modes = 16) {
+inline array<contour_node> talbot_nodes(real t, idx modes = 16) {
     return talbot_contour(t, modes);
 }
 

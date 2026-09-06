@@ -149,7 +149,7 @@ The source and destination must share the same grid geometry.
 num::scalar_field_3d coefficient(32, 24, 16, 0.1f);
 coefficient.fill(1.0);
 
-std::vector<num::field_solver::dirichlet_bc> boundaries{
+num::array<num::field_solver::dirichlet_bc> boundaries{
     {static_cast<int>(coefficient.grid().flat(0, 0, 0)), 1.0},
 };
 

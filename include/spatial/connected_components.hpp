@@ -16,14 +16,15 @@
 /// component.
 #pragma once
 
+#include "core/types.hpp"
 #include <ostream>
 #include <vector>
 
 namespace num {
 
 struct cluster_result {
-    std::vector<int> id;    ///< Per-site label: -2 excluded, >=0 cluster index
-    std::vector<int> sizes; ///< sizes[c] = number of sites in cluster c
+    array<int> id;    ///< Per-site label: -2 excluded, >=0 cluster index
+    array<int> sizes; ///< sizes[c] = number of sites in cluster c
     int largest_id = -1;    ///< Index of largest cluster (-1 if none)
     int largest_size = 0;   ///< Size of largest cluster
 
@@ -52,7 +53,7 @@ cluster_result connected_components(int n_sites, InCluster &&in_cluster, Neighbo
         res.id[i] = in_cluster(i) ? -1 : -2; // -1 = unvisited included, -2 = excluded
     }
 
-    std::vector<int> queue(n_sites);
+    array<int> queue(n_sites);
     int qhead = 0, qtail = 0;
 
     for (int start = 0; start < n_sites; ++start) {

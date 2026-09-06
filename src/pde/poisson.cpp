@@ -28,8 +28,8 @@ static void check_n(int N) {
     }
 }
 
-static std::vector<double> flatten(const mat &M, int N) {
-    std::vector<double> v(static_cast<std::size_t>(N) * static_cast<std::size_t>(N));
+static array<double> flatten(const mat &M, int N) {
+    array<double> v(static_cast<std::size_t>(N) * static_cast<std::size_t>(N));
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             v[(static_cast<std::size_t>(i) * static_cast<std::size_t>(N)) +
@@ -39,7 +39,7 @@ static std::vector<double> flatten(const mat &M, int N) {
     return v;
 }
 
-static mat unflatten(const std::vector<double> &v, int N) {
+static mat unflatten(const array<double> &v, int N) {
     mat M(static_cast<idx>(N), static_cast<idx>(N));
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
@@ -58,14 +58,14 @@ mat poisson2d_fd(const mat &f, int N) {
     const double h = 1.0 / (N + 1);
     const double pi = M_PI;
 
-    std::vector<double> buf = flatten(f, N);
+    array<double> buf = flatten(f, N);
     const std::size_t NN = static_cast<std::size_t>(N) * static_cast<std::size_t>(N);
     for (std::size_t k = 0; k < NN; ++k) {
         buf[k] *= h * h;
     }
     spectral::dst2d(buf, N);
 
-    std::vector<double> lam(static_cast<std::size_t>(N));
+    array<double> lam(static_cast<std::size_t>(N));
     for (int k = 0; k < N; ++k) {
         lam[static_cast<std::size_t>(k)] = 2.0 * (1.0 - std::cos((k + 1) * pi / (N + 1)));
     }
@@ -90,7 +90,7 @@ mat poisson2d(const mat &f, int N) {
     const double pi = M_PI;
     const double N1sq = static_cast<double>(N + 1) * (N + 1);
 
-    std::vector<double> buf = flatten(f, N);
+    array<double> buf = flatten(f, N);
     spectral::dst2d(buf, N);
 
     for (int i = 0; i < N; ++i) {

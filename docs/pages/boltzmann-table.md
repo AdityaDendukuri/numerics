@@ -29,7 +29,7 @@ namespace num::markov {
 double boltzmann_accept(double dE, double beta) noexcept;
 
 // Precompute a table for a discrete DeltaE set
-std::vector<double> make_boltzmann_table(const std::vector<double>& dEs, double beta);
+num::array<double> make_boltzmann_table(const num::array<double>& dEs, double beta);
 
 }
 ```
@@ -46,7 +46,7 @@ double p = num::markov::boltzmann_accept(dE, beta);
 
 ```cpp
 const double beta = 1.0;   // inverse temperature; `num::beta` is the beta function
-std::vector<double> dEs = {-4.0, -2.0, 0.0, 2.0, 4.0};
+num::array<double> dEs = {-4.0, -2.0, 0.0, 2.0, 4.0};
 auto table = num::markov::make_boltzmann_table(dEs, beta);
 
 auto probability = [&](double dE) {

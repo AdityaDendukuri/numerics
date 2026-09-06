@@ -43,7 +43,7 @@ class basic_vec {
     }
 
     /// Copy values from a non-owning span.
-    explicit basic_vec(std::span<const T> values)
+    explicit basic_vec(view<const T> values)
         : n_(values.size()), data_(make_aligned_for_overwrite<T>(values.size())) {
         if (n_ > 0) std::copy(values.begin(), values.end(), data_.get());
     }
@@ -133,8 +133,8 @@ class basic_vec {
     /// The storage is contiguous, so this is a pointer and a length. It exists because
     /// several routines (`sample_categorical`, `categorical_sampler`, the diagonal
     /// helpers) accept a span, and spelling that out at every call site is noise.
-    [[nodiscard]] std::span<T> span() noexcept { return {data(), n_}; }
-    [[nodiscard]] std::span<const T> span() const noexcept { return {data(), n_}; }
+    [[nodiscard]] view<T> span() noexcept { return {data(), n_}; }
+    [[nodiscard]] view<const T> span() const noexcept { return {data(), n_}; }
 
     T &operator[](idx i) { return data_[i]; }
     T operator[](idx i) const { return data_[i]; }
@@ -189,7 +189,7 @@ class basic_vec {
 
 template <typename T>
 /// Copy an owning vector into an equally sized span.
-void copy_to(const basic_vec<T> &source, std::span<T> destination) {
+void copy_to(const basic_vec<T> &source, view<T> destination) {
     if (source.size() != destination.size()) {
         throw std::invalid_argument("copy_to: vector sizes must match");
     }
@@ -199,7 +199,7 @@ void copy_to(const basic_vec<T> &source, std::span<T> destination) {
 template <typename T>
 /// Copy an owning vector into an equally sized std::vector.
 void copy_to(const basic_vec<T> &source, std::vector<T> &destination) {
-    copy_to(source, std::span<T>(destination));
+    copy_to(source, view<T>(destination));
 }
 
 /// @brief Real-valued dense vector with full backend dispatch (CPU + GPU)

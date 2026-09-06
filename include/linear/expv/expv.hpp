@@ -45,7 +45,7 @@ requires linear_operator<Op, vec, vec> vec expv(real t, const Op &A, const vec &
         return vec(n, 0.0);
     }
 
-    std::vector<vec> V;
+    array<vec> V;
     V.reserve(m_max + 1);
 
     vec v0(n);
@@ -56,7 +56,7 @@ requires linear_operator<Op, vec, vec> vec expv(real t, const Op &A, const vec &
 
     mat H(m_max + 1, m_max, 0.0);
     int m_actual = m_max;
-    std::vector<real> h_col(m_max + 1, 0.0);
+    array<real> h_col(m_max + 1, 0.0);
 
     for (int j = 0; j < m_max; j++) {
         vec w(n, 0.0);

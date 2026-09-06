@@ -13,9 +13,9 @@ namespace num {
 struct klu_factorization::Impl {
     idx n = 0;
 #if defined(NUMERICS_HAS_KLU)
-    std::vector<int> column_ptr;
-    std::vector<int> row_index;
-    std::vector<double> values;
+    array<int> column_ptr;
+    array<int> row_index;
+    array<double> values;
     mutable klu_common common{};
     klu_symbolic *symbolic = nullptr;
     klu_numeric *numeric = nullptr;
@@ -62,7 +62,7 @@ klu_factorization::klu_factorization(const spmat &matrix) : impl_(std::make_uniq
 
     impl_->row_index.resize(matrix.nnz());
     impl_->values.resize(matrix.nnz());
-    std::vector<int> next = impl_->column_ptr;
+    array<int> next = impl_->column_ptr;
     for (idx row = 0; row < matrix.n_rows(); ++row) {
         for (idx entry = matrix.row_ptr()[row]; entry < matrix.row_ptr()[row + 1]; ++entry) {
             const auto column = static_cast<int>(matrix.col_idx()[entry]);
@@ -118,7 +118,7 @@ void klu_factorization::solve(const mat &rhs, mat &solution) const {
     if (rhs.rows() != impl_->n) {
         throw std::invalid_argument("KLU block solve dimension mismatch");
     }
-    std::vector<double> column_major(rhs.size());
+    array<double> column_major(rhs.size());
     for (idx column = 0; column < rhs.cols(); ++column) {
         for (idx row = 0; row < rhs.rows(); ++row) {
             column_major[(column * rhs.rows()) + row] = rhs(row, column);
@@ -163,7 +163,7 @@ void klu_factorization::solve_transpose(const mat &rhs, mat &solution) const {
     if (rhs.rows() != impl_->n) {
         throw std::invalid_argument("KLU transpose block solve dimension mismatch");
     }
-    std::vector<double> column_major(rhs.size());
+    array<double> column_major(rhs.size());
     for (idx column = 0; column < rhs.cols(); ++column) {
         for (idx row = 0; row < rhs.rows(); ++row) {
             column_major[(column * rhs.rows()) + row] = rhs(row, column);

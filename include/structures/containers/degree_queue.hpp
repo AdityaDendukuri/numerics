@@ -134,13 +134,13 @@ class basic_degree_queue {
     [[nodiscard]] Index capacity() const noexcept { return static_cast<Index>(degree_.size()); }
 
     /// Direct access to degree array for elimination updates.
-    [[nodiscard]] const std::vector<Index> &degrees() const noexcept { return degree_; }
+    [[nodiscard]] const array<Index> &degrees() const noexcept { return degree_; }
 
   private:
-    std::vector<Index> head_;
-    std::vector<Index> next_;
-    std::vector<Index> prev_;
-    std::vector<Index> degree_;
+    array<Index> head_;
+    array<Index> next_;
+    array<Index> prev_;
+    array<Index> degree_;
     Index low_ = 0;
     Index size_ = 0;
 };

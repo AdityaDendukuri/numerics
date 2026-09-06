@@ -269,9 +269,9 @@ inline real beta(real a, real b) {
 }
 
 /// @brief Integer sequence [start, start+1, ..., start+n-1]. Wraps std::iota.
-inline std::vector<int> int_range(int start, int n) {
+inline array<int> int_range(int start, int n) {
     assert(n >= 0);
-    std::vector<int> out(static_cast<idx>(n));
+    array<int> out(static_cast<idx>(n));
     std::iota(out.begin(), out.end(), start);
     return out;
 }

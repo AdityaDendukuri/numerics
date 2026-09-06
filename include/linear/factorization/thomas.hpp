@@ -51,9 +51,9 @@ namespace lapack {
 inline void thomas(const vec &a, const vec &b, const vec &c, const vec &d, vec &x) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = b.size();
-    std::vector<double> dl(a.data(), a.data() + (n - 1));
-    std::vector<double> diag(b.data(), b.data() + n);
-    std::vector<double> du(c.data(), c.data() + (n - 1));
+    array<double> dl(a.data(), a.data() + (n - 1));
+    array<double> diag(b.data(), b.data() + n);
+    array<double> du(c.data(), c.data() + (n - 1));
     x = d;
     int info = LAPACKE_dgtsv(LAPACK_ROW_MAJOR, static_cast<lapack_int>(n), 1, dl.data(),
                              diag.data(), du.data(), x.data(), 1);

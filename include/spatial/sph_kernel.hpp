@@ -2,6 +2,7 @@
 /// @brief Dimension-generic SPH smoothing kernels.
 #pragma once
 
+#include "core/types.hpp"
 #include <array>
 #include <cmath>
 

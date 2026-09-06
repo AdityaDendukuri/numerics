@@ -2,6 +2,7 @@
 /// @brief Small JSON file helpers using nlohmann::json.
 #pragma once
 
+#include "core/types.hpp"
 #include <fstream>
 #include <iomanip>
 #include <filesystem>
@@ -21,13 +22,13 @@ void write_json(const json &value, const std::filesystem::path &path);
 
 template <typename T>
 /// Convert a JSON numeric array to an arithmetic vector.
-[[nodiscard]] inline std::vector<T> json_vector(const json &value) {
+[[nodiscard]] inline array<T> json_vector(const json &value) {
     static_assert(std::is_arithmetic_v<T>);
     if (!value.is_array()) {
         throw std::invalid_argument("JSON value must be an array");
     }
     try {
-        return value.get<std::vector<T>>();
+        return value.get<array<T>>();
     } catch (const json::exception &) {
         throw std::invalid_argument("JSON array entries must be numeric");
     }
@@ -35,12 +36,12 @@ template <typename T>
 
 template <typename T>
 /// Convert a JSON array of numeric arrays to a nested vector.
-[[nodiscard]] inline std::vector<std::vector<T>> json_matrix(const json &value) {
+[[nodiscard]] inline array<array<T>> json_matrix(const json &value) {
     if (!value.is_array()) {
         throw std::invalid_argument("JSON matrix must be an array");
     }
     try {
-        return value.get<std::vector<std::vector<T>>>();
+        return value.get<array<array<T>>>();
     } catch (const json::exception &) {
         throw std::invalid_argument("JSON matrix entries must be numeric arrays");
     }

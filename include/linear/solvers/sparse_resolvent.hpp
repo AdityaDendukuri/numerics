@@ -36,10 +36,10 @@ class sparse_resolvent_solver {
     /// Numerically factor sI-A while retaining symbolic analysis.
     void factorize(cplx shift);
     /// Solve one or more right-hand sides against the current shift.
-    [[nodiscard]] std::vector<cplx> solve(const std::vector<cplx> &rhs) const;
-    void solve(const std::vector<cplx> &rhs, std::vector<cplx> &out) const;
-    [[nodiscard]] std::vector<std::vector<cplx>>
-    solve(const std::vector<std::vector<cplx>> &rhs) const;
+    [[nodiscard]] array<cplx> solve(const array<cplx> &rhs) const;
+    void solve(const array<cplx> &rhs, array<cplx> &out) const;
+    [[nodiscard]] array<array<cplx>>
+    solve(const array<array<cplx>> &rhs) const;
 
   private:
     struct Impl;

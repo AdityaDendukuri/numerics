@@ -25,13 +25,13 @@ void compute(idx n, vec &result, inverse_diagonal_workspace &workspace, idx bloc
 }
 
 template <typename Solve>
-void compute_selected(idx n, std::span<const idx> rows, std::span<const idx> columns,
+void compute_selected(idx n, view<const idx> rows, view<const idx> columns,
                       vec &result, inverse_diagonal_workspace &workspace, Solve &&solve) {
     if (rows.size() != columns.size() || result.size() != rows.size()) {
         throw std::invalid_argument("selected_inverse: request sizes must match");
     }
-    std::vector<idx> unique_columns;
-    std::unordered_map<idx, idx> position;
+    array<idx> unique_columns;
+    table<idx, idx> position;
     for (idx column : columns) {
         if (column >= n) {
             throw std::out_of_range("selected_inverse: column out of range");
@@ -56,7 +56,7 @@ void compute_selected(idx n, std::span<const idx> rows, std::span<const idx> col
 }
 
 template <typename Solve>
-void compute_principal_block(idx n, std::span<const idx> indices, mat &result,
+void compute_principal_block(idx n, view<const idx> indices, mat &result,
                              inverse_diagonal_workspace &workspace, Solve &&solve) {
     if (indices.empty()) {
         workspace.right_hand_sides = mat(n, 0, 0.0);
@@ -64,7 +64,7 @@ void compute_principal_block(idx n, std::span<const idx> indices, mat &result,
         result = mat(0, 0, 0.0);
         return;
     }
-    std::vector<bool> seen(n, false);
+    array<bool> seen(n, false);
     workspace.right_hand_sides = mat(n, indices.size(), 0.0);
     for (idx column = 0; column < indices.size(); ++column) {
         const idx index = indices[column];
@@ -114,57 +114,57 @@ void inverse_diagonal(const auto_linear_solver &factor, vec &result,
             [&](const mat &rhs, mat &solution) { factor.solve(rhs, solution); });
 }
 
-void selected_inverse(const lu_result &factor, std::span<const idx> rows,
-                      std::span<const idx> columns, vec &result,
+void selected_inverse(const lu_result &factor, view<const idx> rows,
+                      view<const idx> columns, vec &result,
                       inverse_diagonal_workspace &workspace) {
     compute_selected(factor.LU.rows(), rows, columns, result, workspace,
                      [&](const mat &rhs, mat &solution) { lu_solve(factor, rhs, solution); });
 }
 
-void selected_inverse(const cholesky_result &factor, std::span<const idx> rows,
-                      std::span<const idx> columns, vec &result,
+void selected_inverse(const cholesky_result &factor, view<const idx> rows,
+                      view<const idx> columns, vec &result,
                       inverse_diagonal_workspace &workspace) {
     compute_selected(
         factor.L.rows(), rows, columns, result, workspace,
         [&](const mat &rhs, mat &solution) { cholesky_solve(factor, rhs, solution); });
 }
 
-void selected_inverse(const klu_factorization &factor, std::span<const idx> rows,
-                      std::span<const idx> columns, vec &result,
+void selected_inverse(const klu_factorization &factor, view<const idx> rows,
+                      view<const idx> columns, vec &result,
                       inverse_diagonal_workspace &workspace) {
     compute_selected(factor.size(), rows, columns, result, workspace,
                      [&](const mat &rhs, mat &solution) { factor.solve(rhs, solution); });
 }
 
-void selected_inverse(const auto_linear_solver &factor, std::span<const idx> rows,
-                      std::span<const idx> columns, vec &result,
+void selected_inverse(const auto_linear_solver &factor, view<const idx> rows,
+                      view<const idx> columns, vec &result,
                       inverse_diagonal_workspace &workspace) {
     compute_selected(factor.size(), rows, columns, result, workspace,
                      [&](const mat &rhs, mat &solution) { factor.solve(rhs, solution); });
 }
 
-void inverse_principal_block(const lu_result &factor, std::span<const idx> indices, mat &result,
+void inverse_principal_block(const lu_result &factor, view<const idx> indices, mat &result,
                              inverse_diagonal_workspace &workspace) {
     compute_principal_block(
         factor.LU.rows(), indices, result, workspace,
         [&](const mat &rhs, mat &solution) { lu_solve(factor, rhs, solution); });
 }
 
-void inverse_principal_block(const cholesky_result &factor, std::span<const idx> indices,
+void inverse_principal_block(const cholesky_result &factor, view<const idx> indices,
                              mat &result, inverse_diagonal_workspace &workspace) {
     compute_principal_block(
         factor.L.rows(), indices, result, workspace,
         [&](const mat &rhs, mat &solution) { cholesky_solve(factor, rhs, solution); });
 }
 
-void inverse_principal_block(const klu_factorization &factor, std::span<const idx> indices, mat &result,
+void inverse_principal_block(const klu_factorization &factor, view<const idx> indices, mat &result,
                              inverse_diagonal_workspace &workspace) {
     compute_principal_block(
         factor.size(), indices, result, workspace,
         [&](const mat &rhs, mat &solution) { factor.solve(rhs, solution); });
 }
 
-void inverse_principal_block(const auto_linear_solver &factor, std::span<const idx> indices,
+void inverse_principal_block(const auto_linear_solver &factor, view<const idx> indices,
                              mat &result, inverse_diagonal_workspace &workspace) {
     compute_principal_block(
         factor.size(), indices, result, workspace,

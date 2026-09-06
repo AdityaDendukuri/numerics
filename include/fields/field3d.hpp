@@ -6,6 +6,7 @@
 /// plugs straight into linear solvers and operators via .as_vec() with no copy.
 #pragma once
 
+#include "core/types.hpp"
 #include "container/vector_ops.hpp"
 
 #include "container/vector.hpp"

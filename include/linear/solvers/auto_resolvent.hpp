@@ -35,10 +35,10 @@ class auto_resolvent_solver {
     /// Factor the shifted matrix zI-A for subsequent solves.
     void factorize(cplx shift);
     /// Solve the currently factored shifted system.
-    void solve(const std::vector<cplx> &rhs, std::vector<cplx> &result) const;
+    void solve(const array<cplx> &rhs, array<cplx> &result) const;
     /// Solve several right-hand sides against the current shift.
-    [[nodiscard]] std::vector<std::vector<cplx>>
-    solve(const std::vector<std::vector<cplx>> &right_hand_sides) const;
+    [[nodiscard]] array<array<cplx>>
+    solve(const array<array<cplx>> &right_hand_sides) const;
 
   private:
     struct Impl;
@@ -79,7 +79,7 @@ inline void auto_resolvent_solver::factorize(cplx shift) {
     }
 }
 
-inline void auto_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &result) const {
+inline void auto_resolvent_solver::solve(const array<cplx> &rhs, array<cplx> &result) const {
     if (impl_->dense) {
         impl_->dense->solve(rhs, result);
     } else {
@@ -87,8 +87,8 @@ inline void auto_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vect
     }
 }
 
-inline std::vector<std::vector<cplx>>
-auto_resolvent_solver::solve(const std::vector<std::vector<cplx>> &right_hand_sides) const {
+inline array<array<cplx>>
+auto_resolvent_solver::solve(const array<array<cplx>> &right_hand_sides) const {
     return impl_->dense ? impl_->dense->solve(right_hand_sides)
                         : impl_->sparse->solve(right_hand_sides);
 }

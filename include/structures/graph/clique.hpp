@@ -2,6 +2,7 @@
 /// @brief Exact and randomized clique reduction (star-mesh transformation) on multigraphs.
 #pragma once
 
+#include "core/types.hpp"
 #include "structures/containers/degree_queue.hpp"
 #include "structures/graph/multigraph.hpp"
 #include <algorithm>
@@ -14,10 +15,10 @@ namespace num::structures {
 
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>>
-inline Weight collect_neighbors(Index v, std::vector<std::vector<multi_edge<Weight, Index>>> &G,
-                                const std::vector<std::uint8_t> &done, Queue &q,
-                                std::vector<multi_edge<Weight, Index>> &star_buf,
-                                std::vector<multi_edge<Weight, Index>> &nbr_out) {
+inline Weight collect_neighbors(Index v, array<array<multi_edge<Weight, Index>>> &G,
+                                const array<std::uint8_t> &done, Queue &q,
+                                array<multi_edge<Weight, Index>> &star_buf,
+                                array<multi_edge<Weight, Index>> &nbr_out) {
     star_buf.clear();
     for (const auto &e : G[v]) {
         if (done[e.to]) {
@@ -58,8 +59,8 @@ inline Weight collect_neighbors(Index v, std::vector<std::vector<multi_edge<Weig
 
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>>
-inline void add_exact_clique(std::vector<std::vector<multi_edge<Weight, Index>>> &G, Queue &q,
-                             const std::vector<multi_edge<Weight, Index>> &nbr, Weight total_weight) {
+inline void add_exact_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
+                             const array<multi_edge<Weight, Index>> &nbr, Weight total_weight) {
     for (Index a = 0; a < nbr.size(); ++a) {
         for (Index b = a + 1; b < nbr.size(); ++b) {
             Weight w_exact = (nbr[a].weight * nbr[b].weight) / total_weight;
@@ -76,8 +77,8 @@ inline void add_exact_clique(std::vector<std::vector<multi_edge<Weight, Index>>>
 
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>, typename Rng = std::mt19937_64>
-inline void sample_clique(std::vector<std::vector<multi_edge<Weight, Index>>> &G, Queue &q,
-                          std::vector<multi_edge<Weight, Index>> &nbr, Weight total_weight,
+inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
+                          array<multi_edge<Weight, Index>> &nbr, Weight total_weight,
                           std::type_identity_t<Index> sample_limit, Rng &rng) {
     std::sort(nbr.begin(), nbr.end(),
               [](const multi_edge<Weight, Index> &a, const multi_edge<Weight, Index> &b) {
@@ -187,8 +188,8 @@ inline void sample_clique(std::vector<std::vector<multi_edge<Weight, Index>>> &G
 /// @param total_weight \f$C\f$, the sum of those conductances.
 /// @param rng Random source.
 template <typename Weight, std::integral Index, typename Queue, typename Rng>
-inline void sample_clique_tree(std::vector<std::vector<multi_edge<Weight, Index>>> &G, Queue &q,
-                               const std::vector<multi_edge<Weight, Index>> &nbr,
+inline void sample_clique_tree(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
+                               const array<multi_edge<Weight, Index>> &nbr,
                                Weight total_weight, Rng &rng,
                                std::size_t trees = 1) {
     const std::size_t degree = nbr.size();
@@ -196,7 +197,7 @@ inline void sample_clique_tree(std::vector<std::vector<multi_edge<Weight, Index>
         return;
     }
 
-    std::vector<Weight> cumulative(degree);
+    array<Weight> cumulative(degree);
     Weight running = Weight(0);
     std::size_t heaviest = 0;
     for (std::size_t i = 0; i < degree; ++i) {
@@ -245,7 +246,7 @@ inline void sample_clique_tree(std::vector<std::vector<multi_edge<Weight, Index>
     };
 
     for (std::size_t tree = 0; tree < trees; ++tree) {
-    std::vector<char> visited(degree, 0);
+    array<char> visited(degree, 0);
     std::size_t current = draw();
     visited[current] = 1;
     std::size_t remaining = degree - 1;
@@ -336,7 +337,7 @@ inline void sample_clique_tree(std::vector<std::vector<multi_edge<Weight, Index>
 /// @param trees Independent trees to average; each sampled weight is divided by this.
 /// @param emit Callable `void(std::size_t i, std::size_t j, Weight w)` receiving directed fill.
 template <typename Weight, typename Rng, typename Emit>
-inline void sample_biclique_tree(const std::vector<Weight> &x, const std::vector<Weight> &y,
+inline void sample_biclique_tree(const array<Weight> &x, const array<Weight> &y,
                                  Weight pivot, Rng &rng, std::size_t trees, Emit emit) {
     const std::size_t m = x.size();
     const std::size_t n = y.size();
@@ -362,8 +363,8 @@ inline void sample_biclique_tree(const std::vector<Weight> &x, const std::vector
         return;
     }
 
-    std::vector<Weight> cumulative_x(m);
-    std::vector<Weight> cumulative_y(n);
+    array<Weight> cumulative_x(m);
+    array<Weight> cumulative_y(n);
     Weight running = Weight(0);
     for (std::size_t i = 0; i < m; ++i) {
         running += x[i];
@@ -376,7 +377,7 @@ inline void sample_biclique_tree(const std::vector<Weight> &x, const std::vector
     }
 
     std::uniform_real_distribution<Weight> unit(Weight(0), Weight(1));
-    const auto pick = [&](const std::vector<Weight> &cumulative, Weight total) -> std::size_t {
+    const auto pick = [&](const array<Weight> &cumulative, Weight total) -> std::size_t {
         const Weight target = unit(rng) * total;
         std::size_t low = 0;
         std::size_t high = cumulative.size() - 1;
@@ -404,8 +405,8 @@ inline void sample_biclique_tree(const std::vector<Weight> &x, const std::vector
 
     const std::size_t budget = (8 * (m + n) * (1 + ((m + n) / 4))) + 64;
     for (std::size_t tree = 0; tree < trees; ++tree) {
-        std::vector<char> seen_left(m, 0);
-        std::vector<char> seen_right(n, 0);
+        array<char> seen_left(m, 0);
+        array<char> seen_right(n, 0);
         std::size_t remaining = m + n - 1;
 
         std::size_t current = pick(cumulative_x, total_x);

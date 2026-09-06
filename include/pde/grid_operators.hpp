@@ -2,6 +2,7 @@
 /// @brief mat-free grid & stencil operators with explicit spmat generation.
 #pragma once
 
+#include "core/types.hpp"
 #include "algebra/properties.hpp"
 
 #include "container/vector.hpp"
@@ -63,8 +64,8 @@ class laplacian_2d final {
     /// @brief Materialize the 5-point discrete Laplacian as an assembled CSR spmat.
     [[nodiscard]] spmat to_sparse() const {
         const idx n = rows();
-        std::vector<idx> rows_idx, cols_idx;
-        std::vector<real> vals;
+        array<idx> rows_idx, cols_idx;
+        array<real> vals;
         rows_idx.reserve(5 * n);
         cols_idx.reserve(5 * n);
         vals.reserve(5 * n);
@@ -157,8 +158,8 @@ class backward_euler_2d final {
     /// @brief Materialize the Backward Euler system matrix as an assembled CSR spmat.
     [[nodiscard]] spmat to_sparse() const {
         const idx n = rows();
-        std::vector<idx> rows_idx, cols_idx;
-        std::vector<real> vals;
+        array<idx> rows_idx, cols_idx;
+        array<real> vals;
         rows_idx.reserve(5 * n);
         cols_idx.reserve(5 * n);
         vals.reserve(5 * n);

@@ -34,12 +34,12 @@ namespace num::math {
 /// from outside here. `std::vector<int>` is not covered. The integers form a ring rather
 /// than a field, so it has no level on this hierarchy.
 template <std::floating_point T>
-struct claims_of<std::vector<T>> {
+struct claims_of<array<T>> {
     using type = type_list<law::hilbert_space>;
 };
 
 template <std::floating_point T>
-struct claims_of<std::vector<std::complex<T>>> {
+struct claims_of<array<std::complex<T>>> {
     using type = type_list<law::hilbert_space>;
 };
 

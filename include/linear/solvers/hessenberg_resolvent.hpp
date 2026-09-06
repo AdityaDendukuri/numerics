@@ -26,18 +26,18 @@ class hessenberg_resolvent_solver {
     [[nodiscard]] const hessenberg_decomposition &decomposition() const noexcept { return decomp_; }
 
     /// Solve (sI - A) x = b for a single shift and real RHS in O(n^2).
-    [[nodiscard]] std::vector<cplx> solve(cplx shift, const vec &b) const;
+    [[nodiscard]] array<cplx> solve(cplx shift, const vec &b) const;
 
     /// Solve (sI - A) x = b for a single shift and complex RHS in O(n^2).
-    [[nodiscard]] std::vector<cplx> solve(cplx shift, const std::vector<cplx> &b) const;
+    [[nodiscard]] array<cplx> solve(cplx shift, const array<cplx> &b) const;
 
     /// Solve for multiple shifts and a single RHS in parallel O(n^3 + k * n^2).
-    [[nodiscard]] std::vector<std::vector<cplx>>
-    solve_batch(const std::vector<cplx> &shifts, const vec &b) const;
+    [[nodiscard]] array<array<cplx>>
+    solve_batch(const array<cplx> &shifts, const vec &b) const;
 
     /// Solve for multiple shifts and multiple RHS vectors in parallel.
-    [[nodiscard]] std::vector<std::vector<std::vector<cplx>>>
-    solve_batch(const std::vector<cplx> &shifts, const std::vector<vec> &rhs_list) const;
+    [[nodiscard]] array<array<array<cplx>>>
+    solve_batch(const array<cplx> &shifts, const array<vec> &rhs_list) const;
 
   private:
     hessenberg_decomposition decomp_;

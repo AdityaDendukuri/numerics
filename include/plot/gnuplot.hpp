@@ -2,6 +2,7 @@
 /// @brief Plot data helpers and a low-level owning gnuplot pipe.
 #pragma once
 
+#include "core/types.hpp"
 #include "container/vector.hpp"
 #include <cstdio>
 #include <stdexcept>
@@ -14,8 +15,8 @@ namespace num {
 using plot_point = std::pair<double, double>;
 
 /// Ordered (x,y) samples accepted by the plotting helpers.
-struct series : std::vector<plot_point> {
-    using std::vector<plot_point>::vector;
+struct series : array<plot_point> {
+    using array<plot_point>::vector;
     /// Append one sample.
     void store(double x, double y) { emplace_back(x, y); }
 };

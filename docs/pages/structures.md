@@ -4,9 +4,85 @@ The `structures` module provides union-find, addressable priority queues, degree
 
 Graphs here carry no algebraic operations. Laplacians, adjacency matrices, and Markov generators are matrices, so they are assembled by `num::linear` (see @ref page_linear).
 
+## Container vocabulary
+
+Four standard containers are named after words this library has already spent on
+mathematics, so `num` provides aliases that say what the container is instead:
+
+| write this | it is exactly | the word it frees |
+|---|---|---|
+| `num::array<T>` | `std::vector<T>` | `num::vec`, an element of a vector space |
+| `num::static_array<T, N>` | `std::array<T, N>` | — |
+| `num::view<T>` | `std::span<T>` | the span of a set of vectors |
+| `num::table<K, V>` | `std::unordered_map<K, V>` | a linear map |
+| `num::sorted_table<K, V>` | `std::map<K, V>` | likewise |
+| `num::key_set<K>` | `std::unordered_set<K>` | a set |
+
+A declaration then says at a glance which half of the library it belongs to:
+
+```cpp
+num::array<num::idx> row_offsets;  // storage
+num::vec             x(4);         // mathematics
+```
+
+These are alias templates, not wrappers. `num::array<T>` *is* `std::vector<T>`, so it
+converts nowhere, costs nothing, and is accepted unchanged by every standard algorithm
+and by any third-party function taking a `std::vector`:
+
+```cpp
+num::array<double> a{1.0, 2.0, 3.0};
+std::vector<double> &same = a;              // the same object, no conversion
+std::sort(a.begin(), a.end());              // ordinary standard algorithms
+```
+
+Compiler diagnostics still name the underlying standard type. Containers whose names
+carry no mathematical meaning — `std::pair`, `std::tuple`, `std::optional`,
+`std::string` — are deliberately left alone.
+
+For numeric data prefer `num::vec` over `num::array<num::real>`: it owns over-aligned
+storage, skips the zero-initialising pass on construction, and satisfies
+`num::math::vector_space`, so the solvers take it directly.
+
 ---
 
-## 1. Disjoint-Set / Union-Find (num::disjoint_set)
+## 1. Fixed-Capacity Multi-Index (num::multi_index)
+
+`num::multi_index` is a short integer tuple that names a point in a discrete state
+space — an occupancy vector for a chemical master equation, a lattice site, a
+multi-dimensional array subscript. It holds up to `num::multi_index::k_max_dim` (8)
+`int` coordinates inline, so it is 36 bytes, never allocates, and copies by value.
+
+```cpp
+num::multi_index s{2, 0, 1};      // a 3-dimensional state
+num::idx d = s.size();            // 3 active coordinates
+int first = s[0];                 // 2
+
+num::multi_index step{1, 0, 0};
+num::multi_index next = s + step; // {3, 0, 1}; coordinates add elementwise
+```
+
+Coordinate counts are not checked against each other in `operator+` and `operator-`;
+both use the left operand's size. Constructing past `k_max_dim` trips an `assert`, so
+a state space wider than eight dimensions needs a different representation.
+
+It is both hashable and ordered, which is what makes it usable as a key:
+
+```cpp
+// sparse state spaces are enumerated, not indexed, so states are stored as keys
+num::table<num::multi_index, double> probability;   // hashed, O(1) average
+probability[{2, 0, 1}] = 0.25;
+
+num::sorted_table<num::multi_index, double> ordered; // key order, for reproducible sweeps
+ordered[{2, 0, 1}] = 0.25;
+```
+
+`operator<` orders by coordinate count first and then lexicographically, so indices of
+different dimension never compare equal and a `sorted_table` keyed on them iterates in a
+stable, reproducible order.
+
+---
+
+## 2. Disjoint-Set / Union-Find (num::disjoint_set)
 
 `num::disjoint_set` maintains a collection of disjoint sets over elements \f$\{0, 1, \dots, N-1\}\f$ with near \f$\mathcal{O}(1)\f$ amortized cost per operation (\f$\mathcal{O}(\alpha(N))\f$ via two-pass path compression and union by rank, where \f$\alpha\f$ is the inverse Ackermann function).
 
@@ -30,7 +106,7 @@ num::idx sz = ds.component_size(0);     // 3 elements in component {0, 1, 2}
 
 ```cpp
 // Extract all connected components as lists of indices
-std::vector<std::vector<num::idx>> partitions = ds.components();
+num::array<num::array<num::idx>> partitions = ds.components();
 ```
 
 ### 32-Bit Index Specialization (num::disjoint_set_32)
@@ -43,7 +119,7 @@ num::disjoint_set_32 ds32(1000000); // Uses uint32_t internally (12 MB vs 24 MB)
 
 ---
 
-## 2. Indexed Priority Queue (num::indexed_priority_queue)
+## 3. Indexed Priority Queue (num::indexed_priority_queue)
 
 `num::indexed_priority_queue` is an addressable binary heap where every item is identified by a unique index \f$i \in [0, \text{capacity})\f$. Unlike `std::priority_queue`, it supports \f$\mathcal{O}(\log N)\f$ priority updates (`improve_key` / `update`), \f$\mathcal{O}(1)\f$ presence queries (`contains`), and \f$\mathcal{O}(\log N)\f$ arbitrary element removal (`erase`).
 
@@ -79,7 +155,7 @@ num::idx best_state = max_pq.top_index(); // 1 (0.9 > 0.4)
 
 ---
 
-## 3. Degree Queue (num::degree_queue)
+## 4. Degree Queue (num::degree_queue)
 
 Maintains integer degree buckets \f$d \in [0, d_{\max}]\f$ with doubly-linked lists for exact minimum-degree elimination in \f$\mathcal{O}(1)\f$ time:
 
@@ -93,7 +169,7 @@ dq.rekey(neighbor_id, old_deg, new_deg); // Degree update in O(1)
 
 ---
 
-## 4. graph Data Structure (num::graph)
+## 5. graph Data Structure (num::graph)
 
 `num::graph` stores directed or undirected graphs using weighted adjacency lists with fast degree and neighborhood accessors.
 
@@ -119,7 +195,7 @@ mesh.add_edge(0u, 1u, 1.5f);
 
 ---
 
-## 5. Canonical graph Generators (num::structures::*)
+## 6. Canonical graph Generators (num::structures::*)
 
 ### Uniform Spanning Trees & Erdős–Rényi Networks
 ```cpp
@@ -143,29 +219,29 @@ auto kn    = num::structures::complete_graph(6);
 
 ---
 
-## 6. Fundamental graph Algorithms
+## 7. Fundamental graph Algorithms
 
 ```cpp
 // 1. Fast connectivity check via Union-Find in O(E \alpha(V))
 bool connected = num::structures::is_connected(G);
 
 // 2. Connected components partition
-std::vector<std::vector<num::idx>> components = num::structures::connected_components(G);
+num::array<num::array<num::idx>> components = num::structures::connected_components(G);
 
 // 3. Single-Source Shortest Paths via Dijkstra + Indexed Priority Queue in O((V + E) log V)
-std::vector<double> dist = num::structures::dijkstra(G, /*source=*/0);
+num::array<double> dist = num::structures::dijkstra(G, /*source=*/0);
 
 // 4. Minimum Spanning Tree via Kruskal's algorithm in O(E log V)
 num::graph mst = num::structures::minimum_spanning_tree(G);
 
 // 5. Breadth-first and depth-first search orderings
-std::vector<num::idx> bfs_order = num::structures::bfs(G, 0);
-std::vector<num::idx> dfs_order = num::structures::dfs(G, 0);
+num::array<num::idx> bfs_order = num::structures::bfs(G, 0);
+num::array<num::idx> dfs_order = num::structures::dfs(G, 0);
 ```
 
 ---
 
-## 7. Concepts & Diagnostics
+## 8. Concepts & Diagnostics
 
 ```cpp
 static_assert(num::equivalence_relation<num::disjoint_set, num::idx>);

@@ -2,6 +2,7 @@
 /// @brief Generic restarted GMRES constrained by the linear-map model.
 #pragma once
 
+#include "core/types.hpp"
 #include "core/math/concepts.hpp"
 #include "linear/solvers/solver_result.hpp"
 #include <algorithm>
@@ -36,10 +37,10 @@ requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
     solver_result result{0, 0.0, false};
     V residual = math::zero_like(b);
     V scratch = math::zero_like(b);
-    std::vector<V> basis;
+    array<V> basis;
     basis.reserve(restart + 1);
-    std::vector<std::vector<real>> hessenberg(restart, std::vector<real>(restart + 1, 0.0));
-    std::vector<real> cosine(restart, 0.0), sine(restart, 0.0), rhs(restart + 1, 0.0);
+    array<array<real>> hessenberg(restart, array<real>(restart + 1, 0.0));
+    array<real> cosine(restart, 0.0), sine(restart, 0.0), rhs(restart + 1, 0.0);
     idx total_iterations = 0;
 
     while (true) {
@@ -113,7 +114,7 @@ requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
             }
         }
 
-        std::vector<real> coefficients(steps, 0.0);
+        array<real> coefficients(steps, 0.0);
         for (idx row = steps; row > 0;) {
             --row;
             coefficients[row] = rhs[row];
@@ -175,12 +176,12 @@ requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::end
     V residual = math::zero_like(b);
     V scratch = math::zero_like(b);
     V preconditioned = math::zero_like(b);
-    std::vector<V> basis;      // Arnoldi basis of the Krylov space of A M^-1
-    std::vector<V> images;     // M^-1 v_j, kept so the update needs no second solve
+    array<V> basis;      // Arnoldi basis of the Krylov space of A M^-1
+    array<V> images;     // M^-1 v_j, kept so the update needs no second solve
     basis.reserve(restart + 1);
     images.reserve(restart);
-    std::vector<std::vector<real>> hessenberg(restart, std::vector<real>(restart + 1, 0.0));
-    std::vector<real> cosine(restart, 0.0), sine(restart, 0.0), rhs(restart + 1, 0.0);
+    array<array<real>> hessenberg(restart, array<real>(restart + 1, 0.0));
+    array<real> cosine(restart, 0.0), sine(restart, 0.0), rhs(restart + 1, 0.0);
     idx total_iterations = 0;
 
     while (true) {
@@ -263,7 +264,7 @@ requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::end
             }
         }
 
-        std::vector<real> coefficients(steps, 0.0);
+        array<real> coefficients(steps, 0.0);
         for (idx row = steps; row > 0;) {
             --row;
             coefficients[row] = rhs[row];

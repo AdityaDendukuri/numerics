@@ -169,9 +169,9 @@ class indexed_priority_queue {
     Compare comp_;
     Index capacity_ = 0;
     Index size_ = 0;
-    std::vector<Index> heap_;
-    std::vector<Index> pos_;
-    std::vector<Key> keys_;
+    array<Index> heap_;
+    array<Index> pos_;
+    array<Key> keys_;
 };
 
 /// Default Min-Indexed Priority Queue

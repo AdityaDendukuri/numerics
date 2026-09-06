@@ -33,7 +33,7 @@ template <typename Weight, std::integral Index>
 
 /// Compute connected components partition.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline std::vector<std::vector<Index>> connected_components(const basic_graph<Weight, Index> &G) {
+[[nodiscard]] inline array<array<Index>> connected_components(const basic_graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
     basic_disjoint_set<Index> ds(n);
     for (Index u = 0; u < n; ++u) {
@@ -46,13 +46,13 @@ template <typename Weight, std::integral Index>
 
 /// Compute single-source shortest path distances using Dijkstra with an Indexed Priority Queue.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline std::vector<Weight> dijkstra(const basic_graph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline array<Weight> dijkstra(const basic_graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::dijkstra source");
 
     constexpr Weight inf = std::numeric_limits<Weight>::infinity();
-    std::vector<Weight> dist(n, inf);
+    array<Weight> dist(n, inf);
     dist[source] = Weight{0};
 
     min_indexed_pq<Weight, Index> pq(n);
@@ -77,13 +77,13 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
 
 /// Breadth-first search traversal order starting from source.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline std::vector<Index> bfs(const basic_graph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline array<Index> bfs(const basic_graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::bfs source");
 
-    std::vector<bool> visited(n, false);
-    std::vector<Index> order;
+    array<bool> visited(n, false);
+    array<Index> order;
     order.reserve(n);
 
     std::queue<Index> q;
@@ -107,16 +107,16 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
 
 /// Depth-first search traversal order starting from source.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline std::vector<Index> dfs(const basic_graph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline array<Index> dfs(const basic_graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::dfs source");
 
-    std::vector<bool> visited(n, false);
-    std::vector<Index> order;
+    array<bool> visited(n, false);
+    array<Index> order;
     order.reserve(n);
 
-    std::vector<Index> stack = {source};
+    array<Index> stack = {source};
 
     while (!stack.empty()) {
         Index u = stack.back();
@@ -145,7 +145,7 @@ template <typename Weight, std::integral Index>
         bool operator<(const kruskal_edge &o) const { return weight < o.weight; }
     };
 
-    std::vector<kruskal_edge> edges;
+    array<kruskal_edge> edges;
     for (Index u = 0; u < n; ++u) {
         for (const auto &e : G.neighbors(u)) {
             if (u < e.to || G.is_directed()) {

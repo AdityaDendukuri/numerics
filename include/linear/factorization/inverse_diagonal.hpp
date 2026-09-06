@@ -2,6 +2,7 @@
 /// @brief Diagonal of an inverse from reusable factorizations.
 #pragma once
 
+#include "core/types.hpp"
 #include "linear/factorization/cholesky.hpp"
 #include "linear/factorization/lu.hpp"
 #include "linear/solvers/auto_linear.hpp"
@@ -41,33 +42,33 @@ void inverse_diagonal(const auto_linear_solver &factor, vec &result,
                       inverse_diagonal_workspace &workspace, idx block_size = 64);
 
 /// Compute A^-1(rows[i], columns[i]) using only the requested inverse columns.
-void selected_inverse(const lu_result &factor, std::span<const idx> rows,
-                      std::span<const idx> columns, vec &result,
+void selected_inverse(const lu_result &factor, view<const idx> rows,
+                      view<const idx> columns, vec &result,
                       inverse_diagonal_workspace &workspace);
 /// Compute selected inverse entries from a Cholesky factor.
-void selected_inverse(const cholesky_result &factor, std::span<const idx> rows,
-                      std::span<const idx> columns, vec &result,
+void selected_inverse(const cholesky_result &factor, view<const idx> rows,
+                      view<const idx> columns, vec &result,
                       inverse_diagonal_workspace &workspace);
 /// Compute selected inverse entries from a KLU factor.
-void selected_inverse(const klu_factorization &factor, std::span<const idx> rows,
-                      std::span<const idx> columns, vec &result,
+void selected_inverse(const klu_factorization &factor, view<const idx> rows,
+                      view<const idx> columns, vec &result,
                       inverse_diagonal_workspace &workspace);
 /// Compute selected inverse entries from an automatically selected factor.
-void selected_inverse(const auto_linear_solver &factor, std::span<const idx> rows,
-                      std::span<const idx> columns, vec &result,
+void selected_inverse(const auto_linear_solver &factor, view<const idx> rows,
+                      view<const idx> columns, vec &result,
                       inverse_diagonal_workspace &workspace);
 
 /// Extract A^-1(indices, indices), preserving the requested index order.
-void inverse_principal_block(const lu_result &factor, std::span<const idx> indices, mat &result,
+void inverse_principal_block(const lu_result &factor, view<const idx> indices, mat &result,
                              inverse_diagonal_workspace &workspace);
 /// Extract a principal inverse block from a Cholesky factor.
-void inverse_principal_block(const cholesky_result &factor, std::span<const idx> indices,
+void inverse_principal_block(const cholesky_result &factor, view<const idx> indices,
                              mat &result, inverse_diagonal_workspace &workspace);
 /// Extract a principal inverse block from a KLU factor.
-void inverse_principal_block(const klu_factorization &factor, std::span<const idx> indices, mat &result,
+void inverse_principal_block(const klu_factorization &factor, view<const idx> indices, mat &result,
                              inverse_diagonal_workspace &workspace);
 /// Extract a principal inverse block from an automatically selected factor.
-void inverse_principal_block(const auto_linear_solver &factor, std::span<const idx> indices,
+void inverse_principal_block(const auto_linear_solver &factor, view<const idx> indices,
                              mat &result, inverse_diagonal_workspace &workspace);
 
 /// Convenience overload owning its result and workspace.
@@ -82,7 +83,7 @@ void inverse_principal_block(const auto_linear_solver &factor, std::span<const i
 /// Convenience overload owning its result and workspace.
 /// Allocates; prefer the workspace form in hot loops.
 [[nodiscard]] inline mat inverse_principal_block(const auto_linear_solver &factor,
-                                                    std::span<const idx> indices) {
+                                                    view<const idx> indices) {
     mat result;
     inverse_diagonal_workspace workspace;
     inverse_principal_block(factor, indices, result, workspace);

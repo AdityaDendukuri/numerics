@@ -92,11 +92,11 @@ class ilu0_preconditioner final {
 
   private:
     idx n_ = 0;
-    std::vector<real> values_;
-    std::vector<idx> col_idx_;
-    std::vector<idx> row_ptr_;
-    std::vector<idx> diagonal_;
-    std::vector<idx> scratch_;
+    array<real> values_;
+    array<idx> col_idx_;
+    array<idx> row_ptr_;
+    array<idx> diagonal_;
+    array<idx> scratch_;
 };
 
 /// @brief Build an ILU(0) preconditioner for a sparse matrix.

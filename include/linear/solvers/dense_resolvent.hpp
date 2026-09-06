@@ -27,11 +27,11 @@ class dense_resolvent_solver {
     /// Factor sI-A for subsequent solves.
     void factorize(cplx shift);
     /// Solve the currently factored shifted system.
-    [[nodiscard]] std::vector<cplx> solve(const std::vector<cplx> &rhs) const;
-    void solve(const std::vector<cplx> &rhs, std::vector<cplx> &result) const;
+    [[nodiscard]] array<cplx> solve(const array<cplx> &rhs) const;
+    void solve(const array<cplx> &rhs, array<cplx> &result) const;
     /// Solve several right-hand sides against the current shift.
-    [[nodiscard]] std::vector<std::vector<cplx>>
-    solve(const std::vector<std::vector<cplx>> &right_hand_sides) const;
+    [[nodiscard]] array<array<cplx>>
+    solve(const array<array<cplx>> &right_hand_sides) const;
 
   private:
     struct Impl;

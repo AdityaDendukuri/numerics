@@ -4,6 +4,7 @@
 /// boundary-condition parameterization.
 #pragma once
 
+#include "core/types.hpp"
 #include "container/vector.hpp"
 #include "linear/factorization/tridiag_complex.hpp"
 #include "pde/stencil.hpp"
@@ -39,8 +40,8 @@ struct crank_nicolson_adi {
         const cplx ia(0.0, tau / (4.0 * h * h));
         const cplx diag(1.0, -2.0 * tau / (4.0 * h * h));
 
-        auto apply = [&](std::vector<cplx> &fiber) {
-            std::vector<cplx> rhs(N);
+        auto apply = [&](array<cplx> &fiber) {
+            array<cplx> rhs(N);
             for (int i = 0; i < N; ++i) {
                 cplx prev = (i > 0) ? fiber[i - 1] : cplx{};
                 cplx next = (i < N - 1) ? fiber[i + 1] : cplx{};

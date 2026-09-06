@@ -77,10 +77,10 @@ inline hessenberg_decomposition::hessenberg_decomposition(const mat &A, bool use
         // LAPACK dgehrd and dorghr assume column-major layout.
         // A (row-major) corresponds to A^T (column-major).
         // Transpose A to column-major buffer:
-        std::vector<double> a_col(n * n);
+        array<double> a_col(n * n);
         kernel::transpose(a_col.data(), A.data(), n, n);
 
-        std::vector<double> tau(n - 1, 0.0);
+        array<double> tau(n - 1, 0.0);
         lapack_int lapack_n = static_cast<lapack_int>(n);
         lapack_int ilo = 1;
         lapack_int ihi = lapack_n;
@@ -116,9 +116,9 @@ inline hessenberg_decomposition::hessenberg_decomposition(const mat &A, bool use
 #endif
 
     // High-performance vectorized sequential Householder elimination
-    std::vector<double> col_k(n);
-    std::vector<double> v(n);
-    std::vector<double> w(n);
+    array<double> col_k(n);
+    array<double> v(n);
+    array<double> w(n);
     double *H_raw = H_.data();
     double *Q_raw = Q_.data();
 
@@ -167,9 +167,9 @@ inline hessenberg_decomposition::hessenberg_decomposition(const mat &A, bool use
 /// @param y Output, resized to n.
 /// @param M_buf Scratch, grown to n*n and reusable across calls.
 /// @param pivots Scratch, grown to n and reusable across calls.
-inline void hessenberg_shifted_solve(const mat &H, cplx shift, const std::vector<cplx> &b_tilde,
-                                     std::vector<cplx> &y, std::vector<cplx> &M_buf,
-                                     std::vector<idx> &pivots) {
+inline void hessenberg_shifted_solve(const mat &H, cplx shift, const array<cplx> &b_tilde,
+                                     array<cplx> &y, array<cplx> &M_buf,
+                                     array<idx> &pivots) {
     const idx n = H.rows();
     if (b_tilde.size() != n) {
         throw std::invalid_argument("hessenberg_shifted_solve: dimension mismatch");
@@ -192,16 +192,16 @@ inline void hessenberg_shifted_solve(const mat &H, cplx shift, const std::vector
 /// Accepts a real or complex right-hand side. The result is complex either way,
 /// since the shift generally is.
 template <class Rhs>
-inline std::vector<cplx> hessenberg_project(const mat &Q, const Rhs &b) {
+inline array<cplx> hessenberg_project(const mat &Q, const Rhs &b) {
     const idx n = Q.rows();
-    std::vector<cplx> b_tilde(n);
+    array<cplx> b_tilde(n);
     kernel::matvec_transpose_into_complex(b_tilde.data(), Q.data(), b.data(), n, n);
     return b_tilde;
 }
 
 /// @brief Carry a solution back to the original basis: \f$x = Q y\f$.
-inline void hessenberg_back_project(const mat &Q, const std::vector<cplx> &y,
-                                    std::vector<cplx> &x) {
+inline void hessenberg_back_project(const mat &Q, const array<cplx> &y,
+                                    array<cplx> &x) {
     const idx n = Q.rows();
     if (x.size() != n) {
         x.resize(n);

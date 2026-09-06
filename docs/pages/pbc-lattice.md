@@ -19,7 +19,7 @@ sweeps and cluster traversals.
 ```cpp
 struct num::pbc_lattice_2d {
     int N;
-    std::vector<int> up, dn, lt, rt;   // N*N each
+    num::array<int> up, dn, lt, rt;   // N*N each
 
     explicit pbc_lattice_2d(int N);
 };

@@ -44,7 +44,7 @@ Avoids runtime `std::exp` calls when \f$\Delta E\f$ takes values in a known disc
 
 ```cpp
 const double beta = 1.0;   // inverse temperature; `num::beta` is the beta function
-std::vector<double> discrete_dE{-8.0, -4.0, 0.0, 4.0, 8.0};
+num::array<double> discrete_dE{-8.0, -4.0, 0.0, 4.0, 8.0};
 auto table = num::markov::make_boltzmann_table(discrete_dE, beta);
 
 auto stats = num::markov::metropolis_sweep_prob(

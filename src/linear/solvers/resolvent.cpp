@@ -6,16 +6,16 @@
 namespace num {
 namespace {
 
-[[nodiscard]] std::vector<cplx> complex_copy(const vec &source) {
-    std::vector<cplx> result(source.size());
+[[nodiscard]] array<cplx> complex_copy(const vec &source) {
+    array<cplx> result(source.size());
     for (idx index = 0; index < source.size(); ++index) {
         result[index] = source[index];
     }
     return result;
 }
 
-[[nodiscard]] std::vector<std::vector<cplx>> complex_copy(const std::vector<vec> &sources) {
-    std::vector<std::vector<cplx>> result;
+[[nodiscard]] array<array<cplx>> complex_copy(const array<vec> &sources) {
+    array<array<cplx>> result;
     result.reserve(sources.size());
     for (const vec &source : sources) {
         result.push_back(complex_copy(source));
@@ -31,30 +31,30 @@ resolvent_factor::resolvent_factor(cplx shift, const mat &matrix) : solver_(matr
     solver_.factorize(shift);
 }
 
-std::vector<cplx> resolvent_factor::solve(const std::vector<cplx> &rhs) const {
+array<cplx> resolvent_factor::solve(const array<cplx> &rhs) const {
     debug::check_dim(solver_.size(), static_cast<idx>(rhs.size()), "resolvent_factor RHS");
     return solver_.solve(rhs);
 }
 
-std::vector<std::vector<cplx>>
-resolvent_factor::solve(const std::vector<std::vector<cplx>> &right_hand_sides) const {
+array<array<cplx>>
+resolvent_factor::solve(const array<array<cplx>> &right_hand_sides) const {
     return solver_.solve(right_hand_sides);
 }
 
-std::vector<cplx> resolvent_solve(cplx shift, const mat &matrix, const vec &right_hand_side) {
+array<cplx> resolvent_solve(cplx shift, const mat &matrix, const vec &right_hand_side) {
     debug::check_dim(matrix.rows(), right_hand_side.size(), "resolvent_solve RHS");
     hessenberg_resolvent_solver solver(matrix);
     return solver.solve(shift, right_hand_side);
 }
 
-std::vector<std::vector<cplx>>
+array<array<cplx>>
 resolvent_solve_rhs_batch(cplx shift, const mat &matrix,
-                          const std::vector<vec> &right_hand_sides) {
+                          const array<vec> &right_hand_sides) {
     resolvent_factor factor(shift, matrix);
     return factor.solve(complex_copy(right_hand_sides));
 }
 
-std::vector<std::vector<cplx>> resolvent_solve_batch(const std::vector<cplx> &shifts,
+array<array<cplx>> resolvent_solve_batch(const array<cplx> &shifts,
                                                      const mat &matrix,
                                                      const vec &right_hand_side) {
     debug::check_dim(matrix.rows(), matrix.cols(), "resolvent_solve_batch matrix must be square");
@@ -66,9 +66,9 @@ std::vector<std::vector<cplx>> resolvent_solve_batch(const std::vector<cplx> &sh
     return solver.solve_batch(shifts, right_hand_side);
 }
 
-std::vector<std::vector<std::vector<cplx>>>
-resolvent_solve_batch(const std::vector<cplx> &shifts, const mat &matrix,
-                      const std::vector<vec> &right_hand_sides) {
+array<array<array<cplx>>>
+resolvent_solve_batch(const array<cplx> &shifts, const mat &matrix,
+                      const array<vec> &right_hand_sides) {
     debug::check_dim(matrix.rows(), matrix.cols(), "resolvent_solve_batch matrix must be square");
     debug::check_non_empty(matrix.rows(), "resolvent_solve_batch matrix");
 

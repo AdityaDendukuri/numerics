@@ -21,9 +21,9 @@ bool sparse_resolvent_available() noexcept {
 struct sparse_resolvent_solver::Impl {
     idx n = 0;
 #if defined(NUMERICS_HAS_UMFPACK)
-    std::vector<int> ap, ai;
-    std::vector<double> ar, az, xr, xz, br, bz;
-    std::vector<int> diagonal;
+    array<int> ap, ai;
+    array<double> ar, az, xr, xz, br, bz;
+    array<int> diagonal;
     cplx current_shift = {0.0, 0.0};
     void *symbolic = nullptr;
     void *numeric = nullptr;
@@ -60,7 +60,7 @@ sparse_resolvent_solver::sparse_resolvent_solver(const spmat &A, sparse_resolven
     }
     impl_->ai.resize(A.nnz());
     impl_->ar.resize(A.nnz());
-    std::vector<int> next = impl_->ap;
+    array<int> next = impl_->ap;
     for (idx i = 0; i < impl_->n; ++i) {
         for (idx k = A.row_ptr()[i]; k < A.row_ptr()[i + 1]; ++k) {
             const int p = next[A.col_idx()[k]]++;
@@ -73,7 +73,7 @@ sparse_resolvent_solver::sparse_resolvent_solver(const spmat &A, sparse_resolven
     for (int col = 0; col < n; ++col) {
         const int begin = impl_->ap[col];
         const int end = impl_->ap[col + 1];
-        std::vector<std::pair<int, double>> entries;
+        array<std::pair<int, double>> entries;
         entries.reserve(static_cast<std::size_t>(end - begin));
         for (int p = begin; p < end; ++p) {
             entries.emplace_back(impl_->ai[p], impl_->ar[p]);
@@ -142,13 +142,13 @@ void sparse_resolvent_solver::factorize(cplx shift) {
 #endif
 }
 
-std::vector<cplx> sparse_resolvent_solver::solve(const std::vector<cplx> &rhs) const {
-    std::vector<cplx> out;
+array<cplx> sparse_resolvent_solver::solve(const array<cplx> &rhs) const {
+    array<cplx> out;
     solve(rhs, out);
     return out;
 }
 
-void sparse_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vector<cplx> &out) const {
+void sparse_resolvent_solver::solve(const array<cplx> &rhs, array<cplx> &out) const {
 #if defined(NUMERICS_HAS_UMFPACK)
     if (!impl_->numeric || rhs.size() != impl_->n) {
         throw std::invalid_argument("sparse_resolvent_solver: factorization or dimension missing");
@@ -172,9 +172,9 @@ void sparse_resolvent_solver::solve(const std::vector<cplx> &rhs, std::vector<cp
 #endif
 }
 
-std::vector<std::vector<cplx>>
-sparse_resolvent_solver::solve(const std::vector<std::vector<cplx>> &rhs) const {
-    std::vector<std::vector<cplx>> out;
+array<array<cplx>>
+sparse_resolvent_solver::solve(const array<array<cplx>> &rhs) const {
+    array<array<cplx>> out;
     out.reserve(rhs.size());
     for (const auto &b : rhs) {
         out.push_back(solve(b));

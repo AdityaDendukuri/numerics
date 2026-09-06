@@ -2,6 +2,7 @@
 /// @brief Standard C/C++ LAPACKE header for cross-platform Linux and macOS build targets.
 #pragma once
 
+#include "core/types.hpp"
 #include "core/policy.hpp"
 #include <algorithm>
 #include <vector>
@@ -29,7 +30,7 @@ inline int LAPACKE_dgeqrf(int matrix_layout, lapack_int m, lapack_int n, double 
     double work_query = 0.0;
     dgeqrf_(&n, &m, a, &lda, tau, &work_query, &lwork, &info);
     lwork = static_cast<int>(work_query);
-    std::vector<double> work(std::max(1, lwork));
+    array<double> work(std::max(1, lwork));
     dgeqrf_(&n, &m, a, &lda, tau, work.data(), &lwork, &info);
     return info;
 }
@@ -41,7 +42,7 @@ inline int LAPACKE_dorgqr(int matrix_layout, lapack_int m, lapack_int n, lapack_
     double work_query = 0.0;
     dorgqr_(&n, &m, &k, a, &lda, tau, &work_query, &lwork, &info);
     lwork = static_cast<int>(work_query);
-    std::vector<double> work(std::max(1, lwork));
+    array<double> work(std::max(1, lwork));
     dorgqr_(&n, &m, &k, a, &lda, tau, work.data(), &lwork, &info);
     return info;
 }
@@ -53,7 +54,7 @@ inline int LAPACKE_dgehrd(int matrix_layout, lapack_int n, lapack_int ilo, lapac
     double work_query = 0.0;
     dgehrd_(&n, &ilo, &ihi, a, &lda, tau, &work_query, &lwork, &info);
     lwork = static_cast<int>(work_query);
-    std::vector<double> work(std::max(1, lwork));
+    array<double> work(std::max(1, lwork));
     dgehrd_(&n, &ilo, &ihi, a, &lda, tau, work.data(), &lwork, &info);
     return info;
 }
@@ -65,7 +66,7 @@ inline int LAPACKE_dorghr(int matrix_layout, lapack_int n, lapack_int ilo, lapac
     double work_query = 0.0;
     dorghr_(&n, &ilo, &ihi, a, &lda, tau, &work_query, &lwork, &info);
     lwork = static_cast<int>(work_query);
-    std::vector<double> work(std::max(1, lwork));
+    array<double> work(std::max(1, lwork));
     dorghr_(&n, &ilo, &ihi, a, &lda, tau, work.data(), &lwork, &info);
     return info;
 }
@@ -76,11 +77,11 @@ inline int LAPACKE_dgesdd(int matrix_layout, char jobz, lapack_int m, lapack_int
     int info = 0;
     int lwork = -1;
     double work_query = 0.0;
-    std::vector<int> iwork(8 * std::min(m, n));
+    array<int> iwork(8 * std::min(m, n));
     dgesdd_(&jobz, &n, &m, a, &ldu, s, vt, &ldvt, u, &ldu, &work_query, &lwork, iwork.data(),
             &info);
     lwork = static_cast<int>(work_query);
-    std::vector<double> work(std::max(1, lwork));
+    array<double> work(std::max(1, lwork));
     dgesdd_(&jobz, &n, &m, a, &ldu, s, vt, &ldvt, u, &ldu, work.data(), &lwork, iwork.data(),
             &info);
     return info;
@@ -96,8 +97,8 @@ inline int LAPACKE_dsyevd(int matrix_layout, char jobz, char uplo, lapack_int n,
     dsyevd_(&jobz, &uplo, &n, a, &lda, w, &work_query, &lwork, &iwork_query, &liwork, &info);
     lwork = static_cast<int>(work_query);
     liwork = iwork_query;
-    std::vector<double> work(std::max(1, lwork));
-    std::vector<int> iwork(std::max(1, liwork));
+    array<double> work(std::max(1, lwork));
+    array<int> iwork(std::max(1, liwork));
     dsyevd_(&jobz, &uplo, &n, a, &lda, w, work.data(), &lwork, iwork.data(), &liwork, &info);
     return info;
 }
@@ -137,7 +138,7 @@ inline int LAPACKE_dgetri(int matrix_layout, lapack_int n, double *a, lapack_int
     double work_query = 0.0;
     dgetri_(&n, a, &lda, ipiv, &work_query, &lwork, &info);
     lwork = static_cast<int>(work_query);
-    std::vector<double> work(std::max(1, lwork));
+    array<double> work(std::max(1, lwork));
     dgetri_(&n, a, &lda, ipiv, work.data(), &lwork, &info);
     return info;
 }
@@ -171,7 +172,7 @@ inline int LAPACKE_dgeev(int matrix_layout, char jobvl, char jobvr, lapack_int n
     double work_query = 0.0;
     dgeev_(&jobvl, &jobvr, &n, a, &lda, wr, wi, vl, &ldvl, vr, &ldvr, &work_query, &lwork, &info);
     lwork = static_cast<int>(work_query);
-    std::vector<double> work(std::max(1, lwork));
+    array<double> work(std::max(1, lwork));
     dgeev_(&jobvl, &jobvr, &n, a, &lda, wr, wi, vl, &ldvl, vr, &ldvr, work.data(), &lwork, &info);
     return info;
 }
@@ -186,8 +187,8 @@ inline int LAPACKE_dsygvd(int matrix_layout, lapack_int itype, char jobz, char u
     dsygvd_(&itype, &jobz, &uplo, &n, a, &lda, b, &ldb, w, &work_query, &lwork, &iwork_query, &liwork, &info);
     lwork = static_cast<int>(work_query);
     liwork = iwork_query;
-    std::vector<double> work(std::max(1, lwork));
-    std::vector<int> iwork(std::max(1, liwork));
+    array<double> work(std::max(1, lwork));
+    array<int> iwork(std::max(1, liwork));
     dsygvd_(&itype, &jobz, &uplo, &n, a, &lda, b, &ldb, w, work.data(), &lwork, iwork.data(), &liwork, &info);
     return info;
 }

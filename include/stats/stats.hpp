@@ -53,7 +53,7 @@ using running_stats = basic_running_stats<real, idx>;
 /// @brief Fixed-bin histogram over \f$[\ell,h)\f$.
 template <typename Float = double, std::integral Index = num::idx>
 struct basic_histogram {
-    std::vector<Float> counts;
+    array<Float> counts;
     Float lo = Float{0};
     Float hi = Float{0};
     Index nbins = 0;
@@ -97,9 +97,9 @@ struct basic_histogram {
     }
 
     /// Normalise so that the histogram integrates to 1 (probability density).
-    [[nodiscard]] std::vector<Float> pdf() const {
+    [[nodiscard]] array<Float> pdf() const {
         Float norm = total() * bin_width();
-        std::vector<Float> p(static_cast<std::size_t>(nbins));
+        array<Float> p(static_cast<std::size_t>(nbins));
         if (norm > Float{0}) {
             for (Index b = 0; b < nbins; ++b) {
                 p[static_cast<std::size_t>(b)] = counts[static_cast<std::size_t>(b)] / norm;
