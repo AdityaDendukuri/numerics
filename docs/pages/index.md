@@ -70,11 +70,9 @@ auto solution = num::solve(
 
 1. @subpage page_getting_started "Getting Started" (CMake setup, header inclusion, basic operations)
 2. @subpage page_architecture "Library Structure & Architecture" (standalone raw compute layer, module tiers, dependency invariants, where a new feature goes)
-3. @subpage page_kernel "num::kernel Reference" (the raw compute tier: contract, per-routine reference, vendoring it on its own)
-    - @subpage page_kernel_index "num::kernel Index" (all 88 public routines, grouped by what they do)
+3. @subpage page_kernel "num::kernel" (all 88 routines, then the contract, parameter tables, and vendoring)
 4. @subpage page_parallel "Backend Namespaces & Hardware Acceleration" (switching between kernel, BLAS/LAPACK, OpenMP, CUDA, and MPI)
-5. @subpage page_concepts "Concepts & Invariants" (structure versus law, declaring a type's laws, diagnostics)
-    - @subpage page_concept_index "Concept Index" (all 83 concepts, grouped by what they describe)
+5. @subpage page_concepts "Concepts & Invariants" (all 83 concepts, then structure versus law, declaring them, and the diagnostics)
 6. @subpage page_expressive "Expression Interface" (convenience operators and performance tradeoffs)
 7. @subpage page_examples "Examples" (code organized by numerical domain)
 8. @subpage page_reference "API Reference" (classes, functions, and concepts)

@@ -184,36 +184,36 @@ tr.heading {
    A dense, multi-column symbol index in the shape of the cppreference landing
    page: every routine visible at once, grouped by what it does, rather than
    one table per group that has to be scrolled through. */
-.kernel-index {
+.sym-index {
     column-count: 3;
     column-gap: 2.2em;
     font-size: 0.94em;
     line-height: 1.5;
     margin: 1em 0 2em;
 }
-@media (max-width: 1100px) { .kernel-index { column-count: 2; } }
-@media (max-width: 700px)  { .kernel-index { column-count: 1; } }
+@media (max-width: 1100px) { .sym-index { column-count: 2; } }
+@media (max-width: 700px)  { .sym-index { column-count: 1; } }
 
-.kernel-index .kidx-group {
+.sym-index .kidx-group {
     break-inside: avoid-column;
     page-break-inside: avoid;
     margin: 0 0 1.15em;
     display: block;
 }
-.kernel-index .kidx-title {
+.sym-index .kidx-title {
     font-size: 1em;
     font-weight: 600;
     color: var(--primary-color, #3d578c);
 }
-.kernel-index .kidx-syms {
+.sym-index .kidx-syms {
     display: block;
     padding-left: 1em;
     text-indent: -1em;
 }
 /* Routine names are links to their reference anchors; keep them monospace so the
    index still reads as a list of symbols rather than a list of prose links. */
-.kernel-index .kidx-syms a,
-.kernel-index code {
+.sym-index .kidx-syms a,
+.sym-index code {
     font-family: var(--font-family-monospace, monospace);
     font-size: 0.95em;
     white-space: nowrap;
@@ -221,7 +221,7 @@ tr.heading {
     border: none;
     padding: 0;
 }
-.kernel-index .hdr {
+.sym-index .hdr {
     font-style: italic;
     opacity: 0.7;
     font-size: 0.88em;
