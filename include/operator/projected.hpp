@@ -48,9 +48,24 @@ requires(!std::is_lvalue_reference_v<Op>) auto projected(Op &&, Subspace) = dele
 
 namespace num::math {
 
+/// A projection carries its operand's law over to the subspace rather than discarding it.
+///
+/// \f$P A\f$ does not satisfy a global law even when \f$A\f$ does: \f$(PA)^* = AP \ne
+/// PA\f$. It satisfies the law *on the subspace*, because \f$PAx = PAPx\f$ for every
+/// \f$x \in S\f$, and \f$PAP\f$ is self-adjoint, semidefinite or definite exactly when
+/// \f$A\f$ is. `restricted_to` performs that translation.
+///
+/// This is what lets `num::pcg` run on a graph Laplacian restricted to the zero-sum
+/// subspace without the caller re-asserting definiteness that was already established.
 template <class Op, class Subspace>
 struct claims_of<operators::projected_op<Op, Subspace>> {
-    using type = type_list<law::linear_map>;
+  private:
+    template <class... Ls>
+    static auto derive(type_list<Ls...>)
+        -> type_list<law::restricted_to_t<Ls, Subspace>...>;
+
+  public:
+    using type = decltype(derive(typename detail::declared_laws<Op>::type{}));
 };
 
 } // namespace num::math

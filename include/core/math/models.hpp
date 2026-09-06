@@ -199,6 +199,91 @@ struct spd_on : psd_on<Subspace> {
 
 } // namespace num::law
 
+namespace num::law {
+
+// -----------------------------------------------------------------------------
+// Deriving laws
+// -----------------------------------------------------------------------------
+//
+// A law attached to an operand should survive an operation that provably preserves it.
+// Without that, `A + B` for two SPD operators claims nothing, and the caller has to
+// re-assert -- paying an O(n^2) sample, or asserting something unverified. The rules
+// below are theorems, so the claim carries at compile time and costs nothing.
+//
+// Only *unconditional* theorems belong here. A congruence P^T A P preserves definiteness
+// only when P has full column rank, and a product of self-adjoint operators is
+// self-adjoint only when they commute. Neither side condition is checkable, so encoding
+// them would be `assume` wearing a derivation's clothes. Those stay explicit.
+
+/// @brief The strongest law implied by both `A` and `B`: their greatest lower bound.
+///
+/// The laws are partially ordered by implication and every pair has a meet, which is what
+/// makes this total. It is exactly the rule for a sum: `A + B` satisfies whatever both
+/// operands satisfy, and no more. `spd` with `spd` gives `spd`; `spd` with `self_adjoint`
+/// gives `self_adjoint`; `spd` with `unitary` gives `normal`.
+template <class A, class B>
+struct meet {
+    using type =
+        std::conditional_t<std::derived_from<B, A>, A, typename meet<typename A::base, B>::type>;
+};
+
+template <class B>
+struct meet<void, B> {
+    using type = void;
+};
+
+template <class A, class B>
+using meet_t = typename meet<A, B>::type;
+
+/// @brief The law `L` restricted to `Subspace`, when one exists.
+///
+/// Projecting an operator onto a subspace does not preserve a global law: \f$P A\f$ is
+/// not self-adjoint even when \f$A\f$ is. It preserves the law *on the subspace*, since
+/// \f$PAx = PAPx\f$ for every \f$x \in S\f$, and \f$PAP\f$ is self-adjoint whenever
+/// \f$A\f$ is. That is precisely what `self_adjoint_on` and its refinements assert.
+template <class L, class Subspace>
+struct restricted_to {
+    using type = linear_map;
+};
+template <class S> struct restricted_to<spd, S>          { using type = spd_on<S>; };
+template <class S> struct restricted_to<psd, S>          { using type = psd_on<S>; };
+template <class S> struct restricted_to<projection, S>   { using type = psd_on<S>; };
+template <class S> struct restricted_to<self_adjoint, S> { using type = self_adjoint_on<S>; };
+
+template <class L, class Subspace>
+using restricted_to_t = typename restricted_to<L, Subspace>::type;
+
+/// @brief The most derived law in a claim list.
+///
+/// A type usually claims one law, and implication supplies the rest. Where it claims
+/// several, the strongest is the one the others follow from. An empty list means the type
+/// claimed nothing, which for a linear operator still means `linear_map`.
+template <class List>
+struct strongest;
+
+template <>
+struct strongest<math::type_list<>> {
+    using type = linear_map;
+};
+
+template <class L>
+struct strongest<math::type_list<L>> {
+    using type = L;
+};
+
+template <class L, class... Rest>
+struct strongest<math::type_list<L, Rest...>> {
+  private:
+    using rest = typename strongest<math::type_list<Rest...>>::type;
+
+  public:
+    using type = std::conditional_t<std::derived_from<L, rest>, L, rest>;
+};
+
+
+} // namespace num::law
+
+
 namespace num::math {
 
 /// @brief Alias for `num::law`, which was previously nested here as `num::math::law`.
@@ -274,6 +359,18 @@ consteval bool claims_in(type_list<Ls...>) {
 } // namespace detail
 
 } // namespace num::math
+
+namespace num::law {
+
+/// @brief The most derived law a type claims, taken from its declaration.
+///
+/// Defined here rather than beside `strongest` because it needs `declared_laws`, which in
+/// turn needs the claim customization point above.
+template <class T>
+using strongest_law_t =
+    typename strongest<typename math::detail::declared_laws<T>::type>::type;
+
+} // namespace num::law
 
 namespace num {
 

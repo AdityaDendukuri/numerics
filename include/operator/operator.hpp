@@ -11,4 +11,5 @@
 #include "operator/concepts.hpp"
 #include "operator/dense.hpp"
 #include "operator/projected.hpp"
+#include "operator/sum.hpp"
 #include "operator/properties.hpp"
