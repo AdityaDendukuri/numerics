@@ -46,7 +46,7 @@ jobs:
       - name: Check documentation links
         run: |
           missing=0
-          for page in index page_reference concepts annotated namespaces files examples; do
+          for page in index page_reference page_kernel page_concepts annotated namespaces files examples; do
             if [ ! -f "_site/${page}.html" ]; then
               echo "::error file=${page}.html::Doxygen did not generate ${page}.html"
               missing=1
