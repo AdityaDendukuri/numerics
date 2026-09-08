@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['s_0',['s',['../structnum_1_1svd__result.html#a785601283dd294aa8c1e434608abbb6a',1,'num::svd_result::S'],['../structnum_1_1givens__rotation.html#ae33f96b9431a1d28530864de49f16096',1,'num::givens_rotation::s']]],
+  ['sampling_5fcompiled_5fin_1',['sampling_compiled_in',['../namespacenum_1_1debug.html#ab2592eb867b53a896ed263eac9b75775',1,'num::debug']]],
+  ['scale_2',['scale',['../namespacenum_1_1math.html#a0577a54c5fc2390d272a967e38bc50aa',1,'num::math']]],
+  ['seq_3',['seq',['../namespacenum_1_1spectral.html#aa3c9557964894e5b6afc242e052fb0f8',1,'num::spectral']]],
+  ['series_4',['series',['../structnum_1_1plt_1_1detail_1_1plot__panel.html#a04f8dd5ddefcb2cc15a1133d090a1232',1,'num::plt::detail::plot_panel']]],
+  ['shift_5',['shift',['../structnum_1_1contour__node.html#a4c0b304c63db60178895d0476c18f5f9',1,'num::contour_node']]],
+  ['short_5frow_5fcutoff_6',['short_row_cutoff',['../namespacenum_1_1kernel_1_1detail.html#a15226d9810a07603b7790a8c04205b77',1,'num::kernel::detail']]],
+  ['sigma_7',['sigma',['../structnum_1_1talbot__quadrature.html#a811656baa3422dfa4e44604c24afd3c0',1,'num::talbot_quadrature']]],
+  ['singular_8',['singular',['../structnum_1_1lu__result.html#a2b9cd2d229e01c75be50ff3cb5e762c4',1,'num::lu_result::singular'],['../structnum_1_1no__pivot__lu.html#a1423bddc58c283a05883a7bc8a189399',1,'num::no_pivot_lu::singular']]],
+  ['size_9',['size',['../structnum_1_1block__lu__factor.html#a6bb5299f08da7117453d7f8aaae70cdc',1,'num::block_lu_factor::size'],['../structnum_1_1block__cholesky__factor.html#a7937a307272af1fb4f6d07351d2f2136',1,'num::block_cholesky_factor::size']]],
+  ['sizes_10',['sizes',['../structnum_1_1cluster__result.html#a6adab6ac5d409f1ebba0b7329ee9efa1',1,'num::cluster_result']]],
+  ['solutions_11',['solutions',['../structnum_1_1inverse__diagonal__workspace.html#a42601316e46fd57aebde862bb7975e5d',1,'num::inverse_diagonal_workspace']]],
+  ['sparse_12',['sparse',['../structnum_1_1auto__resolvent__solver_1_1Impl.html#a56dcda08229d6098402124630668b153',1,'num::auto_resolvent_solver::Impl']]],
+  ['sparse_5ffactor_13',['sparse_factor',['../structnum_1_1auto__linear__solver_1_1Impl.html#a4e9dd0776c2618f779cee0d4ae4720ec',1,'num::auto_linear_solver::Impl']]],
+  ['sqrt2_14',['sqrt2',['../namespacenum.html#afeaf2e7aac48adeccf35c3e9c4989245',1,'num']]],
+  ['sqrt3_15',['sqrt3',['../namespacenum.html#a1d5f7e3e0ba38363df3b931d211e72d2',1,'num']]],
+  ['state_16',['state',['../structnum_1_1debug_1_1probe__rng.html#afedd0146452fd4e9616ba829b7678220',1,'num::debug::probe_rng']]],
+  ['steps_17',['steps',['../structnum_1_1symplectic__result.html#ae4113a3b0bdc03a2608eb30aa3243d96',1,'num::symplectic_result::steps'],['../structnum_1_1ode__result.html#a2bf0f2b94dd8458b630ebcde6bda53bd',1,'num::ode_result::steps'],['../structnum_1_1lanczos__result.html#a34f205542014fd179bbd478761e211fc',1,'num::lanczos_result::steps']]],
+  ['storage_5falignment_18',['storage_alignment',['../namespacenum.html#a2e78383935b09fc4648b15b07a743afb',1,'num']]],
+  ['strict_19',['strict',['../namespacenum_1_1debug_1_1preset.html#aa4955c9111dc363ed3aaf742461dee9b',1,'num::debug::preset']]],
+  ['style_20',['style',['../structnum_1_1plt_1_1detail_1_1series__entry.html#a9a2303a17ef7430f754453f9b72b4196',1,'num::plt::detail::series_entry']]],
+  ['subspace_21',['subspace',['../structnum_1_1pcg__on__method.html#a6af170ebc8d79874711eb1a514373f8b',1,'num::pcg_on_method']]],
+  ['success_22',['success',['../structnum_1_1cholesky__result.html#a0116c83d3fbd65469608ba779c5c3ff4',1,'num::cholesky_result::success'],['../structnum_1_1banded__solver__result.html#a5e1b1e872981f801c9f0945fbdc36ff6',1,'num::banded_solver_result::success']]],
+  ['sweeps_23',['sweeps',['../structnum_1_1eigen__result.html#a11b1e02512db3f9c2c03ecf3731130d5',1,'num::eigen_result::sweeps'],['../structnum_1_1svd__result.html#ae3abefb6e977c4e9ed7d4b4fcac2ac15',1,'num::svd_result::sweeps']]],
+  ['symmetric_5fpattern_24',['symmetric_pattern',['../structnum_1_1auto__resolvent__options.html#aac8b666655468c2e5248d32df2652270',1,'num::auto_resolvent_options::symmetric_pattern'],['../structnum_1_1sparse__resolvent__options.html#ade80c9806974c00ab7f0afcc45044f02',1,'num::sparse_resolvent_options::symmetric_pattern']]]
+];

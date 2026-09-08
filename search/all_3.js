@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['3_20automated_20html_20performance_20report_0',['3. Automated HTML Performance Report',['../page_performance.html#autotoc_md238',1,'']]],
+  ['3_20axiom_20verification_1',['3. Axiom Verification',['../page_algebra.html#autotoc_md5',1,'']]],
+  ['3_20concepts_2',['3. Concepts',['../page_stats.html#autotoc_md359',1,'']]],
+  ['3_20custom_20operator_20interface_3',['3. Custom Operator Interface',['../page_operator.html#autotoc_md202',1,'']]],
+  ['3_20dense_20matrices_4',['3. Dense Matrices',['../page_container.html#autotoc_md63',1,'']]],
+  ['3_20eigenvalues_20and_20svd_5',['3. Eigenvalues and SVD',['../page_linear.html#autotoc_md174',1,'']]],
+  ['3_20empirical_20comparison_3a_20in_20tree_20c_2020_20vs_20vendor_20blas_20lapack_6',['3. Empirical Comparison: In-Tree C++20 vs. Vendor BLAS/LAPACK',['../page_report.html#autotoc_md294',1,'']]],
+  ['3_20fast_20direct_20poisson_20solvers_20dst_20i_7',['3. Fast Direct Poisson Solvers (DST-I)',['../page_pde.html#autotoc_md228',1,'']]],
+  ['3_20foundational_20mathematical_20vocabulary_8',['3. Foundational Mathematical Vocabulary',['../page_refactor_roadmap.html#autotoc_md264',1,'']]],
+  ['3_20gaussian_20quadrature_20num_3a_3agauss_5flegendre_9',['3. Gaussian Quadrature (num::gauss_legendre)',['../page_quadrature.html#autotoc_md251',1,'']]],
+  ['3_20indexed_20priority_20queue_20num_3a_3aindexed_5fpriority_5fqueue_10',['3. Indexed Priority Queue (num::indexed_priority_queue)',['../page_structures.html#autotoc_md380',1,'']]],
+  ['3_20infix_20operator_20overloads_20num_3a_3aops_11',['3. Infix Operator Overloads (num::ops)',['../page_expressive.html#autotoc_md91',1,'']]],
+  ['3_20initial_20value_20problems_20num_3a_3aode_5fproblem_12',['3. Initial Value Problems (num::ode_problem)',['../page_solve.html#autotoc_md308',1,'']]],
+  ['3_20laws_20survive_20operations_20that_20preserve_20them_13',['3. Laws survive operations that preserve them',['../page_concepts.html#autotoc_md30',1,'']]],
+  ['3_20periodic_20lattice_14',['3. Periodic Lattice',['../page_spatial.html#autotoc_md324',1,'']]],
+  ['3_20plan_20based_20execution_20num_3a_3aspectral_3a_3afft_5fplan_15',['3. Plan-Based Execution (num::spectral::fft_plan)',['../page_spectral.html#autotoc_md336',1,'']]],
+  ['3_20preconditioning_16',['3. Preconditioning',['../page_solver_best_practices.html#autotoc_md316',1,'']]],
+  ['3_20second_20order_20symplectic_20systems_17',['3. Second-Order Symplectic Systems',['../page_ode.html#autotoc_md192',1,'']]],
+  ['3_20standalone_20raw_20kernel_20usage_20examples_18',['3. Standalone Raw Kernel Usage Examples',['../page_architecture.html#autotoc_md13',1,'']]],
+  ['3_20two_20operating_20styles_3a_20expressions_20vs_20zero_20allocation_20kernels_19',['3. Two Operating Styles: Expressions vs. Zero-Allocation Kernels',['../page_getting_started.html#autotoc_md120',1,'']]],
+  ['3_20umbrella_20sampling_20num_3a_3amarkov_3a_3aumbrella_5fsweep_20',['3. Umbrella Sampling (num::markov::umbrella_sweep)',['../page_stochastic.html#autotoc_md369',1,'']]],
+  ['3_20vector_20operations_21',['3. Vector operations',['../page_kernel.html#autotoc_md150',1,'']]],
+  ['3_20worked_20example_3a_20switching_20one_20call_20from_20tt_20kernel_20tt_20to_20lapack_20cuda_22',['3. Worked Example: Switching One Call from &lt;tt&gt;kernel&lt;/tt&gt; to LAPACK/CUDA',['../page_parallel.html#autotoc_md210',1,'']]],
+  ['3d_20poisson_20solve_20f_24_20nabla_202_20phi_20rho_20f_24_23',['3D Poisson Solve (\f$-\nabla^2 \phi = \rho\f$)',['../page_fields.html#autotoc_md111',1,'']]]
+];

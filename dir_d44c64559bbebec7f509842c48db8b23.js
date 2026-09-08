@@ -1,0 +1,28 @@
+var dir_d44c64559bbebec7f509842c48db8b23 =
+[
+    [ "algebra", "dir_ee0edf35ed50fc491863c0018a344c78.html", "dir_ee0edf35ed50fc491863c0018a344c78" ],
+    [ "blas", "dir_1445dbc1383759a79be8ce1d5068112d.html", "dir_1445dbc1383759a79be8ce1d5068112d" ],
+    [ "container", "dir_e0f5f6345e438c73b9ae78ec2940718c.html", "dir_e0f5f6345e438c73b9ae78ec2940718c" ],
+    [ "core", "dir_3d69f64eaf81436fe2b22361382717e5.html", "dir_3d69f64eaf81436fe2b22361382717e5" ],
+    [ "cuda", "dir_84b56ae5fb2dac9a5c8c4aa192827ebc.html", "dir_84b56ae5fb2dac9a5c8c4aa192827ebc" ],
+    [ "fields", "dir_f74a4f86713aa8a58a4b736da742d182.html", "dir_f74a4f86713aa8a58a4b736da742d182" ],
+    [ "io", "dir_a00b633439466cbb1729245c7f66f564.html", "dir_a00b633439466cbb1729245c7f66f564" ],
+    [ "kernel", "dir_2ae24886e77657f82343b4b0154efdc1.html", "dir_2ae24886e77657f82343b4b0154efdc1" ],
+    [ "lapack", "dir_987b24a74bfaaa130c1320e54ca930b0.html", "dir_987b24a74bfaaa130c1320e54ca930b0" ],
+    [ "linear", "dir_618af33872d14ff6d72bdd4567165851.html", "dir_618af33872d14ff6d72bdd4567165851" ],
+    [ "mpi", "dir_a9b22774a02ad69a30b84bd405b7fb28.html", "dir_a9b22774a02ad69a30b84bd405b7fb28" ],
+    [ "ode", "dir_0befd6d9b0feef0e43a409567796a762.html", "dir_0befd6d9b0feef0e43a409567796a762" ],
+    [ "omp", "dir_3a90233651aeb6de4309a51b31e57ac6.html", "dir_3a90233651aeb6de4309a51b31e57ac6" ],
+    [ "operator", "dir_496630d85b56cf9c7bca8cbfffb937c4.html", "dir_496630d85b56cf9c7bca8cbfffb937c4" ],
+    [ "pde", "dir_25b68ce9af49ec12f53e3c5e59079cb0.html", "dir_25b68ce9af49ec12f53e3c5e59079cb0" ],
+    [ "plot", "dir_7645778c65bb557cf1c332015612fa30.html", "dir_7645778c65bb557cf1c332015612fa30" ],
+    [ "quadrature", "dir_21460df64e31324d846fd5404a1e25ce.html", "dir_21460df64e31324d846fd5404a1e25ce" ],
+    [ "roots", "dir_a71dcc01de787d12995d543fbb361d85.html", "dir_a71dcc01de787d12995d543fbb361d85" ],
+    [ "solve", "dir_1282611c3d23f9edca3eba8c0ef28198.html", "dir_1282611c3d23f9edca3eba8c0ef28198" ],
+    [ "spatial", "dir_dfdd15585e592347ae43ff9ade1a1975.html", "dir_dfdd15585e592347ae43ff9ade1a1975" ],
+    [ "spectral", "dir_272e51c9e80df29b8f204376ac4bb640.html", "dir_272e51c9e80df29b8f204376ac4bb640" ],
+    [ "stats", "dir_db020283538f0008ef7319d9c802c6ec.html", "dir_db020283538f0008ef7319d9c802c6ec" ],
+    [ "stochastic", "dir_2c5a172c8a121df367685194c2d423ac.html", "dir_2c5a172c8a121df367685194c2d423ac" ],
+    [ "structures", "dir_ae392c548e81aebab219dc0867f8ff50.html", "dir_ae392c548e81aebab219dc0867f8ff50" ],
+    [ "numerics.hpp", "numerics_8hpp.html", null ]
+];
