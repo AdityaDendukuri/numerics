@@ -89,6 +89,12 @@ struct matrix_as_operator {
     [[nodiscard]] idx rows() const noexcept { return A.rows(); }
     [[nodiscard]] idx cols() const noexcept { return A.cols(); }
 
+    /// Forward entrywise access, so a law decided from the entries rather than from
+    /// sampled applications can still be checked through this view. Without it a
+    /// verifier that needs entries finds none and passes by default, which is the one
+    /// outcome a verifier must never have.
+    [[nodiscard]] entry_t<Mat> operator()(idx i, idx j) const { return A(i, j); }
+
     template <class X, class Y>
     void apply(const X &x, Y &y) const {
         using T = entry_t<Mat>;
@@ -123,13 +129,11 @@ class structured_mat final : public props_detail::square_tag<Ax> {
   public:
     using domain_type = vec;
     using codomain_type = vec;
-    using math_laws = std::conditional_t<
-        std::derived_from<Ax, law::spd>, math::type_list<law::spd>,
-        std::conditional_t<
-            std::derived_from<Ax, law::psd>, math::type_list<law::psd>,
-            std::conditional_t<std::derived_from<Ax, law::self_adjoint>,
-                               math::type_list<law::self_adjoint>,
-                               math::type_list<law::linear_map>>>>;
+    /// The wrapper claims exactly the law it was given. Implication supplies the rest,
+    /// since every law names its own `base`, so there is nothing to normalise here: an
+    /// earlier cascade over spd/psd/self_adjoint mapped those three to themselves and
+    /// silently collapsed every other law to `linear_map`.
+    using math_laws = math::type_list<Ax>;
 
     explicit structured_mat(
         Mat A, math::evidence_provenance provenance =
@@ -203,6 +207,11 @@ using psd_matrix = structured_mat<Mat, law::psd>;
 template <class Mat = mat>
 using spd_mat = structured_mat<Mat, law::spd>;
 
+/// @brief Matrix carrying strict diagonal dominance, the hypothesis for pivot-free
+/// elimination and for Jacobi and Gauss-Seidel convergence.
+template <class Mat = mat>
+using dd_mat = structured_mat<Mat, law::diagonally_dominant>;
+
 /// @brief mat asserted Hermitian; the same claim as `sym_mat` over a complex field.
 template <class Mat = mat>
 using hermitian_matrix = structured_mat<Mat, law::self_adjoint>;
@@ -257,6 +266,22 @@ template <class Mat = mat>
 /// @param loc Source location for invariant failure messages.
 /// @return `sym_mat<Mat>` wrapper accepted by eigensolvers and MINRES.
 /// @see make_symmetric
+/// @brief Attach strict diagonal dominance, \f$|a_{ii}| > \sum_{j \neq i} |a_{ij}|\f$.
+///
+/// Checked exactly rather than sampled, since the test reads the matrix once. This is the
+/// hypothesis Jacobi, Gauss-Seidel and pivot-free LU need, and it is incomparable with
+/// SPD -- neither implies the other -- so routines accepting either ask for both by name.
+///
+/// @tparam Mat Concrete matrix container type.
+/// @param A Diagonally dominant matrix to wrap.
+/// @param loc Source location for invariant failure messages.
+/// @return `dd_mat<Mat>` wrapper accepted by the stationary iterations.
+template <class Mat = mat>
+[[nodiscard]] inline dd_mat<Mat>
+assume_diagonally_dominant(Mat A, std::source_location loc = std::source_location::current()) {
+    return assume_property<law::diagonally_dominant>(std::move(A), loc);
+}
+
 template <class Mat = mat>
 [[nodiscard]] inline sym_mat<Mat>
 assume_symmetric(Mat A, std::source_location loc = std::source_location::current()) {
@@ -461,6 +486,7 @@ assume_sparse_csr(Mat A, std::source_location loc = std::source_location::curren
 
 // Expose property types and assume_* / make_* taggers in top-level num:: namespace
 using linear::psd_matrix;
+using linear::dd_mat;
 using linear::spd_mat;
 using linear::sq_mat;
 using linear::structured_mat;
@@ -470,6 +496,7 @@ using linear::hermitian_matrix;
 using linear::assume_hermitian;
 using linear::assume_property;
 using linear::assume_psd;
+using linear::assume_diagonally_dominant;
 using linear::assume_spd;
 using linear::assume_square;
 using linear::assume_symmetric;

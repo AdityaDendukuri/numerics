@@ -29,6 +29,7 @@ add_executable(numerics_tests
     test_concept_hierarchy.cpp
     test_diagnostics.cpp
     test_law_derivation.cpp
+    test_storage_dispatch.cpp
     test_vector.cpp
     test_matrix.cpp
     test_solvers.cpp

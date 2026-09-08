@@ -34,12 +34,6 @@ concept assemblable_grid_operator = linear_operator<Op> && requires(const Op &A)
 
 /// @brief Operator arising from an implicit step, \f$(I - \Delta t\, L)\f$.
 ///
-/// For a diffusion operator \f$L\f$ this is symmetric positive definite for every
-/// \f$\Delta t > 0\f$, which is what allows conjugate gradients rather than a
-/// general solver. The property is declared through the hierarchy, so a stepper
-/// constrained here cannot be handed an operator that lacks it.
-template <class Op>
-concept implicit_step_operator = spd_operator<Op>;
 
 /// @brief Stepper advancing a field from \f$t\f$ to \f$t + \Delta t\f$.
 ///

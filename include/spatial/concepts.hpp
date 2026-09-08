@@ -47,10 +47,5 @@ concept smoothing_kernel = scalars::field<Scalar> && requires(Scalar r, Scalar h
 
 /// @brief Site-indexed lattice supplying periodic nearest neighbours.
 ///
-/// Each site \f$i\f$ on an \f$N \times N\f$ lattice has four neighbours obtained by
-/// stepping one row or column with wraparound. The tables are precomputed so a
-/// sweep never evaluates a modulus.
-template <class P>
-concept periodic_lattice_2d = periodic_neighbourhood_2d<P>;
 
 } // namespace num

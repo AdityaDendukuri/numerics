@@ -6,42 +6,10 @@ Graphs here carry no algebraic operations. Laplacians, adjacency matrices, and M
 
 ## Container vocabulary
 
-Four standard containers are named after words this library has already spent on
-mathematics, so `num` provides aliases that say what the container is instead:
-
-| write this | it is exactly | the word it frees |
-|---|---|---|
-| `num::array<T>` | `std::vector<T>` | `num::vec`, an element of a vector space |
-| `num::static_array<T, N>` | `std::array<T, N>` | — |
-| `num::view<T>` | `std::span<T>` | the span of a set of vectors |
-| `num::table<K, V>` | `std::unordered_map<K, V>` | a linear map |
-| `num::sorted_table<K, V>` | `std::map<K, V>` | likewise |
-| `num::key_set<K>` | `std::unordered_set<K>` | a set |
-
-A declaration then says at a glance which half of the library it belongs to:
-
-```cpp
-num::array<num::idx> row_offsets;  // storage
-num::vec             x(4);         // mathematics
-```
-
-These are alias templates, not wrappers. `num::array<T>` *is* `std::vector<T>`, so it
-converts nowhere, costs nothing, and is accepted unchanged by every standard algorithm
-and by any third-party function taking a `std::vector`:
-
-```cpp
-num::array<double> a{1.0, 2.0, 3.0};
-std::vector<double> &same = a;              // the same object, no conversion
-std::sort(a.begin(), a.end());              // ordinary standard algorithms
-```
-
-Compiler diagnostics still name the underlying standard type. Containers whose names
-carry no mathematical meaning — `std::pair`, `std::tuple`, `std::optional`,
-`std::string` — are deliberately left alone.
-
-For numeric data prefer `num::vec` over `num::array<num::real>`: it owns over-aligned
-storage, skips the zero-initialising pass on construction, and satisfies
-`num::math::vector_space`, so the solvers take it directly.
+The graph and traversal routines on this page return `num::array` where they used to
+return `std::vector` -- the same type under a name that does not collide with
+`num::vec`. The full vocabulary, scalars included, is documented on the containers
+page: see @ref page_container.
 
 ---
 

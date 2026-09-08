@@ -49,6 +49,7 @@
 #pragma once
 
 #include "container/vector.hpp"
+#include "core/math/concepts.hpp"
 #include "core/math/evidence.hpp"
 #include "core/math/models.hpp"
 #include "core/math/operations.hpp"
@@ -110,8 +111,12 @@ template <class Op>
 /// Applies `degree` operator applications per invocation and allocates nothing
 /// after construction. Holds a reference to the operator, which must outlive it.
 ///
-/// @tparam Op Self-adjoint linear operator type.
+/// @tparam Op SPD operator type. The constraint is load-bearing rather than documentary:
+/// this class declares `law::spd` unconditionally, and \f$p(A)\f$ is positive definite
+/// only when \f$A\f$ is. Without it an indefinite operator could be wrapped here and
+/// handed to `pcg`, which requires an SPD preconditioner, with nothing to catch it.
 template <class Op>
+requires math::spd_operator<Op>
 class chebyshev_preconditioner final {
   public:
     using domain_type = vec;
@@ -202,6 +207,7 @@ class chebyshev_preconditioner final {
 /// The returned object asserts positive definiteness, which holds only when
 /// \f$[lo, hi]\f$ encloses the spectrum. See the file comment.
 template <class Op>
+requires math::spd_operator<Op>
 [[nodiscard]] inline chebyshev_preconditioner<Op> make_chebyshev_preconditioner(const Op &A, real lo,
                                                                          real hi,
                                                                          idx degree = 4) {

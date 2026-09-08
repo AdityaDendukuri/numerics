@@ -3,6 +3,7 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "container/concepts.hpp"
 #include "container/matrix.hpp"
 #include <algorithm>
 #include <span>
@@ -92,7 +93,9 @@ namespace num {
 }
 
 /// Extract the main diagonal up to the smaller matrix dimension.
-[[nodiscard]] inline vec diagonal(const mat &matrix) {
+template <class M>
+requires repr::dense_row_major<M>
+[[nodiscard]] inline vec diagonal(const M &matrix) {
     const idx size = std::min(matrix.rows(), matrix.cols());
     vec result(size, 0.0);
     for (idx index = 0; index < size; ++index) {
@@ -111,7 +114,9 @@ namespace num {
 }
 
 /// Return the transpose of a dense matrix.
-[[nodiscard]] inline mat transpose(const mat &matrix) {
+template <class M>
+requires repr::dense_row_major<M>
+[[nodiscard]] inline mat transpose(const M &matrix) {
     mat result(matrix.cols(), matrix.rows(), 0.0);
     for (idx row = 0; row < matrix.rows(); ++row) {
         for (idx column = 0; column < matrix.cols(); ++column) {

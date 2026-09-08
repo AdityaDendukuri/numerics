@@ -1,6 +1,7 @@
 /// @file sparse.hpp
 /// @brief Compressed Sparse Row (CSR) matrix and operations
 #pragma once
+#include "container/concepts.hpp"
 #include "kernel/kernel.hpp"
 #include <algorithm>
 #include <cmath>
@@ -89,22 +90,18 @@ void sparse_matvec(const spmat &A, const vec &x, vec &y);
 /// @param A Input CSR matrix.
 /// @param alpha Scaling scalar.
 /// @return Scaled `spmat`.
-[[nodiscard]] spmat scaled(const spmat &A, real alpha);
 
 /// @brief Return the CSR transpose \f$A^T\f$ computed in \f$\mathcal{O}(\text{nnz} + n)\f$ time.
 /// @param A Input CSR matrix.
 /// @return Transposed `spmat` in CSR format.
-[[nodiscard]] spmat transpose(const spmat &A);
 
 /// @brief Convert a sparse matrix in CSR format to dense matrix storage.
 /// @param A Input CSR matrix.
 /// @return Dense `mat` of dimension \f$m \times n\f$.
-[[nodiscard]] mat dense(const spmat &A);
 
 /// @brief Extract the main diagonal entries of a sparse matrix: \f$d_i = A_{ii}\f$.
 /// @param A Input sparse matrix.
 /// @return vec of length \f$\min(m, n)\f$ containing diagonal entries (0 for unstored elements).
-[[nodiscard]] vec diagonal(const spmat &A);
 
 /// @brief Compute diagonal similarity transform \f$D^{-1} A D\f$ where \f$D = \text{diag}(\mathbf{w})\f$.
 /// @param A Square CSR matrix.
@@ -274,14 +271,27 @@ inline real spmat::operator()(idx i, idx j) const {
     return 0.0;
 }
 
-inline void sparse_matvec(const spmat &A, const vec &x, vec &y) {
+/// @brief \f$y \leftarrow Ax\f$ for any compressed-sparse-row matrix.
+///
+/// The counterpart to the dense overload in `container/matrix_ops.hpp`: same name,
+/// selected by @ref num::repr::csr instead of @ref num::repr::dense_row_major. Being
+/// stated over the concept rather than over `spmat`, it accepts any type exposing the CSR
+/// accessors -- an Eigen sparse matrix or a raw triple of buffers -- with no adapter.
+template <class M>
+requires repr::csr<M>
+inline void matvec(const M &A, const vec &x, vec &y) {
     if (A.n_cols() != x.size() || A.n_rows() != y.size()) {
-        throw std::invalid_argument("Dimension mismatch in sparse_matvec");
+        throw std::invalid_argument("Dimension mismatch in matvec");
     }
     kernel::spmv(y.data(), A.values(), A.row_ptr(), A.col_idx(), x.data(), A.n_rows());
 }
 
-inline spmat scaled(const spmat &A, real alpha) {
+/// @brief \f$y \leftarrow Ax\f$ for a sparse matrix. Prefer the unified `matvec`.
+inline void sparse_matvec(const spmat &A, const vec &x, vec &y) { matvec(A, x, y); }
+
+template <class M>
+requires repr::csr<M>
+inline spmat scaled(const M &A, real alpha) {
     array<real> values(A.values(), A.values() + A.nnz());
     for (real &value : values) {
         value *= alpha;
@@ -291,7 +301,9 @@ inline spmat scaled(const spmat &A, real alpha) {
             array<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
 }
 
-inline spmat transpose(const spmat &A) {
+template <class M>
+requires repr::csr<M>
+inline spmat transpose(const M &A) {
     array<idx> column_ptr(A.n_cols() + 1, 0);
     for (idx entry = 0; entry < A.nnz(); ++entry) {
         ++column_ptr[A.col_idx()[entry] + 1];
@@ -313,7 +325,9 @@ inline spmat transpose(const spmat &A) {
     return {A.n_cols(), A.n_rows(), std::move(values), std::move(columns), std::move(column_ptr)};
 }
 
-inline mat dense(const spmat &A) {
+template <class M>
+requires repr::csr<M>
+inline mat dense(const M &A) {
     mat result(A.n_rows(), A.n_cols(), 0.0);
     for (idx row = 0; row < A.n_rows(); ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
@@ -323,7 +337,9 @@ inline mat dense(const spmat &A) {
     return result;
 }
 
-inline vec diagonal(const spmat &A) {
+template <class M>
+requires repr::csr<M>
+inline vec diagonal(const M &A) {
     const idx n = std::min(A.n_rows(), A.n_cols());
     vec result(n, 0.0);
     for (idx row = 0; row < n; ++row) {

@@ -18,6 +18,12 @@
 
 namespace num::math {
 
+/// @brief How a law came to be attached to a value: a caller's promise, or a check.
+///
+/// A law derived by a rule -- \f$A^*A\f$ is positive semidefinite for every \f$A\f$ --
+/// carries neither origin, because there is nothing to trust and nothing to test. Those
+/// conclusions live in the type via @ref num::claims_of rather than as evidence on a
+/// value, so they need no entry here.
 enum class evidence_origin { assumed, verified };
 
 /// How and where a runtime value acquired mathematical evidence.
@@ -32,7 +38,7 @@ struct evidence_provenance final {
 /// Only operator laws qualify: evidence is about a specific object, and the space laws
 /// describe a type. `law_tag` (models.hpp) is the broader membership in the hierarchy.
 template <class P>
-concept mathematical_proposition = std::derived_from<P, law::linear_map>;
+concept proposition = std::derived_from<P, law::linear_map>;
 
 template <class T, class P>
 struct evidence_validator {
@@ -50,8 +56,9 @@ class certified_ref final {
     using math_laws = type_list<Properties...>;
 
     template <class... OtherProperties>
-    requires(claims<certified_ref<T, OtherProperties...>, Properties> &&...) constexpr certified_ref(
-        const certified_ref<T, OtherProperties...> &stronger) noexcept
+    requires(claims<certified_ref<T, OtherProperties...>, Properties>
+                 &&...) constexpr certified_ref(const certified_ref<T, OtherProperties...>
+                                                    &stronger) noexcept
         : value_(&stronger.get()), provenance_(stronger.provenance()) {}
 
     [[nodiscard]] constexpr const T &get() const noexcept { return *value_; }
@@ -110,7 +117,7 @@ struct codomain_of<certified_ref<T, Ps...>, void> : codomain_of<T> {};
 
 /// Attach caller-supplied evidence. Decidable shape prerequisites remain enforced.
 template <class P, class T>
-requires mathematical_proposition<P> [[nodiscard]] certified_ref<T, P>
+requires proposition<P> [[nodiscard]] certified_ref<T, P>
 assume(const T &value, std::source_location location = std::source_location::current()) {
     if constexpr (std::derived_from<P, law::endomorphism>) {
         if (value.rows() != value.cols()) {
@@ -126,23 +133,23 @@ assume(const T &value, std::source_location location = std::source_location::cur
 // evidence at the end of the full expression, so rvalues are rejected even
 // though a const reference could otherwise bind to them.
 template <class P, class T>
-requires mathematical_proposition<P> certified_ref<T, P>
+requires proposition<P> certified_ref<T, P>
 assume(const T &&, std::source_location = std::source_location::current()) = delete;
 
 /// Exhaustively validate P using a type-specific validator before attaching evidence.
 template <class P, class T>
-requires mathematical_proposition<P> &&evidence_validator<T, P>::available
+requires proposition<P> &&evidence_validator<T, P>::available
     [[nodiscard]] certified_ref<T, P>
     require(const T &value, std::source_location location = std::source_location::current()) {
     if (!evidence_validator<T, P>::verify(value)) {
-        throw std::invalid_argument("value does not satisfy the required mathematical proposition");
+        throw std::invalid_argument("value does not satisfy the required proposition");
     }
     return detail::evidence_access::make<T, P>(
         value, {evidence_origin::verified, location, "exhaustive validator"});
 }
 
 template <class P, class T>
-requires mathematical_proposition<P> &&evidence_validator<T, P>::available certified_ref<T, P>
+requires proposition<P> &&evidence_validator<T, P>::available certified_ref<T, P>
 require(const T &&, std::source_location = std::source_location::current()) = delete;
 
 } // namespace num::math

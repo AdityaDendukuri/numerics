@@ -4,6 +4,7 @@ Use the code-first examples to discover features, then use these generated
 indexes for exact declarations and overloads.
 
 - @ref page_kernel "num::kernel" — every routine, with the contract each one obeys
+- @ref page_container "Containers" — every type and routine in the container tier
 - @ref page_concepts "Concepts, Invariants & Diagnostics" — every concept and law
 - [Classes and structures](annotated.html)
 - [Namespaces and free functions](namespaces.html)

@@ -77,8 +77,8 @@ auto res = num::markov::umbrella_sweep(
 ## 4. Concepts
 
 ```cpp
-static_assert(num::random_engine<std::mt19937>);
-static_assert(!num::random_engine<double>);
+static_assert(std::uniform_random_bit_generator<std::mt19937>);
+static_assert(!std::uniform_random_bit_generator<double>);
 static_assert(num::categorical_sampling<num::categorical_sampler, std::mt19937>);
 ```
 

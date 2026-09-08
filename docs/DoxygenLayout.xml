@@ -5,6 +5,7 @@
     <tab type="user" visible="yes" url="page_getting_started.html" title="Getting Started"/>
     <tab type="user" visible="yes" url="page_kernel.html" title="Kernel"/>
     <tab type="user" visible="yes" url="page_concepts.html" title="Concepts"/>
+    <tab type="user" visible="yes" url="page_container.html" title="Containers"/>
     <tab type="user" visible="yes" url="page_examples.html" title="Examples"/>
     <tab type="user" visible="yes" url="page_reference.html" title="API Reference"/>
     <tab type="user" visible="yes" url="page_report.html" title="Report"/>

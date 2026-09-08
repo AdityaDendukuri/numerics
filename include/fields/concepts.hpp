@@ -11,13 +11,6 @@
 
 namespace num {
 
-/// @brief Rectangular index space with a flattening from coordinates to storage.
-///
-/// The grid holds the shape and the spacing. It owns no values, so several fields
-/// may share one grid.
-template <class G>
-concept structured_grid_2d = cartesian_index_space_2d<G>;
-
 /// @brief scalar-valued field sampled on a grid.
 ///
 /// Indexing by grid coordinate reads a sample. The values are contiguous and

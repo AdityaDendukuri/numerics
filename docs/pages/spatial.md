@@ -123,7 +123,7 @@ auto position = [](int i) { return std::pair<double, double>{double(i), double(i
 static_assert(num::position_accessor_2d<decltype(position), double>);
 static_assert(num::neighbor_query_2d<num::cell_list_2d<double>, double>);
 static_assert(num::smoothing_kernel<num::sph_kernel<2>, float>);
-static_assert(num::periodic_lattice_2d<num::pbc_lattice_2d>);
+static_assert(num::periodic_neighbourhood_2d<num::pbc_lattice_2d>);
 ```
 
 ---

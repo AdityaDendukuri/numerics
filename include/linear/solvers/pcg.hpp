@@ -14,7 +14,7 @@ namespace num {
 /// Both the system operator `A` and the preconditioner `M` must carry positive-definite evidence.
 ///
 /// @tparam Op System operator type satisfying `math::endomorphism_on<Op, vec>` and carrying SPD evidence.
-/// @tparam M preconditioner operator type satisfying `math::endomorphism_on<M, vec>` and carrying SPD evidence.
+/// @tparam M preconditioner type satisfying @ref num::spd_preconditioner.
 /// @param A Symmetric positive-definite linear operator or matrix wrapper.
 /// @param preconditioner preconditioner operator approximating \f$A^{-1}\f$ (e.g. Jacobi, Incomplete Cholesky).
 /// @param b Right-hand side vector.
@@ -26,8 +26,8 @@ namespace num {
 /// @see cg, minres, gmres, approx_chol_preconditioner
 template <class Op, class M>
 requires math::inner_product_space<vec> &&math::endomorphism_on<Op, vec> &&
-    math::endomorphism_on<M, vec> &&claims<Op, law::spd> &&
-        claims<M, law::spd> inline solver_result
+    claims<Op, law::spd> &&
+        spd_preconditioner<M, vec> inline solver_result
         pcg(const Op &A, const M &preconditioner, const vec &b, vec &x, real tolerance,
             idx max_iterations = 1000) {
     return pcg(A, preconditioner, b, x,

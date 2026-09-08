@@ -574,6 +574,49 @@ inline void verify_spd_sample(const Op &A, idx n,
 ///
 /// Identical to the definite test but admitting a null space, as required by
 /// Gram matrices and graph Laplacians.
+/// @brief Check strict diagonal dominance exactly: \f$|a_{ii}| > \sum_{j \neq i} |a_{ij}|\f$.
+///
+/// Unlike the sampled operator laws, this one is decided rather than probed. Reading every
+/// entry costs \f$O(n^2)\f$, which is the size of the matrix itself, so there is no
+/// cheaper partial test worth preferring and no false negatives to explain.
+///
+/// It needs entrywise access, so it applies to matrix-shaped objects. An operator exposing
+/// only `apply` cannot be checked and is left alone.
+template <class Mat>
+inline void
+verify_diagonal_dominance(const Mat &A,
+                          std::source_location loc = std::source_location::current()) {
+    if constexpr (!num::debug::checks_compiled_in) {
+        return;
+    } else if constexpr (!requires(const Mat &m) { m(idx{0}, idx{0}); }) {
+        return;
+    } else {
+        if (num::debug::get_level() == num::debug::diagnostic_level::off) {
+            return;
+        }
+        const idx n = A.rows();
+        for (idx i = 0; i < n; ++i) {
+            auto off_diagonal = scalars::mag(A(i, i));
+            off_diagonal -= off_diagonal; // a zero of the right real type
+            for (idx j = 0; j < n; ++j) {
+                if (j != i) {
+                    off_diagonal += scalars::mag(A(i, j));
+                }
+            }
+            const auto diagonal = scalars::mag(A(i, i));
+            if (!(diagonal > off_diagonal)) {
+                panic("PropertyError",
+                      "assume_diagonally_dominant() assertion failed: row " +
+                          std::to_string(i) + " has |A(i,i)| = " +
+                          std::to_string(static_cast<double>(diagonal)) +
+                          ", which does not strictly exceed the off-diagonal sum " +
+                          std::to_string(static_cast<double>(off_diagonal)) + ".",
+                      loc);
+            }
+        }
+    }
+}
+
 template <class Op, class VectorType>
 inline void verify_psd_sample(const Op &A, idx n,
                               std::source_location loc = std::source_location::current()) {

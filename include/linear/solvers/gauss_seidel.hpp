@@ -32,9 +32,16 @@ namespace num {
 /// @param tol      Convergence tolerance on residual norm (default 1e-10)
 /// @param max_iter Maximum iterations (default 1000)
 /// @return solver_result with convergence info
-template <bool Parallel = has_omp>
-inline solver_result gauss_seidel(const mat &A, const vec &b, vec &x, real tol = 1e-10,
+///
+/// Converges for strictly diagonally dominant *or* symmetric positive definite \f$A\f$.
+/// Those two laws are incomparable, so the requirement is a disjunction in the constraint
+/// rather than a single law: pass `num::assume_diagonally_dominant(A)` or
+/// `num::assume_spd(A)`.
+template <class Mat = dd_mat<mat>, bool Parallel = has_omp>
+requires claims<Mat, law::diagonally_dominant> || claims<Mat, law::spd>
+inline solver_result gauss_seidel(const Mat &A_in, const vec &b, vec &x, real tol = 1e-10,
                                  idx max_iter = 1000) {
+    const auto &A = A_in.base();
     constexpr real zero_diag_tol = 1e-15;
     idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {

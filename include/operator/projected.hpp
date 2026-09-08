@@ -16,6 +16,7 @@ template <class Op, class Subspace>
 requires math::linear_operator<Op>
     &&math::linear_subspace_of<Subspace, math::codomain_t<Op>> class projected_op final {
   public:
+
     using domain_type = math::domain_t<Op>;
     using codomain_type = math::codomain_t<Op>;
 
@@ -61,8 +62,7 @@ template <class Op, class Subspace>
 struct claims_of<operators::projected_op<Op, Subspace>> {
   private:
     template <class... Ls>
-    static auto derive(type_list<Ls...>)
-        -> type_list<law::restricted_to_t<Ls, Subspace>...>;
+    static auto derive(type_list<Ls...>) -> type_list<law::restricted_to_t<Ls, Subspace>...>;
 
   public:
     using type = decltype(derive(typename detail::declared_laws<Op>::type{}));

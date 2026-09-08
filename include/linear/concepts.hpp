@@ -69,17 +69,8 @@ concept spd_matrix_like =
 // Aliases into num::repr. A banded solver needs banded *storage*; bandedness is
 // not a property of the underlying linear map.
 
-/// @brief banded storage with \f$A_{ij} = 0\f$ outside \f$-k_l \leq j-i \leq k_u\f$.
-template <class B>
-concept banded_matrix_like = repr::banded<B>;
 
-/// @brief tridiagonal storage exposing subdiagonal, diagonal and superdiagonal.
-template <class T>
-concept tridiagonal_matrix_like = repr::tridiagonal<T>;
 
-/// @brief Compressed sparse row storage.
-template <class M>
-concept sparse_matrix_csr_like = repr::csr<M>;
 
 // =============================================================================
 // 3. Direct factorizations
@@ -115,19 +106,21 @@ concept direct_factorization = triangular_factor<F, Vec> && requires(const F &fa
 ///
 /// Structurally a linear operator; what makes it a preconditioner is intent, not
 /// interface, so it is stated as such rather than given a distinguishing method.
-template <class M, class X = vec, class Y = vec>
-concept preconditioner = linear_operator<M, X, Y>;
+/// \f$M\f$ approximates \f$A^{-1}\f$, so it maps the space to itself: an endomorphism,
+/// not merely a linear map between two spaces.
+template <class M, class V = vec>
+concept preconditioner = math::endomorphism_on<M, V>;
 
 /// @brief preconditioner asserted self-adjoint, as PCG and MINRES require.
 ///
 /// A non-symmetric preconditioner silently destroys the Krylov space those methods
 /// build; this is the constraint that should gate them.
-template <class M, class X = vec, class Y = vec>
-concept symmetric_preconditioner = preconditioner<M, X, Y> && self_adjoint_operator<M, X, Y>;
+template <class M, class V = vec>
+concept symmetric_preconditioner = preconditioner<M, V> && claims<M, law::self_adjoint>;
 
 /// @brief preconditioner asserted SPD, the precondition for PCG's error norm to be a norm.
-template <class M, class X = vec, class Y = vec>
-concept spd_preconditioner = symmetric_preconditioner<M, X, Y> && spd_operator<M, X, Y>;
+template <class M, class V = vec>
+concept spd_preconditioner = symmetric_preconditioner<M, V> && claims<M, law::spd>;
 
 // =============================================================================
 // 5. mat functions

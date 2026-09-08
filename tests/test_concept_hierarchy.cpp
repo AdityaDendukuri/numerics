@@ -46,7 +46,7 @@ const std::map<std::string, std::string> &allowed_roots() {
         // Machinery. These read or describe the claim system; they are not claims.
         {"claims", "the mechanism that reads a type's laws"},
         {"law_tag", "membership in the law lattice"},
-        {"mathematical_proposition", "a law that can be attached to a value as evidence"},
+        {"proposition", "a law that can be attached to a value as evidence"},
         {"tag_invocable", "customization-point detection"},
         {"has_free_axpy", "ADL probe"},
         {"has_free_dot", "ADL probe"},
@@ -68,7 +68,7 @@ const std::map<std::string, std::string> &allowed_roots() {
         {"equivalence_relation", "set theory: a partition, no algebraic structure"},
         {"incidence_structure", "graph theory: vertices and edges, no algebraic structure"},
         {"addressable_priority_queue", "order theory, rooted in std::totally_ordered"},
-        {"random_engine", "rooted in std::uniform_random_bit_generator"},
+        {"categorical_sampling", "rooted in std::uniform_random_bit_generator"},
         // Closed sets of algorithm tags, matched with std::same_as. Dispatch, not
         // mathematics; there is nothing for them to refine.
         {"is_explicit_ode_alg", "algorithm tag set"},

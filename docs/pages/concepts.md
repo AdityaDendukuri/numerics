@@ -24,8 +24,22 @@ Grouped by what each describes. Every one is a structural requirement the compil
 decides, a law the caller asserts, or a conjunction of the two, and every one refines
 another.
 
+### Laws
+
+These require a *claim* about the type they constrain -- a property a runtime probe
+could falsify, carried in the type via @ref num::claims.
+
 <div class="sym-index">
-<div class="kidx-group"><span class="kidx-title">Scalars</span><br/><span class="kidx-syms"><a href="conceptnum_1_1scalar.html">scalar</a> &ndash; <a href="conceptnum_1_1math_1_1field.html">field</a> &ndash; <a href="conceptnum_1_1differentiable__function.html">differentiable_function</a> &ndash; <a href="conceptnum_1_1scalar__function.html">scalar_function</a></span></div><div class="kidx-group"><span class="kidx-title">Spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1additive__group.html">additive_group</a> &ndash; <a href="conceptnum_1_1math_1_1vector__space.html">vector_space</a> &ndash; <a href="conceptnum_1_1math_1_1normed__space.html">normed_space</a> &ndash; <a href="conceptnum_1_1math_1_1inner__product__space.html">inner_product_space</a> &ndash; <a href="conceptnum_1_1math_1_1hilbert__space.html">hilbert_space</a> &ndash; <a href="conceptnum_1_1math_1_1mutable__vector__space.html">mutable_vector_space</a> &ndash; <a href="conceptnum_1_1math_1_1contiguous__vector.html">contiguous_vector</a> &ndash; <a href="conceptnum_1_1math_1_1linear__subspace__of.html">linear_subspace_of</a></span></div><div class="kidx-group"><span class="kidx-title">Maps and operators</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1linear__map.html">linear_map</a> &ndash; <a href="conceptnum_1_1math_1_1linear__operator.html">linear_operator</a> &ndash; <a href="conceptnum_1_1math_1_1adjointable__linear__operator.html">adjointable_linear_operator</a> &ndash; <a href="conceptnum_1_1math_1_1endomorphism.html">endomorphism</a> &ndash; <a href="conceptnum_1_1math_1_1endomorphism__on.html">endomorphism_on</a> &ndash; <a href="conceptnum_1_1math_1_1nonlinear__operator.html">nonlinear_operator</a> &ndash; <a href="conceptnum_1_1sparse__convertible.html">sparse_convertible</a></span></div><div class="kidx-group"><span class="kidx-title">Operator laws</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1normal__operator.html">normal_operator</a> &ndash; <a href="conceptnum_1_1math_1_1self__adjoint__operator.html">self_adjoint_operator</a> &ndash; <a href="conceptnum_1_1math_1_1psd__operator.html">psd_operator</a> &ndash; <a href="conceptnum_1_1math_1_1spd__operator.html">spd_operator</a> &ndash; <a href="conceptnum_1_1math_1_1projection__operator.html">projection_operator</a> &ndash; <a href="conceptnum_1_1math_1_1skew__adjoint__operator.html">skew_adjoint_operator</a> &ndash; <a href="conceptnum_1_1math_1_1unitary__operator.html">unitary_operator</a></span></div><div class="kidx-group"><span class="kidx-title">Matrices</span><br/><span class="kidx-syms"><a href="conceptnum_1_1matrix__space.html">matrix_space</a> &ndash; <a href="conceptnum_1_1mutable__matrix__space.html">mutable_matrix_space</a> &ndash; <a href="conceptnum_1_1square__matrix__like.html">square_matrix_like</a> &ndash; <a href="conceptnum_1_1symmetric__matrix__like.html">symmetric_matrix_like</a> &ndash; <a href="conceptnum_1_1psd__matrix__like.html">psd_matrix_like</a> &ndash; <a href="conceptnum_1_1spd__matrix__like.html">spd_matrix_like</a> &ndash; <a href="conceptnum_1_1banded__matrix__like.html">banded_matrix_like</a> &ndash; <a href="conceptnum_1_1tridiagonal__matrix__like.html">tridiagonal_matrix_like</a> &ndash; <a href="conceptnum_1_1sparse__matrix__csr__like.html">sparse_matrix_csr_like</a> &ndash; <a href="conceptnum_1_1triangular__factor.html">triangular_factor</a></span></div><div class="kidx-group"><span class="kidx-title">Storage layout</span><br/><span class="kidx-syms"><a href="conceptnum_1_1repr_1_1contiguous.html">contiguous</a> &ndash; <a href="conceptnum_1_1repr_1_1dense__row__major.html">dense_row_major</a> &ndash; <a href="conceptnum_1_1repr_1_1csr.html">csr</a> &ndash; <a href="conceptnum_1_1repr_1_1banded.html">banded</a> &ndash; <a href="conceptnum_1_1repr_1_1tridiagonal.html">tridiagonal</a></span></div><div class="kidx-group"><span class="kidx-title">Claims and evidence</span><br/><span class="kidx-syms"><a href="conceptnum_1_1claims.html">claims</a> &ndash; <a href="conceptnum_1_1math_1_1law__tag.html">law_tag</a> &ndash; <a href="conceptnum_1_1math_1_1mathematical__proposition.html">mathematical_proposition</a></span></div><div class="kidx-group"><span class="kidx-title">Solvers and preconditioners</span><br/><span class="kidx-syms"><a href="conceptnum_1_1direct__factorization.html">direct_factorization</a> &ndash; <a href="conceptnum_1_1preconditioner.html">preconditioner</a> &ndash; <a href="conceptnum_1_1symmetric__preconditioner.html">symmetric_preconditioner</a> &ndash; <a href="conceptnum_1_1spd__preconditioner.html">spd_preconditioner</a></span></div><div class="kidx-group"><span class="kidx-title">Discrete structures</span><br/><span class="kidx-syms"><a href="conceptnum_1_1concepts_1_1equivalence__relation.html">equivalence_relation</a> &ndash; <a href="conceptnum_1_1concepts_1_1incidence__structure.html">incidence_structure</a> &ndash; <a href="conceptnum_1_1concepts_1_1weighted__incidence.html">weighted_incidence</a> &ndash; <a href="conceptnum_1_1concepts_1_1addressable__priority__queue.html">addressable_priority_queue</a> &ndash; <a href="conceptnum_1_1linear_1_1laplacian__graph.html">laplacian_graph</a></span></div><div class="kidx-group"><span class="kidx-title">Index spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1square__extent__2d.html">square_extent_2d</a> &ndash; <a href="conceptnum_1_1cartesian__index__space__2d.html">cartesian_index_space_2d</a> &ndash; <a href="conceptnum_1_1periodic__neighbourhood__2d.html">periodic_neighbourhood_2d</a></span></div><div class="kidx-group"><span class="kidx-title">Fields and grids</span><br/><span class="kidx-syms"><a href="conceptnum_1_1structured__grid__2d.html">structured_grid_2d</a> &ndash; <a href="conceptnum_1_1scalar__field__like.html">scalar_field_like</a> &ndash; <a href="conceptnum_1_1solvable__field.html">solvable_field</a></span></div><div class="kidx-group"><span class="kidx-title">Ordinary differential equations</span><br/><span class="kidx-syms"><a href="conceptnum_1_1vec__field.html">vec_field</a> &ndash; <a href="conceptnum_1_1is__ode__problem.html">is_ode_problem</a> &ndash; <a href="conceptnum_1_1is__symplectic__ode__problem.html">is_symplectic_ode_problem</a> &ndash; <a href="conceptnum_1_1is__ode__stepper.html">is_ode_stepper</a></span></div><div class="kidx-group"><span class="kidx-title">Partial differential equations</span><br/><span class="kidx-syms"><a href="conceptnum_1_1grid__stencil.html">grid_stencil</a> &ndash; <a href="conceptnum_1_1assemblable__grid__operator.html">assemblable_grid_operator</a> &ndash; <a href="conceptnum_1_1implicit__step__operator.html">implicit_step_operator</a> &ndash; <a href="conceptnum_1_1field__stepper.html">field_stepper</a></span></div><div class="kidx-group"><span class="kidx-title">Spatial acceleration</span><br/><span class="kidx-syms"><a href="conceptnum_1_1position__accessor__2d.html">position_accessor_2d</a> &ndash; <a href="conceptnum_1_1neighbor__query__2d.html">neighbor_query_2d</a> &ndash; <a href="conceptnum_1_1smoothing__kernel.html">smoothing_kernel</a> &ndash; <a href="conceptnum_1_1periodic__lattice__2d.html">periodic_lattice_2d</a></span></div><div class="kidx-group"><span class="kidx-title">Stochastic</span><br/><span class="kidx-syms"><a href="conceptnum_1_1random__engine.html">random_engine</a> &ndash; <a href="conceptnum_1_1categorical__sampling.html">categorical_sampling</a> &ndash; <a href="conceptnum_1_1energy__difference.html">energy_difference</a></span></div><div class="kidx-group"><span class="kidx-title">Quadrature</span><br/><span class="kidx-syms"><a href="conceptnum_1_1quadrature__rule.html">quadrature_rule</a> &ndash; <a href="conceptnum_1_1contour__rule.html">contour_rule</a></span></div><div class="kidx-group"><span class="kidx-title">Spectral</span><br/><span class="kidx-syms"><a href="conceptnum_1_1transform__plan.html">transform_plan</a> &ndash; <a href="conceptnum_1_1unitary__transform.html">unitary_transform</a></span></div><div class="kidx-group"><span class="kidx-title">Statistics</span><br/><span class="kidx-syms"><a href="conceptnum_1_1streaming__accumulator.html">streaming_accumulator</a> &ndash; <a href="conceptnum_1_1moment__accumulator.html">moment_accumulator</a></span></div><div class="kidx-group"><span class="kidx-title">Root finding</span><br/><span class="kidx-syms"><a href="conceptnum_1_1bracketable__function.html">bracketable_function</a></span></div><div class="kidx-group"><span class="kidx-title">Problem dispatch</span><br/><span class="kidx-syms"><a href="conceptnum_1_1is__explicit__ode__alg.html">is_explicit_ode_alg</a> &ndash; <a href="conceptnum_1_1is__mcmc__alg.html">is_mcmc_alg</a></span></div>
+<div class="kidx-group"><span class="kidx-title">Scalars</span><br/><span class="kidx-syms"><a href="conceptnum_1_1scalar.html">scalar</a> &ndash; <a href="conceptnum_1_1math_1_1field.html">field</a> &ndash; <a href="conceptnum_1_1differentiable__function.html">differentiable_function</a> &ndash; <a href="conceptnum_1_1scalar__function.html">scalar_function</a></span></div><div class="kidx-group"><span class="kidx-title">Spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1additive__group.html">additive_group</a> &ndash; <a href="conceptnum_1_1math_1_1vector__space.html">vector_space</a> &ndash; <a href="conceptnum_1_1math_1_1normed__space.html">normed_space</a> &ndash; <a href="conceptnum_1_1math_1_1inner__product__space.html">inner_product_space</a> &ndash; <a href="conceptnum_1_1math_1_1hilbert__space.html">hilbert_space</a> &ndash; <a href="conceptnum_1_1math_1_1mutable__vector__space.html">mutable_vector_space</a> &ndash; <a href="conceptnum_1_1math_1_1contiguous__vector.html">contiguous_vector</a> &ndash; <a href="conceptnum_1_1math_1_1linear__subspace__of.html">linear_subspace_of</a></span></div><div class="kidx-group"><span class="kidx-title">Maps and operators</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1linear__map.html">linear_map</a> &ndash; <a href="conceptnum_1_1math_1_1linear__operator.html">linear_operator</a> &ndash; <a href="conceptnum_1_1math_1_1adjointable__linear__operator.html">adjointable_linear_operator</a> &ndash; <a href="conceptnum_1_1math_1_1endomorphism.html">endomorphism</a> &ndash; <a href="conceptnum_1_1math_1_1endomorphism__on.html">endomorphism_on</a> &ndash; <a href="conceptnum_1_1math_1_1nonlinear__operator.html">nonlinear_operator</a> &ndash; <a href="conceptnum_1_1sparse__convertible.html">sparse_convertible</a></span></div><div class="kidx-group"><span class="kidx-title">Operator laws</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1normal__operator.html">normal_operator</a> &ndash; <a href="conceptnum_1_1math_1_1self__adjoint__operator.html">self_adjoint_operator</a> &ndash; <a href="conceptnum_1_1math_1_1psd__operator.html">psd_operator</a> &ndash; <a href="conceptnum_1_1math_1_1spd__operator.html">spd_operator</a> &ndash; <a href="conceptnum_1_1math_1_1projection__operator.html">projection_operator</a> &ndash; <a href="conceptnum_1_1math_1_1skew__adjoint__operator.html">skew_adjoint_operator</a> &ndash; <a href="conceptnum_1_1math_1_1unitary__operator.html">unitary_operator</a> &ndash; <a href="structnum_1_1law_1_1diagonally__dominant.html">law::diagonally_dominant</a></span></div><div class="kidx-group"><span class="kidx-title">Matrices</span><br/><span class="kidx-syms"><a href="conceptnum_1_1matrix__space.html">matrix_space</a> &ndash; <a href="conceptnum_1_1mutable__matrix__space.html">mutable_matrix_space</a> &ndash; <a href="conceptnum_1_1square__matrix__like.html">square_matrix_like</a> &ndash; <a href="conceptnum_1_1symmetric__matrix__like.html">symmetric_matrix_like</a> &ndash; <a href="conceptnum_1_1psd__matrix__like.html">psd_matrix_like</a> &ndash; <a href="conceptnum_1_1spd__matrix__like.html">spd_matrix_like</a> &ndash; <a href="conceptnum_1_1triangular__factor.html">triangular_factor</a></span></div><div class="kidx-group"><span class="kidx-title">Claims and evidence</span><br/><span class="kidx-syms"><a href="conceptnum_1_1claims.html">claims</a> &ndash; <a href="conceptnum_1_1math_1_1law__tag.html">law_tag</a> &ndash; <a href="conceptnum_1_1math_1_1proposition.html">proposition</a></span></div><div class="kidx-group"><span class="kidx-title">Solvers and preconditioners</span><br/><span class="kidx-syms"><a href="conceptnum_1_1direct__factorization.html">direct_factorization</a> &ndash; <a href="conceptnum_1_1preconditioner.html">preconditioner</a> &ndash; <a href="conceptnum_1_1symmetric__preconditioner.html">symmetric_preconditioner</a> &ndash; <a href="conceptnum_1_1spd__preconditioner.html">spd_preconditioner</a></span></div><div class="kidx-group"><span class="kidx-title">Spectral</span><br/><span class="kidx-syms"><a href="conceptnum_1_1unitary__transform.html">unitary_transform</a></span></div>
+</div>
+
+### Interfaces
+
+These require operations to exist. The compiler settles them outright;
+there is nothing for a probe to falsify.
+
+<div class="sym-index">
+<div class="kidx-group"><span class="kidx-title">Storage layout</span><br/><span class="kidx-syms"><a href="conceptnum_1_1repr_1_1contiguous.html">contiguous</a> &ndash; <a href="conceptnum_1_1repr_1_1dense__row__major.html">dense_row_major</a> &ndash; <a href="conceptnum_1_1repr_1_1csr.html">csr</a> &ndash; <a href="conceptnum_1_1repr_1_1banded.html">banded</a> &ndash; <a href="conceptnum_1_1repr_1_1tridiagonal.html">tridiagonal</a></span></div><div class="kidx-group"><span class="kidx-title">Discrete structures</span><br/><span class="kidx-syms"><a href="conceptnum_1_1concepts_1_1equivalence__relation.html">equivalence_relation</a> &ndash; <a href="conceptnum_1_1concepts_1_1incidence__structure.html">incidence_structure</a> &ndash; <a href="conceptnum_1_1concepts_1_1weighted__incidence.html">weighted_incidence</a> &ndash; <a href="conceptnum_1_1concepts_1_1addressable__priority__queue.html">addressable_priority_queue</a> &ndash; <a href="conceptnum_1_1linear_1_1laplacian__graph.html">laplacian_graph</a></span></div><div class="kidx-group"><span class="kidx-title">Index spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1square__extent__2d.html">square_extent_2d</a> &ndash; <a href="conceptnum_1_1cartesian__index__space__2d.html">cartesian_index_space_2d</a> &ndash; <a href="conceptnum_1_1periodic__neighbourhood__2d.html">periodic_neighbourhood_2d</a></span></div><div class="kidx-group"><span class="kidx-title">Fields and grids</span><br/><span class="kidx-syms"><a href="conceptnum_1_1scalar__field__like.html">scalar_field_like</a> &ndash; <a href="conceptnum_1_1solvable__field.html">solvable_field</a></span></div><div class="kidx-group"><span class="kidx-title">Ordinary differential equations</span><br/><span class="kidx-syms"><a href="conceptnum_1_1vec__field.html">vec_field</a> &ndash; <a href="conceptnum_1_1is__ode__problem.html">is_ode_problem</a> &ndash; <a href="conceptnum_1_1is__symplectic__ode__problem.html">is_symplectic_ode_problem</a> &ndash; <a href="conceptnum_1_1is__ode__stepper.html">is_ode_stepper</a></span></div><div class="kidx-group"><span class="kidx-title">Partial differential equations</span><br/><span class="kidx-syms"><a href="conceptnum_1_1grid__stencil.html">grid_stencil</a> &ndash; <a href="conceptnum_1_1assemblable__grid__operator.html">assemblable_grid_operator</a> &ndash; <a href="conceptnum_1_1field__stepper.html">field_stepper</a></span></div><div class="kidx-group"><span class="kidx-title">Spatial acceleration</span><br/><span class="kidx-syms"><a href="conceptnum_1_1position__accessor__2d.html">position_accessor_2d</a> &ndash; <a href="conceptnum_1_1neighbor__query__2d.html">neighbor_query_2d</a> &ndash; <a href="conceptnum_1_1smoothing__kernel.html">smoothing_kernel</a></span></div><div class="kidx-group"><span class="kidx-title">Stochastic</span><br/><span class="kidx-syms"><a href="conceptnum_1_1categorical__sampling.html">categorical_sampling</a> &ndash; <a href="conceptnum_1_1energy__difference.html">energy_difference</a></span></div><div class="kidx-group"><span class="kidx-title">Quadrature</span><br/><span class="kidx-syms"><a href="conceptnum_1_1quadrature__rule.html">quadrature_rule</a> &ndash; <a href="conceptnum_1_1contour__rule.html">contour_rule</a></span></div><div class="kidx-group"><span class="kidx-title">Spectral</span><br/><span class="kidx-syms"><a href="conceptnum_1_1transform__plan.html">transform_plan</a></span></div><div class="kidx-group"><span class="kidx-title">Statistics</span><br/><span class="kidx-syms"><a href="conceptnum_1_1streaming__accumulator.html">streaming_accumulator</a> &ndash; <a href="conceptnum_1_1moment__accumulator.html">moment_accumulator</a></span></div><div class="kidx-group"><span class="kidx-title">Root finding</span><br/><span class="kidx-syms"><a href="conceptnum_1_1bracketable__function.html">bracketable_function</a></span></div><div class="kidx-group"><span class="kidx-title">Problem dispatch</span><br/><span class="kidx-syms"><a href="conceptnum_1_1is__explicit__ode__alg.html">is_explicit_ode_alg</a> &ndash; <a href="conceptnum_1_1is__mcmc__alg.html">is_mcmc_alg</a></span></div>
 </div>
 
 ---
@@ -138,12 +152,88 @@ template <> struct claims_of<third_party_matrix> {
 A type never acquires a law from its syntax. `std::string` defines `operator+` and is not a
 vector space.
 
+### A declared law must be unconstructible to violate
+
+Declaring `math_laws` is an unconditional promise about *every* instance, and nothing
+checks it. It is sound only when the type makes a violating instance impossible to build.
+There are three ways to achieve that, and every claim in the library uses one:
+
+**A closing constructor** rejects the bad inputs, at a cost proportional to the structure:
+
+```cpp
+// jacobi_preconditioner: SPD because a non-positive diagonal cannot get past the ctor.
+// O(n), against the O(n^2) sampled probe a general assume_spd would run.
+class positive_diagonal {
+  public:
+    using math_laws = num::math::type_list<num::law::spd>;
+
+    explicit positive_diagonal(num::vec d) : d_(std::move(d)) {
+        for (const num::real value : d_) {
+            if (!(value > 0.0) || !std::isfinite(value)) {
+                throw std::invalid_argument("diagonal must be positive and finite");
+            }
+        }
+    }
+  private:
+    num::vec d_;
+};
+
+// there is no way to build one that is not SPD, so the claim needs no probe
+num::vec good{1.0, 2.0, 3.0};
+positive_diagonal ok(good);
+```
+
+**A constrained template** rejects the bad operands at compile time:
+
+```cpp
+// p(A) is positive definite only when A is, so the operand must already carry it.
+template <class Op>
+requires math::spd_operator<Op>
+class chebyshev_preconditioner final { /* ... */ };
+```
+
+**Structure**, where the shape of `apply` leaves nothing to violate — a symmetric stencil
+is self-adjoint whatever its coefficients, and \f$\langle r, L^{-T}L^{-1} r\rangle =
+\lVert L^{-1}r \rVert^2 \ge 0\f$ however \f$L\f$ was built.
+
+The library's claims and what earns each:
+
+| type | claims | earned by |
+| :--- | :--- | :--- |
+| `jacobi_preconditioner` | `spd` | ctor: every entry positive and finite |
+| `chebyshev_preconditioner<Op>` | `spd` | `requires spd_operator<Op>` |
+| `backward_euler_2d` | `spd` | ctor: `coeff >= 0`, so \f$1+4c > 4c\f$ and Gershgorin applies |
+| `backward_euler_operator_2d` | `spd` | the same check, in `validated_matrix` |
+| `laplacian_2d` | `self_adjoint` | structure: symmetric 5-point stencil |
+| `basic_vec<T>`, `array<T>` | `hilbert_space` | structure, given `claims<T, law::field>` |
+
+When adding a claim, the question to answer is: *can I write a program that constructs a
+violating instance?* If yes, the claim belongs behind `assume` — where the caller takes
+responsibility and the diagnostics sample it — rather than in `math_laws`.
+
+One claim is a deliberate approximation. `claims_of<double>` reports `law::field`, and
+floating-point addition is not associative, so `double` is not a field. Every numerical
+library makes this assumption; it is recorded here rather than hidden.
+
 ---
 
 ## 3. Laws survive operations that preserve them
 
-The rule for a sum is the meet: \f$A + B\f$ satisfies whatever both operands satisfy, since
-\f$\langle x, (A+B)x \rangle = \langle x, Ax \rangle + \langle x, Bx \rangle\f$.
+A caller who has established that \f$A\f$ is positive definite should not have to establish
+it again for \f$A + A\f$. Each operation below carries its operands' laws forward by a
+theorem, so the conclusion is available to the compiler with no probe and no second
+assertion.
+
+Every rule is stated once, proved once, and applied automatically:
+
+| you write | the result claims | the theorem |
+| :--- | :--- | :--- |
+| `sum(A, B)` | the strongest law **both** carry | \f$\langle x,(A{+}B)x\rangle = \langle x,Ax\rangle + \langle x,Bx\rangle\f$ |
+| `projected(A, S)` | the law restricted to \f$S\f$ | \f$PAx = PAPx\f$ for \f$x \in S\f$ |
+
+### Sum: the meet
+
+\f$A + B\f$ satisfies whatever *both* operands satisfy.
 
 ```cpp
 num::mat M = num::identity(4);
@@ -158,7 +248,7 @@ num::vec rhs(4, 1.0), x(4, 0.0);
 num::cg(s, rhs, x, 1e-12, 100);                  // accepted with nothing re-asserted
 ```
 
-It derives exactly the meet and never more:
+Where the operands disagree, the result keeps only their common consequence — never more:
 
 ```cpp
 num::mat M = num::identity(4);
@@ -167,21 +257,26 @@ auto sym  = num::operators::assume_symmetric(num::operators::dense_op(M));
 auto uni  = num::operators::assume_orthogonal(num::operators::dense_op(M));
 auto bare = num::operators::dense_op(M);
 
+// spd + self_adjoint -> self_adjoint: a symmetric operand may be indefinite
 auto with_sym = num::operators::sum(spd, sym);
 static_assert( num::self_adjoint_operator<decltype(with_sym)>);
-static_assert(!num::spd_operator<decltype(with_sym)>);        // sym may be indefinite
+static_assert(!num::spd_operator<decltype(with_sym)>);
 
+// spd + unitary -> normal: nothing implies both definiteness and unitarity
 auto with_uni = num::operators::sum(spd, uni);
 static_assert( num::normal_operator<decltype(with_uni)>);
 static_assert(!num::self_adjoint_operator<decltype(with_uni)>);
 
+// spd + nothing -> nothing
 auto with_bare = num::operators::sum(spd, bare);
-static_assert(!num::self_adjoint_operator<decltype(with_bare)>);  // nothing in, nothing out
+static_assert(!num::self_adjoint_operator<decltype(with_bare)>);
 ```
 
-Projection carries the law onto the subspace. \f$PA\f$ is not self-adjoint globally, since
-\f$(PA)^* = AP \neq PA\f$. But \f$PAx = PAPx\f$ for every \f$x \in S\f$, and \f$PAP\f$
-inherits definiteness from \f$A\f$ — which is what a `_on<S>` law asserts.
+### Projection: the law restricted to a subspace
+
+\f$PA\f$ is not self-adjoint globally, since \f$(PA)^* = AP \neq PA\f$. But \f$PAx = PAPx\f$ for
+every \f$x \in S\f$, and \f$PAP\f$ inherits definiteness from \f$A\f$ — which is exactly what a
+`_on<S>` law asserts.
 
 ```cpp
 num::mat M = num::identity(4);
@@ -193,10 +288,72 @@ static_assert(!num::claims<decltype(pa), num::law::spd>);           // correctly
 static_assert(!num::claims<decltype(pa), num::law::self_adjoint>);  // correctly refused
 ```
 
-Only unconditional theorems are derived. A congruence \f$P^\top A P\f$ preserves
-definiteness only when \f$P\f$ has full column rank, and a product of self-adjoint
-operators is self-adjoint only when they commute. Neither side condition is checkable, so
-both stay explicit assumptions.
+A weaker operand restricts to a weaker law, and an operand claiming nothing restricts to
+nothing:
+
+```cpp
+num::mat M = num::identity(4);
+auto sym = num::operators::assume_symmetric(num::operators::dense_op(M));
+auto ps  = num::operators::projected(sym, num::space::zero_sum{});
+static_assert( num::claims<decltype(ps), num::law::self_adjoint_on<num::space::zero_sum>>);
+static_assert(!num::claims<decltype(ps), num::law::psd_on<num::space::zero_sum>>);
+
+auto bare = num::operators::dense_op(M);
+auto pb   = num::operators::projected(bare, num::space::zero_sum{});
+static_assert(!num::claims<decltype(pb), num::law::self_adjoint_on<num::space::zero_sum>>);
+```
+
+### Reading what was derived
+
+`law::strongest_law_t` reports the conclusion the rules reached:
+
+```cpp
+num::mat M = num::identity(4);
+auto a = num::operators::assume_spd(num::operators::dense_op(M));
+auto b = num::operators::assume_orthogonal(num::operators::dense_op(M));
+
+using conclusion = num::law::strongest_law_t<decltype(num::operators::sum(a, b))>;
+static_assert(conclusion::name == "normal");         // spd meet unitary
+
+```
+
+### Laws that do not compare
+
+Not every pair of laws has one stronger than the other. Strict diagonal dominance and
+definiteness are independent: \f$\begin{pmatrix} 1 & 0.9 \\ 0.9 & 1\end{pmatrix}\f$ is SPD and
+not dominant, and a dominant matrix need not be symmetric.
+
+```cpp
+// their meet is the common ancestor, not either of them
+static_assert(std::same_as<num::law::meet_t<num::law::diagonally_dominant, num::law::spd>,
+                           num::law::endomorphism>);
+```
+
+So a routine accepting either cannot name one law. The ordering on laws is a partial order;
+the *constraint* is ordinary logic and may use `||`:
+
+```cpp
+// gauss_seidel converges for strictly diagonally dominant or SPD A, so it asks for both
+// by name rather than for a single law that covers them
+num::mat A(3, 3, 0.0);
+for (num::idx i = 0; i < 3; ++i) { A(i, i) = 4.0; }
+A(0, 1) = 1.0; A(1, 0) = 1.0; A(1, 2) = 1.0; A(2, 1) = 1.0;
+
+num::vec b{1.0, 2.0, 3.0}, x(3, 0.0), y(3, 0.0);
+num::gauss_seidel(num::assume_diagonally_dominant(A), b, x);   // one arm
+num::gauss_seidel(num::assume_spd(A), b, y);                   // the other
+```
+
+Passing an uncertified matrix is a compile error rather than an iteration that quietly
+returns `converged == false`.
+
+### Where derivation stops
+
+Only unconditional theorems are applied. A congruence \f$P^\top A P\f$ preserves definiteness
+only when \f$P\f$ has full column rank; a product is self-adjoint only when the operands
+commute; \f$A^*A\f$ is definite only when \f$A\f$ has trivial kernel. None of those side
+conditions is decidable from the types, so each stays an explicit assumption you make with
+`assume_*` and the diagnostics sample.
 
 ---
 
@@ -315,6 +472,11 @@ auto checked   = num::require<num::law::spd>(A);  // exhaustive, where a validat
 
 `assume` records `evidence_origin::assumed`; `require` records `verified`. Both store the
 source location the diagnostics report.
+
+A law that a *rule* produced needs neither, because there is nothing to trust and nothing
+to test: \f$A^*A\f$ is positive semidefinite for every \f$A\f$, so a probe could only
+re-test the proof. Those conclusions live in the type, not as evidence on a value -- see
+section 3.
 
 | Matrix tagger | Operator tagger | Invariant | Cost |
 | :--- | :--- | :--- | :--- |

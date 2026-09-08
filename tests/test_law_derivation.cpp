@@ -13,6 +13,7 @@
 /// matters, so most of these are negative.
 
 #include "core/math/models.hpp"
+#include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/solvers/cg.hpp"
 #include "operator/dense.hpp"
@@ -131,4 +132,40 @@ TEST(LawDerivation, ProjectionOfAWeakerOperandDerivesAWeakerRestriction) {
     static_assert(!claims<decltype(pb), L::self_adjoint_on<space::zero_sum>>,
                   "nothing in means nothing out");
     SUCCEED();
+}
+
+// -----------------------------------------------------------------------------
+// Diagonal dominance: a law incomparable with the self-adjoint family
+// -----------------------------------------------------------------------------
+
+TEST(LawDerivation, DiagonalDominanceIsIncomparableWithDefiniteness) {
+    // Neither implies the other, so their meet is the common ancestor and not one of
+    // them. This is what makes the ordering a partial order rather than a chain.
+    static_assert(std::same_as<L::meet_t<L::diagonally_dominant, L::spd>, L::endomorphism>);
+    static_assert(std::same_as<L::meet_t<L::diagonally_dominant, L::self_adjoint>,
+                               L::endomorphism>);
+    static_assert(!std::derived_from<L::spd, L::diagonally_dominant>,
+                  "[[1, 0.9], [0.9, 1]] is SPD and not diagonally dominant");
+    static_assert(!std::derived_from<L::diagonally_dominant, L::self_adjoint>,
+                  "a diagonally dominant matrix need not be symmetric");
+    SUCCEED();
+}
+
+TEST(LawDerivation, DiagonalDominanceIsCheckedExactlyNotSampled) {
+    mat dominant(3, 3, 0.0);
+    for (idx i = 0; i < 3; ++i) {
+        dominant(i, i) = 4.0;
+        if (i + 1 < 3) {
+            dominant(i, i + 1) = 1.0;
+            dominant(i + 1, i) = 1.0;
+        }
+    }
+    EXPECT_NO_THROW(static_cast<void>(assume_diagonally_dominant(dominant)));
+
+    // A single offending row is enough, and being off the diagonal of a probe cannot
+    // hide it the way a sampled law would.
+    mat offending = dominant;
+    offending(2, 2) = 1.0; // |1| < |1| from the (2,1) entry
+    EXPECT_THROW(static_cast<void>(assume_diagonally_dominant(offending)),
+                 std::invalid_argument);
 }

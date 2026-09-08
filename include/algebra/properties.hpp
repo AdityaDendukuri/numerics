@@ -95,6 +95,19 @@ struct law_verifier<law::normal> {
     static void run(const Op &, std::source_location) noexcept {}
 };
 
+/// @brief Every row's diagonal strictly exceeds the sum of its off-diagonal magnitudes.
+///
+/// Decided outright rather than sampled: the check reads the whole matrix, which is the
+/// same order of work as touching it at all, so there is no reason to accept a partial
+/// answer here.
+template <>
+struct law_verifier<law::diagonally_dominant> {
+    template <class Op, class V>
+    static void run(const Op &A, std::source_location loc) {
+        debug::verify_diagonal_dominance(A, loc);
+    }
+};
+
 /// @brief \f$\langle Ax, y \rangle = \langle x, Ay \rangle\f$ over sampled pairs.
 template <>
 struct law_verifier<law::self_adjoint> {

@@ -366,7 +366,7 @@ TEST(GaussSeidel, DiagonalDominant3x3) {
 
     vec b{1.0, 2.0, 3.0};
     vec x(3, 0.0);
-    solver_result r = gauss_seidel(A, b, x);
+    solver_result r = gauss_seidel(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -388,7 +388,7 @@ TEST(GaussSeidel, DiagonalSystem) {
         b[i] = static_cast<real>((i + 1) * (i + 1));
     }
 
-    solver_result r = gauss_seidel(A, b, x);
+    solver_result r = gauss_seidel(num::assume_diagonally_dominant(A), b, x);
     EXPECT_TRUE(r.converged);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], static_cast<real>(i + 1), 1e-8);
@@ -408,7 +408,7 @@ TEST(GaussSeidel, ResidualVerified) {
         }
     }
     vec b(n, 1.0), x(n, 0.0);
-    solver_result r = gauss_seidel(A, b, x);
+    solver_result r = gauss_seidel(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -435,7 +435,7 @@ TEST(Jacobi, DiagonalDominant3x3) {
 
     vec b{1.0, 2.0, 3.0};
     vec x(3, 0.0);
-    solver_result r = jacobi(A, b, x);
+    solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -457,7 +457,7 @@ TEST(Jacobi, DiagonalSystem) {
     }
 
     // Diagonal system: Jacobi converges in one iteration
-    solver_result r = jacobi(A, b, x, 1e-10, 1);
+    solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x, 1e-10, 1);
     EXPECT_EQ(r.iterations, static_cast<idx>(1));
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], static_cast<real>(i + 1), 1e-10);
@@ -477,7 +477,7 @@ TEST(Jacobi, ResidualVerified) {
         }
     }
     vec b(n, 1.0), x(n, 0.0);
-    solver_result r = jacobi(A, b, x);
+    solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);

@@ -117,6 +117,25 @@ struct endomorphism : linear_map {
     static constexpr std::string_view name = "endomorphism";
 };
 
+/// @brief \f$|a_{ii}| > \sum_{j \neq i} |a_{ij}|\f$ for every row: strict diagonal dominance.
+///
+/// This is the hypothesis under which Jacobi and Gauss-Seidel converge and under which
+/// Gaussian elimination needs no pivoting, so it is the precondition several routines
+/// state in prose and could not previously state in a signature.
+///
+/// It sits directly under `endomorphism` and is deliberately *incomparable* with the
+/// self-adjoint family: a diagonally dominant matrix need not be symmetric, and an SPD
+/// matrix need not be diagonally dominant -- \f$\begin{psmallmatrix} 1 & 0.9 \\ 0.9 & 1
+/// \end{psmallmatrix}\f$ is SPD but not dominant. Neither implies the other, so
+/// @ref num::law::meet_t of the two is `endomorphism`, and a routine that accepts either
+/// must say so with a disjunction in its `requires` clause rather than by naming one law.
+/// That is the difference between the ordering on laws, which is a partial order, and the
+/// logic of a constraint, which is free to use `||`.
+struct diagonally_dominant : endomorphism {
+    using base = endomorphism;
+    static constexpr std::string_view name = "diagonally_dominant";
+};
+
 /// @brief \f$AA^* = A^*A\f$. These are exactly the unitarily diagonalizable operators.
 ///
 /// Normality has no cheap probe that does not require the adjoint, so its own verifier

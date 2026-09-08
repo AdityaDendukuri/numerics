@@ -26,11 +26,11 @@ namespace num::operators {
 
 /// @brief Non-owning \f$A + B\f$ for two operators over the same spaces.
 template <class Lhs, class Rhs>
-requires math::linear_operator<Lhs> && math::linear_operator<Rhs> &&
-    std::same_as<math::domain_t<Lhs>, math::domain_t<Rhs>> &&
-    std::same_as<math::codomain_t<Lhs>, math::codomain_t<Rhs>>
-class sum_op final {
+requires math::linear_operator<Lhs> &&math::linear_operator<Rhs>
+    &&std::same_as<math::domain_t<Lhs>, math::domain_t<Rhs>>
+        &&std::same_as<math::codomain_t<Lhs>, math::codomain_t<Rhs>> class sum_op final {
   public:
+
     using domain_type = math::domain_t<Lhs>;
     using codomain_type = math::codomain_t<Lhs>;
 
@@ -62,8 +62,8 @@ template <class Lhs, class Rhs>
 // Binding to a temporary would leave the sum holding a dangling operand at the end of the
 // full expression, so rvalues are rejected rather than silently accepted.
 template <class Lhs, class Rhs>
-requires(!std::is_lvalue_reference_v<Lhs> || !std::is_lvalue_reference_v<Rhs>)
-auto sum(Lhs &&, Rhs &&) = delete;
+requires(!std::is_lvalue_reference_v<Lhs> ||
+         !std::is_lvalue_reference_v<Rhs>) auto sum(Lhs &&, Rhs &&) = delete;
 
 } // namespace num::operators
 

@@ -11,6 +11,7 @@
 /// gone. Each was slower than the kernel now is.
 #pragma once
 
+#include "container/concepts.hpp"
 #include "container/matrix.hpp"
 #include "container/vector_ops.hpp"
 #include "core/policy.hpp"
@@ -50,7 +51,25 @@ inline void matmul(const mat &A, const mat &B, mat &C) {
 
 namespace num {
 
-inline void matvec(const mat &A, const vec &x, vec &y) { accel::matvec(A, x, y); }
+/// @brief \f$y \leftarrow Ax\f$ for any row-major dense matrix.
+///
+/// Constrained on @ref num::repr::dense_row_major rather than taking `mat`, so a foreign
+/// dense matrix exposing `data()`, `rows()` and `cols()` works with no adapter. `num::mat`
+/// takes the configured backend; anything else takes the kernel, which needs only the
+/// three accessors the concept requires.
+///
+/// The CSR counterpart is declared in `linear/sparse/sparse.hpp` under this same name and
+/// selected by @ref num::repr::csr. The two concepts are disjoint, so there is no
+/// ambiguity and neither header needs the other.
+template <class M>
+requires repr::dense_row_major<M>
+inline void matvec(const M &A, const vec &x, vec &y) {
+    if constexpr (requires { accel::matvec(A, x, y); }) {
+        accel::matvec(A, x, y);
+    } else {
+        kernel::matvec(y.data(), A.data(), x.data(), A.rows(), A.cols());
+    }
+}
 
 inline void matmul(const mat &A, const mat &B, mat &C) { accel::matmul(A, B, C); }
 

@@ -28,9 +28,13 @@ concept transform_plan = inner_product_space<V> && requires(const P &plan, const
 ///
 /// Parseval's identity is a statement about the inner product, which is why the
 /// domain is required to be an inner product space rather than merely indexable.
-/// It is the property that makes a spectral method conserve energy, and
-/// `num::spectral::debug::verify_parseval` samples it.
+/// It is the property that makes a spectral method conserve energy.
+///
+/// Having `execute` is not evidence of it -- a plan that loses energy has exactly the
+/// same interface -- so the plan must claim @ref num::law::unitary, and
+/// `num::spectral::debug::verify_parseval` samples the claim at the configured
+/// diagnostic level. Use @ref num::transform_plan for the interface alone.
 template <class P, class V = cvec>
-concept unitary_transform = transform_plan<P, V>;
+concept unitary_transform = transform_plan<P, V> && claims<P, law::unitary>;
 
 } // namespace num

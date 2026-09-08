@@ -1,6 +1,82 @@
 # Containers {#page_container}
 
-## Vectors
+## All containers
+
+Grouped by what each does. Types own their storage and are
+over-aligned; the free functions write into caller-provided destinations.
+
+<div class="sym-index">
+<div class="kidx-group"><span class="kidx-title">Scalars and vocabulary <span class="hdr">&lt;core/types.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::real "real" &ndash; @ref num::idx "idx" &ndash; @ref num::cplx "cplx" &ndash; @ref num::array "array" &ndash; @ref num::static_array "static_array" &ndash; @ref num::view "view" &ndash; @ref num::table "table" &ndash; @ref num::sorted_table "sorted_table" &ndash; @ref num::key_set "key_set"</span></div><div class="kidx-group"><span class="kidx-title">Dense vectors <span class="hdr">&lt;container/vector.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::basic_vec "basic_vec" &ndash; @ref num::vec "vec" &ndash; @ref num::cvec "cvec" &ndash; @ref num::vec2_view "vec2_view" &ndash; @ref num::copy_to "copy_to"</span></div><div class="kidx-group"><span class="kidx-title">Dense matrices <span class="hdr">&lt;container/matrix.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::basic_mat "basic_mat" &ndash; @ref num::mat "mat"</span></div><div class="kidx-group"><span class="kidx-title">Vector arithmetic <span class="hdr">&lt;container/vector_ops.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::scale "scale" &ndash; @ref num::axpy "axpy" &ndash; @ref num::axpby "axpby" &ndash; @ref num::axpbyz "axpbyz" &ndash; @ref num::add "add" &ndash; @ref num::dot "dot" &ndash; @ref num::norm "norm"</span></div><div class="kidx-group"><span class="kidx-title">Reductions <span class="hdr">&lt;container/reduce.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::sum "sum" &ndash; @ref num::l1_norm "l1_norm" &ndash; @ref num::linf_norm "linf_norm"</span></div><div class="kidx-group"><span class="kidx-title">Matrix arithmetic <span class="hdr">&lt;container/matrix_ops.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::matmul "matmul" &ndash; @ref num::matvec "matvec" &ndash; @ref num::matadd "matadd"</span></div><div class="kidx-group"><span class="kidx-title">Rank-1 and triangular solves <span class="hdr">&lt;container/dense.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::ger "ger" &ndash; @ref num::trsv_lower "trsv_lower" &ndash; @ref num::trsv_upper "trsv_upper"</span></div><div class="kidx-group"><span class="kidx-title">Matrix construction <span class="hdr">&lt;linear/matrix_utils.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::identity "identity" &ndash; @ref num::eye "eye" &ndash; @ref num::zeros "zeros" &ndash; @ref num::ones "ones" &ndash; @ref num::unit_vector "unit_vector" &ndash; @ref num::identity_columns "identity_columns" &ndash; @ref num::diagonal_matrix "diagonal_matrix" &ndash; @ref num::transpose "transpose"</span></div><div class="kidx-group"><span class="kidx-title">Diagonals <span class="hdr">&lt;linear/matrix_utils.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::diagonal "diagonal" &ndash; @ref num::set_diagonal "set_diagonal"</span></div><div class="kidx-group"><span class="kidx-title">Scaling and accumulation <span class="hdr">&lt;linear/matrix_utils.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::scale_elements "scale_elements" &ndash; @ref num::scale_rows "scale_rows" &ndash; @ref num::divide_elements "divide_elements" &ndash; @ref num::divide_rows "divide_rows" &ndash; @ref num::accu "accu"</span></div><div class="kidx-group"><span class="kidx-title">Gather and scatter <span class="hdr">&lt;linear/matrix_utils.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::gather "gather" &ndash; @ref num::scatter "scatter"</span></div><div class="kidx-group"><span class="kidx-title">Sparse matrices <span class="hdr">&lt;linear/sparse/sparse.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::spmat "spmat" &ndash; @ref num::spmat::from_triplets "spmat::from_triplets" &ndash; @ref num::spmat::from_csc "spmat::from_csc" &ndash; @ref num::sparse_matvec "sparse_matvec" &ndash; @ref num::dense "dense" &ndash; @ref num::spmat::nnz "spmat::nnz"</span></div><div class="kidx-group"><span class="kidx-title">Small fixed-size <span class="hdr">&lt;container/small_matrix.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::small_vec "small_vec" &ndash; @ref num::small_matrix "small_matrix" &ndash; @ref num::givens_rotation "givens_rotation"</span></div><div class="kidx-group"><span class="kidx-title">Discrete indices <span class="hdr">&lt;container/multi_index.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::multi_index "multi_index"</span></div><div class="kidx-group"><span class="kidx-title">Over-aligned storage <span class="hdr">&lt;container/util/aligned_storage.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::aligned_array "aligned_array" &ndash; @ref num::make_aligned "make_aligned" &ndash; @ref num::make_aligned_for_overwrite "make_aligned_for_overwrite" &ndash; @ref num::is_storage_aligned "is_storage_aligned"</span></div><div class="kidx-group"><span class="kidx-title">Orthogonal polynomials <span class="hdr">&lt;container/util/math.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::legendre "legendre" &ndash; @ref num::assoc_legendre "assoc_legendre" &ndash; @ref num::laguerre "laguerre" &ndash; @ref num::assoc_laguerre "assoc_laguerre" &ndash; @ref num::hermite "hermite"</span></div><div class="kidx-group"><span class="kidx-title">Bessel functions <span class="hdr">&lt;container/util/math.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::bessel_j "bessel_j" &ndash; @ref num::bessel_y "bessel_y" &ndash; @ref num::bessel_i "bessel_i" &ndash; @ref num::sph_bessel_j "sph_bessel_j" &ndash; @ref num::sph_bessel_y "sph_bessel_y"</span></div><div class="kidx-group"><span class="kidx-title">Ranges and sampling <span class="hdr">&lt;container/util/math.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::linspace "linspace" &ndash; @ref num::logspace "logspace" &ndash; @ref num::int_range "int_range" &ndash; @ref num::rng_state "rng_state" &ndash; @ref num::rng_uniform "rng_uniform" &ndash; @ref num::rng_normal "rng_normal" &ndash; @ref num::rng_int "rng_int"</span></div><div class="kidx-group"><span class="kidx-title">Misc numerics <span class="hdr">&lt;container/util/integer_pow.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::ipow "ipow"</span></div>
+</div>
+
+---
+
+## 1. Vocabulary
+
+Every type below is an alias, so it is the underlying type exactly — nothing is wrapped,
+nothing converts, and a function expecting the standard type accepts the alias unchanged.
+
+**Scalars.** These exist so precision and index width are decided in one place rather
+than spelled out at every site.
+
+| alias | is | use it for |
+|---|---|---|
+| `num::real` | `double` | every floating-point quantity |
+| `num::idx` | `std::size_t` | sizes, offsets, and subscripts |
+| `num::cplx` | `std::complex<num::real>` | complex amplitudes |
+
+Note the spelling: `cplx`, not `cmplx`.
+
+**Containers.** Four standard containers are named after words this library has already
+spent on mathematics, so they get names that say what they hold instead.
+
+| alias | is | the word it frees |
+|---|---|---|
+| `num::array<T>` | `std::vector<T>` | `num::vec`, an element of a vector space |
+| `num::static_array<T, N>` | `std::array<T, N>` | — |
+| `num::view<T>` | `std::span<T>` | the span of a set of vectors |
+| `num::table<K, V>` | `std::unordered_map<K, V>` | a linear map |
+| `num::sorted_table<K, V>` | `std::map<K, V>` | likewise |
+| `num::key_set<K>` | `std::unordered_set<K>` | a set |
+
+A declaration then says which half of the library it belongs to:
+
+```cpp
+num::array<num::idx> row_offsets;   // storage
+num::vec             x(4);          // mathematics
+```
+
+Because these are aliases and not wrappers, standard code keeps working verbatim:
+
+```cpp
+num::array<num::real> a{1.0, 2.0, 3.0};
+std::vector<num::real> &same = a;      // the same object; no conversion happens
+std::sort(a.begin(), a.end());         // ordinary standard algorithms
+```
+
+Compiler diagnostics still name the underlying standard type. Containers whose names
+carry no mathematical meaning — `std::pair`, `std::tuple`, `std::optional`,
+`std::string` — are deliberately left alone, so the library does not end up maintaining a
+parallel vocabulary for the whole standard library.
+
+### Choosing between num::vec and num::array<num::real>
+
+Both hold `double`s contiguously, and they are different types with different jobs.
+
+```cpp
+num::array<num::real> raw(n);   // storage: grows, zero-initialises, 16-byte aligned
+num::vec              x(n);     // mathematics: fixed extent, 64-byte aligned
+```
+
+`num::vec` owns over-aligned storage, skips the zero-initialising pass when the contents
+are about to be overwritten, and satisfies `num::math::vector_space`, so solvers and
+operators take it directly. It has no `push_back`: its extent is fixed at construction.
+Use `num::array` when the length is not known until the values are, and `num::vec` once
+the data is mathematics.
+
+---
+
+## 2. Vectors
 
 ### Construct a vector
 
@@ -108,7 +184,7 @@ points.y(0) = 9.0; // storage becomes {1, 9, 8, 4}.
 
 Use `Vec2ConstView` when the underlying vector is read-only.
 
-## Dense Matrices
+## 3. Dense Matrices
 
 ### Construct a matrix
 
@@ -184,7 +260,7 @@ num::seq::matmul(A, B, C); // Portable kernel, single-threaded.
 num::omp::matmul(A, B, C); // Threaded, same kernel per tile.
 ```
 
-## Matrix Construction Helpers
+## 4. Matrix Construction Helpers
 
 ### Unit vector
 
@@ -228,7 +304,7 @@ num::set_diagonal(A, values); // Replace A(0,0) and A(1,1).
 num::mat At = num::transpose(A); // At(j,i) == A(i,j).
 ```
 
-## Element and Row Scaling
+## 5. Element and Row Scaling
 
 ### Scale vector elements
 
@@ -252,7 +328,7 @@ num::divide_rows(A, weights); // Restore the original matrix.
 
 Weight counts must match the vector size or matrix row count.
 
-## Gather and Scatter
+## 6. Gather and Scatter
 
 ### Gather selected values
 
@@ -279,7 +355,7 @@ Accumulate instead of replacing:
 num::scatter<num::real>(values, indices, output, true); // Add into output.
 ```
 
-## Sparse Matrices
+## 7. Sparse Matrices
 
 ### Construct from triplets
 
@@ -317,7 +393,92 @@ num::mat transformed = num::diagonal_similarity(A, weights);
 // transformed == D^-1*A*D.
 ```
 
-## Matrix Properties
+## 8. Storage Layout and Foreign Types
+
+The matrix operations are constrained on *layout*, not on `num::mat` and `num::spmat`. One
+name serves every storage format, and the format decides the implementation:
+
+| operation | dense row-major | compressed sparse row |
+| :--- | :--- | :--- |
+| `num::matvec(A, x, y)` | backend `gemv` | `kernel::spmv` |
+| `num::transpose(A)` | → `num::mat` | → `num::spmat` |
+| `num::diagonal(A)` | → `num::vec` | → `num::vec` |
+| `num::dense(A)` | — | → `num::mat` |
+| `num::scaled(A, a)` | → `num::mat` | → `num::spmat` |
+
+The two concepts are disjoint — no type satisfies both — so the overloads never compete:
+
+```cpp
+num::mat   D = num::identity(3);
+num::spmat S = num::spmat::from_triplets(3, 3, {0, 1, 2}, {0, 1, 2}, {2.0, 3.0, 4.0});
+num::vec   x(3, 1.0), y(3, 0.0), z(3, 0.0);
+
+num::matvec(D, x, y);   // selected by num::repr::dense_row_major
+num::matvec(S, x, z);   // selected by num::repr::csr
+```
+
+### Using your own storage
+
+Because the constraint is on the accessors rather than on a type, a matrix the library has
+never heard of participates directly. No inheritance, no adapter, no trait specialisation
+— this is the shape an Eigen sparse matrix or a raw triple of CSR buffers already has:
+
+```cpp
+struct my_csr {
+    num::idx nr, nc;
+    std::vector<num::idx> rp, ci;
+    std::vector<num::real> vals;
+
+    num::idx n_rows() const { return nr; }
+    num::idx n_cols() const { return nc; }
+    num::idx nnz()    const { return vals.size(); }
+    const num::idx  *row_ptr() const { return rp.data(); }
+    const num::idx  *col_idx() const { return ci.data(); }
+    const num::real *values()  const { return vals.data(); }
+};
+
+static_assert(num::repr::csr<my_csr>);          // it already qualifies
+
+// [[2 0 1], [0 3 0], [1 0 4]]
+my_csr A{3, 3, {0, 2, 3, 5}, {0, 2, 1, 0, 2}, {2.0, 1.0, 3.0, 1.0, 4.0}};
+num::vec ones(3, 1.0), out(3, 0.0);
+
+num::matvec(A, ones, out);                      // row sums: 3, 3, 5
+num::vec d  = num::diagonal(A);                 // 2, 3, 4
+num::mat Ad = num::dense(A);                    // densified into a num::mat
+```
+
+A dense type qualifies on `rows()`, `cols()` and `data()`:
+
+```cpp
+struct my_dense {
+    num::idx r, c;
+    std::vector<num::real> v;
+
+    num::idx rows() const { return r; }
+    num::idx cols() const { return c; }
+    const num::real *data() const { return v.data(); }
+    num::real *data() { return v.data(); }
+    num::real operator()(num::idx i, num::idx j) const { return v[(i * c) + j]; }
+};
+
+static_assert(num::repr::dense_row_major<my_dense>);
+
+my_dense M{2, 2, {1.0, 2.0, 3.0, 4.0}};
+num::vec u(2, 1.0), w(2, 0.0);
+num::matvec(M, u, w);                           // 3, 7
+num::mat Mt = num::transpose(M);
+```
+
+`num::mat` still reaches the configured backend — BLAS, OpenMP or CUDA — because the
+dispatch checks for it. A foreign dense type takes the kernel path, which needs only the
+three accessors the concept requires.
+
+`num::sparse_matvec` remains as a forwarder to `num::matvec` for code that already calls it.
+
+---
+
+## 9. Matrix Properties
 
 ### Check a property
 
@@ -353,7 +514,7 @@ auto spd = num::linear::assume_spd(A_dense);
 // No numerical validation is performed.
 ```
 
-## Concepts and Runtime Diagnostics
+## 10. Concepts and Runtime Diagnostics
 
 ### Check storage interfaces at compile time
 
@@ -399,7 +560,7 @@ static_assert(num::spd_operator<decltype(spd)>);
 adds the property tag, constrained solvers can reject incompatible operators at
 compile time.
 
-## Selection and Probability
+## 11. Selection and Probability
 
 ### Find the first maximum
 
@@ -440,6 +601,6 @@ num::real mean = num::weighted_sum(probability, [](num::idx state) {
 });
 ```
 
-## Complete Program
+## 12. Complete Program
 
 @example 00_core_storage_and_helpers.cpp

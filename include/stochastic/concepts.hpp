@@ -5,16 +5,9 @@
 #include "algebra/concepts.hpp"
 #include "core/types.hpp"
 #include <concepts>
+#include <random>
 
 namespace num {
-
-/// @brief Uniform random bit generator, as the standard library defines one.
-///
-/// Stated so that a routine taking an engine says which one it means. Any
-/// `std::mt19937`, `std::mt19937_64`, or user engine satisfying the standard's
-/// requirements qualifies.
-template <class G>
-concept random_engine = std::uniform_random_bit_generator<G>;
 
 /// @brief Sampler drawing an index from a fixed distribution.
 ///
@@ -24,7 +17,7 @@ concept random_engine = std::uniform_random_bit_generator<G>;
 /// satisfies that is a property of the values, checked by
 /// `num::stochastic::debug::verify_weights`.
 template <class S, class G>
-concept categorical_sampling = random_engine<G> && requires(S &sampler, G &rng) {
+concept categorical_sampling = std::uniform_random_bit_generator<G> && requires(S &sampler, G &rng) {
     { sampler(rng) } -> std::convertible_to<idx>;
 };
 

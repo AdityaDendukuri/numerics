@@ -183,3 +183,21 @@ TEST(Chebyshev, RepeatedApplicationIsStateless) {
 }
 
 } // namespace
+
+// The preconditioner declares law::spd unconditionally, so that claim is only sound if a
+// non-SPD operand cannot be wrapped. p(A) is positive definite only when A is; without the
+// constraint an indefinite operator would reach pcg, which requires an SPD preconditioner.
+TEST(Chebyshev, OnlyAcceptsAnOperandThatCarriesSPD) {
+    using bare = num::operators::dense_op;
+    using certified = num::operators::spd_op<bare>;
+
+    static_assert(!num::math::spd_operator<bare>,
+                  "a dense operator claims only law::linear_map");
+    static_assert(num::math::spd_operator<certified>);
+
+    // naming chebyshev_preconditioner<bare> is now itself ill-formed, which is the point:
+    // the constraint is on the class, so the bad instantiation cannot be written down.
+    static_assert(std::constructible_from<num::chebyshev_preconditioner<certified>,
+                                          const certified &, num::real, num::real, num::idx>);
+    SUCCEED();
+}

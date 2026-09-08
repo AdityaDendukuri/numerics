@@ -71,7 +71,7 @@ verify_kernel_support(Scalar h, std::source_location loc = std::source_location:
 /// Stepping up from a site and then down must return to it, and likewise left and
 /// right. A table built with the wrong modulus satisfies neither.
 template <class P>
-requires periodic_lattice_2d<P> inline void
+requires periodic_neighbourhood_2d<P> inline void
 verify_lattice_symmetry(const P &lattice,
                         std::source_location loc = std::source_location::current()) {
     if (get_level() == diagnostic_level::off) {

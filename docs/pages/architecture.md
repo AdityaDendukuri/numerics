@@ -67,7 +67,7 @@ The bottom tier (`include/kernel/`) is a completely self-contained mathematical 
 ### Key Characteristics of Tier 0
 * **Zero External Dependencies:** Depends strictly on standard C++ library headers (`<algorithm>`, `<cmath>`, `<complex>`, `<concepts>`, `<cstddef>`).
 * **Zero Dynamic Heap Allocations:** Never calls `new`, `malloc`, or allocates heap buffers. All temporary workspace is caller-managed (`T* work`).
-* **Foreign Type Agnostic:** Works seamlessly with `std::vector<T>`, `std::array<T, N>`, Eigen vectors (`v.data()`), Armadillo matrices (`M.memptr()`), PyTorch/CUDA host tensors, or raw heap/stack buffers.
+* **Foreign Type Agnostic:** The kernel takes raw pointers, so `std::vector<T>`, `std::array<T, N>`, Eigen vectors (`v.data()`), Armadillo matrices (`M.memptr()`), PyTorch/CUDA host tensors and raw buffers all work directly. Above the kernel, the matrix operations are constrained on storage layout rather than on `num::mat` and `num::spmat`, so a foreign type exposing the accessors of `num::repr::dense_row_major` or `num::repr::csr` participates in `matvec`, `transpose`, `diagonal`, `dense` and `scaled` with no adapter (see @ref page_container).
 * **100% Copyable / Vendorable:** Drop `include/kernel/` directly into any embedded, real-time, game engine, or legacy codebase.
 
 ### Including and Linking Tier 0

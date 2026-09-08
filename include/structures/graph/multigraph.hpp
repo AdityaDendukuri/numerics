@@ -2,7 +2,6 @@
 /// @brief Weighted multigraph data structure with multi-edge multiplicities for RandNLA and Laplacian solvers.
 #pragma once
 
-#include "container/matrix.hpp"
 #include "core/types.hpp"
 #include "structures/graph/graph.hpp"
 #include <algorithm>
