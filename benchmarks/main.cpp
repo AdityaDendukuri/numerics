@@ -15,6 +15,7 @@
 
 #include "bench_memory.hpp"
 #include "bench_plot.hpp"
+#include "kernel/dense.hpp"
 #include <benchmark/benchmark.h>
 
 #include <cstring>
@@ -53,6 +54,21 @@ class CollectingReporter : public benchmark::ConsoleReporter {
 };
 
 int main(int argc, char **argv) {
+    // What the kernel rows were built for, so a GFLOP/s figure can be read
+    // against the target rather than in isolation. `kernel` rows run on one
+    // thread; compare them to a per-core FMA peak (vector lanes x 2 x FMA
+    // units x clock). A vendor BLAS that lands far above cores x that peak is
+    // running on a matrix coprocessor (Apple AMX, Intel AMX, ARM SME) that no
+    // portable code can reach.
+    {
+        using cfg = num::kernel::gemm_config<double>;
+        std::cout << "kernel::gemm<double>: tile " << cfg::mr << "x" << cfg::nr << ", kc "
+                  << cfg::kc << ", mc " << cfg::mc << ", nc " << cfg::nc << ", vector "
+                  << NUM_K_VECTOR_BYTES << " B x " << NUM_K_VECTOR_REGISTERS << " registers, L1 "
+                  << NUM_K_L1_BYTES << " B, L2 " << NUM_K_L2_BYTES << " B, fma "
+                  << (NUM_K_HAS_FMA ? "yes" : "NO (ceiling halved)") << "\n";
+    }
+
     // Scan for --plot[=DIR] and --report[=DIR] before passing argv to Google
     // Benchmark.
     bool do_plot = false;

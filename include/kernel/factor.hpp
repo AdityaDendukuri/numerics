@@ -66,41 +66,50 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief In-place blocked Cholesky factorization, `A <- L` with `A = L*L^T`.
-///
-/// The lower triangle is factored in panels.  The panel solve and trailing
-/// update are delegated to the raw TRSM/SYRK kernels so larger problems expose
-/// the same computational spine as the standalone dense primitives.
+namespace detail {
+
+/// @brief Unblocked lower Cholesky of an `n x n` block with row stride `lda`,
+/// writing zeros above the diagonal.
 template <std::floating_point T>
-[[nodiscard]] inline bool cholesky_blocked(T *A, idx n, idx block_size = 64) noexcept {
-    if (n == 0) {
-        return true;
+[[nodiscard]] inline bool cholesky_block(T *A, idx lda, idx n) noexcept {
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j <= i; ++j) {
+            T sum = A[(i * lda) + j];
+            for (idx p = 0; p < j; ++p) {
+                sum -= A[(i * lda) + p] * A[(j * lda) + p];
+            }
+            if (i == j) {
+                if (!(sum > T(0))) {
+                    return false;
+                }
+                A[(i * lda) + j] = std::sqrt(sum);
+            } else {
+                A[(i * lda) + j] = sum / A[(j * lda) + j];
+            }
+        }
+        for (idx j = i + 1; j < n; ++j) {
+            A[(i * lda) + j] = T(0);
+        }
     }
-    if (block_size == 0) {
-        block_size = 1;
-    }
+    return true;
+}
+
+/// @brief Blocked lower Cholesky of an `n x n` block with row stride `lda`.
+///
+/// Diagonal blocks wider than the `trsm`/`syrk` block are factored by
+/// recursion, so the panel solve and trailing update always see blocks long
+/// enough for their internal `gemm` to matter.
+template <std::floating_point T>
+[[nodiscard]] inline bool cholesky_blocked(T *A, idx lda, idx n, idx block_size) noexcept {
     for (idx kk = 0; kk < n; kk += block_size) {
         const idx kb = std::min(block_size, n - kk);
+        T *diagonal = A + (kk * lda) + kk;
 
         // L11 <- chol(A11), retaining the parent row stride.
-        for (idx i = 0; i < kb; ++i) {
-            for (idx j = 0; j <= i; ++j) {
-                T sum = A[((kk + i) * n) + (kk + j)];
-                for (idx p = 0; p < j; ++p) {
-                    sum -= A[((kk + i) * n) + (kk + p)] * A[((kk + j) * n) + (kk + p)];
-                }
-                if (i == j) {
-                    if (!(sum > T(0))) {
-                        return false;
-                    }
-                    A[((kk + i) * n) + (kk + j)] = std::sqrt(sum);
-                } else {
-                    A[((kk + i) * n) + (kk + j)] = sum / A[((kk + j) * n) + (kk + j)];
-                }
-            }
-            for (idx j = i + 1; j < kb; ++j) {
-                A[((kk + i) * n) + (kk + j)] = T(0);
-            }
+        const bool ok = kb > trsm_block ? cholesky_blocked(diagonal, lda, kb, trsm_block)
+                                        : cholesky_block(diagonal, lda, kb);
+        if (!ok) {
+            return false;
         }
 
         const idx trailing = n - (kk + kb);
@@ -109,12 +118,36 @@ template <std::floating_point T>
         }
 
         // L21 <- A21 * L11^{-T}.
-        trsm_lower_transpose_right_inplace(A + ((kk + kb) * n) + kk, n,
-                                           A + (kk * n) + kk, n, trailing, kb);
+        trsm_lower_transpose_right_inplace(A + ((kk + kb) * lda) + kk, lda, diagonal, lda, trailing,
+                                           kb);
 
         // A22 <- A22 - L21*L21^T (lower triangle only).
-        syrk_lower(A + (((kk + kb) * n) + (kk + kb)), n,
-                   A + (((kk + kb) * n) + kk), n, T(-1), T(1), trailing, kb);
+        syrk_lower(A + (((kk + kb) * lda) + (kk + kb)), lda, A + (((kk + kb) * lda) + kk), lda,
+                   T(-1), T(1), trailing, kb);
+    }
+    return true;
+}
+
+} // namespace detail
+
+/// @brief In-place blocked Cholesky factorization, `A <- L` with `A = L*L^T`.
+///
+/// The lower triangle is factored in panels of `block_size` columns. The panel
+/// solve and trailing update are the blocked `trsm` and `syrk` kernels, so past
+/// a few hundred rows the work runs at `gemm` speed; a diagonal block wider
+/// than their internal block is factored recursively. The default panel is
+/// wide so those updates are long; the panel factorization itself is
+/// \f$O(n b^2)\f$ and stays a small fraction for `b <= n/4`.
+template <std::floating_point T>
+[[nodiscard]] inline bool cholesky_blocked(T *A, idx n, idx block_size = 256) noexcept {
+    if (n == 0) {
+        return true;
+    }
+    if (block_size == 0) {
+        block_size = 1;
+    }
+    if (!detail::cholesky_blocked(A, n, n, block_size)) {
+        return false;
     }
     // The packed lower factor is the public result; make the unused triangle explicit.
     for (idx i = 0; i < n; ++i) {
@@ -214,7 +247,8 @@ template <std::floating_point T, class Index>
 template <std::floating_point T, class Index>
 [[nodiscard]] inline bool lu_factor_blocked(T *NUM_K_RESTRICT LU, Index *NUM_K_RESTRICT piv, idx n,
                                             idx block_size = 64) noexcept {
-    if (block_size == 0) block_size = 1;
+    if (block_size == 0)
+        block_size = 1;
     bool nonsingular = true;
     for (idx kk = 0; kk < n; kk += block_size) {
         const idx kb = std::min(block_size, n - kk), panel_end = kk + kb;
@@ -223,12 +257,19 @@ template <std::floating_point T, class Index>
             T best = std::abs(LU[(k * n) + k]);
             for (idx i = k + 1; i < n; ++i) {
                 const T candidate = std::abs(LU[(i * n) + k]);
-                if (candidate > best) { best = candidate; pivot_row = i; }
+                if (candidate > best) {
+                    best = candidate;
+                    pivot_row = i;
+                }
             }
             piv[k] = static_cast<Index>(pivot_row);
-            if (pivot_row != k) swap_rows(LU, n, k, pivot_row, n);
+            if (pivot_row != k)
+                swap_rows(LU, n, k, pivot_row, n);
             const T pivot = LU[(k * n) + k];
-            if (pivot == T(0)) { nonsingular = false; continue; }
+            if (pivot == T(0)) {
+                nonsingular = false;
+                continue;
+            }
             for (idx i = k + 1; i < n; ++i) {
                 const T factor = LU[(i * n) + k] / pivot;
                 LU[(i * n) + k] = factor;
@@ -237,7 +278,8 @@ template <std::floating_point T, class Index>
             }
         }
         const idx trailing = n - panel_end;
-        if (trailing == 0) continue;
+        if (trailing == 0)
+            continue;
         // U12 <- L11^{-1} A12.
         trsm_unit_lower_inplace(LU + (kk * n) + panel_end, n, LU + (kk * n) + kk, n, kb, trailing);
         // A22 <- A22 - L21*U12.
@@ -279,28 +321,37 @@ inline void lu_solve(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT LU,
     }
 }
 
-/// @brief Invert packed LU factors in place: A <- A^{-1}.
+/// @brief Inverse from packed LU factors: `inverse <- A^{-1}`, one column at a time.
+///
+/// Column `j` of the inverse is the solve `A x = e_j`, so this is `n` calls
+/// of `lu_solve` written without the per-column copy. Out of place: every
+/// column's solve reads the whole factor, so the result cannot overwrite it.
+/// `work` holds `n` elements.
 template <std::floating_point T, class Index>
-inline void lu_invert(T *NUM_K_RESTRICT LU, const Index *NUM_K_RESTRICT piv, idx n,
-                      T *NUM_K_RESTRICT work) noexcept {
+inline void lu_invert(T *NUM_K_RESTRICT inverse, const T *NUM_K_RESTRICT LU,
+                      const Index *NUM_K_RESTRICT piv, idx n, T *NUM_K_RESTRICT work) noexcept {
     for (idx col = 0; col < n; ++col) {
-        for (idx i = 0; i < n; ++i) work[i] = (i == col) ? T(1) : T(0);
+        for (idx i = 0; i < n; ++i)
+            work[i] = (i == col) ? T(1) : T(0);
         for (idx k = 0; k < n; ++k) {
             const idx p = static_cast<idx>(piv[k]);
-            if (p != k) std::swap(work[k], work[p]);
+            if (p != k)
+                std::swap(work[k], work[p]);
         }
         for (idx i = 1; i < n; ++i) {
             T sum = work[i];
-            for (idx j = 0; j < i; ++j) sum -= LU[(i * n) + j] * work[j];
+            for (idx j = 0; j < i; ++j)
+                sum -= LU[(i * n) + j] * work[j];
             work[i] = sum;
         }
         for (idx i = n; i-- > 0;) {
             T sum = work[i];
-            for (idx j = i + 1; j < n; ++j) sum -= LU[(i * n) + j] * work[j];
+            for (idx j = i + 1; j < n; ++j)
+                sum -= LU[(i * n) + j] * work[j];
             work[i] = sum / LU[(i * n) + i];
         }
         for (idx i = 0; i < n; ++i) {
-            LU[(i * n) + col] = work[i];
+            inverse[(i * n) + col] = work[i];
         }
     }
 }
@@ -335,7 +386,8 @@ inline void cholesky_invert(T *NUM_K_RESTRICT L, idx n, T *NUM_K_RESTRICT work) 
 template <std::floating_point T, class Index>
 [[nodiscard]] inline bool banded_factor(T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
                                         Index *NUM_K_RESTRICT ipiv) noexcept {
-    for (idx i = 0; i < n; ++i) ipiv[i] = static_cast<Index>(i);
+    for (idx i = 0; i < n; ++i)
+        ipiv[i] = static_cast<Index>(i);
     const idx kv = ku + kl;
     for (idx j = 0; j < n; ++j) {
         const idx last_row = std::min(j + kl, n - 1);
@@ -343,9 +395,13 @@ template <std::floating_point T, class Index>
         idx pivot = j;
         for (idx i = j + 1; i <= last_row; ++i) {
             T val = std::abs(ab[kv + i - j + (j * ldab)]);
-            if (val > max_val) { max_val = val; pivot = i; }
+            if (val > max_val) {
+                max_val = val;
+                pivot = i;
+            }
         }
-        if (max_val == T(0)) return false;
+        if (max_val == T(0))
+            return false;
         ipiv[j] = static_cast<Index>(pivot);
         if (pivot != j) {
             const idx col_start = (j > ku) ? j - ku : 0;

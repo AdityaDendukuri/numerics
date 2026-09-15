@@ -81,6 +81,44 @@ using idx = std::size_t;
 #define NUM_K_VECTOR_BYTES 16
 #endif
 
+// Architectural vector registers on the target. Used to size `gemm`'s register
+// tile: the accumulators must live in registers for the whole inner loop, and a
+// tile that overflows the file spills to the stack and loses far more than the
+// blocking gained.
+#if defined(__AVX512F__) || defined(__aarch64__) || defined(_M_ARM64)
+#define NUM_K_VECTOR_REGISTERS 32
+#else
+#define NUM_K_VECTOR_REGISTERS 16
+#endif
+
+// Cache budgets that size `gemm`'s blocking. The defaults are the smallest
+// figures found on any mainstream core of the last decade, so a build that
+// knows nothing about its host is merely under-blocked, never wrong. The
+// numerics CMake configuration overrides them with the host's measured sizes;
+// a consumer of the bare headers may define them before including this file.
+#ifndef NUM_K_L1_BYTES
+#define NUM_K_L1_BYTES 32768
+#endif
+#ifndef NUM_K_L2_BYTES
+#define NUM_K_L2_BYTES 524288
+#endif
+// The B panel `gemm` keeps resident across one sweep of rows. Measured on this
+// tree, 1 MiB beat both 256 KiB (too little reuse) and 4 MiB (stops fitting).
+#ifndef NUM_K_GEMM_PANEL_BYTES
+#define NUM_K_GEMM_PANEL_BYTES 1048576
+#endif
+
+// Whether `a*b + c` compiles to one fused instruction. Without it every
+// multiply-add in `gemm` is two instructions and the ceiling halves; the
+// arithmetic is still correct. x86 needs `-mfma` (numerics' CMake adds it
+// with `-mavx2`); AArch64 always has it. GCC additionally needs
+// `-ffp-contract=fast`, because strict `-std=c++NN` turns contraction off.
+#if defined(__FMA__) || defined(__ARM_FEATURE_FMA) || defined(__aarch64__) || defined(_M_ARM64)
+#define NUM_K_HAS_FMA 1
+#else
+#define NUM_K_HAS_FMA 0
+#endif
+
 namespace num::kernel {
 
 /// Computational contracts used at the unchecked kernel boundary.  The typed

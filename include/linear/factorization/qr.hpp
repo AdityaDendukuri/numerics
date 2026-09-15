@@ -45,12 +45,15 @@ namespace seq {
 inline qr_result qr(const mat &A) {
     const idx m = A.rows();
     const idx n = A.cols();
+    // Reflectors that can act on more than one row. The kernel still forms
+    // one per column up to min(m, n) -- the last of a square matrix is the
+    // identity -- so `tau` is sized for what it writes, not for `r`.
     const idx r = (m > n) ? n : m - 1;
 
     mat R = A;
     array<array<real>> vs(r);
     array<real> betas(r, 0.0);
-    array<real> tau(r), v(m), work(n);
+    array<real> tau(std::min(m, n)), v(m), work(n);
     // A <- compact Householder QR; reflector tails remain below R's diagonal.
     kernel::qr_factor_blocked(R.data(), n, m, n, tau.data(), v.data(), work.data());
     for (idx k = 0; k < r; ++k) {
@@ -131,7 +134,7 @@ inline qr_result qr(const mat &A) {
 } // namespace lapack
 
 inline qr_result qr(const mat &A) {
-#if defined(NUMERICS_HAS_LAPACK)
+#if defined(NUMERICS_LAPACK_DEFAULT)
     return lapack::qr(A);
 #else
     return seq::qr(A);

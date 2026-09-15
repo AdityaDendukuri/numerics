@@ -2,29 +2,29 @@
 /// @brief LU factorization with partial pivoting.
 #pragma once
 
-#include "core/types.hpp"
+#include "container/matrix.hpp"
 #include "core/debug.hpp"
+#include "core/policy.hpp"
+#include "core/types.hpp"
 #include "kernel/factor.hpp"
 #include "kernel/kernel.hpp"
+#include "lapack/lapack_wrapper.hpp"
+#include "linear/concepts.hpp"
+#include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
 #include <algorithm>
 #include <cmath>
+#include <ostream>
 #include <stdexcept>
 #include <string>
-#include "lapack/lapack_wrapper.hpp"
-#include "container/matrix.hpp"
-#include "core/policy.hpp"
-#include "linear/concepts.hpp"
-#include "linear/matrix_properties.hpp"
-#include <ostream>
 #include <vector>
 
 namespace num {
 
 /// @brief Packed factorization \f$PA=LU\f$.
 struct lu_result {
-    mat LU;             ///< Packed unit-lower and upper factors.
-    array<idx> piv;  ///< Zero-based row swaps applied during factorization.
+    mat LU;                ///< Packed unit-lower and upper factors.
+    array<idx> piv;        ///< Zero-based row swaps applied during factorization.
     bool singular = false; ///< True when a zero pivot was encountered.
 
     friend std::ostream &operator<<(std::ostream &os, const lu_result &r) {
@@ -45,14 +45,15 @@ namespace unsafe {
 
 /// @brief Factor \f$PA = LU\f$ without requiring the square-dimension invariant.
 /// @return `lu_result`: `.LU` (packed factors), `.piv` (row pivots), `.singular`.
-inline lu_result lu(const mat &A) { return num::lu(linear::sq_mat<mat>(A)); }
+inline lu_result lu(const mat &A) {
+    return num::lu(linear::sq_mat<mat>(A));
+}
 
 } // namespace unsafe
 
 /// @brief Rejects an untagged matrix at compile time.
 template <class M>
-requires matrix_space<M> && (!square_matrix_like<M>)
-lu_result lu(const M & /*untagged*/) {
+    requires matrix_space<M> && (!square_matrix_like<M>)lu_result lu(const M & /*untagged*/) {
     static_assert(square_matrix_like<M>,
                   "lu() requires a matrix carrying the square-dimension invariant. "
                   "Establish it with num::assume_square(A) or num::make_square(A). "
@@ -81,52 +82,21 @@ real lu_det(const lu_result &f);
 /// @brief Compute \f$A^{-1}\f$ by solving \f$AX=I\f$.
 mat lu_inv(const lu_result &f);
 
-
-
 namespace seq {
+/// Blocked partial-pivoting LU through `kernel::lu_factor_blocked`: panel
+/// factorization, then a `trsm` and a `gemm` per panel, so the bulk of the
+/// work runs at `gemm` speed. A pivot below `singular_tol` marks the result
+/// singular; the factorization still completes so the caller can inspect it.
 inline lu_result lu(const mat &A) {
     constexpr real singular_tol = 1e-14;
     const idx n = A.rows();
     lu_result f;
     f.LU = A;
     f.piv.resize(n);
-    f.singular = false;
-
-    mat &M = f.LU;
-    array<real> col_k(n);
-    array<real> lik_col(n);
-
-    for (idx k = 0; k < n; ++k) {
-        const idx len = n - k;
-        for (idx i = 0; i < len; ++i) {
-            col_k[i] = M(k + i, k);
-        }
-
-        const idx pivot_offset = kernel::argmax_abs(col_k.data(), len);
-        const idx pivot_row = k + pivot_offset;
-        f.piv[k] = pivot_row;
-
-        if (pivot_row != k) {
-            kernel::swap_rows(M.data(), n, k, pivot_row, n);
-        }
-
-        if (std::abs(M(k, k)) < singular_tol) {
-            f.singular = true;
-            continue;
-        }
-
-        const real inv_ukk = real(1) / M(k, k);
-        for (idx i = k + 1; i < n; ++i) {
-            M(i, k) *= inv_ukk;
-            lik_col[i - (k + 1)] = M(i, k);
-        }
-
-        if (k + 1 < n) {
-            kernel::ger(&M(k + 1, k + 1), n, lik_col.data(), &M(k, k + 1), -1.0, n - 1 - k,
-                             n - 1 - k);
-        }
+    f.singular = !kernel::lu_factor_blocked(f.LU.data(), f.piv.data(), n);
+    for (idx k = 0; k < n && !f.singular; ++k) {
+        f.singular = std::abs(f.LU(k, k)) < singular_tol;
     }
-
     return f;
 }
 } // namespace seq
@@ -164,7 +134,7 @@ inline lu_result lu(const mat &A) {
 } // namespace lapack
 
 inline lu_result lu(const linear::sq_mat<mat> &A) {
-#if defined(NUMERICS_HAS_LAPACK)
+#if defined(NUMERICS_LAPACK_DEFAULT)
     return lapack::lu(A.base());
 #else
     return seq::lu(A.base());
@@ -204,7 +174,7 @@ inline void lu_solve(const lu_result &f, const mat &B, mat &X) {
         throw std::invalid_argument("lu_solve: dimension mismatch");
     }
     X = B;
-#if defined(NUMERICS_HAS_LAPACK)
+#if defined(NUMERICS_LAPACK_DEFAULT)
     array<lapack_int> pivots(n);
     for (idx index = 0; index < n; ++index) {
         pivots[index] = static_cast<lapack_int>(f.piv[index] + 1);
@@ -217,28 +187,46 @@ inline void lu_solve(const lu_result &f, const mat &B, mat &X) {
         throw std::runtime_error("lu_solve: LAPACK block solve failed");
     }
 #else
+    // P B, then L Y = P B and U X = Y, both as blocked triangular solves.
+    const idx nrhs = B.cols();
     for (idx k = 0; k < n; ++k) {
         if (f.piv[k] != k) {
-            for (idx column = 0; column < B.cols(); ++column) {
-                std::swap(X(k, column), X(f.piv[k], column));
-            }
+            kernel::swap_rows(X.data(), nrhs, k, f.piv[k], nrhs);
         }
     }
-    for (idx row = 1; row < n; ++row) {
-        for (idx k = 0; k < row; ++k) {
-            for (idx column = 0; column < B.cols(); ++column) {
-                X(row, column) -= f.LU(row, k) * X(k, column);
-            }
-        }
+    kernel::trsm_unit_lower_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
+    kernel::trsm_upper_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
+#endif
+}
+
+/// Solve \f$A^T X = B\f$ for several right-hand sides from \f$PA = LU\f$:
+/// \f$A^T = U^T L^T P\f$, so \f$U^T Q = B\f$, \f$L^T Y = Q\f$, \f$X = P^T Y\f$.
+inline void lu_solve_transpose(const lu_result &f, const mat &B, mat &X) {
+    const idx n = f.LU.rows();
+    if (f.LU.cols() != n || B.rows() != n) {
+        throw std::invalid_argument("lu_solve_transpose: dimension mismatch");
     }
-    for (idx row = n; row-- > 0;) {
-        for (idx k = row + 1; k < n; ++k) {
-            for (idx column = 0; column < B.cols(); ++column) {
-                X(row, column) -= f.LU(row, k) * X(k, column);
-            }
-        }
-        for (idx column = 0; column < B.cols(); ++column) {
-            X(row, column) /= f.LU(row, row);
+    X = B;
+    const idx nrhs = B.cols();
+#if defined(NUMERICS_LAPACK_DEFAULT)
+    array<lapack_int> pivots(n);
+    for (idx index = 0; index < n; ++index) {
+        pivots[index] = static_cast<lapack_int>(f.piv[index] + 1);
+    }
+    const int info =
+        LAPACKE_dgetrs(LAPACK_ROW_MAJOR, 'T', static_cast<lapack_int>(n),
+                       static_cast<lapack_int>(nrhs), f.LU.data(), static_cast<lapack_int>(n),
+                       pivots.data(), X.data(), static_cast<lapack_int>(nrhs));
+    if (info != 0) {
+        throw std::runtime_error("lu_solve_transpose: LAPACK block solve failed");
+    }
+#else
+    kernel::trsm_upper_transpose_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
+    kernel::trsm_unit_lower_transpose_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
+    // X = P^T Y: undo the row interchanges in reverse order.
+    for (idx step = n; step-- > 0;) {
+        if (f.piv[step] != step) {
+            kernel::swap_rows(X.data(), nrhs, step, f.piv[step], nrhs);
         }
     }
 #endif
@@ -249,45 +237,15 @@ inline void lu_solve_transpose(const lu_result &f, const vec &b, vec &x) {
     if (f.LU.cols() != n || b.size() != n) {
         throw std::invalid_argument("lu_solve_transpose: dimension mismatch");
     }
-    vec work = b;
-    // U^T q = b.
+    mat column(n, 1, 0.0);
     for (idx row = 0; row < n; ++row) {
-        for (idx column = 0; column < row; ++column) {
-            work[row] -= f.LU(column, row) * work[column];
-        }
-        work[row] /= f.LU(row, row);
+        column(row, 0) = b[row];
     }
-    // L^T y = q; L has a unit diagonal.
-    for (idx row = n; row-- > 0;) {
-        for (idx column = row + 1; column < n; ++column) {
-            work[row] -= f.LU(column, row) * work[column];
-        }
-    }
-    // x = P^T y: undo row interchanges in reverse order.
-    for (idx step = n; step-- > 0;) {
-        if (f.piv[step] != step) {
-            std::swap(work[step], work[f.piv[step]]);
-        }
-    }
-    x = std::move(work);
-}
-
-inline void lu_solve_transpose(const lu_result &f, const mat &B, mat &X) {
-    const idx n = f.LU.rows();
-    if (f.LU.cols() != n || B.rows() != n) {
-        throw std::invalid_argument("lu_solve_transpose: dimension mismatch");
-    }
-    X = mat(n, B.cols(), 0.0);
-    vec right_hand_side(n, 0.0);
-    vec solution(n, 0.0);
-    for (idx column = 0; column < B.cols(); ++column) {
-        for (idx row = 0; row < n; ++row) {
-            right_hand_side[row] = B(row, column);
-        }
-        lu_solve_transpose(f, right_hand_side, solution);
-        for (idx row = 0; row < n; ++row) {
-            X(row, column) = solution[row];
-        }
+    mat solution;
+    lu_solve_transpose(f, column, solution);
+    x = vec(n, 0.0);
+    for (idx row = 0; row < n; ++row) {
+        x[row] = solution(row, 0);
     }
 }
 
@@ -321,14 +279,15 @@ inline real lu_det(const lu_result &f) {
 inline mat lu_inv(const lu_result &f) {
     const idx n = f.LU.rows();
     mat inv = f.LU;
-#if defined(NUMERICS_HAS_LAPACK)
+#if defined(NUMERICS_LAPACK_DEFAULT)
     array<lapack_int> ipiv(n);
-    for (idx i = 0; i < n; ++i) ipiv[i] = static_cast<lapack_int>(f.piv[i] + 1);
+    for (idx i = 0; i < n; ++i)
+        ipiv[i] = static_cast<lapack_int>(f.piv[i] + 1);
     LAPACKE_dgetri(LAPACK_ROW_MAJOR, static_cast<lapack_int>(n), inv.data(),
                    static_cast<lapack_int>(n), ipiv.data());
 #else
     array<real> work(n);
-    kernel::lu_invert(inv.data(), f.piv.data(), n, work.data());
+    kernel::lu_invert(inv.data(), f.LU.data(), f.piv.data(), n, work.data());
 #endif
     return inv;
 }

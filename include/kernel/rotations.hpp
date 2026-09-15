@@ -69,13 +69,17 @@ NUM_K_AINLINE void rot(T *NUM_K_RESTRICT x, T *NUM_K_RESTRICT y, T c, T s, idx n
 template <std::floating_point T>
 NUM_K_AINLINE void householder_vector(T *NUM_K_RESTRICT v, T &beta, const T *NUM_K_RESTRICT x,
                                       idx m) noexcept {
-    T sq = T(0);
+    // LAPACK's convention (dlarfg): a column whose tail is already zero needs
+    // no reflection, so beta = 0 and the column is left as it is. Without this
+    // a length-one column gets H = -1, which flips a sign in R that a Q built
+    // from the other reflectors never sees.
+    T tail = T(0);
     NUM_K_IVDEP
-    for (idx i = 0; i < m; ++i) {
-        sq += x[i] * x[i];
+    for (idx i = 1; i < m; ++i) {
+        tail += x[i] * x[i];
     }
-    const T norm_x = std::sqrt(sq);
-    if (norm_x < T(1e-15)) {
+    const T norm_x = std::sqrt(tail + (x[0] * x[0]));
+    if (tail == T(0) || norm_x < T(1e-15)) {
         beta = T(0);
         v[0] = T(1);
         return;
@@ -93,13 +97,36 @@ NUM_K_AINLINE void householder_vector(T *NUM_K_RESTRICT v, T &beta, const T *NUM
 }
 
 /// @brief Householder reflector for a strided column of a matrix.
+///
+/// The column is copied into `v` and the reflector formed there in place. Not
+/// a call to `householder_vector(v, beta, v, m)`: that passes one buffer as
+/// two `restrict` parameters, and at `-O3` the compiler is entitled to read
+/// `x[0]` after `v[0]` has been overwritten with 1.
 template <std::floating_point T>
 NUM_K_AINLINE void householder_vector_strided(T *NUM_K_RESTRICT v, T &beta,
                                               const T *NUM_K_RESTRICT A, idx lda, idx offset,
                                               idx m) noexcept {
-    for (idx i = 0; i < m; ++i)
+    T tail = T(0);
+    v[0] = A[(offset * lda) + offset];
+    for (idx i = 1; i < m; ++i) {
         v[i] = A[((offset + i) * lda) + offset];
-    householder_vector(v, beta, v, m);
+        tail += v[i] * v[i];
+    }
+    const T norm_x = std::sqrt(tail + (v[0] * v[0]));
+    if (tail == T(0) || norm_x < T(1e-15)) { // see householder_vector
+        beta = T(0);
+        v[0] = T(1);
+        return;
+    }
+    const T sign = (v[0] >= T(0)) ? T(1) : T(-1);
+    const T mu = v[0] + (sign * norm_x);
+    v[0] = T(1);
+    T v_sq = T(1);
+    for (idx i = 1; i < m; ++i) {
+        v[i] /= mu;
+        v_sq += v[i] * v[i];
+    }
+    beta = T(2) / v_sq;
 }
 
 template <std::floating_point T>

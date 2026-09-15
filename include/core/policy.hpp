@@ -19,7 +19,6 @@
 /// `if constexpr`; where it must not, it just names a namespace.
 #pragma once
 
-
 #include "core/types.hpp"
 #include <concepts>
 #include <cstdint>
@@ -40,6 +39,23 @@ inline constexpr bool has_blas =
 
 inline constexpr bool has_lapack =
 #if defined(NUMERICS_HAS_LAPACK)
+    true;
+#else
+    false;
+#endif
+
+// The default dense factorizations (`num::lu`, `num::cholesky`, `num::qr`,
+// `num::svd`) take LAPACK only when it sits on an optimized BLAS. The
+// configuration defines NUMERICS_LAPACK_REFERENCE when it found reference
+// LAPACK on reference BLAS, which the kernel outperforms several times over;
+// the `num::lapack::*` bindings remain callable by name either way.
+#if defined(NUMERICS_HAS_LAPACK) && !defined(NUMERICS_LAPACK_REFERENCE)
+#define NUMERICS_LAPACK_DEFAULT 1
+#endif
+
+/// True when the untagged dense factorizations resolve to LAPACK.
+inline constexpr bool lapack_default =
+#if defined(NUMERICS_LAPACK_DEFAULT)
     true;
 #else
     false;

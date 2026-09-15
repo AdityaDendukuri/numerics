@@ -23,19 +23,66 @@
 namespace num::omp {
 
 inline void matmul(const mat &A, const mat &B, mat &C) {
-    constexpr idx block_size = 64;
+    // The kernel's own blocked loop (see `kernel::gemm_config`), with the
+    // packed A slab and B panel shared by every thread rather than repacked
+    // per row tile. Threads split the packing by tile and the microkernel
+    // sweep by column tile, which is the BLIS "jr-loop" parallelization; the
+    // work-sharing barriers keep the shared panels consistent.
+    using cfg = kernel::gemm_config<real>;
     const idx m = A.rows(), k = A.cols(), n = B.cols();
     const real *ad = A.data();
     const real *bd = B.data();
     real *cd = C.data();
+    real *work = kernel::detail::gemm_static_workspace<real>();
+    real *Ap = work;
+    real *Bp =
+        work + (kernel::detail::round_up(std::min(m, cfg::mc), cfg::mr) * std::min(k, cfg::kc));
+
 #if defined(NUMERICS_HAS_OMP)
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel
 #endif
-    for (idx ii = 0; ii < m; ii += block_size) {
-        const idx rows = std::min(block_size, m - ii);
-        // The row tile is the only decision made here: `kernel::gemm` does its
-        // own register and cache blocking inside each tile.
-        kernel::gemm(cd + (ii * n), ad + (ii * k), bd, real(1), real(0), rows, n, k);
+    {
+#if defined(NUMERICS_HAS_OMP)
+#pragma omp for schedule(static)
+#endif
+        for (idx i = 0; i < m; ++i) {
+            kernel::fill(cd + (i * n), real(0), n);
+        }
+        for (idx jc = 0; jc < n; jc += cfg::nc) {
+            const idx nb = std::min(cfg::nc, n - jc);
+            for (idx pc = 0; pc < k; pc += cfg::kc) {
+                const idx kb = std::min(cfg::kc, k - pc);
+#if defined(NUMERICS_HAS_OMP)
+#pragma omp for schedule(static)
+#endif
+                for (idx j0 = 0; j0 < nb; j0 += cfg::nr) {
+                    kernel::detail::gemm_pack_b(Bp + (j0 * kb), bd + (pc * n) + jc + j0, n, idx{1},
+                                                kb, std::min(cfg::nr, nb - j0));
+                }
+                for (idx ic = 0; ic < m; ic += cfg::mc) {
+                    const idx mb = std::min(cfg::mc, m - ic);
+#if defined(NUMERICS_HAS_OMP)
+#pragma omp for schedule(static)
+#endif
+                    for (idx i0 = 0; i0 < mb; i0 += cfg::mr) {
+                        kernel::detail::gemm_pack_a(Ap + (i0 * kb), ad + ((ic + i0) * k) + pc, k,
+                                                    idx{1}, real(1), std::min(cfg::mr, mb - i0),
+                                                    kb);
+                    }
+#if defined(NUMERICS_HAS_OMP)
+#pragma omp for schedule(static)
+#endif
+                    for (idx jr = 0; jr < nb; jr += cfg::nr) {
+                        const idx cols = std::min(cfg::nr, nb - jr);
+                        for (idx ir = 0; ir < mb; ir += cfg::mr) {
+                            kernel::detail::gemm_micro(cd + ((ic + ir) * n) + jc + jr, n,
+                                                       Ap + (ir * kb), Bp + (jr * kb), kb,
+                                                       std::min(cfg::mr, mb - ir), cols);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

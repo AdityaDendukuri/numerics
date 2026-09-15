@@ -4,6 +4,7 @@
 
 #include "kernel/factor.hpp"
 #include "core/debug.hpp"
+#include "core/policy.hpp"
 #include "kernel/kernel.hpp"
 #include <cmath>
 #include <stdexcept>
@@ -92,7 +93,7 @@ inline cholesky_result cholesky_impl(const mat &A) {
 
     const idx n = A.rows();
 
-#if defined(NUMERICS_HAS_LAPACK)
+#if defined(NUMERICS_LAPACK_DEFAULT)
     mat L = A;
     int info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), L.data(),
                               static_cast<lapack_int>(n));
@@ -142,7 +143,7 @@ inline void cholesky_solve(const cholesky_result &f, const vec &b, vec &x) {
     }
 
     x = b;
-#if defined(NUMERICS_HAS_LAPACK)
+#if defined(NUMERICS_LAPACK_DEFAULT)
     const int info = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), 1,
                                     f.L.data(), static_cast<lapack_int>(n), x.data(), 1);
     if (info != 0) {
@@ -164,7 +165,7 @@ inline void cholesky_solve(const cholesky_result &f, const mat &B, mat &X) {
     }
 
     X = B;
-#if defined(NUMERICS_HAS_LAPACK)
+#if defined(NUMERICS_LAPACK_DEFAULT)
     const int info = LAPACKE_dpotrs(
         LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), static_cast<lapack_int>(B.cols()),
         f.L.data(), static_cast<lapack_int>(n), X.data(), static_cast<lapack_int>(B.cols()));

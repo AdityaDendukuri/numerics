@@ -160,6 +160,17 @@ cmake --build build/bench --target numerics_bench
 ./build/bench/benchmarks/numerics_bench
 ```
 
+### LAPACK
+
+The untagged dense factorizations (`num::lu`, `num::cholesky`, `num::qr`, `num::svd`) use
+LAPACK only when the LAPACK found is backed by an optimized BLAS. Configuration reads the
+library's shared-object dependencies to decide; reference LAPACK linked against reference
+BLAS (the Homebrew and Debian `lapack` packages) is several times slower than the
+library's own blocked kernel, so on such a machine the kernel stays the default and the
+LAPACK bindings remain available as `num::lapack::*`. Install OpenBLAS (`brew install
+openblas`, `apt install libopenblas-dev`) for an optimized LAPACKE, or set
+`-DNUMERICS_LAPACK_OPTIMIZED=ON|OFF` to override the check.
+
 ---
 
 ## License

@@ -180,7 +180,7 @@ inline svd_result svd(const mat &A_in) {
 } // namespace lapack
 
 inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
-#if defined(NUMERICS_HAS_LAPACK)
+#if defined(NUMERICS_LAPACK_DEFAULT)
     return lapack::svd(A_in);
 #else
     return seq::svd(A_in, tol, max_sweeps);

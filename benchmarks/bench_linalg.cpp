@@ -8,15 +8,15 @@
 ///   ./build/benchmarks/numerics_bench --benchmark_format=json > results.json
 ///
 /// Backends benchmarked:
-///   seq      -- naive serial C++ (baseline)
-///   blocked  -- cache-blocked; compiler auto-vectorizes
-///   simd     -- hand-written AVX2/NEON intrinsics
-///   blas     -- cblas_dgemm / cblas_dgemv / cblas_ddot (OpenBLAS / MKL)
-///   omp      -- OpenMP parallel
+///   Kernel   -- num::kernel::gemm on one thread: packed, blocked, register
+///               tiled, portable C++ (see kernel::gemm_config)
+///   Omp      -- the same loop with its packed panels shared across threads
+///   Blas     -- cblas_dgemm / cblas_dgemv / cblas_ddot (Accelerate, OpenBLAS, MKL)
 ///
-/// matmul also includes the intermediate optimisation steps
-/// (naive -> blocked -> register-blocked -> SIMD -> blas)
-/// to illustrate the progression of techniques.
+/// Read GFLOP/s against the machine: `Kernel` against one core's FMA peak,
+/// `Omp` against cores x that peak. A `Blas` figure above cores x peak means
+/// the vendor library is using a matrix coprocessor (Apple AMX, Intel AMX,
+/// ARM SME) that portable code cannot reach, and is not a software gap.
 
 #include "container/matrix_ops.hpp"
 #include "container/vector_ops.hpp"
@@ -50,9 +50,9 @@ static double matmul_flops(idx n) {
 
 // matmul  -- full backend comparison
 //
-// `Kernel` is the portable `num::kernel::gemm` on one thread: register-tiled
-// and cache-panelled, no intrinsics. It is the floor everything else is
-// measured against, and the thing `Omp` runs per row tile.
+// `Kernel` is the portable `num::kernel::gemm` on one thread: packed, blocked
+// and register-tiled, no intrinsics. It is the floor everything else is
+// measured against; `Omp` is the same loop with its packed panels shared.
 
 static void BM_Matmul_Kernel(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
@@ -66,23 +66,22 @@ static void BM_Matmul_Kernel(benchmark::State &state) {
                            benchmark::Counter::kIs1000);
     state.SetComplexityN(static_cast<int64_t>(n));
 }
-BENCHMARK(BM_Matmul_Kernel)->RangeMultiplier(2)->Range(64, 512)->Complexity();
+BENCHMARK(BM_Matmul_Kernel)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
 
-
-#define NUMERICS_BENCH_MATMUL(name, call)                                                        \
-    static void BM_Matmul_##name(benchmark::State &state) {                                      \
-        idx n = static_cast<idx>(state.range(0));                                                \
-        mat A(n, n, 1.0), B_mat(n, n, 1.0), C(n, n);                                          \
-        for (auto _ : state) {                                                                    \
-            call;                                                                                 \
-            benchmark::DoNotOptimize(C.data());                                                   \
+#define NUMERICS_BENCH_MATMUL(name, call)                                                          \
+    static void BM_Matmul_##name(benchmark::State &state) {                                        \
+        idx n = static_cast<idx>(state.range(0));                                                  \
+        mat A(n, n, 1.0), B_mat(n, n, 1.0), C(n, n);                                               \
+        for (auto _ : state) {                                                                     \
+            call;                                                                                  \
+            benchmark::DoNotOptimize(C.data());                                                    \
         }                                                                                          \
-        state.counters["GFLOP/s"] =                                                               \
+        state.counters["GFLOP/s"] =                                                                \
             benchmark::Counter(matmul_flops(n), benchmark::Counter::kIsIterationInvariantRate,     \
                                benchmark::Counter::kIs1000);                                       \
-        state.SetComplexityN(static_cast<int64_t>(n));                                            \
+        state.SetComplexityN(static_cast<int64_t>(n));                                             \
     }                                                                                              \
-    BENCHMARK(BM_Matmul_##name)->RangeMultiplier(2)->Range(64, 512)->Complexity()
+    BENCHMARK(BM_Matmul_##name)->RangeMultiplier(2)->Range(64, 1024)->Complexity()
 
 #if defined(NUMERICS_HAS_BLAS)
 NUMERICS_BENCH_MATMUL(Blas, blas::matmul(A, B_mat, C));
@@ -112,14 +111,14 @@ BENCHMARK(BM_Matmul_GPU)->RangeMultiplier(2)->Range(64, 512)->Complexity();
 
 // matvec  -- backend comparison
 
-#define NUMERICS_BENCH_MATVEC(name, call)                                                        \
-    static void BM_Matvec_##name(benchmark::State &state) {                                      \
-        idx n = static_cast<idx>(state.range(0));                                                \
-        mat A(n, n, 1.0);                                                                      \
-        vec x(n, 1.0), y(n);                                                                   \
-        for (auto _ : state) {                                                                    \
-            call;                                                                                 \
-            benchmark::DoNotOptimize(y.data());                                                   \
+#define NUMERICS_BENCH_MATVEC(name, call)                                                          \
+    static void BM_Matvec_##name(benchmark::State &state) {                                        \
+        idx n = static_cast<idx>(state.range(0));                                                  \
+        mat A(n, n, 1.0);                                                                          \
+        vec x(n, 1.0), y(n);                                                                       \
+        for (auto _ : state) {                                                                     \
+            call;                                                                                  \
+            benchmark::DoNotOptimize(y.data());                                                    \
         }                                                                                          \
         state.SetBytesProcessed(state.iterations() * static_cast<int64_t>(n * n + 2 * n) *         \
                                 sizeof(real));                                                     \
@@ -154,12 +153,12 @@ BENCHMARK(BM_Matvec_GPU)->RangeMultiplier(2)->Range(64, 2048);
 
 // dot product  -- backend comparison
 
-#define NUMERICS_BENCH_DOT(name, call)                                                           \
-    static void BM_Dot_##name(benchmark::State &state) {                                         \
-        vec x(static_cast<idx>(state.range(0)), 1.0);                                         \
-        vec y(static_cast<idx>(state.range(0)), 2.0);                                         \
-        for (auto _ : state) {                                                                    \
-            benchmark::DoNotOptimize(call);                                                       \
+#define NUMERICS_BENCH_DOT(name, call)                                                             \
+    static void BM_Dot_##name(benchmark::State &state) {                                           \
+        vec x(static_cast<idx>(state.range(0)), 1.0);                                              \
+        vec y(static_cast<idx>(state.range(0)), 2.0);                                              \
+        for (auto _ : state) {                                                                     \
+            benchmark::DoNotOptimize(call);                                                        \
         }                                                                                          \
         state.SetBytesProcessed(state.iterations() * state.range(0) * 2 * sizeof(real));           \
     }                                                                                              \
@@ -189,13 +188,13 @@ BENCHMARK(BM_Dot_GPU)->RangeMultiplier(4)->Range(1024, 1 << 20);
 
 // axpy  -- backend comparison
 
-#define NUMERICS_BENCH_AXPY(name, call)                                                          \
-    static void BM_Axpy_##name(benchmark::State &state) {                                        \
-        vec x(static_cast<idx>(state.range(0)), 1.0);                                         \
-        vec y(static_cast<idx>(state.range(0)), 2.0);                                         \
-        for (auto _ : state) {                                                                    \
-            call;                                                                                 \
-            benchmark::DoNotOptimize(y.data());                                                   \
+#define NUMERICS_BENCH_AXPY(name, call)                                                            \
+    static void BM_Axpy_##name(benchmark::State &state) {                                          \
+        vec x(static_cast<idx>(state.range(0)), 1.0);                                              \
+        vec y(static_cast<idx>(state.range(0)), 2.0);                                              \
+        for (auto _ : state) {                                                                     \
+            call;                                                                                  \
+            benchmark::DoNotOptimize(y.data());                                                    \
         }                                                                                          \
         state.SetBytesProcessed(state.iterations() * state.range(0) * 3 * sizeof(real));           \
     }                                                                                              \
