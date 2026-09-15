@@ -12,4 +12,5 @@
 #include "stochastic/boltzmann_table.hpp"
 #include "stochastic/categorical.hpp"
 #include "stochastic/mcmc.hpp"
+#include "stochastic/probe.hpp"
 #include "stochastic/rng.hpp"

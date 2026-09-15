@@ -4,6 +4,7 @@
 
 #include "core/types.hpp"
 #include "structures/containers/degree_queue.hpp"
+#include "stochastic/rng.hpp"
 #include "structures/graph/multigraph.hpp"
 #include <algorithm>
 #include <concepts>
@@ -76,7 +77,7 @@ inline void add_exact_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &
 }
 
 template <typename Weight = double, std::integral Index = num::idx,
-          typename Queue = structures::basic_degree_queue<Index>, typename Rng = std::mt19937_64>
+          typename Queue = structures::basic_degree_queue<Index>, typename Rng = rng64>
 inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
                           array<multi_edge<Weight, Index>> &nbr, Weight total_weight,
                           std::type_identity_t<Index> sample_limit, Rng &rng) {

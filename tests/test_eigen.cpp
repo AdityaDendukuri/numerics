@@ -158,8 +158,7 @@ TEST(PowerIteration, DominantEigenvalue) {
 TEST(Lanczos, TopKEigenvalues) {
     idx n = 50;
     mat A = make_sym(n);
-    auto op =
-        operators::make_op([&](const vec &v, vec &w) { matvec(A, v, w); }, n);
+    auto op = operators::make_op([&](const vec &v, vec &w) { matvec(A, v, w); }, n);
     auto r = lanczos(operators::assume_symmetric(op), 5, 1e-10);
     EXPECT_TRUE(r.converged);
 
@@ -198,4 +197,63 @@ TEST(Lanczos, DenseOperator) {
         }
         EXPECT_TRUE(found) << "Lanczos missed eigenvalue " << lref;
     }
+}
+
+TEST(Lanczos, InverseSquareRootAction) {
+    constexpr idx n = 12;
+    mat A(n, n, 0.0);
+    vec right_hand_side(n, 0.0);
+    for (idx j = 0; j < n; ++j) {
+        A(j, j) = 1.0 + static_cast<real>(j);
+        right_hand_side[j] = static_cast<real>(j + 1);
+    }
+
+    const auto result = inverse_sqrt_lanczos(operators::assume_spd(operators::dense_op(A)),
+                                             right_hand_side, 1e-12, n);
+
+    EXPECT_TRUE(result.converged);
+    for (idx j = 0; j < n; ++j)
+        EXPECT_NEAR(result.value[j], right_hand_side[j] / std::sqrt(A(j, j)), 1e-9);
+}
+
+TEST(Lanczos, InverseSquareRootOfZeroVector) {
+    mat A(4, 4, 0.0);
+    for (idx j = 0; j < 4; ++j)
+        A(j, j) = 2.0;
+
+    const auto result =
+        inverse_sqrt_lanczos(operators::assume_spd(operators::dense_op(A)), vec(4, 0.0));
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_EQ(result.steps, 0u);
+    EXPECT_EQ(norm(result.value), 0.0);
+}
+
+TEST(Lanczos, SquareRootAction) {
+    constexpr idx n = 12;
+    mat A(n, n, 0.0);
+    vec right_hand_side(n, 0.0);
+    for (idx j = 0; j < n; ++j) {
+        A(j, j) = 1.0 + static_cast<real>(j);
+        right_hand_side[j] = static_cast<real>(j + 1);
+    }
+
+    const auto result =
+        sqrt_lanczos(operators::assume_spd(operators::dense_op(A)), right_hand_side, 1e-12, n);
+
+    EXPECT_TRUE(result.converged);
+    for (idx j = 0; j < n; ++j)
+        EXPECT_NEAR(result.value[j], right_hand_side[j] * std::sqrt(A(j, j)), 1e-9);
+}
+
+TEST(Lanczos, SquareRootOfZeroVector) {
+    mat A(4, 4, 0.0);
+    for (idx j = 0; j < 4; ++j)
+        A(j, j) = 2.0;
+
+    const auto result = sqrt_lanczos(operators::assume_spd(operators::dense_op(A)), vec(4, 0.0));
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_EQ(result.steps, 0u);
+    EXPECT_EQ(norm(result.value), 0.0);
 }

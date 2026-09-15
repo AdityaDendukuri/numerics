@@ -167,7 +167,7 @@ mesh.add_edge(0u, 1u, 1.5f);
 
 ### Uniform Spanning Trees & Erdős–Rényi Networks
 ```cpp
-std::mt19937_64 rng(42);
+num::rng64 rng(42);
 
 // Uniform Spanning Tree generated via loop-erased random walk (Wilson's algorithm)
 num::graph tree = num::structures::random_spanning_tree(100, rng, /*min_w=*/0.5, /*max_w=*/2.0);

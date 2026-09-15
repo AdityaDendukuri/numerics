@@ -50,8 +50,7 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
     mat L = num::linear::dense_laplacian(G);
     operators::dense_op op(L);
     const space::zero_sum zero_sum_space{};
-    const auto laplacian_on_zero_sum =
-        num::assume<law::spd_on<space::zero_sum>>(op);
+    const auto laplacian_on_zero_sum = num::assume<law::spd_on<space::zero_sum>>(op);
 
     // 1. Exact factor PCG -> 1 step solve
     auto ac_G = to_approxchol_graph(G);
@@ -96,4 +95,36 @@ TEST(RandomMat, SparseMatrixConversion) {
     auto ac_prec = approxchol_preconditioner(L, 1, 42);
     EXPECT_EQ(ac_prec.rows(), 5u);
     EXPECT_EQ(ac_prec.cols(), 5u);
+}
+
+TEST(RandomMat, GroundedApproxCholExposesFactorActions) {
+    const std::vector<idx> rows{0, 0, 1, 1, 1, 2, 2};
+    const std::vector<idx> columns{0, 1, 0, 1, 2, 1, 2};
+    const std::vector<real> values{2.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0};
+    const spmat grounded = spmat::from_triplets(3, 3, rows, columns, values);
+    const auto factor = grounded_approxchol_factor(grounded, 2, 17);
+
+    mat C(3, 3, 0.0);
+    for (idx column = 0; column < 3; ++column) {
+        vec basis(3, 0.0);
+        basis[column] = 1.0;
+        const vec image = factor.apply_lower(basis);
+        for (idx row = 0; row < 3; ++row)
+            C(row, column) = image[row];
+    }
+
+    const vec x{0.5, -1.0, 2.0};
+    const vec Cx = matvec(C, x);
+    const vec recovered_lower = factor.solve_lower(Cx);
+    for (idx row = 0; row < 3; ++row)
+        EXPECT_NEAR(recovered_lower[row], x[row], 1e-12);
+
+    const vec b{1.0, 2.0, -0.5};
+    const vec upper_solution = factor.solve_upper(b);
+    for (idx column = 0; column < 3; ++column) {
+        real reconstructed = 0.0;
+        for (idx row = 0; row < 3; ++row)
+            reconstructed += C(row, column) * upper_solution[row];
+        EXPECT_NEAR(reconstructed, b[column], 1e-12);
+    }
 }
