@@ -13,6 +13,7 @@
 /// Kernels assume non-owning, caller-sized buffers and do not allocate.
 #pragma once
 
+#include "kernel/dense.hpp"
 #include "kernel/vector.hpp"
 #include <algorithm>
 #include <cmath>
@@ -133,30 +134,134 @@ template <std::floating_point T>
 NUM_K_AINLINE void householder_left(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K_RESTRICT v, T beta,
                                     idx m, idx n, T *NUM_K_RESTRICT work) noexcept;
 
-/// @brief Compact Householder QR factorization; reflector tails remain below R's diagonal.
+/// @brief Reflectors per block in `qr_factor_blocked`.
+inline constexpr idx qr_block = 32;
+
+/// @brief Workspace elements `qr_factor_blocked` needs for an `m x n` factorization.
+[[nodiscard]] constexpr idx qr_workspace(idx m, idx n) noexcept {
+    const idx nb = std::min(qr_block, std::min(m, n));
+    return (m * nb) + (nb * nb) + (nb * n) + m + n; // V, T, W, v, row work
+}
+
+/// @brief Form the compact-WY block reflector for columns `[k0, k0 + kb)`.
+///
+/// Reads the reflector tails stored below the diagonal of the factored panel
+/// and their scalars `tau`, and writes `V` (`(m - k0) x kb`, unit lower
+/// trapezoidal, row stride `kb`) and the upper triangular `T` (`kb x kb`)
+/// with \f$H_{k_0} \cdots H_{k_0 + k_b - 1} = I - V T V^T\f$.
 template <std::floating_point T>
-inline void qr_factor_blocked(T *NUM_K_RESTRICT A, idx lda, idx m, idx n, T *NUM_K_RESTRICT tau,
-                              T *NUM_K_RESTRICT v, T *NUM_K_RESTRICT work,
-                              idx block_size = 32) noexcept {
-    (void)block_size;
-    const idx r = std::min(m, n);
-    for (idx k = 0; k < r; ++k) {
-        const idx len = m - k;
-        T beta = T(0);
-        householder_vector_strided(v, beta, A, lda, k, len);
-        tau[k] = beta;
-        if (beta == T(0))
-            continue;
-        // R(k:m,k:n) <- H_k R(k:m,k:n).
-        householder_left(A + (k * lda) + k, lda, v, beta, len, n - k, work);
-        for (idx i = 1; i < len; ++i)
-            A[((k + i) * lda) + k] = v[i];
+inline void qr_form_block(T *NUM_K_RESTRICT V, T *NUM_K_RESTRICT Tm, const T *NUM_K_RESTRICT A,
+                          idx lda, idx m, idx k0, idx kb, const T *NUM_K_RESTRICT tau) noexcept {
+    const idx rows = m - k0;
+    for (idx i = 0; i < rows; ++i) {
+        for (idx j = 0; j < kb; ++j) {
+            V[(i * kb) + j] = i < j ? T(0) : (i == j ? T(1) : A[((k0 + i) * lda) + k0 + j]);
+        }
+    }
+    // T(0:j, j) = -tau_j * T(0:j, 0:j) * w with w = V(:, 0:j)^T V(:, j); T(j, j) = tau_j.
+    // Column j of T holds w while it is being consumed: entry i of the product
+    // reads T(i, i:j) from finished columns and w_k = T(k, j) for k >= i, none
+    // of which has been overwritten yet when row i is written.
+    for (idx j = 0; j < kb; ++j) {
+        const T tau_j = tau[k0 + j];
+        for (idx i = 0; i < j; ++i) {
+            T w = T(0);
+            for (idx r = j; r < rows; ++r) {
+                w += V[(r * kb) + i] * V[(r * kb) + j];
+            }
+            Tm[(i * kb) + j] = w;
+        }
+        for (idx i = 0; i < j; ++i) {
+            T sum = T(0);
+            for (idx k = i; k < j; ++k) {
+                sum += Tm[(i * kb) + k] * Tm[(k * kb) + j];
+            }
+            Tm[(i * kb) + j] = -tau_j * sum;
+        }
+        for (idx i = j + 1; i < kb; ++i) {
+            Tm[(i * kb) + j] = T(0);
+        }
+        Tm[(j * kb) + j] = tau_j;
     }
 }
 
-/// @brief Applies left Householder transformation \f$A \leftarrow (I - \beta \mathbf{v}
-/// \mathbf{v}^T) A\f$ on an \f$m \times n\f$ block with stride `lda`. `work` is a caller-provided
-/// scratch buffer of length at least \f$n\f$.
+/// @brief `C <- (I - V T' V^T) C` for a compact-WY block reflector.
+///
+/// `C` is `rows x cols`; `V` and `T` come from `qr_form_block` with `kb`
+/// reflectors; `T'` is `T^T` when `transpose` is set (the product
+/// \f$H_{k_b-1} \cdots H_0\f$, used when factoring) and `T` otherwise
+/// (\f$H_0 \cdots H_{k_b-1}\f$, used when forming Q). `W` holds `kb x cols`.
+template <std::floating_point T>
+inline void qr_apply_block_left(T *NUM_K_RESTRICT C, idx ldc, idx rows, idx cols,
+                                const T *NUM_K_RESTRICT V, const T *NUM_K_RESTRICT Tm, idx kb,
+                                bool transpose, T *NUM_K_RESTRICT W) noexcept {
+    // W <- V^T C.
+    gemm_transpose_left(W, cols, V, kb, C, ldc, T(1), T(0), rows, kb, cols);
+    // W <- T' W, in place: T is upper triangular, so rows are consumed in the
+    // order that keeps the unread ones intact.
+    if (transpose) {
+        for (idx i = kb; i-- > 0;) {
+            T *NUM_K_RESTRICT w_i = W + (i * cols);
+            scale(w_i, Tm[(i * kb) + i], cols);
+            for (idx k = 0; k < i; ++k) {
+                axpy(w_i, W + (k * cols), Tm[(k * kb) + i], cols);
+            }
+        }
+    } else {
+        for (idx i = 0; i < kb; ++i) {
+            T *NUM_K_RESTRICT w_i = W + (i * cols);
+            scale(w_i, Tm[(i * kb) + i], cols);
+            for (idx k = i + 1; k < kb; ++k) {
+                axpy(w_i, W + (k * cols), Tm[(i * kb) + k], cols);
+            }
+        }
+    }
+    // C <- C - V W.
+    gemm(C, ldc, V, kb, W, cols, T(-1), T(1), rows, cols, kb);
+}
+
+/// @brief Compact Householder QR factorization; reflector tails remain below R's diagonal.
+///
+/// Blocked: each panel of `qr_block` columns is factored by unblocked
+/// Householder reflections applied only within the panel, then the panel's
+/// reflectors are aggregated into one compact-WY block (`qr_form_block`) and
+/// applied to the trailing columns with two `gemm`s. `tau` receives
+/// `min(m, n)` scalars; `work` holds `qr_workspace(m, n)` elements.
+template <std::floating_point T>
+inline void qr_factor_blocked(T *NUM_K_RESTRICT A, idx lda, idx m, idx n, T *NUM_K_RESTRICT tau,
+                              T *NUM_K_RESTRICT work) noexcept {
+    const idx r = std::min(m, n);
+    const idx nb = std::min(qr_block, r);
+    T *NUM_K_RESTRICT V = work;
+    T *NUM_K_RESTRICT Tm = V + (m * nb);
+    T *NUM_K_RESTRICT W = Tm + (nb * nb);
+    T *NUM_K_RESTRICT v = W + (nb * n);
+    T *NUM_K_RESTRICT row_work = v + m;
+
+    for (idx k0 = 0; k0 < r; k0 += nb) {
+        const idx kb = std::min(nb, r - k0);
+        const idx panel_end = k0 + kb;
+        for (idx k = k0; k < panel_end; ++k) {
+            const idx len = m - k;
+            T beta = T(0);
+            householder_vector_strided(v, beta, A, lda, k, len);
+            tau[k] = beta;
+            if (beta != T(0)) {
+                // Panel columns only; the trailing block gets the aggregate below.
+                householder_left(A + (k * lda) + k, lda, v, beta, len, panel_end - k, row_work);
+            }
+            for (idx i = 1; i < len; ++i) {
+                A[((k + i) * lda) + k] = v[i];
+            }
+        }
+        if (panel_end < n) {
+            qr_form_block(V, Tm, A, lda, m, k0, kb, tau);
+            qr_apply_block_left(A + (k0 * lda) + panel_end, lda, m - k0, n - panel_end, V, Tm, kb,
+                                true, W);
+        }
+    }
+}
+
 template <std::floating_point T>
 NUM_K_AINLINE void householder_left(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K_RESTRICT v, T beta,
                                     idx m, idx n, T *NUM_K_RESTRICT work) noexcept {

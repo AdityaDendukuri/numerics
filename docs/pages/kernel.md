@@ -447,7 +447,8 @@ dimension, which made them silently wrong for any non-square shape.
 | rotations | `rotg(a, b, c, s)` / `rot(x, y, c, s, n)` | Construct and apply a Givens rotation |
 | rotations | `householder_vector(v, beta, x, n)` | Elementary reflector \f$(v, \beta)\f$ |
 | rotations | `householder_left`, `householder_right` | Apply \f$I - \beta v v^T\f$ from either side |
-| rotations | `qr_factor_blocked` | Compact Householder QR;
+| rotations | `qr_form_block`, `qr_apply_block_left` | Compact-WY block reflector \f$I - V T V^T\f$ from a factored panel, and its application by two `gemm`s |
+| rotations | `qr_factor_blocked` | Blocked compact Householder QR (panels of `qr_block` columns, trailing update through the block reflector);
 reflector tails stay below the diagonal of \f$R\f$ | | rotations | `jacobi_rotation` |
     One Jacobi sweep step | |
     krylov | `cg(A, x, b, n, work, tol, max_iter)` | Conjugate gradients over a callable \f$A\f$ |

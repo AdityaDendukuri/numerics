@@ -6,10 +6,23 @@ on:
   pull_request:
 
 jobs:
-  # ── Job 1: tests ─────────────────────────────────────────────────────────────
+  # ── Tests across compilers and dense-dispatch modes ─────────────────────────
+  #
+  # The dense factorizations resolve to LAPACK when an optimized one is found
+  # and to the kernel otherwise, so both paths have to execute, not just build:
+  # three latent kernel bugs once survived because every CI machine had LAPACK.
+  #
+  #   lapack  -- OpenBLAS installed; the default dispatch picks LAPACK.
+  #   kernel  -- same install, NUMERICS_LAPACK_OPTIMIZED=OFF forces the kernel.
+  #   bare    -- no BLAS, no LAPACK, no FFTW: the dependency-free build.
   tests:
-    name: Tests
+    name: ${{ matrix.compiler }} / ${{ matrix.mode }}
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        mode: [lapack, kernel, bare]
 
     steps:
       - uses: actions/checkout@v4
@@ -17,21 +30,61 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y --no-install-recommends \
-            libopenblas-dev \
-            liblapacke-dev \
-            libfftw3-dev
+          if [ "${{ matrix.mode }}" != "bare" ]; then
+            sudo apt-get install -y --no-install-recommends \
+              libopenblas-dev liblapacke-dev libfftw3-dev
+          fi
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            sudo apt-get install -y --no-install-recommends clang libomp-dev
+          fi
 
       - name: Configure
         run: |
+          case "${{ matrix.compiler }}" in
+            gcc)   export CC=gcc CXX=g++ ;;
+            clang) export CC=clang CXX=clang++ ;;
+          esac
+          case "${{ matrix.mode }}" in
+            lapack) extra="" ;;
+            kernel) extra="-DNUMERICS_LAPACK_OPTIMIZED=OFF" ;;
+            bare)   extra="-DNUMERICS_USE_BLAS=OFF -DNUMERICS_USE_LAPACK=OFF -DNUMERICS_USE_FFTW=OFF -DNUMERICS_USE_SUITESPARSE=OFF" ;;
+          esac
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DNUMERICS_BUILD_TESTS=ON \
             -DNUMERICS_BUILD_BENCHMARKS=OFF \
-            -DNUMERICS_BUILD_DOCS=OFF
+            -DNUMERICS_BUILD_DOCS=OFF \
+            $extra 2>&1 | tee configure.log
+          # The dispatch the tests will exercise, and the kernel's blocking.
+          grep -E "LAPACKE|SIMD|Cache" configure.log
 
       - name: Build
         run: cmake --build build --parallel $(nproc)
+
+      - name: Check the kernel's x86 configuration
+        # The runners are AVX2 machines with 32 KiB L1; the tile is the one the
+        # documentation promises, and every FMA in the microkernel fused.
+        run: |
+          cat > probe.cpp <<'CPP'
+          #include "kernel/dense.hpp"
+          #include <cstdio>
+          int main() {
+              using c = num::kernel::gemm_config<double>;
+              std::printf("tile %zux%zu kc %zu fma %d\n", c::mr, c::nr, c::kc, NUM_K_HAS_FMA);
+              return (c::mr == 6 && c::nr == 8 && NUM_K_HAS_FMA) ? 0 : 1;
+          }
+          CPP
+          ${CXX:-g++} -std=c++20 -O2 -mavx2 -mfma -Iinclude probe.cpp -o probe && ./probe
+          ${CXX:-g++} -std=c++20 -O3 -mavx2 -mfma -ffp-contract=fast -Iinclude -S -o gemm.s \
+            -x c++ - <<'CPP'
+          #include "kernel/dense.hpp"
+          void f(double *C, const double *A, const double *B, num::idx n) {
+              num::kernel::gemm(C, A, B, 1.0, 0.0, n, n, n);
+          }
+          CPP
+          fmas=$(grep -c vfmadd gemm.s || true)
+          echo "vfmadd instructions in gemm: $fmas"
+          test "$fmas" -ge 12
 
       - name: Run tests
         run: ./build/tests/numerics_tests --gtest_output=xml:test_results.xml
@@ -40,7 +93,46 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ github.sha }}
+          name: test-results-${{ matrix.compiler }}-${{ matrix.mode }}-${{ github.sha }}
           path: test_results.xml
           retention-days: 14
 
+  # ── Sanitizers on the dependency-free build ─────────────────────────────────
+  #
+  # The bare configuration is where every kernel path is the only path, so it
+  # is where a heap overflow or a restrict violation has nowhere to hide.
+  sanitize:
+    name: ${{ matrix.sanitizer }} / bare
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [asan, ubsan]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends clang libomp-dev
+
+      - name: Configure
+        run: |
+          CC=clang CXX=clang++ cmake -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DNUMERICS_SANITIZE=${{ matrix.sanitizer }} \
+            -DNUMERICS_BUILD_TESTS=ON \
+            -DNUMERICS_BUILD_BENCHMARKS=OFF \
+            -DNUMERICS_BUILD_DOCS=OFF \
+            -DNUMERICS_USE_BLAS=OFF -DNUMERICS_USE_LAPACK=OFF \
+            -DNUMERICS_USE_FFTW=OFF -DNUMERICS_USE_SUITESPARSE=OFF
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Run tests
+        env:
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+          ASAN_OPTIONS: detect_leaks=1
+        run: ./build/tests/numerics_tests

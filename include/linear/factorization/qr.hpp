@@ -2,16 +2,16 @@
 /// @brief QR factorization via Householder reflections.
 #pragma once
 
+#include "container/matrix.hpp"
+#include "core/policy.hpp"
 #include "core/types.hpp"
 #include "kernel/kernel.hpp"
+#include "lapack/lapack_wrapper.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "lapack/lapack_wrapper.hpp"
-#include "container/matrix.hpp"
-#include "core/policy.hpp"
 
 #include <ostream>
 
@@ -23,8 +23,8 @@ struct qr_result {
     mat R; ///< Upper-triangular factor.
 
     friend std::ostream &operator<<(std::ostream &os, const qr_result &r) {
-        os << "qr_result{ Q: " << r.Q.rows() << "x" << r.Q.cols()
-           << ", R: " << r.R.rows() << "x" << r.R.cols() << " }";
+        os << "qr_result{ Q: " << r.Q.rows() << "x" << r.Q.cols() << ", R: " << r.R.rows() << "x"
+           << r.R.cols() << " }";
         return os;
     }
 };
@@ -39,44 +39,39 @@ qr_result qr(const mat &A);
 /// @brief Solve \f$\min_x \|Ax-b\|_2\f$.
 void qr_solve(const qr_result &f, const vec &b, vec &x);
 
-
-
 namespace seq {
+/// Blocked Householder QR through `kernel::qr_factor_blocked`, with Q formed
+/// by applying the same compact-WY blocks, last to first, to the identity.
 inline qr_result qr(const mat &A) {
     const idx m = A.rows();
     const idx n = A.cols();
-    // Reflectors that can act on more than one row. The kernel still forms
-    // one per column up to min(m, n) -- the last of a square matrix is the
-    // identity -- so `tau` is sized for what it writes, not for `r`.
-    const idx r = (m > n) ? n : m - 1;
+    const idx r = std::min(m, n);
+    const idx nb = std::min(kernel::qr_block, r);
 
     mat R = A;
-    array<array<real>> vs(r);
-    array<real> betas(r, 0.0);
-    array<real> tau(std::min(m, n)), v(m), work(n);
-    // A <- compact Householder QR; reflector tails remain below R's diagonal.
-    kernel::qr_factor_blocked(R.data(), n, m, n, tau.data(), v.data(), work.data());
-    for (idx k = 0; k < r; ++k) {
-        const idx len = m - k;
-        betas[k] = tau[k];
-        vs[k].assign(len, real(0));
-        vs[k][0] = real(1);
-        for (idx i = 1; i < len; ++i) vs[k][i] = R((k + i), k);
-    }
+    // Sized for the wider of the two block applications: the factorization's
+    // trailing columns (up to n) and Q's trailing columns (up to m).
+    array<real> tau(r), work(kernel::qr_workspace(m, std::max(m, n)));
+    kernel::qr_factor_blocked(R.data(), n, m, n, tau.data(), work.data());
 
+    // Q = H_0 ... H_{r-1}: for each block from the last, Q[k0:, k0:] <- B_k Q[k0:, k0:].
+    // Entries of Q left of column k0 in those rows are still zero, so they
+    // are skipped rather than multiplied.
     mat Q(m, m, real(0));
     for (idx i = 0; i < m; ++i) {
         Q(i, i) = real(1);
     }
-
-    for (idx k = r; k-- > 0;) {
-        if (betas[k] == 0.0) {
-            continue;
+    real *V = work.data();
+    real *T = V + (m * nb);
+    real *W = T + (nb * nb);
+    idx k0 = r == 0 ? 0 : ((r - 1) / nb) * nb;
+    for (idx blocks = (r + nb - 1) / nb; blocks-- > 0; k0 -= nb) {
+        const idx kb = std::min(nb, r - k0);
+        kernel::qr_form_block(V, T, R.data(), n, m, k0, kb, tau.data());
+        kernel::qr_apply_block_left(&Q(k0, k0), m, m - k0, m - k0, V, T, kb, false, W);
+        if (k0 == 0) {
+            break;
         }
-        const array<real> &v = vs[k];
-        const idx len = static_cast<idx>(v.size());
-        array<real> work(m - k);
-        kernel::householder_left(&Q(k, k), m, v.data(), betas[k], len, m - k, work.data());
     }
 
     for (idx i = 1; i < m; ++i) {
@@ -84,7 +79,6 @@ inline qr_result qr(const mat &A) {
             R(i, j) = real(0);
         }
     }
-
     return {std::move(Q), std::move(R)};
 }
 } // namespace seq

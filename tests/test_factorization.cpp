@@ -1,5 +1,5 @@
-#include "linear/factorization/factorization.hpp"
 #include "container/matrix_ops.hpp"
+#include "linear/factorization/factorization.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/sparse/klu.hpp"
 #include "linear/sparse/sparse.hpp"
@@ -51,7 +51,7 @@ TEST(KLU, SparseFactorAndBlockSolve) {
     }
 
     const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
-                                               {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
+                                        {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
     klu_factorization factor(A);
     vec b{15.0, 10.0, 10.0};
     vec x;
@@ -238,7 +238,7 @@ TEST(UMFPACK, SparseFactorAndSolve) {
         GTEST_SKIP() << "SuiteSparse UMFPACK is not available";
     }
     const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
-                                               {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
+                                        {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
     umfpack_factor factor(A);
     vec x;
     factor.solve(vec{15.0, 10.0, 10.0}, x);
@@ -536,6 +536,35 @@ TEST(QR, RIsUpperTriangular) {
         for (idx j = 0; j < std::min(i, f.R.cols()); ++j) {
             EXPECT_NEAR(f.R(i, j), 0.0, 1e-10);
         }
+    }
+}
+
+// The kernel factors in panels of `qr_block` columns and aggregates each
+// panel into a compact-WY reflector; these shapes cross the panel boundary in
+// both dimensions, square, tall and wide, and check Q against R on every one.
+TEST(QR, BlockedShapesReconstructAndStayOrthogonal) {
+    struct Shape {
+        idx m, n;
+    };
+    for (const Shape s : {Shape{33, 33}, Shape{64, 64}, Shape{65, 65}, Shape{100, 70},
+                          Shape{70, 100}, Shape{130, 40}}) {
+        mat A(s.m, s.n, 0.0);
+        for (idx i = 0; i < s.m; ++i) {
+            for (idx j = 0; j < s.n; ++j) {
+                A(i, j) = std::sin(0.37 * static_cast<real>(i + 1) * static_cast<real>(j + 2)) +
+                          (i == j ? 2.0 : 0.0);
+            }
+        }
+        auto f = qr(A);
+        ASSERT_EQ(f.Q.rows(), s.m);
+        ASSERT_EQ(f.Q.cols(), s.m);
+        expect_orthogonal(f.Q, 1e-9);
+        for (idx i = 0; i < f.R.rows(); ++i) {
+            for (idx j = 0; j < std::min(i, f.R.cols()); ++j) {
+                EXPECT_EQ(f.R(i, j), 0.0) << "R below diagonal at " << i << "," << j;
+            }
+        }
+        expect_qr_product(f.Q, f.R, A, 1e-9);
     }
 }
 

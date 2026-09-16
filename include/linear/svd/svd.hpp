@@ -4,33 +4,32 @@
 
 #include "container/matrix.hpp"
 #include "container/matrix_ops.hpp"
-#include "lapack/lapack_wrapper.hpp"
 #include "container/util/math.hpp"
 #include "container/vector.hpp"
 #include "core/policy.hpp"
+#include "lapack/lapack_wrapper.hpp"
 #include "linear/factorization/qr.hpp"
 #include <algorithm>
 #include <cmath>
-#include <stdexcept>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 
 namespace num {
 
 /// Singular value decomposition and convergence metadata.
 struct svd_result {
-    mat U;               ///< Left singular vectors.
-    vec S;               ///< Singular values in descending order.
-    mat Vt;              ///< Transposed right singular vectors.
+    mat U;                  ///< Left singular vectors.
+    vec S;                  ///< Singular values in descending order.
+    mat Vt;                 ///< Transposed right singular vectors.
     idx sweeps = 0;         ///< Jacobi sweeps for the fallback implementation.
     bool converged = false; ///< Whether the requested tolerance was met.
 
     friend std::ostream &operator<<(std::ostream &os, const svd_result &r) {
         os << "svd_result{ rank: " << r.S.size()
-           << ", converged: " << (r.converged ? "true" : "false")
-           << ", sweeps: " << r.sweeps
-           << ", U: " << r.U.rows() << "x" << r.U.cols()
-           << ", Vt: " << r.Vt.rows() << "x" << r.Vt.cols() << " }";
+           << ", converged: " << (r.converged ? "true" : "false") << ", sweeps: " << r.sweeps
+           << ", U: " << r.U.rows() << "x" << r.U.cols() << ", Vt: " << r.Vt.rows() << "x"
+           << r.Vt.cols() << " }";
         return os;
     }
 };
@@ -43,7 +42,8 @@ struct svd_result {
 /// @param A Input \f$m \times n\f$ dense matrix.
 /// @param tol Orthogonality tolerance for Jacobi sweeps (default: 1e-12).
 /// @param max_sweeps Maximum one-sided Jacobi sweeps (default: 100).
-/// @return `svd_result` with left singular vectors \f$U\f$, singular values \f$\Sigma\f$, and transposed right vectors \f$V^T\f$.
+/// @return `svd_result` with left singular vectors \f$U\f$, singular values \f$\Sigma\f$, and
+/// transposed right vectors \f$V^T\f$.
 ///
 /// Picks LAPACK (`dgesdd`) if configured, else the in-tree one-sided
 /// Hestenes-Jacobi sweeps. To force one explicitly, call
@@ -51,10 +51,12 @@ struct svd_result {
 /// @see svd_truncated, eig_sym, qr
 svd_result svd(const mat &A, real tol = 1e-12, idx max_sweeps = 100);
 
-/// @brief Compute randomized truncated rank-\f$k\f$ SVD approximation \f$A \approx U_k \Sigma_k V_k^T\f$.
+/// @brief Compute randomized truncated rank-\f$k\f$ SVD approximation \f$A \approx U_k \Sigma_k
+/// V_k^T\f$.
 ///
 /// Uses Gaussian random test matrices and QR range-finder to project \f$A\f$ into a small
-/// subspace of dimension \f$l = k + \text{oversampling}\f$, achieving near-optimal low-rank reconstruction.
+/// subspace of dimension \f$l = k + \text{oversampling}\f$, achieving near-optimal low-rank
+/// reconstruction.
 ///
 /// @param A Input \f$m \times n\f$ dense matrix.
 /// @param k Target low-rank approximation dimension (\f$0 < k \le \min(m, n)\f$).
@@ -66,50 +68,69 @@ svd_result svd(const mat &A, real tol = 1e-12, idx max_sweeps = 100);
 svd_result svd_truncated(const mat &A, idx k, idx oversampling = 10, rng_state *rng = nullptr);
 
 namespace seq {
+/// One-sided Jacobi (Hestenes) SVD on the transpose.
+///
+/// The algorithm orthogonalizes the columns of A by plane rotations. Columns
+/// of a row-major matrix are strided, so the work is done on rows of
+/// \f$A^T\f$ instead, where every dot product and rotation is contiguous;
+/// column norms are computed once per sweep and carried through the
+/// rotations rather than recomputed per pair. Jacobi is slower than a
+/// bidiagonalization-based SVD by a constant factor but computes small
+/// singular values to high relative accuracy, and it is what the library
+/// falls back to when no optimized LAPACK is available.
 inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
     constexpr real tiny = 1e-300;
-    idx m = A_in.rows(), n = A_in.cols();
-    idx r = std::min(m, n);
+    const idx m = A_in.rows(), n = A_in.cols();
+    const idx r = std::min(m, n);
 
-    mat A = A_in;
-    mat V(n, n, 0.0);
+    // Rows of `columns` are the columns of A; rows of `rotations` accumulate V^T.
+    mat columns(n, m, 0.0);
+    for (idx i = 0; i < m; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            columns(j, i) = A_in(i, j);
+        }
+    }
+    mat rotations(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
-        V(i, i) = 1.0;
+        rotations(i, i) = 1.0;
     }
 
+    vec norms(r, 0.0);
     idx sweeps = 0;
     bool converged = false;
-
     for (idx sweep = 0; sweep < max_sweeps; ++sweep) {
+        for (idx p = 0; p < r; ++p) {
+            norms[p] = kernel::norm_sq(&columns(p, 0), m);
+        }
         real max_cos = 0;
-        for (idx p = 0; p < r - 1; ++p) {
+        for (idx p = 0; p + 1 < r; ++p) {
             for (idx q = p + 1; q < r; ++q) {
-                const real alpha = kernel::column_dot(A.data(), n, m, p, p);
-                const real beta = kernel::column_dot(A.data(), n, m, q, q);
-                const real gamma = kernel::column_dot(A.data(), n, m, p, q);
+                const real alpha = norms[p];
+                const real beta = norms[q];
                 if (alpha < tiny || beta < tiny) {
                     continue;
                 }
-
-                real cos_pq = std::abs(gamma) / std::sqrt(alpha * beta);
+                const real gamma = kernel::dot(&columns(p, 0), &columns(q, 0), m);
+                const real cos_pq = std::abs(gamma) / std::sqrt(alpha * beta);
                 max_cos = std::max(max_cos, cos_pq);
-
                 if (cos_pq < tol) {
                     continue;
                 }
 
-                real zeta = (beta - alpha) / (2.0 * gamma);
-                real t =
+                const real zeta = (beta - alpha) / (2.0 * gamma);
+                const real t =
                     std::copysign(1.0, zeta) / (std::abs(zeta) + std::sqrt(1.0 + (zeta * zeta)));
-                real c = 1.0 / std::sqrt(1.0 + (t * t));
-                real s = c * t;
+                const real c = 1.0 / std::sqrt(1.0 + (t * t));
+                const real s = c * t;
 
-                // [A_p A_q] <- [A_p A_q] J(c,s).
-                kernel::rotate_columns(A.data(), n, m, p, q, c, s);
-                kernel::rotate_columns(V.data(), n, n, p, q, c, s);
+                // [a_p a_q] <- [a_p a_q] J(c, s): a_p' = c a_p - s a_q, a_q' = s a_p + c a_q,
+                // which is `rot` with the sign of s flipped. The same rotation on V.
+                kernel::rot(&columns(p, 0), &columns(q, 0), c, -s, m);
+                kernel::rot(&rotations(p, 0), &rotations(q, 0), c, -s, n);
+                norms[p] = alpha - (t * gamma);
+                norms[q] = beta + (t * gamma);
             }
         }
-
         ++sweeps;
         if (max_cos < tol) {
             converged = true;
@@ -117,40 +138,36 @@ inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
         }
     }
 
-    vec S(r);
-    mat U(m, r, 0.0);
+    vec S(r, 0.0);
     for (idx j = 0; j < r; ++j) {
-        const real nrm = kernel::norm_sq_strided(A.data() + j, n, m);
-        S[j] = std::sqrt(nrm);
-        if (S[j] > tiny) {
-            // U[:,j] <- A[:,j] / sigma_j.
-            kernel::scale_copy_strided(U.data() + j, r, A.data() + j, n, real(1) / S[j], m);
-        }
+        S[j] = std::sqrt(kernel::norm_sq(&columns(j, 0), m));
     }
 
-    for (idx i = 0; i < r - 1; ++i) {
-        idx max_j = i;
-        for (idx j = i + 1; j < r; ++j) {
-            if (S[j] > S[max_j]) {
-                max_j = j;
+    // Descending order: permute the rows of `columns` and `rotations` together.
+    array<idx> order(r);
+    for (idx j = 0; j < r; ++j) {
+        order[j] = j;
+    }
+    std::stable_sort(order.begin(), order.end(), [&](idx a, idx b) { return S[a] > S[b]; });
+
+    mat U(m, r, 0.0);
+    mat Vt(r, n, 0.0);
+    vec sorted(r, 0.0);
+    for (idx k = 0; k < r; ++k) {
+        const idx j = order[k];
+        sorted[k] = S[j];
+        if (S[j] > tiny) {
+            const real inverse = real(1) / S[j];
+            for (idx i = 0; i < m; ++i) {
+                U(i, k) = columns(j, i) * inverse;
             }
         }
-
-        if (max_j != i) {
-            std::swap(S[i], S[max_j]);
-            // [U_i U_j] <- [U_j U_i], [V_i V_j] <- [V_j V_i].
-            kernel::swap_strided(U.data() + i, r, U.data() + max_j, r, m);
-            kernel::swap_strided(V.data() + i, n, V.data() + max_j, n, n);
+        for (idx i = 0; i < n; ++i) {
+            Vt(k, i) = rotations(j, i);
         }
     }
 
-    mat vt(r, n, 0.0);
-    // V^T <- transpose(V[:,0:r]).
-    for (idx i = 0; i < r; ++i) {
-        kernel::copy_strided(vt.data() + (i * n), 1, V.data() + i, n, n);
-    }
-
-    return {U, S, vt, sweeps, converged};
+    return {std::move(U), std::move(sorted), std::move(Vt), sweeps, converged};
 }
 } // namespace seq
 
@@ -215,15 +232,15 @@ inline svd_result svd_truncated(const mat &A, idx k, idx oversampling, rng_state
 
     mat B(l, n, 0.0);
     // B <- Q_l^T*A
-    kernel::gemm_transpose_left(B.data(), B.cols(), Q.data(), Q.cols(), A.data(), A.cols(),
-                                     real(1), real(0), m, l, n);
+    kernel::gemm_transpose_left(B.data(), B.cols(), Q.data(), Q.cols(), A.data(), A.cols(), real(1),
+                                real(0), m, l, n);
 
     svd_result small = svd(B);
 
     mat U(m, k, 0.0);
     // U_k <- Q_l*U(B)[:,0:k]
-    kernel::gemm(U.data(), U.cols(), Q.data(), Q.cols(), small.U.data(), small.U.cols(),
-                      real(1), real(0), m, k, l);
+    kernel::gemm(U.data(), U.cols(), Q.data(), Q.cols(), small.U.data(), small.U.cols(), real(1),
+                 real(0), m, k, l);
 
     vec S(k);
     // sigma_k <- sigma(B)[0:k]
