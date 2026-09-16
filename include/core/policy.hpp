@@ -53,7 +53,19 @@ inline constexpr bool has_lapack =
 #define NUMERICS_LAPACK_DEFAULT 1
 #endif
 
-/// True when the untagged dense factorizations resolve to LAPACK.
+/// Order above which the untagged LU takes LAPACK rather than the kernel.
+///
+/// Measured against OpenBLAS through LAPACKE's row-major interface on an
+/// M1 Pro: the kernel's blocked LU is faster up to about n = 700 and the
+/// threaded dgetrf pulls ahead past that. Cholesky never crosses over (the
+/// kernel is faster at every size measured, to n = 1536), and the triangular
+/// solves are 2-10x faster in the kernel at every size -- dgetrs/dpotrs on a
+/// threaded BLAS spend tens of microseconds waking the pool for an 8x8
+/// system -- so those never take LAPACK by default. SVD and the LU inverse
+/// do, where LAPACK's algorithm is the better one.
+inline constexpr idx lapack_factor_threshold = 768;
+
+/// True when the untagged SVD, LU inverse and large LU resolve to LAPACK.
 inline constexpr bool lapack_default =
 #if defined(NUMERICS_LAPACK_DEFAULT)
     true;

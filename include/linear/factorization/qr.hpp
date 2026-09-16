@@ -127,12 +127,10 @@ inline qr_result qr(const mat &A) {
 }
 } // namespace lapack
 
+/// The blocked kernel QR; it measured faster than dgeqrf + dorgqr through
+/// LAPACKE at every size tried, and `num::lapack::qr` remains callable by name.
 inline qr_result qr(const mat &A) {
-#if defined(NUMERICS_LAPACK_DEFAULT)
-    return lapack::qr(A);
-#else
     return seq::qr(A);
-#endif
 }
 
 inline void qr_solve(const qr_result &f, const vec &b, vec &x) {

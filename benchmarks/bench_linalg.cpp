@@ -13,6 +13,10 @@
 ///   Omp      -- the same loop with its packed panels shared across threads
 ///   Blas     -- cblas_dgemm / cblas_dgemv / cblas_ddot (Accelerate, OpenBLAS, MKL)
 ///
+/// Pin the vendor's threads to compare software rather than core counts:
+/// OMP_NUM_THREADS=1 for an OpenMP-built OpenBLAS (Homebrew's is; it ignores
+/// OPENBLAS_NUM_THREADS), VECLIB_MAXIMUM_THREADS=1 for Accelerate.
+///
 /// Read GFLOP/s against the machine: `Kernel` against one core's FMA peak,
 /// `Omp` against cores x that peak. A `Blas` figure above cores x peak means
 /// the vendor library is using a matrix coprocessor (Apple AMX, Intel AMX,

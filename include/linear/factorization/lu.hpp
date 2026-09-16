@@ -133,12 +133,15 @@ inline lu_result lu(const mat &A) {
 }
 } // namespace lapack
 
+/// Blocked kernel LU up to `lapack_factor_threshold`, LAPACK's dgetrf beyond
+/// it when an optimized LAPACK is configured.
 inline lu_result lu(const linear::sq_mat<mat> &A) {
 #if defined(NUMERICS_LAPACK_DEFAULT)
-    return lapack::lu(A.base());
-#else
-    return seq::lu(A.base());
+    if (A.base().rows() > lapack_factor_threshold) {
+        return lapack::lu(A.base());
+    }
 #endif
+    return seq::lu(A.base());
 }
 
 inline void lu_solve(const lu_result &f, const vec &b, vec &x) {
@@ -174,20 +177,9 @@ inline void lu_solve(const lu_result &f, const mat &B, mat &X) {
         throw std::invalid_argument("lu_solve: dimension mismatch");
     }
     X = B;
-#if defined(NUMERICS_LAPACK_DEFAULT)
-    array<lapack_int> pivots(n);
-    for (idx index = 0; index < n; ++index) {
-        pivots[index] = static_cast<lapack_int>(f.piv[index] + 1);
-    }
-    const int info =
-        LAPACKE_dgetrs(LAPACK_ROW_MAJOR, 'N', static_cast<lapack_int>(n),
-                       static_cast<lapack_int>(B.cols()), f.LU.data(), static_cast<lapack_int>(n),
-                       pivots.data(), X.data(), static_cast<lapack_int>(B.cols()));
-    if (info != 0) {
-        throw std::runtime_error("lu_solve: LAPACK block solve failed");
-    }
-#else
     // P B, then L Y = P B and U X = Y, both as blocked triangular solves.
+    // Never dgetrs: the kernel solve measured faster at every size, and on a
+    // threaded BLAS the LAPACK call pays a thread wake-up per solve.
     const idx nrhs = B.cols();
     for (idx k = 0; k < n; ++k) {
         if (f.piv[k] != k) {
@@ -196,7 +188,6 @@ inline void lu_solve(const lu_result &f, const mat &B, mat &X) {
     }
     kernel::trsm_unit_lower_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
     kernel::trsm_upper_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
-#endif
 }
 
 /// Solve \f$A^T X = B\f$ for several right-hand sides from \f$PA = LU\f$:
@@ -208,19 +199,6 @@ inline void lu_solve_transpose(const lu_result &f, const mat &B, mat &X) {
     }
     X = B;
     const idx nrhs = B.cols();
-#if defined(NUMERICS_LAPACK_DEFAULT)
-    array<lapack_int> pivots(n);
-    for (idx index = 0; index < n; ++index) {
-        pivots[index] = static_cast<lapack_int>(f.piv[index] + 1);
-    }
-    const int info =
-        LAPACKE_dgetrs(LAPACK_ROW_MAJOR, 'T', static_cast<lapack_int>(n),
-                       static_cast<lapack_int>(nrhs), f.LU.data(), static_cast<lapack_int>(n),
-                       pivots.data(), X.data(), static_cast<lapack_int>(nrhs));
-    if (info != 0) {
-        throw std::runtime_error("lu_solve_transpose: LAPACK block solve failed");
-    }
-#else
     kernel::trsm_upper_transpose_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
     kernel::trsm_unit_lower_transpose_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
     // X = P^T Y: undo the row interchanges in reverse order.
@@ -229,7 +207,6 @@ inline void lu_solve_transpose(const lu_result &f, const mat &B, mat &X) {
             kernel::swap_rows(X.data(), nrhs, step, f.piv[step], nrhs);
         }
     }
-#endif
 }
 
 inline void lu_solve_transpose(const lu_result &f, const vec &b, vec &x) {

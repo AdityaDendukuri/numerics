@@ -2,24 +2,24 @@
 /// @brief Dense Cholesky factorization for SPD matrices.
 #pragma once
 
-#include "kernel/factor.hpp"
-#include "core/debug.hpp"
-#include "core/policy.hpp"
-#include "kernel/kernel.hpp"
-#include <cmath>
-#include <stdexcept>
-#include <vector>
-#include "lapack/lapack_wrapper.hpp"
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
+#include "core/debug.hpp"
+#include "core/policy.hpp"
+#include "kernel/factor.hpp"
+#include "kernel/kernel.hpp"
+#include "lapack/lapack_wrapper.hpp"
 #include "linear/concepts.hpp"
+#include <cmath>
 #include <ostream>
+#include <stdexcept>
+#include <vector>
 
 namespace num {
 
 /// @brief Lower-triangular factorization \f$A=LL^T\f$.
 struct cholesky_result {
-    mat L;             ///< Lower-triangular factor when successful.
+    mat L;                ///< Lower-triangular factor when successful.
     bool success = false; ///< False when the input is not positive definite.
 
     friend std::ostream &operator<<(std::ostream &os, const cholesky_result &r) {
@@ -55,8 +55,8 @@ cholesky_result cholesky(const mat &A);
 /// diagnostic rather than to run: a warning can be silenced by an unrelated
 /// `-Wno-` flag, whereas this cannot compile.
 template <class M>
-requires matrix_space<M> && (!spd_matrix_like<M>)
-cholesky_result cholesky(const M & /*untagged*/) {
+    requires matrix_space<M> &&
+    (!spd_matrix_like<M>)cholesky_result cholesky(const M & /*untagged*/) {
     static_assert(spd_matrix_like<M>,
                   "cholesky() requires a matrix carrying the SPD invariant. "
                   "Establish it with num::assume_spd(A) (asserted, sampled at runtime) or "
@@ -81,8 +81,37 @@ void cholesky_update(cholesky_result &factor, const vec &update);
 /// Replace A=LL^T by A-x*x^T in O(n^2), or throw if it is not SPD.
 void cholesky_downdate(cholesky_result &factor, const vec &update);
 
+namespace lapack {
 
+/// Cholesky through LAPACKE's dpotrf. Not the default: the kernel's blocked
+/// factorization measured faster at every size tried (see
+/// `lapack_factor_threshold`), but the binding stays callable by name.
+inline cholesky_result cholesky(const mat &A) {
+    if (A.rows() != A.cols()) {
+        throw std::invalid_argument("cholesky: matrix must be square");
+    }
+#if defined(NUMERICS_HAS_LAPACK)
+    const idx n = A.rows();
+    mat L = A;
+    int info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), L.data(),
+                              static_cast<lapack_int>(n));
+    if (info != 0) {
+        return {std::move(L), false};
+    }
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = i + 1; j < n; ++j) {
+            L(i, j) = 0.0;
+        }
+    }
+    return {std::move(L), true};
+#else
+    mat L = A;
+    const bool ok = kernel::cholesky_blocked(L.data(), A.rows());
+    return {std::move(L), ok};
+#endif
+}
 
+} // namespace lapack
 
 namespace detail {
 
@@ -90,33 +119,12 @@ inline cholesky_result cholesky_impl(const mat &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("cholesky: matrix must be square");
     }
-
-    const idx n = A.rows();
-
-#if defined(NUMERICS_LAPACK_DEFAULT)
+    // The blocked kernel (kernel/factor.hpp): panel solve and trailing update
+    // through the packed trsm/syrk, faster than dpotrf through LAPACKE at every
+    // size measured.
     mat L = A;
-    int info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), L.data(),
-                              static_cast<lapack_int>(n));
-    if (info != 0) {
-        return {std::move(L), false};
-    }
-
-    // Zero out upper triangle for lower triangular result L
-    for (idx i = 0; i < n; ++i) {
-        for (idx j = i + 1; j < n; ++j) {
-            L(i, j) = 0.0;
-        }
-    }
-
-    return {std::move(L), true};
-#else
-    // The sequential factorization itself lives in kernel/factor.hpp as a
-    // raw-pointer kernel, so consuming projects can use it without this container.
-    mat L = A;
-    // A = L*L^T; blocked panels lower the cost of the trailing update.
-    const bool ok = kernel::cholesky_blocked(L.data(), n);
+    const bool ok = kernel::cholesky_blocked(L.data(), A.rows());
     return {std::move(L), ok};
-#endif
 }
 
 } // namespace detail
@@ -143,16 +151,8 @@ inline void cholesky_solve(const cholesky_result &f, const vec &b, vec &x) {
     }
 
     x = b;
-#if defined(NUMERICS_LAPACK_DEFAULT)
-    const int info = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), 1,
-                                    f.L.data(), static_cast<lapack_int>(n), x.data(), 1);
-    if (info != 0) {
-        throw std::runtime_error("cholesky_solve: LAPACK solve failed");
-    }
-#else
     kernel::trsv_lower(x.data(), f.L.data(), b.data(), n);
     kernel::trsv_transpose_lower(x.data(), f.L.data(), n, n);
-#endif
 }
 
 inline void cholesky_solve(const cholesky_result &f, const mat &B, mat &X) {
@@ -165,18 +165,11 @@ inline void cholesky_solve(const cholesky_result &f, const mat &B, mat &X) {
     }
 
     X = B;
-#if defined(NUMERICS_LAPACK_DEFAULT)
-    const int info = LAPACKE_dpotrs(
-        LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), static_cast<lapack_int>(B.cols()),
-        f.L.data(), static_cast<lapack_int>(n), X.data(), static_cast<lapack_int>(B.cols()));
-    if (info != 0) {
-        throw std::runtime_error("cholesky_solve: LAPACK block solve failed");
-    }
-#else
-    // Y <- L^{-1}B, then X <- L^{-T}Y.
+    // Y <- L^{-1}B, then X <- L^{-T}Y, both blocked over gemm. Never dpotrs:
+    // the kernel solve is faster at every size, and on a threaded BLAS the
+    // LAPACK call pays a thread wake-up per solve.
     kernel::trsm_lower_inplace(X.data(), B.cols(), f.L.data(), n, B.cols());
     kernel::trsm_lower_transpose_inplace(X.data(), B.cols(), f.L.data(), n, B.cols());
-#endif
 }
 
 inline void solve_in_place(const cholesky_result &f, vec &right_hand_side) {

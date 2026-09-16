@@ -162,14 +162,30 @@ cmake --build build/bench --target numerics_bench
 
 ### LAPACK
 
-The untagged dense factorizations (`num::lu`, `num::cholesky`, `num::qr`, `num::svd`) use
-LAPACK only when the LAPACK found is backed by an optimized BLAS. Configuration reads the
-library's shared-object dependencies to decide; reference LAPACK linked against reference
-BLAS (the Homebrew and Debian `lapack` packages) is several times slower than the
-library's own blocked kernel, so on such a machine the kernel stays the default and the
-LAPACK bindings remain available as `num::lapack::*`. Install OpenBLAS (`brew install
+The dense factorizations pick between the library's blocked kernel and LAPACK by what
+measured faster, not by what is installed:
+
+| Operation | Default |
+| :--- | :--- |
+| `gemm`, `gemv`, BLAS-1 | vendor BLAS when found |
+| Cholesky, triangular solves, LU solves, QR | the kernel, at every size |
+| LU factorization | the kernel up to `num::lapack_factor_threshold` (768), LAPACK above |
+| SVD, LU inverse | LAPACK when found |
+
+Against OpenBLAS through LAPACKE on an M1 Pro, the kernel's Cholesky was faster at every
+size to n = 1536, its LU to about n = 700, and its triangular solves at every size by
+2-10x: `dgetrs`/`dpotrs` on a threaded BLAS spend tens of microseconds waking the pool
+for an 8 x 8 system, which matters when a simulation performs a million small solves.
+The `num::lapack::*` bindings stay callable by name.
+
+LAPACK counts as found only when the library configuration finds one backed by an
+optimized BLAS: it reads the shared-object dependencies of the LAPACKE it locates, and
+reference LAPACK on reference BLAS (the Homebrew and Debian `lapack` packages) is left
+out, since it is slower than the kernel everywhere. Install OpenBLAS (`brew install
 openblas`, `apt install libopenblas-dev`) for an optimized LAPACKE, or set
-`-DNUMERICS_LAPACK_OPTIMIZED=ON|OFF` to override the check.
+`-DNUMERICS_LAPACK_OPTIMIZED=ON|OFF` to override the check. When benchmarking against
+a Homebrew OpenBLAS note that it is built with OpenMP, so its thread count is
+`OMP_NUM_THREADS`, not `OPENBLAS_NUM_THREADS`.
 
 ---
 
