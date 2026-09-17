@@ -1,10 +1,21 @@
 # numerics {#mainpage}
 
-`numerics` is a C++20 library for scientific computing and physical simulation: dense and sparse linear algebra, direct factorizations, Krylov solvers, ODE integrators, spectral transforms, graph algorithms, and quadrature. Its compute kernels are efficient, allocate nothing, and depend on nothing. The typed layers above them enforce mathematical preconditions -- positive-definiteness, symmetry, self-adjointness -- through C++20 concepts and runtime evidence, so a solver cannot be handed an operator it is not correct for.
+`numerics` is a C++20 library for scientific computing.
+It provides dense and sparse linear algebra, direct factorizations, Krylov solvers, ODE integrators, spectral transforms, graph algorithms, and quadrature.
+The compute kernels are efficient, allocate nothing, and have no dependencies.
+The layers above them state the mathematical preconditions of each algorithm, such as symmetry or positive-definiteness, as C++20 concepts.
+A precondition that cannot be checked at compile time is asserted by the caller and verified at run time under the diagnostic presets.
 
-It began as my research and coursework code gathered into one applied-mathematics library, and it still grows that way: tools built for downstream projects are absorbed and refined here for reuse. Its contents span mesh-free fluid solvers from undergraduate work on surgical simulation, graph algorithms and Ising nucleation from a master's, and finite state projection and iterative linear solvers from PhD research. It is maintained by one person for that research rather than by a team; use it with that in mind.
+I began this library by collecting my research and coursework code in one place, and it still grows in that way.
+Tools written for downstream projects are absorbed here and refined for reuse.
+The contents range from mesh-free fluid solvers written as an undergraduate for surgical simulation, through graph algorithms and Ising nucleation from my master's work, to finite state projection and iterative linear solvers from my PhD research.
+One person maintains it for that research.
+Please use it with appropriate caution.
 
-The library is covered by 362 unit tests and degrades cleanly. BLAS, LAPACK, OpenMP and CUDA accelerate it when present; when they are not, portable C++ carries it, and that fallback is not a compromise: single-threaded, its dense product and factorizations measure within 10% of a vendor BLAS on the same core, and its small triangular solves are faster than LAPACK's at every size (see @ref page_performance "Performance").
+The library has 362 unit tests.
+BLAS, LAPACK, OpenMP, and CUDA accelerate it when they are available.
+When they are not, portable C++ takes their place.
+On one core, the portable dense product and factorizations run within 10% of a vendor BLAS, and the small triangular solves run faster than LAPACK at every size (see @ref page_performance "Performance").
 
 Jump right in with @ref page_getting_started "Getting Started" or browse @ref page_examples "Examples".
 

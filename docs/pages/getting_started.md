@@ -32,7 +32,8 @@ Include the umbrella header to access the complete public API:
 
 ## 2. Core Data Structures
 
-Vectors and matrices are dense, contiguous containers; every routine in the library takes them or a view of them:
+Vectors and matrices are dense containers with contiguous storage.
+Every routine in the library accepts them or a view of them.
 
 ```cpp
 #include <numerics.hpp>
