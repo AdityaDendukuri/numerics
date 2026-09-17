@@ -92,8 +92,11 @@ class aligned_deleter {
             return;
         }
         std::destroy_n(pointer, count_);
-        ::operator delete(static_cast<void *>(pointer), count_ * sizeof(T),
-                          std::align_val_t{storage_alignment});
+        // The unsized aligned form: the sized one is a separate replaceable
+        // function that clang does not enable before version 19 without
+        // -fsized-deallocation, and the alignment is what the deallocation
+        // must match.
+        ::operator delete(static_cast<void *>(pointer), std::align_val_t{storage_alignment});
     }
 
   private:
@@ -115,8 +118,8 @@ template <class T>
 /// @brief Release raw storage whose elements were never constructed.
 template <class T>
 inline void deallocate_aligned(T *pointer, idx count) noexcept {
-    ::operator delete(static_cast<void *>(pointer), count * sizeof(T),
-                      std::align_val_t{storage_alignment});
+    (void)count; // see aligned_deleter
+    ::operator delete(static_cast<void *>(pointer), std::align_val_t{storage_alignment});
 }
 
 } // namespace detail

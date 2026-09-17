@@ -140,7 +140,11 @@ TEST(MathSpine, AssumedEvidenceRecordsItsOrigin) {
     const auto proof = num::assume<num::law::spd>(A);
 
     EXPECT_EQ(proof.provenance().origin, num::math::evidence_origin::assumed);
-    EXPECT_EQ(proof.provenance().location.file_name(), std::string_view(__FILE__));
+    // GCC spells file_name() in the current source location as the path the
+    // compiler was given, which need not be the __FILE__ of this unit; the
+    // file's own name is what both agree on.
+    const std::string_view recorded = proof.provenance().location.file_name();
+    EXPECT_TRUE(recorded.ends_with("test_math_spine.cpp")) << recorded;
 }
 
 TEST(MathSpine, VerifiedDenseMatrixUsesCanonicalCg) {

@@ -12,12 +12,15 @@ jobs:
   # and to the kernel otherwise, so both paths have to execute, not just build:
   # three latent kernel bugs once survived because every CI machine had LAPACK.
   #
+  # ubuntu-24.04 for its clang 18: std::source_location needs
+  # __builtin_source_location, which clang gained in 16, and 22.04 ships 14.
+  #
   #   lapack  -- OpenBLAS installed; the default dispatch picks LAPACK.
   #   kernel  -- same install, NUMERICS_LAPACK_OPTIMIZED=OFF forces the kernel.
   #   bare    -- no BLAS, no LAPACK, no FFTW: the dependency-free build.
   tests:
     name: ${{ matrix.compiler }} / ${{ matrix.mode }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -103,7 +106,7 @@ jobs:
   # is where a heap overflow or a restrict violation has nowhere to hide.
   sanitize:
     name: ${{ matrix.sanitizer }} / bare
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
