@@ -1,165 +1,28 @@
-#num::kernel Reference{#page_kernel }
+# num::kernel Reference {#page_kernel}
 
-`num::kernel` is the computational core of the library.Every routine operates on raw pointers,
-    lengths and strides.Nothing in it allocates, throws, or refers to `num::vec`,
+`num::kernel` is the computational core of the library. Every routine operates on raw
+pointers, lengths and strides. Nothing in it allocates, throws, or refers to `num::vec`,
 `num::mat`, or any type above it.
 
-                 It has no dependencies beyond the C++ standard library,
-    so it can be copied out of this project and used on its
-        own.Every other tier of `numerics` reaches this one
-    : a call to
-`num::cg` on a `num::vec` ends in the same loops a direct call to `num::kernel::cg` would run
-          .
+It has no dependencies beyond the C++ standard library, so it can be copied out of this
+project and used on its own. Every other tier of `numerics` reaches this one: a call to
+`num::cg` on a `num::vec` ends in the same loops a direct call to `num::kernel::cg` would
+run.
 
 ```cpp
-#include <kernel/dense.hpp>  // or one header at a time
-#include <kernel/kernel.hpp> // all of it
+#include <kernel/kernel.hpp>          // all of it
+#include <kernel/dense.hpp>           // or one header at a time
 ```
 
-      -- -
+---
 
-      ##All routines
+## All routines
 
-          Grouped by what each does.All 88 are templates on the scalar type,
-    take raw pointers and lengths, allocate nothing,
-    and are `noexcept`.
+Grouped by what each does. All 97 are templates on the scalar type, take raw pointers
+and lengths, allocate nothing, and are `noexcept`.
 
-        <div class = "sym-index"><div class = "kidx-group">
-        <span class = "kidx-title"> Vector construction<span class = "hdr"> &lt;
-kernel / vector.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::copy "copy" & ndash;
-@ref num::kernel::fill "fill" & ndash;
-@ref num::kernel::copy_strided "copy_strided" & ndash;
-@ref num::kernel::scale_copy_strided "scale_copy_strided" & ndash;
-@ref num::kernel::swap "swap" & ndash;
-@ref num::kernel::swap_strided "swap_strided" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Vector arithmetic<span class = "hdr"> &lt;
-kernel / vector.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::scale "scale" & ndash;
-@ref num::kernel::axpy "axpy" & ndash;
-@ref num::kernel::axpy_strided "axpy_strided" & ndash;
-@ref num::kernel::axpby "axpby" & ndash;
-@ref num::kernel::axpbyz "axpbyz" & ndash;
-@ref num::kernel::add "add" & ndash;
-@ref num::kernel::hadamard_mul "hadamard_mul" & ndash;
-@ref num::kernel::hadamard_div "hadamard_div" & ndash;
-@ref num::kernel::inv "inv" & ndash;
-@ref num::kernel::clamp "clamp" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Reductions<span class = "hdr"> &lt;
-kernel / vector.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::dot "dot" & ndash;
-@ref num::kernel::sum "sum" & ndash;
-@ref num::kernel::norm "norm" & ndash;
-@ref num::kernel::norm_sq "norm_sq" & ndash;
-@ref num::kernel::norm_sq_strided "norm_sq_strided" & ndash;
-@ref num::kernel::l1_norm "l1_norm" & ndash;
-@ref num::kernel::linf_norm "linf_norm" & ndash;
-@ref num::kernel::argmax_abs "argmax_abs" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Fused reductions<span class = "hdr"> &lt;
-kernel / vector.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::axpy_norm_sq "axpy_norm_sq" &
-    ndash;
-@ref num::kernel::dot2 "dot2" & ndash;
-@ref num::kernel::dot_norm_sq "dot_norm_sq" & ndash;
-@ref num::kernel::linear_combination_norm_sq "linear_combination_norm_sq" < / span >
-    </ div><div class = "kidx-group">
-        <span class = "kidx-title"> Matrix - vector products<span class = "hdr"> &lt;
-kernel / dense.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::matvec "matvec" & ndash;
-@ref num::kernel::matvec_transpose "matvec_transpose" & ndash;
-@ref num::kernel::gbmv "gbmv" & ndash;
-@ref num::kernel::ger "ger" < / span > </ div><div class = "kidx-group">
-                                           <span class = "kidx-title"> Matrix -
-                                           matrix products<span class = "hdr"> &lt;
-kernel / dense.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::gemm "gemm" & ndash;
-@ref num::kernel::gemm_transpose_left "gemm_transpose_left" & ndash;
-@ref num::kernel::syrk_lower "syrk_lower" & ndash;
-@ref num::kernel::transpose "transpose" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Triangular solves<span class = "hdr"> &lt;
-kernel / dense.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::trsv_lower "trsv_lower" & ndash;
-@ref num::kernel::trsv_upper "trsv_upper" & ndash;
-@ref num::kernel::trsv_lower_inplace "trsv_lower_inplace" & ndash;
-@ref num::kernel::trsv_upper_inplace "trsv_upper_inplace" & ndash;
-@ref num::kernel::trsv_transpose_lower "trsv_transpose_lower" & ndash;
-@ref num::kernel::trsv_transpose_upper "trsv_transpose_upper" & ndash;
-@ref num::kernel::trsm_lower_inplace "trsm_lower_inplace" & ndash;
-@ref num::kernel::trsm_unit_lower_inplace "trsm_unit_lower_inplace" & ndash;
-@ref num::kernel::trsm_lower_transpose_inplace "trsm_lower_transpose_inplace" & ndash;
-@ref num::kernel::trsm_lower_transpose_right_inplace "trsm_lower_transpose_right_inplace" < / span >
-    </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Orthogonalization<span class = "hdr"> &lt;
-kernel / dense.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::mgs_columns "mgs_columns" &
-    ndash;
-@ref num::kernel::project_columns "project_columns" & ndash;
-@ref num::kernel::column_dot "column_dot" & ndash;
-@ref num::kernel::combine_columns "combine_columns" & ndash;
-@ref num::kernel::rotate_columns "rotate_columns" & ndash;
-@ref num::kernel::swap_rows "swap_rows" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> LU without pivoting<span class = "hdr"> &lt;
-kernel / dense.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::lu_no_pivot "lu_no_pivot" &
-    ndash;
-@ref num::kernel::lu_no_pivot_solve_multiple "lu_no_pivot_solve_multiple" & ndash;
-@ref num::kernel::lu_no_pivot_solve_transpose_multiple
-    "lu_no_pivot_solve_transpose_multiple" < / span >
-    </ div><div class = "kidx-group"><span class = "kidx-title"> Cholesky<span class = "hdr"> &lt;
-kernel / factor.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::cholesky "cholesky" & ndash;
-@ref num::kernel::cholesky_blocked "cholesky_blocked" & ndash;
-@ref num::kernel::cholesky_solve "cholesky_solve" & ndash;
-@ref num::kernel::cholesky_batched "cholesky_batched" & ndash;
-@ref num::kernel::cholesky_solve_batched "cholesky_solve_batched" & ndash;
-@ref num::kernel::cholesky_invert "cholesky_invert" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> LU with partial pivoting<span class = "hdr"> &lt;
-kernel / factor.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::lu_factor "lu_factor" & ndash;
-@ref num::kernel::lu_factor_blocked "lu_factor_blocked" & ndash;
-@ref num::kernel::lu_solve "lu_solve" & ndash;
-@ref num::kernel::lu_invert "lu_invert" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Banded<span class = "hdr"> &lt;
-kernel / factor.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::banded_factor "banded_factor" &
-    ndash;
-@ref num::kernel::banded_solve "banded_solve" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Givens and Jacobi rotations<span class = "hdr"> &lt;
-kernel / rotations.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::rotg "rotg" & ndash;
-@ref num::kernel::rot "rot" & ndash;
-@ref num::kernel::jacobi_rotation "jacobi_rotation" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Householder and QR<span class = "hdr"> &lt;
-kernel / rotations.hpp & gt;
-</ span></ span><br />
-    <span class = "kidx-syms"> @ref num::kernel::householder_vector "householder_vector" & ndash;
-@ref num::kernel::householder_vector_strided "householder_vector_strided" & ndash;
-@ref num::kernel::householder_left "householder_left" & ndash;
-@ref num::kernel::householder_right "householder_right" & ndash;
-@ref num::kernel::qr_factor_blocked "qr_factor_blocked" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Sparse products<span class = "hdr"> &lt;
-kernel / sparse.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::spmv "spmv" & ndash;
-@ref num::kernel::spmv_axpy "spmv_axpy" & ndash;
-@ref num::kernel::spmm "spmm" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Incomplete factorization<span class = "hdr"> &lt;
-kernel / sparse.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::csr_diagonal_positions
-    "csr_diagonal_positions" &
-    ndash;
-@ref num::kernel::ilu0_factor "ilu0_factor" & ndash;
-@ref num::kernel::csr_lu_solve "csr_lu_solve" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Krylov<span class = "hdr"> &lt;
-kernel / krylov.hpp & gt;
-</ span></ span><br /><span class = "kidx-syms"> @ref num::kernel::cg "cg" & ndash;
-@ref num::kernel::pcg "pcg" < / span > </ div><div class = "kidx-group">
-    <span class = "kidx-title"> Real and complex<span class = "hdr"> &lt;
-kernel / complex.hpp & gt;
-</ span></ span><br />
-    <span class = "kidx-syms"> @ref num::kernel::matvec_real_complex "matvec_real_complex" & ndash;
-@ref num::kernel::matvec_transpose_into_complex "matvec_transpose_into_complex" & ndash;
-@ref num::kernel::hessenberg_shifted_factor "hessenberg_shifted_factor" & ndash;
-@ref num::kernel::hessenberg_shifted_substitute "hessenberg_shifted_substitute" & ndash; @ref num::kernel::hessenberg_shifted_solve "hessenberg_shifted_solve"</span></div>
+<div class="sym-index">
+<div class="kidx-group"><span class="kidx-title">Vector construction <span class="hdr">&lt;kernel/vector.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::copy "copy" &ndash; @ref num::kernel::fill "fill" &ndash; @ref num::kernel::copy_strided "copy_strided" &ndash; @ref num::kernel::scale_copy_strided "scale_copy_strided" &ndash; @ref num::kernel::swap "swap" &ndash; @ref num::kernel::swap_strided "swap_strided"</span></div><div class="kidx-group"><span class="kidx-title">Vector arithmetic <span class="hdr">&lt;kernel/vector.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::scale "scale" &ndash; @ref num::kernel::axpy "axpy" &ndash; @ref num::kernel::axpy_strided "axpy_strided" &ndash; @ref num::kernel::axpby "axpby" &ndash; @ref num::kernel::axpbyz "axpbyz" &ndash; @ref num::kernel::add "add" &ndash; @ref num::kernel::hadamard_mul "hadamard_mul" &ndash; @ref num::kernel::hadamard_div "hadamard_div" &ndash; @ref num::kernel::inv "inv" &ndash; @ref num::kernel::clamp "clamp"</span></div><div class="kidx-group"><span class="kidx-title">Reductions <span class="hdr">&lt;kernel/vector.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::dot "dot" &ndash; @ref num::kernel::sum "sum" &ndash; @ref num::kernel::norm "norm" &ndash; @ref num::kernel::norm_sq "norm_sq" &ndash; @ref num::kernel::norm_sq_strided "norm_sq_strided" &ndash; @ref num::kernel::l1_norm "l1_norm" &ndash; @ref num::kernel::linf_norm "linf_norm" &ndash; @ref num::kernel::argmax_abs "argmax_abs"</span></div><div class="kidx-group"><span class="kidx-title">Fused reductions <span class="hdr">&lt;kernel/vector.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::axpy_norm_sq "axpy_norm_sq" &ndash; @ref num::kernel::dot2 "dot2" &ndash; @ref num::kernel::dot_norm_sq "dot_norm_sq" &ndash; @ref num::kernel::linear_combination_norm_sq "linear_combination_norm_sq"</span></div><div class="kidx-group"><span class="kidx-title">Matrix-vector products <span class="hdr">&lt;kernel/dense.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::matvec "matvec" &ndash; @ref num::kernel::matvec_transpose "matvec_transpose" &ndash; @ref num::kernel::gbmv "gbmv" &ndash; @ref num::kernel::ger "ger"</span></div><div class="kidx-group"><span class="kidx-title">Matrix-matrix products <span class="hdr">&lt;kernel/dense.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::gemm "gemm" &ndash; @ref num::kernel::gemm_config "gemm_config" &ndash; @ref num::kernel::gemm_workspace "gemm_workspace" &ndash; @ref num::kernel::gemm_transpose_left "gemm_transpose_left" &ndash; @ref num::kernel::syrk_lower "syrk_lower" &ndash; @ref num::kernel::transpose "transpose"</span></div><div class="kidx-group"><span class="kidx-title">Triangular solves <span class="hdr">&lt;kernel/dense.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::trsv_lower "trsv_lower" &ndash; @ref num::kernel::trsv_upper "trsv_upper" &ndash; @ref num::kernel::trsv_lower_inplace "trsv_lower_inplace" &ndash; @ref num::kernel::trsv_upper_inplace "trsv_upper_inplace" &ndash; @ref num::kernel::trsv_transpose_lower "trsv_transpose_lower" &ndash; @ref num::kernel::trsv_transpose_upper "trsv_transpose_upper" &ndash; @ref num::kernel::trsm_lower_inplace "trsm_lower_inplace" &ndash; @ref num::kernel::trsm_unit_lower_inplace "trsm_unit_lower_inplace" &ndash; @ref num::kernel::trsm_lower_transpose_inplace "trsm_lower_transpose_inplace" &ndash; @ref num::kernel::trsm_unit_lower_transpose_inplace "trsm_unit_lower_transpose_inplace" &ndash; @ref num::kernel::trsm_upper_inplace "trsm_upper_inplace" &ndash; @ref num::kernel::trsm_upper_transpose_inplace "trsm_upper_transpose_inplace" &ndash; @ref num::kernel::trsm_lower_transpose_right_inplace "trsm_lower_transpose_right_inplace"</span></div><div class="kidx-group"><span class="kidx-title">Orthogonalization <span class="hdr">&lt;kernel/dense.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::mgs_columns "mgs_columns" &ndash; @ref num::kernel::project_columns "project_columns" &ndash; @ref num::kernel::column_dot "column_dot" &ndash; @ref num::kernel::combine_columns "combine_columns" &ndash; @ref num::kernel::rotate_columns "rotate_columns" &ndash; @ref num::kernel::swap_rows "swap_rows"</span></div><div class="kidx-group"><span class="kidx-title">LU without pivoting <span class="hdr">&lt;kernel/dense.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::lu_no_pivot "lu_no_pivot" &ndash; @ref num::kernel::lu_no_pivot_solve_multiple "lu_no_pivot_solve_multiple" &ndash; @ref num::kernel::lu_no_pivot_solve_transpose_multiple "lu_no_pivot_solve_transpose_multiple"</span></div><div class="kidx-group"><span class="kidx-title">Cholesky <span class="hdr">&lt;kernel/factor.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::cholesky "cholesky" &ndash; @ref num::kernel::cholesky_blocked "cholesky_blocked" &ndash; @ref num::kernel::cholesky_solve "cholesky_solve" &ndash; @ref num::kernel::cholesky_batched "cholesky_batched" &ndash; @ref num::kernel::cholesky_solve_batched "cholesky_solve_batched" &ndash; @ref num::kernel::cholesky_invert "cholesky_invert"</span></div><div class="kidx-group"><span class="kidx-title">LU with partial pivoting <span class="hdr">&lt;kernel/factor.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::lu_factor "lu_factor" &ndash; @ref num::kernel::lu_factor_blocked "lu_factor_blocked" &ndash; @ref num::kernel::lu_solve "lu_solve" &ndash; @ref num::kernel::lu_invert "lu_invert"</span></div><div class="kidx-group"><span class="kidx-title">Banded <span class="hdr">&lt;kernel/factor.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::banded_factor "banded_factor" &ndash; @ref num::kernel::banded_solve "banded_solve"</span></div><div class="kidx-group"><span class="kidx-title">Givens and Jacobi rotations <span class="hdr">&lt;kernel/rotations.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::rotg "rotg" &ndash; @ref num::kernel::rot "rot" &ndash; @ref num::kernel::jacobi_rotation "jacobi_rotation"</span></div><div class="kidx-group"><span class="kidx-title">Householder and QR <span class="hdr">&lt;kernel/rotations.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::householder_vector "householder_vector" &ndash; @ref num::kernel::householder_vector_strided "householder_vector_strided" &ndash; @ref num::kernel::householder_left "householder_left" &ndash; @ref num::kernel::householder_right "householder_right" &ndash; @ref num::kernel::qr_form_block "qr_form_block" &ndash; @ref num::kernel::qr_apply_block_left "qr_apply_block_left" &ndash; @ref num::kernel::qr_factor_blocked "qr_factor_blocked" &ndash; @ref num::kernel::qr_workspace "qr_workspace"</span></div><div class="kidx-group"><span class="kidx-title">Sparse products <span class="hdr">&lt;kernel/sparse.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::spmv "spmv" &ndash; @ref num::kernel::spmv_axpy "spmv_axpy" &ndash; @ref num::kernel::spmm "spmm"</span></div><div class="kidx-group"><span class="kidx-title">Incomplete factorization <span class="hdr">&lt;kernel/sparse.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::csr_diagonal_positions "csr_diagonal_positions" &ndash; @ref num::kernel::ilu0_factor "ilu0_factor" &ndash; @ref num::kernel::csr_lu_solve "csr_lu_solve"</span></div><div class="kidx-group"><span class="kidx-title">Krylov <span class="hdr">&lt;kernel/krylov.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::cg "cg" &ndash; @ref num::kernel::pcg "pcg"</span></div><div class="kidx-group"><span class="kidx-title">Real and complex <span class="hdr">&lt;kernel/complex.hpp&gt;</span></span><br/><span class="kidx-syms">@ref num::kernel::matvec_real_complex "matvec_real_complex" &ndash; @ref num::kernel::matvec_transpose_into_complex "matvec_transpose_into_complex" &ndash; @ref num::kernel::hessenberg_shifted_factor "hessenberg_shifted_factor" &ndash; @ref num::kernel::hessenberg_shifted_substitute "hessenberg_shifted_substitute" &ndash; @ref num::kernel::hessenberg_shifted_solve "hessenberg_shifted_solve"</span></div>
 </div>
 
 ---
@@ -180,8 +43,7 @@ length `n` must be readable, and if it is an output, writable, for exactly `n` e
 
 **Restrict-qualified pointers must not overlap.** Most parameters are marked
 `NUM_K_RESTRICT`. Passing one buffer as two such parameters is undefined behaviour. It
-does not produce a diagnostic;
-at `-O2` it produces wrong answers. Where a function
+does not produce a diagnostic; at `-O2` it produces wrong answers. Where a function
 permits aliasing, its documentation says so.
 
 **Every routine is `noexcept`.** A kernel has no failure it can report by throwing.
@@ -191,56 +53,37 @@ Routines that can fail numerically return `bool` or a result struct.
 spread the range across several accumulators. See §6.
 
 **Row-major storage.** A matrix of `m` rows and `n` columns occupies `m*n` contiguous
-elements;
-entry `(i, j)` is at `A[i * n + j]`.Routines taking an explicit leading dimension name it `lda`, `ldb` or `ldc`.
+elements; entry `(i, j)` is at `A[i*n + j]`. Routines taking an explicit leading dimension
+name it `lda`, `ldb` or `ldc`.
 
-                                                                                                              Complexity
-                                                                                                              is
-                                                                                                              quoted
-                                                                                                              in
-                                                                                                              elements
-                                                                                                              touched
-                                                                                                              rather
-                                                                                                              than
-                                                                                                              in
-                                                                                                              floating
-                                                                                                              -
-                                                                                                              point
-                                                                                                              operations
-    ,
-    since every routine here is bandwidth - bound at realistic sizes.
+Complexity is quoted in elements touched rather than in floating-point operations, since
+every routine here is bandwidth-bound at realistic sizes.
 
-                                            -- -
+---
 
-                                            ##2. Headers
+## 2. Headers
 
-        | Header | Contents | | : -- -| : -- -|
-                                          | `<kernel / vector.hpp>` | BLAS - 1 vector operations,
-    fused reductions,
-    the `NUM_K_ *` macros.Every other header includes it.| | `<kernel / dense.hpp>` | BLAS - 2 and BLAS - 3 : `gemm`, `matvec`,
-    triangular solves, banded products,
-    Gram - Schmidt.| | `<kernel / sparse.hpp>` | CSR products and ILU(0).|
-        | `<kernel / factor.hpp>` | Cholesky and LU,
-    plain, blocked and batched.Banded solves.| | `<kernel / rotations.hpp>` | Givens,
-    Householder and Jacobi rotations.Blocked QR.| | `<kernel / krylov.hpp>` |
-        Matrix - free CG and PCG over a callable
-                 operator.| | `<kernel / complex.hpp>` | Routines mixing real and complex operands
-                     .Kept separate because `<complex>` costs roughly 95,
-    000 preprocessed lines.| | `<kernel / debug.hpp>` | `operator<<` for `krylov_result`.The only
-                                                        kernel header that includes `<ostream>`,
-        and deliberately not part of the umbrella.|
+| Header | Contents |
+| :--- | :--- |
+| `<kernel/vector.hpp>` | BLAS-1 vector operations, fused reductions, the `NUM_K_*` macros. Every other header includes it. |
+| `<kernel/dense.hpp>` | BLAS-2 and BLAS-3: `gemm`, `matvec`, triangular solves, banded products, Gram-Schmidt. |
+| `<kernel/sparse.hpp>` | CSR products and ILU(0). |
+| `<kernel/factor.hpp>` | Cholesky and LU, plain, blocked and batched. Banded solves. |
+| `<kernel/rotations.hpp>` | Givens, Householder and Jacobi rotations. Blocked QR. |
+| `<kernel/krylov.hpp>` | Matrix-free CG and PCG over a callable operator. |
+| `<kernel/complex.hpp>` | Routines mixing real and complex operands. Kept separate because `<complex>` costs roughly 95,000 preprocessed lines. |
+| `<kernel/debug.hpp>` | `operator<<` for `krylov_result`. The only kernel header that includes `<ostream>`, and deliberately not part of the umbrella. |
 
-            -- -
+---
 
-               ##3. Vector operations
+## 3. Vector operations
 
-`<kernel / vector.hpp>`
+`<kernel/vector.hpp>`
 
-            | Signature | Effect | Complexity |
-            | : -- -| : -- -| : -- -| | `copy(y, x, n)` | \f$y_i \leftarrow x_i\f$ | 2n | | `fill(x, value, n)` | \f$x_i \leftarrow \mathit {
-    value
-}
-\f$ | n |
+| Signature | Effect | Complexity |
+| :--- | :--- | :--- |
+| `copy(y, x, n)` | \f$y_i \leftarrow x_i\f$ | 2n |
+| `fill(x, value, n)` | \f$x_i \leftarrow \mathit{value}\f$ | n |
 | `scale(x, alpha, n)` | \f$x_i \leftarrow \alpha x_i\f$ | 2n |
 | `axpy(y, x, alpha, n)` | \f$y_i \leftarrow y_i + \alpha x_i\f$ | 3n |
 | `axpby(y, x, a, b, n)` | \f$y_i \leftarrow a x_i + b y_i\f$ | 3n |
@@ -269,17 +112,20 @@ template <std::floating_point T>
 void axpy(T *y, const T *x, T alpha, idx n) noexcept;
 ```
 
-        Computes \f$y \leftarrow y + \alpha x\f$ in place.
+Computes \f$y \leftarrow y + \alpha x\f$ in place.
 
-    | Parameter | Meaning | | : -- -| : -- -| | `y` | Length `n`,
-    read and written.Must not alias `x`.| | `x` | Length `n`,
-    read only.| | `alpha` | Scalar multiplier.| | `n` |
-        Number of elements. `n == 0` is permitted and does nothing.|
+| Parameter | Meaning |
+| :--- | :--- |
+| `y` | Length `n`, read and written. Must not alias `x`. |
+| `x` | Length `n`, read only. |
+| `alpha` | Scalar multiplier. |
+| `n` | Number of elements. `n == 0` is permitted and does nothing. |
 
-        ## #num::kernel::dot
+### num::kernel::dot
 
-```cpp template <std::floating_point T>
-        [[nodiscard]] T dot(const T *x, const T *y, idx n) noexcept;
+```cpp
+template <std::floating_point T>
+[[nodiscard]] T dot(const T *x, const T *y, idx n) noexcept;
 template <std::floating_point T>
 [[nodiscard]] T dot(contract::ordered_t, const T *x, const T *y, idx n) noexcept;
 ```
@@ -313,12 +159,8 @@ them, so the fused form is close to bandwidth-optimal.
 | Signature | Returns | Also does |
 | :--- | :--- | :--- |
 | `axpy_norm_sq(y, x, alpha, n)` | \f$\Vert y + \alpha x \Vert^2\f$ | \f$y \leftarrow y + \alpha x\f$ |
-| `dot2(x, y, z, n)` | `{
-    xy, xz
-}` | Loads `x` once for both products |
-| `dot_norm_sq(x, y, n)` | `{
-    dot, norm_sq
-}` | One pass over both |
+| `dot2(x, y, z, n)` | `{xy, xz}` | Loads `x` once for both products |
+| `dot_norm_sq(x, y, n)` | `{dot, norm_sq}` | One pass over both |
 | `linear_combination_norm_sq(x, a, y, b, n)` | \f$\Vert a x + b y \Vert^2\f$ | Does not materialize the combination |
 
 ---
@@ -369,8 +211,7 @@ The implementation is the Goto/BLIS structure, in portable C++:
 1. **Packing.** Before any arithmetic, the slice of `A` in play is copied into an
    `mc x kc` slab laid out as `mr`-row tiles, and the slice of `B` into a `kc x nc` panel
    laid out as `nr`-column tiles. Both are contiguous and zero-padded to whole tiles, so
-   the inner loop streams unit-stride memory and never sees a matrix edge;
-`alpha` is
+   the inner loop streams unit-stride memory and never sees a matrix edge; `alpha` is
    folded into the packed `A`.
 2. **Three blocking loops** hold the `B` panel across one sweep of the `A` slab, the `A`
    slab in L2, and the `kc x nr` sliver of `B` the microkernel reads in L1.
@@ -402,24 +243,18 @@ loop compiled with the same contraction.
 
 The overload without `work` packs into a per-thread static buffer of
 `gemm_config<T>::workspace` elements. That is the one place in the tier with storage of
-its own;
-it never calls an allocator and is safe from any thread.Pass `work` to keep the call
-    stateless. `syrk_lower` and `gemm_transpose_left` run through the same packed core,
-    the transposed operand expressed as a stride swap in the packer rather than a copy. So do
-the four `trsm` variants (each diagonal block of `detail::trsm_block` rows by substitution,
-the rows or columns beyond it by one `gemm`), and through them `cholesky_blocked` and
-`lu_factor_blocked`. Measured on the same machine: Cholesky 35 GFLOP/s and LU 28 GFLOP/s
-at n = 1024, from 6 and 9 before the blocking.
+its own; it never calls an allocator and is safe from any thread. Pass `work` to keep the
+call stateless. `syrk_lower` and `gemm_transpose_left` run through the same packed core,
+the transposed operand expressed as a stride swap in the packer rather than a copy. So do
+the six `trsm` forms (each diagonal block of `detail::trsm_block` rows by substitution,
+the rows or columns beyond it by one `gemm`), and through them `cholesky_blocked`,
+`lu_factor_blocked` and `qr_factor_blocked`.
 
-        Measured on an Apple M1 Pro(clang 17, one thread) : 44 GFLOP
-        / s from
-        n = 256 to 2048,
-        which is 86 % of the
-            core's NEON FMA peak; the previous unpacked register-tiled loop measured
-            30. Accelerate's `dgemm` measures 450-620 GFLOP/s on the same machine because it runs on
-            the AMX coprocessor,
-        which no C++ can reach; on cores without a matrix unit the
-vendor BLAS lead is the remaining 10-15% of peak that hand-scheduled assembly buys.
+Measured on an Apple M1 Pro (clang 17, one thread): `gemm` 44 GFLOP/s from n = 256 to
+2048, which is 86% of the core's NEON FMA peak and within 10% of OpenBLAS's hand-written
+NEON `dgemm` on the same core; Cholesky 35 and LU 28 GFLOP/s at n = 1024, from 6 and 9
+before the blocking. Accelerate's `dgemm` measures 270-620 GFLOP/s on the same machine
+because it runs on the AMX coprocessor, which no C++ can reach.
 
 There are no `gemm_blocked`, `gemm_register_blocked` or `matmul_simd` variants. Those
 existed and were removed: the blocked ones measured slower than this, and the hand-written
@@ -448,17 +283,17 @@ dimension, which made them silently wrong for any non-square shape.
 | rotations | `householder_vector(v, beta, x, n)` | Elementary reflector \f$(v, \beta)\f$ |
 | rotations | `householder_left`, `householder_right` | Apply \f$I - \beta v v^T\f$ from either side |
 | rotations | `qr_form_block`, `qr_apply_block_left` | Compact-WY block reflector \f$I - V T V^T\f$ from a factored panel, and its application by two `gemm`s |
-| rotations | `qr_factor_blocked` | Blocked compact Householder QR (panels of `qr_block` columns, trailing update through the block reflector);
-reflector tails stay below the diagonal of \f$R\f$ | | rotations | `jacobi_rotation` |
-    One Jacobi sweep step | |
-    krylov | `cg(A, x, b, n, work, tol, max_iter)` | Conjugate gradients over a callable \f$A\f$ |
-    | krylov | `pcg(A, M, x, b, n, work, tol, max_iter)` | Preconditioned conjugate gradients |
+| rotations | `qr_factor_blocked(A, lda, m, n, tau, work)` | Blocked compact Householder QR: panels of `qr_block` columns, trailing update through the block reflector; reflector tails stay below the diagonal of \f$R\f$; `work` holds `qr_workspace(m, n)` elements |
+| rotations | `jacobi_rotation` | One Jacobi sweep step |
+| krylov | `cg(A, x, b, n, work, tol, max_iter)` | Conjugate gradients over a callable \f$A\f$ |
+| krylov | `pcg(A, M, x, b, n, work, tol, max_iter)` | Preconditioned conjugate gradients |
 
-    ## #num::kernel::cg
+### num::kernel::cg
 
-```cpp template <std::floating_point T, class MatVec>
-    [[nodiscard]] krylov_result<T> cg(MatVec &&A, T *x, const T *b, idx n, T *work,
-                                      T tol = T(1e-10), idx max_iter = 1000);
+```cpp
+template <std::floating_point T, class MatVec>
+[[nodiscard]] krylov_result<T> cg(MatVec &&A, T *x, const T *b, idx n, T *work,
+                                  T tol = T(1e-10), idx max_iter = 1000);
 ```
 
 Solves \f$Ax = b\f$ for symmetric positive definite \f$A\f$.
@@ -468,8 +303,7 @@ Solves \f$Ax = b\f$ for symmetric positive definite \f$A\f$.
 | `A` | Any callable with signature `void(const T *u, T *Au)`. It is never stored. |
 | `x` | Length `n`. The initial guess on entry, the solution on exit. |
 | `b` | Length `n`, read only. |
-| `work` | Length `3*n`. Caller-provided;
-`cg` allocates nothing. |
+| `work` | Length `3*n`. Caller-provided; `cg` allocates nothing. |
 | `tol` | Relative residual at which to stop. |
 | `max_iter` | Iteration cap. |
 
@@ -505,7 +339,7 @@ machines, use the `contract::ordered` overload.
 
 ```cpp
 double fast  = num::kernel::dot(x, y, n);                            // blocked
-double exact = num::kernel::dot(num::kernel::contract::ordered, x, y, n); // source order
+double exact = num::kernel::dot(num::kernel::contract::ordered, x, y, n);  // source order
 ```
 
 ---
@@ -538,8 +372,8 @@ other part of `numerics`. The headers carry an MIT licence notice and two attrib
 lines; keep those with whatever you take.
 
 ```cpp
-#include <cstdio>
 #include <kernel/kernel.hpp>
+#include <cstdio>
 #include <vector>
 
 int main() {
@@ -548,9 +382,9 @@ int main() {
     std::vector<double> y{0.5, 1.5, 2.5, 3.5};
 
     const double d = num::kernel::dot(x.data(), y.data(), n);
-    num::kernel::axpy(y.data(), x.data(), 2.0, n); // y <- y + 2x
+    num::kernel::axpy(y.data(), x.data(), 2.0, n);   // y <- y + 2x
 
-    std::printf("dot=%.1f y0=%.1f\n", d, y[0]); // dot=25.0 y0=2.5
+    std::printf("dot=%.1f y0=%.1f\n", d, y[0]);      // dot=25.0 y0=2.5
 }
 ```
 
@@ -570,7 +404,8 @@ int main() {
 
     auto laplacian = [](const double *u, double *Lu) {
         for (num::idx i = 0; i < n; ++i) {
-            Lu[i] = 2.0 * u[i] - (i > 0 ? u[i - 1] : 0.0) - (i + 1 < n ? u[i + 1] : 0.0);
+            Lu[i] = 2.0 * u[i] - (i > 0 ? u[i - 1] : 0.0)
+                               - (i + 1 < n ? u[i + 1] : 0.0);
         }
     };
 

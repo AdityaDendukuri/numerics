@@ -157,6 +157,28 @@ Problem make_spd_problem(const std::vector<num::idx> &block_sizes, std::uint64_t
     return Problem{builder.sparse(), builder.dense(), std::move(levels), n};
 }
 
+Problem problem_from_dense(const num::mat &dense, std::vector<num::idx> levels) {
+    Builder builder(dense.rows());
+    for (num::idx i = 0; i < dense.rows(); ++i) {
+        for (num::idx j = 0; j < dense.cols(); ++j) {
+            if (dense(i, j) != 0.0) {
+                builder.add(i, j, dense(i, j));
+            }
+        }
+    }
+    return Problem{builder.sparse(), builder.dense(), std::move(levels), dense.rows()};
+}
+
+void expect_exact_matrix(const num::mat &actual, const num::mat &expected) {
+    ASSERT_EQ(actual.rows(), expected.rows());
+    ASSERT_EQ(actual.cols(), expected.cols());
+    for (num::idx i = 0; i < actual.rows(); ++i) {
+        for (num::idx j = 0; j < actual.cols(); ++j) {
+            EXPECT_DOUBLE_EQ(actual(i, j), expected(i, j));
+        }
+    }
+}
+
 num::vec make_rhs(num::idx n, std::uint64_t seed) {
     std::mt19937_64 rng(seed);
     std::uniform_real_distribution<double> entry(-2.0, 2.0);
@@ -527,6 +549,127 @@ TEST(BlockTridiagonal, ExposesTheLayoutALowRankLayerNeeds) {
     EXPECT_EQ(factor.upper[0].cols(), 3u);
     EXPECT_EQ(factor.lower[0].rows(), 3u);
     EXPECT_EQ(factor.lower[0].cols(), 2u);
+}
+
+// --- 11: cross-step suffix refactorization ----------------------------------
+
+TEST(BlockTridiagonal, LUSuffixRefactorReusesPrefixAndMatchesFreshFactor) {
+    const auto original = make_problem({3, 4, 2, 5}, 131);
+    const auto previous = num::factor_block_lu(original.sparse, original.levels);
+
+    num::mat changed = original.dense;
+    // Block 2 begins at row 7. Change its diagonal and the boundary coupling
+    // from block 1; blocks 0 and 1 remain exactly unchanged.
+    changed(7, 7) += 2.0;
+    changed(8, 8) += 1.5;
+    changed(4, 7) -= 0.25;
+    changed(7, 4) += 0.4;
+    const auto updated_problem = problem_from_dense(changed, original.levels);
+
+    const auto updated =
+        num::refactor_block_lu_suffix(updated_problem.sparse, updated_problem.levels,
+                                      previous, 2);
+    const auto fresh = num::factor_block_lu(updated_problem.sparse, updated_problem.levels);
+
+    // These factors are copied, not recomputed.
+    expect_exact_matrix(updated.diagonal[0].packed, previous.diagonal[0].packed);
+    expect_exact_matrix(updated.diagonal[1].packed, previous.diagonal[1].packed);
+    expect_exact_matrix(updated.lower[0], previous.lower[0]);
+
+    const auto b = make_rhs(updated_problem.size, 132);
+    num::vec reused_solution(updated_problem.size, 0.0);
+    num::vec fresh_solution(updated_problem.size, 0.0);
+    num::solve(updated, b, reused_solution);
+    num::solve(fresh, b, fresh_solution);
+    for (num::idx i = 0; i < updated_problem.size; ++i) {
+        EXPECT_NEAR(reused_solution[i], fresh_solution[i], tolerance) << "row " << i;
+    }
+}
+
+TEST(BlockTridiagonal, CholeskySuffixRefactorReusesPrefixAndMatchesFreshFactor) {
+    const auto original = make_spd_problem({3, 4, 3}, 141);
+    const auto previous = num::factor_block_cholesky(original.sparse, original.levels);
+
+    num::mat changed = original.dense;
+    // A positive diagonal update in the last block preserves positive
+    // definiteness and leaves the first two block rows unchanged.
+    changed(7, 7) += 1.0;
+    changed(8, 8) += 1.5;
+    changed(9, 9) += 2.0;
+    const auto updated_problem = problem_from_dense(changed, original.levels);
+
+    const auto updated = num::refactor_block_cholesky_suffix(
+        updated_problem.sparse, updated_problem.levels, previous, 2);
+    const auto fresh =
+        num::factor_block_cholesky(updated_problem.sparse, updated_problem.levels);
+
+    expect_exact_matrix(updated.diagonal[0].L, previous.diagonal[0].L);
+    expect_exact_matrix(updated.diagonal[1].L, previous.diagonal[1].L);
+    expect_exact_matrix(updated.lower[0], previous.lower[0]);
+
+    const auto b = make_rhs(updated_problem.size, 142);
+    num::vec reused_solution(updated_problem.size, 0.0);
+    num::vec fresh_solution(updated_problem.size, 0.0);
+    num::solve(updated, b, reused_solution);
+    num::solve(fresh, b, fresh_solution);
+    for (num::idx i = 0; i < updated_problem.size; ++i) {
+        EXPECT_NEAR(reused_solution[i], fresh_solution[i], tolerance) << "row " << i;
+    }
+}
+
+TEST(BlockTridiagonal, LUSuffixRefactorAppendsANewLevel) {
+    const auto original = make_problem({3, 2}, 146);
+    const auto previous = num::factor_block_lu(original.sparse, original.levels);
+
+    num::mat enlarged(7, 7, 0.0);
+    for (num::idx i = 0; i < original.size; ++i) {
+        for (num::idx j = 0; j < original.size; ++j) {
+            enlarged(i, j) = original.dense(i, j);
+        }
+    }
+    enlarged(5, 5) = 15.0;
+    enlarged(5, 6) = -0.4;
+    enlarged(6, 5) = 0.3;
+    enlarged(6, 6) = 16.0;
+    enlarged(3, 5) = 0.2;
+    enlarged(4, 6) = -0.3;
+    enlarged(5, 3) = 0.1;
+    enlarged(6, 4) = 0.25;
+    auto levels = original.levels;
+    levels.push_back(2);
+    levels.push_back(2);
+    const auto enlarged_problem = problem_from_dense(enlarged, std::move(levels));
+
+    const auto updated = num::refactor_block_lu_suffix(
+        enlarged_problem.sparse, enlarged_problem.levels, previous, 2);
+    const auto fresh =
+        num::factor_block_lu(enlarged_problem.sparse, enlarged_problem.levels);
+
+    expect_exact_matrix(updated.diagonal[0].packed, previous.diagonal[0].packed);
+    expect_exact_matrix(updated.diagonal[1].packed, previous.diagonal[1].packed);
+    expect_exact_matrix(updated.lower[0], previous.lower[0]);
+
+    const auto b = make_rhs(enlarged_problem.size, 147);
+    num::vec reused_solution(enlarged_problem.size, 0.0);
+    num::vec fresh_solution(enlarged_problem.size, 0.0);
+    num::solve(updated, b, reused_solution);
+    num::solve(fresh, b, fresh_solution);
+    for (num::idx i = 0; i < enlarged_problem.size; ++i) {
+        EXPECT_NEAR(reused_solution[i], fresh_solution[i], tolerance) << "row " << i;
+    }
+}
+
+TEST(BlockTridiagonal, SuffixRefactorRejectsAnIncompatiblePrefixLayout) {
+    const auto original = make_problem({3, 4, 2}, 151);
+    const auto previous = num::factor_block_lu(original.sparse, original.levels);
+    const auto incompatible = make_problem({2, 5, 2}, 152);
+
+    EXPECT_THROW((void)num::refactor_block_lu_suffix(
+                     incompatible.sparse, incompatible.levels, previous, 2),
+                 std::invalid_argument);
+    EXPECT_THROW((void)num::refactor_block_lu_suffix(
+                     original.sparse, original.levels, previous, 3),
+                 std::invalid_argument);
 }
 
 } // namespace

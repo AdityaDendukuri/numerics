@@ -32,7 +32,7 @@ Include the umbrella header to access the complete public API:
 
 ## 2. Core Data Structures
 
-Numerics provides cache-aligned, continuous memory containers for linear algebra and numerical routines:
+Vectors and matrices are dense, contiguous containers; every routine in the library takes them or a view of them:
 
 ```cpp
 #include <numerics.hpp>

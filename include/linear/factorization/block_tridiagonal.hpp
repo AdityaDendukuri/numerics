@@ -343,6 +343,36 @@ inline void subtract_from(vec &target, const vec &update) {
     return layout;
 }
 
+/// @brief Check that factors before `first_changed_block` use the same rows.
+///
+/// A suffix refactorization deliberately trusts the caller's statement that the
+/// matrix entries in the retained prefix are unchanged. The layout itself is
+/// checked here, because reusing a factor for a differently sized or reordered
+/// prefix would always be invalid.
+template <class Factor>
+inline void validate_reusable_prefix(const block_layout &layout, const Factor &previous,
+                                     idx first_changed_block) {
+    const idx count = layout.offsets.size() - 1;
+    if (previous.offsets.empty() || first_changed_block > previous.blocks() ||
+        first_changed_block >= count) {
+        throw std::invalid_argument(
+            "block_tridiagonal: first changed block is outside the reusable layout");
+    }
+    for (idx k = 0; k <= first_changed_block; ++k) {
+        if (layout.offsets[k] != previous.offsets[k]) {
+            throw std::invalid_argument(
+                "block_tridiagonal: block boundaries differ inside the reusable prefix");
+        }
+    }
+    const idx retained_rows = layout.offsets[first_changed_block];
+    for (idx p = 0; p < retained_rows; ++p) {
+        if (layout.order[p] != previous.order[p]) {
+            throw std::invalid_argument(
+                "block_tridiagonal: row order differs inside the reusable prefix");
+        }
+    }
+}
+
 /// @brief Solve `L z = rhs` for lower-triangular `L`, column by column.
 [[nodiscard]] inline mat forward_substitute(const mat &L, const mat &rhs) {
     const idx n = L.rows();
@@ -441,6 +471,70 @@ inline void subtract_from(vec &target, const vec &update) {
         factor.lower[k] = transpose(scaled_transposed);
 
         // D_{k+1} <- D_{k+1} - lower[k] upper[k]
+        detail::subtract_from(blocks.diagonal[k + 1],
+                              detail::product(factor.lower[k], factor.upper[k]));
+    }
+    return factor;
+}
+
+/// @brief Reuse a block-LU prefix and refactor only the changed suffix.
+///
+/// Blocks before `first_changed_block` must be numerically unchanged from the
+/// matrix represented by `previous`. The coupling immediately before the
+/// changed block is assembled and eliminated again, because it touches the
+/// changed suffix. Thus a change beginning at block `j` retains diagonal
+/// factors `0,...,j-1` and scaled lower blocks `0,...,j-2`.
+///
+/// The layout of the retained prefix is checked, while equality of its matrix
+/// entries is the caller's responsibility.
+[[nodiscard]] inline block_lu_factor
+refactor_block_lu_suffix(const spmat &A, view<const idx> levels,
+                         const block_lu_factor &previous, idx first_changed_block,
+                         real scale = 1.0) {
+    const detail::block_layout layout = detail::prepare(A, levels);
+    detail::validate_reusable_prefix(layout, previous, first_changed_block);
+    detail::assembled_blocks blocks = detail::gather_blocks(A, layout, scale);
+    const idx count = layout.offsets.size() - 1;
+
+    block_lu_factor factor;
+    factor.size = A.n_rows();
+    factor.offsets = layout.offsets;
+    factor.order = layout.order;
+    factor.upper = std::move(blocks.upper);
+    factor.lower = std::move(blocks.lower);
+    factor.diagonal.reserve(count);
+
+    for (idx k = 0; k < first_changed_block; ++k) {
+        factor.diagonal.push_back(previous.diagonal[k]);
+    }
+    for (idx k = 0; k + 1 < first_changed_block; ++k) {
+        factor.lower[k] = previous.lower[k];
+    }
+
+    if (first_changed_block > 0) {
+        const idx coupling = first_changed_block - 1;
+        mat transposed = transpose(factor.lower[coupling]);
+        mat scaled_transposed;
+        solve_transpose(factor.diagonal[coupling], transposed, scaled_transposed);
+        factor.lower[coupling] = transpose(scaled_transposed);
+        detail::subtract_from(
+            blocks.diagonal[first_changed_block],
+            detail::product(factor.lower[coupling], factor.upper[coupling]));
+    }
+
+    for (idx k = first_changed_block; k < count; ++k) {
+        factor.diagonal.push_back(factor_no_pivot(assume_square(blocks.diagonal[k])));
+        if (factor.diagonal.back().singular) {
+            throw std::runtime_error("block_tridiagonal: zero pivot in diagonal block " +
+                                     std::to_string(k));
+        }
+        if (k + 1 >= count) {
+            break;
+        }
+        mat transposed = transpose(factor.lower[k]);
+        mat scaled_transposed;
+        solve_transpose(factor.diagonal[k], transposed, scaled_transposed);
+        factor.lower[k] = transpose(scaled_transposed);
         detail::subtract_from(blocks.diagonal[k + 1],
                               detail::product(factor.lower[k], factor.upper[k]));
     }
@@ -630,6 +724,63 @@ inline void solve_transpose(const block_lu_factor &factor, const vec &b, vec &x)
         factor.lower[k] = transpose(detail::forward_substitute(chol, transpose(factor.lower[k])));
 
         // A_{k+1} <- A_{k+1} - C C^T
+        detail::subtract_from(blocks.diagonal[k + 1],
+                              detail::product(factor.lower[k], transpose(factor.lower[k])));
+    }
+    return factor;
+}
+
+/// @brief Reuse a block-Cholesky prefix and refactor only the changed suffix.
+///
+/// The retained diagonal factors are `0,...,j-1`, and the retained scaled lower
+/// blocks are `0,...,j-2`, where `j = first_changed_block`. The boundary
+/// coupling `j-1` is recomputed because it touches the changed suffix.
+[[nodiscard]] inline block_cholesky_factor
+refactor_block_cholesky_suffix(const spmat &A, view<const idx> levels,
+                               const block_cholesky_factor &previous,
+                               idx first_changed_block) {
+    const detail::block_layout layout = detail::prepare(A, levels);
+    detail::validate_reusable_prefix(layout, previous, first_changed_block);
+    detail::assembled_blocks blocks = detail::gather_blocks(A, layout, real(1));
+    const idx count = layout.offsets.size() - 1;
+
+    block_cholesky_factor factor;
+    factor.size = A.n_rows();
+    factor.offsets = layout.offsets;
+    factor.order = layout.order;
+    factor.lower = std::move(blocks.lower);
+    factor.diagonal.reserve(count);
+
+    for (idx k = 0; k < first_changed_block; ++k) {
+        factor.diagonal.push_back(previous.diagonal[k]);
+    }
+    for (idx k = 0; k + 1 < first_changed_block; ++k) {
+        factor.lower[k] = previous.lower[k];
+    }
+
+    if (first_changed_block > 0) {
+        const idx coupling = first_changed_block - 1;
+        const mat &chol = factor.diagonal[coupling].L;
+        factor.lower[coupling] = transpose(
+            detail::forward_substitute(chol, transpose(factor.lower[coupling])));
+        detail::subtract_from(
+            blocks.diagonal[first_changed_block],
+            detail::product(factor.lower[coupling], transpose(factor.lower[coupling])));
+    }
+
+    for (idx k = first_changed_block; k < count; ++k) {
+        auto result = cholesky(assume_spd(blocks.diagonal[k]));
+        if (!result.success) {
+            throw std::runtime_error("block_tridiagonal: diagonal block " +
+                                     std::to_string(k) + " is not positive definite");
+        }
+        factor.diagonal.push_back(std::move(result));
+        if (k + 1 >= count) {
+            break;
+        }
+        const mat &chol = factor.diagonal[k].L;
+        factor.lower[k] =
+            transpose(detail::forward_substitute(chol, transpose(factor.lower[k])));
         detail::subtract_from(blocks.diagonal[k + 1],
                               detail::product(factor.lower[k], transpose(factor.lower[k])));
     }

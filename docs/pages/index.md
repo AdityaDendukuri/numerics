@@ -4,7 +4,7 @@
 
 It began as my research and coursework code gathered into one applied-mathematics library, and it still grows that way: tools built for downstream projects are absorbed and refined here for reuse. Its contents span mesh-free fluid solvers from undergraduate work on surgical simulation, graph algorithms and Ising nucleation from a master's, and finite state projection and iterative linear solvers from PhD research. It is maintained by one person for that research rather than by a team; use it with that in mind.
 
-The library is covered by 362 unit tests and degrades cleanly. BLAS, LAPACK, OpenMP and CUDA accelerate it when present; when they are not, portable C++ carries it, and that fallback is not a compromise: single-threaded, its dense product and factorizations measure within 10% of a vendor BLAS on the same core, and its small triangular solves are faster than LAPACK's at every size (see @ref page_performance).
+The library is covered by 362 unit tests and degrades cleanly. BLAS, LAPACK, OpenMP and CUDA accelerate it when present; when they are not, portable C++ carries it, and that fallback is not a compromise: single-threaded, its dense product and factorizations measure within 10% of a vendor BLAS on the same core, and its small triangular solves are faster than LAPACK's at every size (see @ref page_performance "Performance").
 
 Jump right in with @ref page_getting_started "Getting Started" or browse @ref page_examples "Examples".
 
