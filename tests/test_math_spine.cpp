@@ -102,15 +102,14 @@ static_assert(!StrictMinresCallable<num::operators::dense_op>);
 static_assert(!StrictPcgCallable<num::operators::dense_op, num::jacobi_preconditioner>);
 static_assert(StrictPcgCallable<num::operators::backward_euler_2d, num::jacobi_preconditioner>);
 static_assert(
-    !std::constructible_from<num::math::certified_ref<num::mat, num::law::spd>,
-                             const num::mat &>);
+    !std::constructible_from<num::math::certified_ref<num::mat, num::law::spd>, const num::mat &>);
 static_assert(!CanAssumeTemporarySpd<num::mat>);
 static_assert(!CanRequireTemporarySpd<num::mat>);
 static_assert(num::math::cpo_detail::tag_invocable<num::math::scale_t, double, num::vec &>);
-static_assert(num::math::cpo_detail::tag_invocable<num::math::axpy_t, double, const num::vec &,
-                                                  num::vec &>);
-static_assert(num::math::cpo_detail::tag_invocable<num::math::inner_t, const num::vec &,
-                                                  const num::vec &>);
+static_assert(
+    num::math::cpo_detail::tag_invocable<num::math::axpy_t, double, const num::vec &, num::vec &>);
+static_assert(
+    num::math::cpo_detail::tag_invocable<num::math::inner_t, const num::vec &, const num::vec &>);
 static_assert(num::math::cpo_detail::tag_invocable<num::math::norm_t, const num::vec &>);
 
 TEST(MathSpine, VerifiedEvidenceIsNonOwningAndImmutable) {
@@ -131,8 +130,7 @@ TEST(MathSpine, VerifiedEvidenceIsNonOwningAndImmutable) {
 
 TEST(MathSpine, AssumeEnforcesDecidableShapePrerequisite) {
     num::mat rectangular(2, 3, 0.0);
-    EXPECT_THROW((void)num::assume<num::law::spd>(rectangular),
-                 std::invalid_argument);
+    EXPECT_THROW((void)num::assume<num::law::spd>(rectangular), std::invalid_argument);
 }
 
 TEST(MathSpine, AssumedEvidenceRecordsItsOrigin) {
@@ -246,12 +244,9 @@ TEST(MathSpine, RestrictedPcgCarriesSubspaceSpecificEvidence) {
     identity(0, 0) = 1.0;
     identity(1, 1) = 1.0;
 
-    const auto restricted_A =
-        num::assume<num::law::spd_on<num::space::zero_sum>>(laplacian);
-    const auto restricted_M =
-        num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
-    static_assert(num::claims<decltype(restricted_A),
-                                     num::law::spd_on<num::space::zero_sum>>);
+    const auto restricted_A = num::assume<num::law::spd_on<num::space::zero_sum>>(laplacian);
+    const auto restricted_M = num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
+    static_assert(num::claims<decltype(restricted_A), num::law::spd_on<num::space::zero_sum>>);
     static_assert(!num::claims<decltype(restricted_A), num::law::spd>);
     static_assert(ZeroSumPcgCallable<decltype(restricted_A), decltype(restricted_M)>);
 
@@ -270,8 +265,7 @@ TEST(MathSpine, RestrictedPcgRejectsInputOutsideSubspace) {
     num::mat identity(2, 2, 0.0);
     identity(0, 0) = 1.0;
     identity(1, 1) = 1.0;
-    const auto restricted =
-        num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
+    const auto restricted = num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
     num::vec incompatible_rhs{1.0, 0.0};
     num::vec x(2, 0.0);
 
@@ -287,8 +281,7 @@ TEST(MathSpine, RestrictedPcgChecksSubspacePreservation) {
     num::mat bad_preconditioner(2, 2, 0.0);
     bad_preconditioner(0, 0) = 1.0;
     bad_preconditioner(1, 1) = 2.0;
-    const auto restricted_A =
-        num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
+    const auto restricted_A = num::assume<num::law::spd_on<num::space::zero_sum>>(identity);
     const auto contradicted_M =
         num::assume<num::law::spd_on<num::space::zero_sum>>(bad_preconditioner);
     num::vec b{1.0, -1.0};

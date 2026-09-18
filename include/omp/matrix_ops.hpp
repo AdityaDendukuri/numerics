@@ -33,7 +33,8 @@ inline void matmul(const mat &A, const mat &B, mat &C) {
     const real *ad = A.data();
     const real *bd = B.data();
     real *cd = C.data();
-    real *work = kernel::detail::gemm_static_workspace<real>();
+    const kernel::detail::gemm_scratch<real> scratch;
+    real *work = scratch.get();
     real *Ap = work;
     real *Bp =
         work + (kernel::detail::round_up(std::min(m, cfg::mc), cfg::mr) * std::min(k, cfg::kc));

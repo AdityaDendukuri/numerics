@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cmath>
 #include <concepts>
+#include <cstdlib>
 #include <cstring>
 #include <type_traits>
 
@@ -414,11 +415,42 @@ inline void gemm_strided(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A
 /// thread-local rather than heap-allocated, so the routine still never calls
 /// an allocator and is still safe to call from any thread; the cost is
 /// `gemm_config<T>::workspace` elements of TLS per thread that uses it.
+/// @brief Packing storage for the overloads that take no workspace.
+///
+/// A per-thread static buffer of `gemm_config<T>::workspace` elements: the
+/// one place in the kernel with storage of its own. It never calls an
+/// allocator and is safe to call from any thread; the cost is that many
+/// elements of TLS per thread that uses it. `get()` is the buffer.
+///
+/// One toolchain is the exception. GCC on macOS implements `thread_local`
+/// through emulated TLS, whose control block is a weak symbol in `.data`, and
+/// its Darwin backend then emits other local data in that section (among
+/// them every `std::source_location` record) as an offset from that weak
+/// symbol. Once the linker coalesces the weak copies, each such offset lands
+/// in one translation unit's data, and every caller's source location comes
+/// out as the first unit's. No `thread_local` in a header survives that, so
+/// on that toolchain alone the workspace is allocated per call and freed
+/// when this object goes out of scope.
 template <std::floating_point T>
-[[nodiscard]] inline T *gemm_static_workspace() noexcept {
-    alignas(64) static thread_local T buffer[gemm_config<T>::workspace];
-    return buffer;
-}
+class gemm_scratch {
+  public:
+#if defined(__APPLE__) && defined(__GNUC__) && !defined(__clang__)
+    gemm_scratch() noexcept
+        : buffer_(static_cast<T *>(std::malloc(gemm_config<T>::workspace * sizeof(T)))) {}
+    ~gemm_scratch() { std::free(buffer_); }
+    gemm_scratch(const gemm_scratch &) = delete;
+    gemm_scratch &operator=(const gemm_scratch &) = delete;
+    [[nodiscard]] T *get() const noexcept { return buffer_; }
+
+  private:
+    T *buffer_;
+#else
+    [[nodiscard]] T *get() const noexcept {
+        alignas(64) static thread_local T buffer[gemm_config<T>::workspace];
+        return buffer;
+    }
+#endif
+};
 
 } // namespace detail
 
@@ -437,13 +469,14 @@ inline void gemm(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx ld
 
 /// @brief Dense matrix product `C <- alpha*A*B + beta*C`, with row strides.
 ///
-/// Packs through a per-thread static buffer (see `detail::gemm_static_workspace`);
+/// Packs through a per-thread static buffer (see `detail::gemm_scratch`);
 /// pass a workspace explicitly to keep the call free of any state.
 template <std::floating_point T>
 inline void gemm(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda,
                  const T *NUM_K_RESTRICT B, idx ldb, T alpha, T beta, idx m, idx n,
                  idx k) noexcept {
-    gemm(C, ldc, A, lda, B, ldb, alpha, beta, m, n, k, detail::gemm_static_workspace<T>());
+    const detail::gemm_scratch<T> scratch;
+    gemm(C, ldc, A, lda, B, ldb, alpha, beta, m, n, k, scratch.get());
 }
 
 template <std::floating_point T>
@@ -559,8 +592,9 @@ inline void syrk_lower_strips(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTR
 template <std::floating_point T>
 inline void syrk_lower(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda, T alpha,
                        T beta, idx rows, idx columns) noexcept {
+    const detail::gemm_scratch<T> scratch;
     detail::syrk_lower_strips(C, ldc, A, lda, alpha, beta, rows, columns, gemm_config<T>::mc,
-                              detail::gemm_static_workspace<T>());
+                              scratch.get());
 }
 
 template <std::floating_point T>
@@ -576,8 +610,9 @@ template <std::floating_point T>
 inline void gemm_transpose_left(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda,
                                 const T *NUM_K_RESTRICT B, idx ldb, T alpha, T beta, idx rows,
                                 idx a_cols, idx b_cols) noexcept {
+    const detail::gemm_scratch<T> scratch;
     detail::gemm_strided(C, ldc, A, idx{1}, lda, B, ldb, idx{1}, alpha, beta, a_cols, b_cols, rows,
-                         detail::gemm_static_workspace<T>());
+                         scratch.get());
 }
 
 /// @brief Block projection coefficients \f$h \leftarrow V^T w\f$.
@@ -772,7 +807,8 @@ template <std::floating_point T>
 inline void trsm_lower_blocked(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L,
                                idx row_stride, idx col_stride, idx n, idx nrhs,
                                bool unit) noexcept {
-    T *NUM_K_RESTRICT work = gemm_static_workspace<T>();
+    const gemm_scratch<T> scratch;
+    T *NUM_K_RESTRICT work = scratch.get();
     for (idx i0 = 0; i0 < n; i0 += trsm_block) {
         const idx i1 = std::min(n, i0 + trsm_block);
         trsm_lower_block(X + (i0 * ldx), ldx, L + (i0 * row_stride) + (i0 * col_stride), row_stride,
@@ -791,7 +827,8 @@ template <std::floating_point T>
 inline void trsm_lower_transpose_blocked(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L,
                                          idx row_stride, idx col_stride, idx n, idx nrhs,
                                          bool unit) noexcept {
-    T *NUM_K_RESTRICT work = gemm_static_workspace<T>();
+    const gemm_scratch<T> scratch;
+    T *NUM_K_RESTRICT work = scratch.get();
     idx i1 = n;
     while (i1 > 0) {
         const idx i0 = i1 > trsm_block ? i1 - trsm_block : 0;
@@ -920,7 +957,8 @@ template <std::floating_point T>
 inline void trsm_lower_transpose_right_inplace(T *NUM_K_RESTRICT X, idx ldx,
                                                const T *NUM_K_RESTRICT L, idx ldl, idx rows,
                                                idx n) noexcept {
-    T *NUM_K_RESTRICT work = detail::gemm_static_workspace<T>();
+    const detail::gemm_scratch<T> scratch;
+    T *NUM_K_RESTRICT work = scratch.get();
     for (idx j0 = 0; j0 < n; j0 += detail::trsm_block) {
         const idx j1 = std::min(n, j0 + detail::trsm_block);
         detail::trsm_lower_transpose_right_block(X + j0, ldx, L + (j0 * ldl) + j0, ldl, rows,

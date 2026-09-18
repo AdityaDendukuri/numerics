@@ -8,6 +8,7 @@
 /// be traced to the line that made the claim.
 #pragma once
 
+#include "core/call_site.hpp"
 #include "core/math/associated.hpp"
 #include "core/math/models.hpp"
 #include <concepts>
@@ -117,8 +118,8 @@ struct codomain_of<certified_ref<T, Ps...>, void> : codomain_of<T> {};
 
 /// Attach caller-supplied evidence. Decidable shape prerequisites remain enforced.
 template <class P, class T>
-requires proposition<P> [[nodiscard]] certified_ref<T, P>
-assume(const T &value, std::source_location location = std::source_location::current()) {
+requires proposition<P> [[nodiscard]] certified_ref<T, P> assume(const T &value,
+                                                                 call_site site = {}) {
     if constexpr (std::derived_from<P, law::endomorphism>) {
         if (value.rows() != value.cols()) {
             throw std::invalid_argument(
@@ -126,31 +127,29 @@ assume(const T &value, std::source_location location = std::source_location::cur
         }
     }
     return detail::evidence_access::make<T, P>(
-        value, {evidence_origin::assumed, location, "explicit caller assumption"});
+        value, {evidence_origin::assumed, site.location, "explicit caller assumption"});
 }
 
 // certified_ref is non-owning.  Binding it to a temporary would leave dangling
 // evidence at the end of the full expression, so rvalues are rejected even
 // though a const reference could otherwise bind to them.
 template <class P, class T>
-requires proposition<P> certified_ref<T, P>
-assume(const T &&, std::source_location = std::source_location::current()) = delete;
+requires proposition<P> certified_ref<T, P> assume(const T &&, call_site = {}) = delete;
 
 /// Exhaustively validate P using a type-specific validator before attaching evidence.
 template <class P, class T>
-requires proposition<P> &&evidence_validator<T, P>::available
-    [[nodiscard]] certified_ref<T, P>
-    require(const T &value, std::source_location location = std::source_location::current()) {
+requires proposition<P> &&evidence_validator<T, P>::available [[nodiscard]] certified_ref<T, P>
+require(const T &value, call_site site = {}) {
     if (!evidence_validator<T, P>::verify(value)) {
         throw std::invalid_argument("value does not satisfy the required proposition");
     }
     return detail::evidence_access::make<T, P>(
-        value, {evidence_origin::verified, location, "exhaustive validator"});
+        value, {evidence_origin::verified, site.location, "exhaustive validator"});
 }
 
 template <class P, class T>
 requires proposition<P> &&evidence_validator<T, P>::available certified_ref<T, P>
-require(const T &&, std::source_location = std::source_location::current()) = delete;
+require(const T &&, call_site = {}) = delete;
 
 } // namespace num::math
 

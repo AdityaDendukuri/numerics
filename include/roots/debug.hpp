@@ -2,6 +2,7 @@
 /// @brief Runtime verification of root-finding preconditions.
 #pragma once
 
+#include "core/call_site.hpp"
 #include "core/debug.hpp"
 #include "core/types.hpp"
 #include "roots/concepts.hpp"
@@ -21,8 +22,8 @@ using num::debug::panic;
 /// inside the interval. Without one they return a value that is not a root and
 /// report no error, so the bracket is checked rather than assumed.
 template <class F, class T = real>
-requires scalar_function<F, T> inline void
-verify_bracket(F &&f, T a, T b, std::source_location loc = std::source_location::current()) {
+requires scalar_function<F, T> inline void verify_bracket(F &&f, T a, T b, call_site site = {}) {
+    const std::source_location loc = site.location;
     if (get_level() == diagnostic_level::off) {
         return;
     }
@@ -50,8 +51,8 @@ verify_bracket(F &&f, T a, T b, std::source_location loc = std::source_location:
 /// or not at all, and none of those report an error on their own.
 template <class F, class D, class T = real>
 requires differentiable_function<F, D, T> inline void
-verify_derivative(F &&f, D &&df, T x, T tol = T(1e-5),
-                  std::source_location loc = std::source_location::current()) {
+verify_derivative(F &&f, D &&df, T x, T tol = T(1e-5), call_site site = {}) {
+    const std::source_location loc = site.location;
     if constexpr (!num::debug::sampling_compiled_in) {
         return;
     }
