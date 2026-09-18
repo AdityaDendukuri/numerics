@@ -4,15 +4,15 @@
 It provides dense and sparse linear algebra, direct factorizations, Krylov solvers, ODE integrators, spectral transforms, graph algorithms, and quadrature.
 The compute kernels are efficient, allocate nothing, and have no dependencies.
 The layers above them state the mathematical preconditions of each algorithm, such as symmetry or positive-definiteness, as C++20 concepts.
-A precondition that cannot be checked at compile time is asserted by the caller and verified at run time under the diagnostic presets.
+A precondition that cannot be established at compile time is asserted by the caller and verified at run time under the diagnostic presets.
 
-I began this library by collecting my research and coursework code in one place, and it still grows in that way.
-Tools written for downstream projects are absorbed here and refined for reuse.
-The contents range from mesh-free fluid solvers written as an undergraduate for surgical simulation, through graph algorithms and Ising nucleation from my master's work, to finite state projection and iterative linear solvers from my PhD research.
-One person maintains it for that research.
-Please use it with appropriate caution.
+The library originated as a consolidation of my research and coursework code, and it continues to grow in that manner.
+Tools developed for downstream projects are incorporated here and refined for reuse.
+Its contents span mesh-free fluid solvers from undergraduate work on surgical simulation, graph algorithms and Ising nucleation from my master's thesis, and finite state projection and iterative linear solvers from my doctoral research.
+It is maintained by one person in support of that research.
+Please use it with appropriate caution!!
 
-The library has 362 unit tests.
+The library is covered by 366 unit tests.
 BLAS, LAPACK, OpenMP, and CUDA accelerate it when they are available.
 When they are not, portable C++ takes their place.
 On one core, the portable dense product and factorizations run within 10% of a vendor BLAS, and the small triangular solves run faster than LAPACK at every size (see @ref page_performance "Performance").
