@@ -1,0 +1,4 @@
+var structnum_1_1math_1_1detail_1_1declared__laws_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1red5409402552c41b458c9f6e91803933a =
+[
+    [ "type", "structnum_1_1math_1_1detail_1_1declared__laws_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1red5409402552c41b458c9f6e91803933a.html#a03acdd6ff7ba8271f725b1d22177d780", null ]
+];

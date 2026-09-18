@@ -1,0 +1,25 @@
+var namespacenum_1_1kernel_1_1detail =
+[
+    [ "gemm_scratch", "classnum_1_1kernel_1_1detail_1_1gemm__scratch.html", "classnum_1_1kernel_1_1detail_1_1gemm__scratch" ],
+    [ "cholesky_block", "namespacenum_1_1kernel_1_1detail.html#a774d4864e67d822536797ee514818290", null ],
+    [ "cholesky_blocked", "namespacenum_1_1kernel_1_1detail.html#a7f85ee64c3bebb29b2253e4570f446ba", null ],
+    [ "csr_row_dot", "namespacenum_1_1kernel_1_1detail.html#ac577acc185f599673d7ef72df251969a", null ],
+    [ "gemm_micro", "namespacenum_1_1kernel_1_1detail.html#a9dd0cb41dc5ca51d3e896e763b0bc8fe", null ],
+    [ "gemm_pack_a", "namespacenum_1_1kernel_1_1detail.html#a98bebd5edb3255b7016354c6d9a9750f", null ],
+    [ "gemm_pack_b", "namespacenum_1_1kernel_1_1detail.html#a561e748133a25e6bf5795b9d5d5630ea", null ],
+    [ "gemm_scale_c", "namespacenum_1_1kernel_1_1detail.html#aca495c3aaab9703f665944b7a500a13f", null ],
+    [ "gemm_strided", "namespacenum_1_1kernel_1_1detail.html#adb14c5bef94ce6789259e39b0699e5a1", null ],
+    [ "reduce", "namespacenum_1_1kernel_1_1detail.html#a21ba65697c25e9eb1e95e49760e2db75", null ],
+    [ "round_down", "namespacenum_1_1kernel_1_1detail.html#a0a458fbf2d10b96938f660a1e724e08e", null ],
+    [ "round_up", "namespacenum_1_1kernel_1_1detail.html#a716602cb2aba28a032675d23a6504272", null ],
+    [ "syrk_lower_strips", "namespacenum_1_1kernel_1_1detail.html#a1a933a480f54518dc07ef506197a61b1", null ],
+    [ "trsm_lower_block", "namespacenum_1_1kernel_1_1detail.html#a1e8b3d1ed06c2da833620821c1f2ff79", null ],
+    [ "trsm_lower_blocked", "namespacenum_1_1kernel_1_1detail.html#a8b52dbeff082616077127c3d1a67e016", null ],
+    [ "trsm_lower_transpose_block", "namespacenum_1_1kernel_1_1detail.html#a1406e30aae45e235c1b6fc9d1b6156cd", null ],
+    [ "trsm_lower_transpose_blocked", "namespacenum_1_1kernel_1_1detail.html#aec69e429ed8d68c8b28ea5e272350878", null ],
+    [ "trsm_lower_transpose_right_block", "namespacenum_1_1kernel_1_1detail.html#a63bd7ad8bfa4d308a564338a2378310d", null ],
+    [ "reduction_lanes", "namespacenum_1_1kernel_1_1detail.html#aeb2c231e13e47f94ce88b68d5c48540f", null ],
+    [ "short_row_cutoff", "namespacenum_1_1kernel_1_1detail.html#a15226d9810a07603b7790a8c04205b77", null ],
+    [ "trsm_block", "namespacenum_1_1kernel_1_1detail.html#a80243aa779a6fa28fe52ece257d63461", null ],
+    [ "trsm_row_batch", "namespacenum_1_1kernel_1_1detail.html#a187607a78659b4933940ea0e12c02a64", null ]
+];

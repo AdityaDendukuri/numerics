@@ -1,0 +1,26 @@
+var namespacenum_1_1plt =
+[
+    [ "detail", "namespacenum_1_1plt_1_1detail.html", "namespacenum_1_1plt_1_1detail" ],
+    [ "clf", "namespacenum_1_1plt.html#a1938b6f5b2418a3d8fa2b3d529d59b60", null ],
+    [ "colormap", "namespacenum_1_1plt.html#a5cc5cc675734f9c510fc3da318063775", null ],
+    [ "heatmap", "namespacenum_1_1plt.html#af87558e8714f5214ab652acf8a69c49c", null ],
+    [ "heatmap", "namespacenum_1_1plt.html#acdb184d9e328194e790171e8e53edf89", null ],
+    [ "legend", "namespacenum_1_1plt.html#adfa7bbdd35cf7129d885e5de32d99343", null ],
+    [ "loglog", "namespacenum_1_1plt.html#aaea590d09554c3b975be880e969b432c", null ],
+    [ "next", "namespacenum_1_1plt.html#a39a61b865bfb7f9743e3947791c36154", null ],
+    [ "plot", "namespacenum_1_1plt.html#aaf8e7ba0eb839c78ddd494f99ae441d6", null ],
+    [ "plot", "namespacenum_1_1plt.html#aa7c40c3112e59322769c2c65b05150b0", null ],
+    [ "plot_paths", "namespacenum_1_1plt.html#a0f661362fd9accc16aad6296b9ef5bfa", null ],
+    [ "savefig", "namespacenum_1_1plt.html#aadfb6a7e2006684ea4c8d4bd9e22938a", null ],
+    [ "semilogx", "namespacenum_1_1plt.html#aa01d7c42bfcaeffa990c1c2352ad94e9", null ],
+    [ "semilogy", "namespacenum_1_1plt.html#adaf049be040a762365f659098f8c89fa", null ],
+    [ "show", "namespacenum_1_1plt.html#a3f93afa14ffba85f8df2f399f09f7248", null ],
+    [ "show_dumb", "namespacenum_1_1plt.html#ac8adb22d46909850d9b21b5319cc9493", null ],
+    [ "subplot", "namespacenum_1_1plt.html#acb8faaa3c42453a44a5206945cc6f897", null ],
+    [ "terminal_dumb", "namespacenum_1_1plt.html#a656665e6f14ca459f929c87c75c2fa7a", null ],
+    [ "title", "namespacenum_1_1plt.html#a5fceaace78547e20a8e656ecf19468ea", null ],
+    [ "xlabel", "namespacenum_1_1plt.html#a1969f5b60f9c9bc50b1fd92f56708773", null ],
+    [ "xlim", "namespacenum_1_1plt.html#a9d6051661c68f491855d802e8c26311e", null ],
+    [ "ylabel", "namespacenum_1_1plt.html#a6eea0d08d5c2147c38244d7a688a3c97", null ],
+    [ "ylim", "namespacenum_1_1plt.html#a00fcb94dd44373d9d0ba6aee20dfb702", null ]
+];

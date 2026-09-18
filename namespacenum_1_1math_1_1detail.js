@@ -1,0 +1,23 @@
+var namespacenum_1_1math_1_1detail =
+[
+    [ "codomain_of", "structnum_1_1math_1_1detail_1_1codomain__of.html", "structnum_1_1math_1_1detail_1_1codomain__of" ],
+    [ "codomain_of< basic_mat< T >, void >", "structnum_1_1math_1_1detail_1_1codomain__of_3_01basic__mat_3_01T_01_4_00_01void_01_4.html", "structnum_1_1math_1_1detail_1_1codomain__of_3_01basic__mat_3_01T_01_4_00_01void_01_4" ],
+    [ "codomain_of< certified_ref< T, Ps... >, void >", "structnum_1_1math_1_1detail_1_1codomain__of_3_01certified__ref_3_01T_00_01Ps_8_8_8_01_4_00_01void_01_4.html", null ],
+    [ "codomain_of< chebyshev_preconditioner< Op >, void >", "structnum_1_1math_1_1detail_1_1codomain__of_3_01chebyshev__preconditioner_3_01Op_01_4_00_01void_01_4.html", "structnum_1_1math_1_1detail_1_1codomain__of_3_01chebyshev__preconditioner_3_01Op_01_4_00_01void_01_4" ],
+    [ "codomain_of< ilu0_preconditioner, void >", "structnum_1_1math_1_1detail_1_1codomain__of_3_01ilu0__preconditioner_00_01void_01_4.html", "structnum_1_1math_1_1detail_1_1codomain__of_3_01ilu0__preconditioner_00_01void_01_4" ],
+    [ "codomain_of< linear::structured_mat< Mat, Ax >, void >", "structnum_1_1math_1_1detail_1_1codomain__of_3_01linear_1_1structured__mat_3_01Mat_00_01Ax_01_4_00_01void_01_4.html", null ],
+    [ "codomain_of< T, std::void_t< typename std::remove_cvref_t< T >::codomain_type > >", "structnum_1_1math_1_1detail_1_1codomain__of_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1remofaa4035848825e72bbd3c17ca9c8386a.html", "structnum_1_1math_1_1detail_1_1codomain__of_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1remofaa4035848825e72bbd3c17ca9c8386a" ],
+    [ "declared_laws", "structnum_1_1math_1_1detail_1_1declared__laws.html", "structnum_1_1math_1_1detail_1_1declared__laws" ],
+    [ "declared_laws< T, std::void_t< typename std::remove_cvref_t< T >::math_laws > >", "structnum_1_1math_1_1detail_1_1declared__laws_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1red5409402552c41b458c9f6e91803933a.html", "structnum_1_1math_1_1detail_1_1declared__laws_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1red5409402552c41b458c9f6e91803933a" ],
+    [ "domain_of", "structnum_1_1math_1_1detail_1_1domain__of.html", "structnum_1_1math_1_1detail_1_1domain__of" ],
+    [ "domain_of< basic_mat< T >, void >", "structnum_1_1math_1_1detail_1_1domain__of_3_01basic__mat_3_01T_01_4_00_01void_01_4.html", "structnum_1_1math_1_1detail_1_1domain__of_3_01basic__mat_3_01T_01_4_00_01void_01_4" ],
+    [ "domain_of< certified_ref< T, Ps... >, void >", "structnum_1_1math_1_1detail_1_1domain__of_3_01certified__ref_3_01T_00_01Ps_8_8_8_01_4_00_01void_01_4.html", null ],
+    [ "domain_of< chebyshev_preconditioner< Op >, void >", "structnum_1_1math_1_1detail_1_1domain__of_3_01chebyshev__preconditioner_3_01Op_01_4_00_01void_01_4.html", "structnum_1_1math_1_1detail_1_1domain__of_3_01chebyshev__preconditioner_3_01Op_01_4_00_01void_01_4" ],
+    [ "domain_of< ilu0_preconditioner, void >", "structnum_1_1math_1_1detail_1_1domain__of_3_01ilu0__preconditioner_00_01void_01_4.html", "structnum_1_1math_1_1detail_1_1domain__of_3_01ilu0__preconditioner_00_01void_01_4" ],
+    [ "domain_of< linear::structured_mat< Mat, Ax >, void >", "structnum_1_1math_1_1detail_1_1domain__of_3_01linear_1_1structured__mat_3_01Mat_00_01Ax_01_4_00_01void_01_4.html", null ],
+    [ "domain_of< T, std::void_t< typename std::remove_cvref_t< T >::domain_type > >", "structnum_1_1math_1_1detail_1_1domain__of_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1removef0670a8658740383c2fa95fcdda309e4.html", "structnum_1_1math_1_1detail_1_1domain__of_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1removef0670a8658740383c2fa95fcdda309e4" ],
+    [ "scalar_of", "structnum_1_1math_1_1detail_1_1scalar__of.html", "structnum_1_1math_1_1detail_1_1scalar__of" ],
+    [ "scalar_of< certified_ref< T, Ps... >, void >", "structnum_1_1math_1_1detail_1_1scalar__of_3_01certified__ref_3_01T_00_01Ps_8_8_8_01_4_00_01void_01_4.html", null ],
+    [ "scalar_of< T, std::void_t< typename std::remove_cvref_t< T >::value_type > >", "structnum_1_1math_1_1detail_1_1scalar__of_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1remove8a727e847a045837850ea248002db848.html", "structnum_1_1math_1_1detail_1_1scalar__of_3_01T_00_01std_1_1void__t_3_01typename_01std_1_1remove8a727e847a045837850ea248002db848" ],
+    [ "claims_in", "namespacenum_1_1math_1_1detail.html#a1e97d4f95b7afa209a93663e8a74db4c", null ]
+];

@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['d_0',['d',['../classnum_1_1linear_1_1tri__mat.html#a0e77b2bdd58c6856252f3aad3f7ff91b',1,'num::linear::tri_mat']]],
+  ['data_1',['data',['../structnum_1_1small__vec.html#a7a12c96732921cbad2272c34acf2c047',1,'num::small_vec::data'],['../structnum_1_1small__matrix.html#a39e1bf66755cef36fdd2f6176a978d6d',1,'num::small_matrix::data'],['../structnum_1_1plt_1_1detail_1_1series__entry.html#aca31006c0a771d7f2a9efc6d0fdc08bc',1,'num::plt::detail::series_entry::data'],['../structnum_1_1plt_1_1detail_1_1heatmap__entry.html#a60095822ae09873c099dcaf1a503ea63',1,'num::plt::detail::heatmap_entry::data']]],
+  ['data_5f_2',['data_',['../structnum_1_1multi__index.html#a2a443c437f1908b12e711a460e38689e',1,'num::multi_index']]],
+  ['decomp_3',['decomp',['../structnum_1_1dense__resolvent__solver_1_1Impl.html#a8cc12878872f8d99496705e79c454ce0',1,'num::dense_resolvent_solver::Impl']]],
+  ['default_5ffft_5fbackend_4',['default_fft_backend',['../namespacenum_1_1spectral.html#a8de7b957bfbfd714ba3471681d6fa822',1,'num::spectral']]],
+  ['dense_5',['dense',['../structnum_1_1auto__resolvent__solver_1_1Impl.html#adb18944284bf340f5a8293b938910bf5',1,'num::auto_resolvent_solver::Impl']]],
+  ['dense_5ffactor_6',['dense_factor',['../structnum_1_1auto__linear__solver_1_1Impl.html#adb2beded848faed229b1c3be3b74098b',1,'num::auto_linear_solver::Impl']]],
+  ['dense_5flimit_7',['dense_limit',['../structnum_1_1auto__linear__options.html#a4956c7aca15affc24a5633ed8bc53263',1,'num::auto_linear_options::dense_limit'],['../structnum_1_1auto__resolvent__options.html#afe531ede691a8af5d87753aafe52164c',1,'num::auto_resolvent_options::dense_limit']]],
+  ['diagonal_8',['diagonal',['../structnum_1_1block__lu__factor.html#a79d34bc83ae4871bf663489a95aa9817',1,'num::block_lu_factor::diagonal'],['../structnum_1_1detail_1_1assembled__blocks.html#af6b28d88f03c6e183d9f7326c0ad3a33',1,'num::detail::assembled_blocks::diagonal'],['../structnum_1_1block__cholesky__factor.html#ab6defa817d2fbcd26c72cf974293caac',1,'num::block_cholesky_factor::diagonal']]],
+  ['dimension_9',['dimension',['../namespacenum_1_1math.html#a0194c1f314d5f44d4524f0a8d11bd979',1,'num::math']]],
+  ['dl_10',['dl',['../classnum_1_1linear_1_1tri__mat.html#a4bd30c8aa4bcd5d9cf297f8689b138af',1,'num::linear::tri_mat']]],
+  ['dn_11',['dn',['../structnum_1_1pbc__lattice__2d.html#a12d8e959dbc41eca6a63df9c3cd566ec',1,'num::pbc_lattice_2d']]],
+  ['dot_12',['dot',['../structnum_1_1kernel_1_1dot__norm__result.html#aa44297a1bd39eb4f909eb0757c38acfe',1,'num::kernel::dot_norm_result']]],
+  ['dt_13',['dt',['../structnum_1_1ode_1_1implicit__params.html#a6b56d3b79fac5020b9cdcae5a6bffbeb',1,'num::ode::implicit_params::dt'],['../structnum_1_1crank__nicolson__adi.html#ae7019643c1ce68c6bfa6896b536675b3',1,'num::crank_nicolson_adi::dt']]],
+  ['du_14',['du',['../classnum_1_1linear_1_1tri__mat.html#ae69b4182691b483a4455fbc5d9a7ad29',1,'num::linear::tri_mat']]],
+  ['dx_15',['dx',['../structnum_1_1grid__3d.html#a7cee606123cc8e80ba89c39e2d0c5e1a',1,'num::grid_3d']]]
+];
