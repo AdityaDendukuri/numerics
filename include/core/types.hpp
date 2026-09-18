@@ -10,6 +10,7 @@
 #include <span>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace num {
@@ -87,6 +88,23 @@ using sorted_table = std::map<K, V, Compare, Alloc>;
 template <class K, class Hash = std::hash<K>, class Eq = std::equal_to<K>,
           class Alloc = std::allocator<K>>
 using key_set = std::unordered_set<K, Hash, Eq, Alloc>;
+
+/// @brief Add an element at the end of an array, constructed from `args`.
+///
+/// `push_back` and `emplace_back` name how the standard library stores the
+/// element; this names what the caller does. It is `emplace_back`, so it
+/// accepts either a finished value or the arguments of the element's
+/// constructor, and it returns a reference to the element it added.
+///
+/// ```cpp
+/// num::array<num::idx> rows;
+/// num::append(rows, i);
+/// num::append(transitions, source, destination, rate); // constructs in place
+/// ```
+template <class T, class Alloc, class... Args>
+T &append(array<T, Alloc> &values, Args &&...args) {
+    return values.emplace_back(std::forward<Args>(args)...);
+}
 
 /// @}
 
