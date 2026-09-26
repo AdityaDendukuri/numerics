@@ -72,12 +72,12 @@ int main() {
         auto t0 = std::chrono::high_resolution_clock::now();
         std::vector<cplx> density(N, cplx(0.0, 0.0));
 
-        inverse_laplace_accumulate(t_eval, M, [&](cplx shift, cplx weight) {
+        for (const auto &[shift, weight] : talbot_contour(t_eval, M)) {
             auto sol = hess_solver.solve(shift, p0);
             for (idx i = 0; i < N; ++i) {
                 density[i] += weight * sol[i];
             }
-        });
+        }
 
         vec p_talbot(N, 0.0);
         for (idx i = 0; i < N; ++i) p_talbot[i] = std::max(0.0, density[i].real());

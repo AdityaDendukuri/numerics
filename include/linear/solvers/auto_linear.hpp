@@ -43,6 +43,22 @@ class auto_linear_solver {
     std::unique_ptr<Impl> impl_;
 };
 
+inline void solve(const auto_linear_solver &factor, const vec &rhs, vec &solution) {
+    factor.solve(rhs, solution);
+}
+
+inline void solve(const auto_linear_solver &factor, const mat &rhs, mat &solution) {
+    factor.solve(rhs, solution);
+}
+
+inline void solve_transpose(const auto_linear_solver &factor, const vec &rhs, vec &solution) {
+    factor.solve_transpose(rhs, solution);
+}
+
+inline void solve_transpose(const auto_linear_solver &factor, const mat &rhs, mat &solution) {
+    factor.solve_transpose(rhs, solution);
+}
+
 /// Convenience solve overload. Allocates; prefer the out-param form in hot loops.
 [[nodiscard]] inline vec solve(const auto_linear_solver &factor, const vec &rhs) {
     vec solution(rhs.size(), 0.0);

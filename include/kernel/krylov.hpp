@@ -56,8 +56,8 @@ struct krylov_result {
 /// @return `krylov_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
 template <std::floating_point T, class MatVec>
 [[nodiscard]] inline krylov_result<T> cg(MatVec &&A, T *NUM_K_RESTRICT x, const T *b, idx n,
-                                        T *NUM_K_RESTRICT work, T tol = T(1e-10),
-                                        idx max_iter = 1000) {
+                                         T *NUM_K_RESTRICT work, T tol = T(1e-10),
+                                         idx max_iter = 1000) {
     T *r = work;
     T *p = work + n;
     T *Ap = work + (2 * n);
@@ -123,8 +123,8 @@ template <std::floating_point T, class MatVec>
 /// @return `krylov_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
 template <std::floating_point T, class MatVec, class Precond>
 [[nodiscard]] inline krylov_result<T> pcg(MatVec &&A, Precond &&M, T *NUM_K_RESTRICT x, const T *b,
-                                         idx n, T *NUM_K_RESTRICT work, T tol = T(1e-10),
-                                         idx max_iter = 1000) {
+                                          idx n, T *NUM_K_RESTRICT work, T tol = T(1e-10),
+                                          idx max_iter = 1000) {
     T *r = work;
     T *z = work + n;
     T *p = work + (2 * n);

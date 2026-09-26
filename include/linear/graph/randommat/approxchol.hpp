@@ -23,7 +23,27 @@ namespace num {
 
 namespace randommat {
 
+/// Select the connectivity-preserving approximate elimination of Gao, Kyng,
+/// and Spielman, "Robust and Practical Solution of Laplacian Equations by
+/// Approximate Elimination" (2023), arXiv:2303.00709.
+namespace gao_kyng_spielman_2023 {
+
+struct ac_t {};
+struct ac2_t {};
+inline constexpr ac_t ac{};
+inline constexpr ac2_t ac2{};
+
+} // namespace gao_kyng_spielman_2023
+
 namespace detail {
+
+template <class T>
+concept gks_2023_algorithm = std::same_as<std::remove_cvref_t<T>, gao_kyng_spielman_2023::ac_t> ||
+                             std::same_as<std::remove_cvref_t<T>, gao_kyng_spielman_2023::ac2_t>;
+
+template <gks_2023_algorithm Algorithm>
+inline constexpr idx gks_2023_samples =
+    std::same_as<std::remove_cvref_t<Algorithm>, gao_kyng_spielman_2023::ac2_t> ? 2 : 1;
 
 template <typename Float, std::integral Index>
 inline void write_column(Index v, Index step, Float total_weight,
@@ -59,9 +79,9 @@ inline void permute_rows(cholesky_factor<Float, Index> &factor) {
 
 /// @brief How the star-mesh clique left by each elimination is approximated.
 enum class clique_sampler : std::uint8_t {
-    exact,       ///< Keep the full clique. Correct, and densifies.
-    independent, ///< Kyng-Sachdeva: `samples` independent draws per neighbour.
-    tree,        ///< A random spanning tree of the clique, reweighted to stay unbiased.
+    exact,    ///< Keep the full clique. Correct, and densifies.
+    gks_2023, ///< Gao--Kyng--Spielman AC/AC2 connectivity-preserving sampler.
+    tree,     ///< A random spanning tree of the clique, reweighted to stay unbiased.
 };
 
 /// Factorize a multigraph Laplacian into approximate or exact Cholesky factor \f$L L^T\f$.
@@ -70,7 +90,7 @@ template <typename Float = double, std::integral Index = num::idx, typename Rng 
 inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &input_G,
                                                std::type_identity_t<Index> samples = 1,
                                                bool exact_mode = false, Rng *rng = nullptr,
-                                               clique_sampler sampler = clique_sampler::independent,
+                                               clique_sampler sampler = clique_sampler::gks_2023,
                                                std::optional<Index> pinned_vertex = std::nullopt) {
     if (exact_mode) {
         sampler = clique_sampler::exact;
@@ -138,7 +158,7 @@ inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &input_
             structures::sample_clique_tree(G, q, nbr_buf, total_weight, active_rng,
                                            static_cast<std::size_t>(samples));
             break;
-        case clique_sampler::independent:
+        case clique_sampler::gks_2023:
             structures::sample_clique(G, q, nbr_buf, total_weight, samples, active_rng);
             break;
         }
@@ -156,30 +176,42 @@ inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &input_
     return factor;
 }
 
-/// ApproxChol factorizer with 1 random sample per clique node.
+/// Apply the Gao--Kyng--Spielman AC/AC2 clique sampler explicitly.
+template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64,
+          typename Queue = structures::basic_degree_queue<Index>,
+          detail::gks_2023_algorithm Algorithm = gao_kyng_spielman_2023::ac_t>
+inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &G, Algorithm,
+                                               Rng *rng = nullptr,
+                                               std::optional<Index> pinned_vertex = std::nullopt) {
+    return factorize<Float, Index, Rng, Queue>(
+        G, static_cast<Index>(detail::gks_2023_samples<Algorithm>), false, rng,
+        clique_sampler::gks_2023, pinned_vertex);
+}
+
+/// Gao--Kyng--Spielman AC factorizer with one sample per original entry.
 /// @return `cholesky_factor`: the sparse approximate factor, consumed by `randommat::solve`.
 template <typename Float = double, std::integral Index = num::idx>
 inline cholesky_factor<Float, Index> ac1(const graph<Float, Index> &G, std::uint64_t seed = 42) {
     rng64 rng(seed);
-    return factorize<Float, Index, rng64>(G, 1, false, &rng);
+    return factorize<Float, Index, rng64>(G, gao_kyng_spielman_2023::ac, &rng);
 }
 
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64>
 inline cholesky_factor<Float, Index> ac1(const graph<Float, Index> &G, Rng &rng) {
-    return factorize<Float, Index, Rng>(G, 1, false, &rng);
+    return factorize<Float, Index, Rng>(G, gao_kyng_spielman_2023::ac, &rng);
 }
 
-/// ApproxChol factorizer with 2 random samples per clique node.
+/// Gao--Kyng--Spielman AC2 factorizer with two samples per original entry.
 /// @return `cholesky_factor`: the sparse approximate factor, consumed by `randommat::solve`.
 template <typename Float = double, std::integral Index = num::idx>
 inline cholesky_factor<Float, Index> ac2(const graph<Float, Index> &G, std::uint64_t seed = 42) {
     rng64 rng(seed);
-    return factorize<Float, Index, rng64>(G, 2, false, &rng);
+    return factorize<Float, Index, rng64>(G, gao_kyng_spielman_2023::ac2, &rng);
 }
 
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64>
 inline cholesky_factor<Float, Index> ac2(const graph<Float, Index> &G, Rng &rng) {
-    return factorize<Float, Index, Rng>(G, 2, false, &rng);
+    return factorize<Float, Index, Rng>(G, gao_kyng_spielman_2023::ac2, &rng);
 }
 
 /// @brief Spanning-tree clique sampler: one reweighted random tree per elimination.

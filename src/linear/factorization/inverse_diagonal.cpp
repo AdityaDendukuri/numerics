@@ -31,7 +31,7 @@ void compute_selected(idx n, view<const idx> rows, view<const idx> columns,
         throw std::invalid_argument("selected_inverse: request sizes must match");
     }
     array<idx> unique_columns;
-    table<idx, idx> position;
+    unordered_map<idx, idx> position;
     for (idx column : columns) {
         if (column >= n) {
             throw std::out_of_range("selected_inverse: column out of range");

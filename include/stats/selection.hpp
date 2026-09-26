@@ -7,6 +7,8 @@
 #include <numeric>
 #include <span>
 #include <stdexcept>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace num {
@@ -35,10 +37,22 @@ template <typename T>
     return argmax(values.size(), [&](idx index) -> const T & { return values[index]; });
 }
 
-/// Return indices of the k smallest values, ordered by increasing value.
-template <typename T>
-[[nodiscard]] array<idx> smallest_indices(view<const T> values, idx count) {
-    count = std::min(count, values.size());
+/// Return the indices that sort `values` in increasing order, ties by index.
+///
+/// `values` is any container with `size()` and `operator[]`.
+template <typename Values>
+[[nodiscard]] array<idx> argsort(const Values &values) {
+    array<idx> indices(values.size());
+    std::iota(indices.begin(), indices.end(), idx{0});
+    std::stable_sort(indices.begin(), indices.end(),
+                     [&](idx left, idx right) { return values[left] < values[right]; });
+    return indices;
+}
+
+/// Return the first `count` indices of `argsort(values)`, without sorting the rest.
+template <typename Values>
+[[nodiscard]] array<idx> smallest_indices(const Values &values, idx count) {
+    count = std::min(count, static_cast<idx>(values.size()));
     array<idx> indices(values.size());
     std::iota(indices.begin(), indices.end(), idx{0});
     const auto less = [&](idx left, idx right) {
@@ -53,6 +67,39 @@ template <typename T>
     }
     std::sort(indices.begin(), indices.end(), less);
     return indices;
+}
+
+/// Return the indices in [0, count) for which `keep(index)` is true, in increasing order.
+template <typename Predicate>
+[[nodiscard]] array<idx> filter(idx count, Predicate &&keep) {
+    array<idx> indices;
+    for (idx index = 0; index < count; ++index) {
+        if (keep(index)) {
+            indices.push_back(index);
+        }
+    }
+    return indices;
+}
+
+/// @brief Group the indices in [0, count) by `key(index)`.
+///
+/// Returns the distinct keys in order of first appearance, and for each index
+/// the position of its key among them.
+template <typename Key>
+[[nodiscard]] auto group_by(idx count, Key &&key) {
+    using value = std::remove_cvref_t<decltype(key(idx{0}))>;
+    std::pair<array<value>, array<idx>> groups;
+    auto &[keys, group_of] = groups;
+    unordered_map<value, idx> position;
+    group_of.reserve(count);
+    for (idx index = 0; index < count; ++index) {
+        const auto [entry, added] = position.emplace(key(index), keys.size());
+        if (added) {
+            keys.push_back(entry->first);
+        }
+        group_of.push_back(entry->second);
+    }
+    return groups;
 }
 
 } // namespace num

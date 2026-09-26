@@ -72,7 +72,7 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
     EXPECT_LT(res_exact.residual, 1e-11);
 
     // 2. Sampled ApproxChol preconditioner
-    auto sampled_prec = approxchol_preconditioner(G, /*samples=*/2, /*seed=*/42);
+    auto sampled_prec = approxchol_preconditioner(G, gao_kyng_spielman_2023::ac2, /*seed=*/42);
     const auto projected_sampled_prec = operators::projected(sampled_prec, zero_sum_space);
     const auto sampled_prec_on_zero_sum =
         num::assume<law::spd_on<space::zero_sum>>(projected_sampled_prec);
@@ -92,7 +92,7 @@ TEST(RandomMat, SparseMatrixConversion) {
     G.add_edge(4, 0, 0.5);
 
     spmat L = num::linear::laplacian(G);
-    auto ac_prec = approxchol_preconditioner(L, 1, 42);
+    auto ac_prec = approxchol_preconditioner(L, gao_kyng_spielman_2023::ac, 42);
     EXPECT_EQ(ac_prec.rows(), 5u);
     EXPECT_EQ(ac_prec.cols(), 5u);
 }
@@ -102,7 +102,7 @@ TEST(RandomMat, GroundedApproxCholExposesFactorActions) {
     const std::vector<idx> columns{0, 1, 0, 1, 2, 1, 2};
     const std::vector<real> values{2.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0};
     const spmat grounded = spmat::from_triplets(3, 3, rows, columns, values);
-    const auto factor = grounded_approxchol_factor(grounded, 2, 17);
+    const auto factor = grounded_approxchol_factor(grounded, gao_kyng_spielman_2023::ac2, 17);
 
     mat C(3, 3, 0.0);
     for (idx column = 0; column < 3; ++column) {

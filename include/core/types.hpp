@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <functional>
 #include <map>
+#include <set>
 #include <span>
 #include <unordered_map>
 #include <unordered_set>
@@ -74,20 +75,24 @@ using static_array = std::array<T, N>;
 template <class T, std::size_t Extent = std::dynamic_extent>
 using view = std::span<T, Extent>;
 
-/// @brief A hash table from keys to values.
+/// @brief `std::unordered_map`: a hash map with no key order, like Rust `HashMap`.
 template <class K, class V, class Hash = std::hash<K>, class Eq = std::equal_to<K>,
           class Alloc = std::allocator<std::pair<const K, V>>>
-using table = std::unordered_map<K, V, Hash, Eq, Alloc>;
+using unordered_map = std::unordered_map<K, V, Hash, Eq, Alloc>;
 
-/// @brief A table kept in key order, for iteration from smallest key to largest.
+/// @brief `std::map`: a map sorted by key, like Rust `BTreeMap`.
 template <class K, class V, class Compare = std::less<K>,
           class Alloc = std::allocator<std::pair<const K, V>>>
-using sorted_table = std::map<K, V, Compare, Alloc>;
+using map = std::map<K, V, Compare, Alloc>;
 
-/// @brief A hash table of unique keys.
+/// @brief `std::unordered_set`: a hash set with no key order, like Rust `HashSet`.
 template <class K, class Hash = std::hash<K>, class Eq = std::equal_to<K>,
           class Alloc = std::allocator<K>>
-using key_set = std::unordered_set<K, Hash, Eq, Alloc>;
+using unordered_set = std::unordered_set<K, Hash, Eq, Alloc>;
+
+/// @brief `std::set`: a set sorted by key, like Rust `BTreeSet`.
+template <class K, class Compare = std::less<K>, class Alloc = std::allocator<K>>
+using set = std::set<K, Compare, Alloc>;
 
 /// @brief Add an element at the end of an array, constructed from `args`.
 ///

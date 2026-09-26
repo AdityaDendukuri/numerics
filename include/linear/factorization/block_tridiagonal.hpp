@@ -39,6 +39,7 @@
 /// solves. No GEMM or triangular solve is reimplemented.
 #pragma once
 
+#include "blas/matrix_ops.hpp"
 #include "container/matrix.hpp"
 #include "container/matrix_ops.hpp"
 #include "container/vector.hpp"
@@ -423,6 +424,92 @@ inline void validate_reusable_prefix(const block_layout &layout, const Factor &p
 } // namespace detail
 
 // =============================================================================
+// In-place solves
+// =============================================================================
+
+namespace detail {
+
+/// Rows of `X` (n x nrhs, row-major) permuted into `work` by `order`.
+inline void gather(const real *X, idx nrhs, const array<idx> &order, real *work) {
+    for (idx p = 0; p < order.size(); ++p)
+        std::copy_n(X + order[p] * nrhs, nrhs, work + p * nrhs);
+}
+
+inline void scatter(const real *work, idx nrhs, const array<idx> &order, real *X) {
+    for (idx p = 0; p < order.size(); ++p)
+        std::copy_n(work + p * nrhs, nrhs, X + order[p] * nrhs);
+}
+
+} // namespace detail
+
+/// @brief Solve \f$AX = B\f$ in place: `X` holds `B` on entry and the solution on
+/// exit, as `n x nrhs` row-major storage in the original ordering. `work`
+/// holds `n * nrhs` elements. Nothing is allocated.
+inline void solve_in_place(const block_lu_factor &f, real *X, idx nrhs, real *work) {
+    const idx count = f.blocks();
+    detail::gather(X, nrhs, f.order, work);
+    const auto rows = [&](idx k) { return work + f.offsets[k] * nrhs; };
+    // Y_k = B_k - lower[k-1] Y_{k-1}
+    for (idx k = 1; k < count; ++k)
+        blas::gemm(-1.0, f.lower[k - 1].data(), f.block_size(k - 1), false, rows(k - 1), nrhs,
+                   false, 1.0, rows(k), nrhs, f.block_size(k), nrhs, f.block_size(k - 1));
+    // X_k = D_k^{-1} Y_k ; Y_{k-1} -= upper[k-1] X_k
+    for (idx k = count; k-- > 0;) {
+        kernel::lu_no_pivot_solve_multiple(rows(k), f.diagonal[k].packed.data(), f.block_size(k),
+                                           nrhs);
+        if (k > 0)
+            blas::gemm(-1.0, f.upper[k - 1].data(), f.block_size(k), false, rows(k), nrhs, false,
+                       1.0, rows(k - 1), nrhs, f.block_size(k - 1), nrhs, f.block_size(k));
+    }
+    detail::scatter(work, nrhs, f.order, X);
+}
+
+/// @brief Solve \f$A^T X = B\f$ in place, as `solve_in_place`.
+inline void solve_transpose_in_place(const block_lu_factor &f, real *X, idx nrhs, real *work) {
+    const idx count = f.blocks();
+    detail::gather(X, nrhs, f.order, work);
+    const auto rows = [&](idx k) { return work + f.offsets[k] * nrhs; };
+    // Z_k = D_k^{-T}(B_k - upper[k-1]^T Z_{k-1})
+    for (idx k = 0; k < count; ++k) {
+        if (k > 0)
+            blas::gemm(-1.0, f.upper[k - 1].data(), f.block_size(k), true, rows(k - 1), nrhs,
+                       false, 1.0, rows(k), nrhs, f.block_size(k), nrhs, f.block_size(k - 1));
+        kernel::lu_no_pivot_solve_transpose_multiple(rows(k), f.diagonal[k].packed.data(),
+                                                     f.block_size(k), nrhs);
+    }
+    // X_k = Z_k - lower[k]^T X_{k+1}
+    for (idx k = count - 1; k-- > 0;)
+        blas::gemm(-1.0, f.lower[k].data(), f.block_size(k), true, rows(k + 1), nrhs, false, 1.0,
+                   rows(k), nrhs, f.block_size(k), nrhs, f.block_size(k + 1));
+    detail::scatter(work, nrhs, f.order, X);
+}
+
+/// @brief Solve \f$AX = B\f$ in place from block Cholesky factors, as `solve_in_place`.
+inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, real *work) {
+    const idx count = f.blocks();
+    detail::gather(X, nrhs, f.order, work);
+    const auto rows = [&](idx k) { return work + f.offsets[k] * nrhs; };
+    // L Y = B
+    for (idx k = 0; k < count; ++k) {
+        if (k > 0)
+            blas::gemm(-1.0, f.lower[k - 1].data(), f.block_size(k - 1), false, rows(k - 1), nrhs,
+                       false, 1.0, rows(k), nrhs, f.block_size(k), nrhs, f.block_size(k - 1));
+        kernel::trsm_lower_inplace(rows(k), nrhs, f.diagonal[k].L.data(), f.block_size(k), nrhs);
+    }
+    // L^T X = Y
+    for (idx k = count; k-- > 0;) {
+        if (k + 1 < count)
+            blas::gemm(-1.0, f.lower[k].data(), f.block_size(k), true, rows(k + 1), nrhs, false,
+                       1.0, rows(k), nrhs, f.block_size(k), nrhs, f.block_size(k + 1));
+        kernel::trsm_lower_transpose_inplace(rows(k), nrhs, f.diagonal[k].L.data(),
+                                             f.block_size(k), nrhs);
+    }
+    detail::scatter(work, nrhs, f.order, X);
+}
+
+
+
+// =============================================================================
 // Block LU
 // =============================================================================
 
@@ -546,34 +633,9 @@ inline void solve(const block_lu_factor &factor, const mat &B, mat &X) {
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
     }
-    const idx count = factor.blocks();
-    mat work = detail::gather_rows(B, factor.order);
-
-    // Forward: Y_0 = B_0 ; Y_k = B_k - lower[k-1] Y_{k-1}
-    for (idx k = 1; k < count; ++k) {
-        const mat previous =
-            detail::block_rows(work, factor.offsets[k - 1], factor.block_size(k - 1));
-        mat current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        detail::subtract_from(current, detail::product(factor.lower[k - 1], previous));
-        detail::set_block_rows(work, factor.offsets[k], current);
-    }
-
-    // Backward: X_k = D_k^{-1} Y_k ; Y_{k-1} -= upper[k-1] X_k
-    for (idx k = count; k-- > 0;) {
-        const mat current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        mat solved;
-        solve(factor.diagonal[k], current, solved);
-        detail::set_block_rows(work, factor.offsets[k], solved);
-        if (k > 0) {
-            mat previous =
-                detail::block_rows(work, factor.offsets[k - 1], factor.block_size(k - 1));
-            detail::subtract_from(previous, detail::product(factor.upper[k - 1], solved));
-            detail::set_block_rows(work, factor.offsets[k - 1], previous);
-        }
-    }
-
-    X = mat(factor.size, B.cols(), 0.0);
-    detail::scatter_rows(work, factor.order, X);
+    X = B;
+    vec work(factor.size * B.cols(), 0.0);
+    solve_in_place(factor, X.data(), B.cols(), work.data());
 }
 
 /// @brief Solve \f$Ax = b\f$ using stored block LU factors.
@@ -581,32 +643,9 @@ inline void solve(const block_lu_factor &factor, const vec &b, vec &x) {
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");
     }
-    const idx count = factor.blocks();
-    vec work = detail::gather_rows(b, factor.order);
-
-    for (idx k = 1; k < count; ++k) {
-        const vec previous =
-            detail::block_rows(work, factor.offsets[k - 1], factor.block_size(k - 1));
-        vec current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        detail::subtract_from(current, detail::product(factor.lower[k - 1], previous));
-        detail::set_block_rows(work, factor.offsets[k], current);
-    }
-
-    for (idx k = count; k-- > 0;) {
-        const vec current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        vec solved(current.size(), 0.0);
-        solve(factor.diagonal[k], current, solved);
-        detail::set_block_rows(work, factor.offsets[k], solved);
-        if (k > 0) {
-            vec previous =
-                detail::block_rows(work, factor.offsets[k - 1], factor.block_size(k - 1));
-            detail::subtract_from(previous, detail::product(factor.upper[k - 1], solved));
-            detail::set_block_rows(work, factor.offsets[k - 1], previous);
-        }
-    }
-
-    x = vec(factor.size, 0.0);
-    detail::scatter_rows(work, factor.order, x);
+    x = b;
+    vec work(factor.size, 0.0);
+    solve_in_place(factor, x.data(), 1, work.data());
 }
 
 /// @brief Solve \f$A^{T}X = B\f$ from the same factors, without refactorizing.
@@ -620,34 +659,9 @@ inline void solve_transpose(const block_lu_factor &factor, const mat &B, mat &X)
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
     }
-    const idx count = factor.blocks();
-    mat work = detail::gather_rows(B, factor.order);
-
-    // U^T Z = B : Z_k = D_k^{-T}(B_k - upper[k-1]^T Z_{k-1})
-    for (idx k = 0; k < count; ++k) {
-        mat current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        if (k > 0) {
-            const mat previous =
-                detail::block_rows(work, factor.offsets[k - 1], factor.block_size(k - 1));
-            detail::subtract_from(current,
-                                  detail::product(transpose(factor.upper[k - 1]), previous));
-        }
-        mat solved;
-        solve_transpose(factor.diagonal[k], current, solved);
-        detail::set_block_rows(work, factor.offsets[k], solved);
-    }
-
-    // L^T X = Z : X_k = Z_k - lower[k]^T X_{k+1}
-    for (idx k = count - 1; k-- > 0;) {
-        const mat next =
-            detail::block_rows(work, factor.offsets[k + 1], factor.block_size(k + 1));
-        mat current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        detail::subtract_from(current, detail::product(transpose(factor.lower[k]), next));
-        detail::set_block_rows(work, factor.offsets[k], current);
-    }
-
-    X = mat(factor.size, B.cols(), 0.0);
-    detail::scatter_rows(work, factor.order, X);
+    X = B;
+    vec work(factor.size * B.cols(), 0.0);
+    solve_transpose_in_place(factor, X.data(), B.cols(), work.data());
 }
 
 /// @brief Solve \f$A^{T}x = b\f$ from the same factors, without refactorizing.
@@ -655,32 +669,9 @@ inline void solve_transpose(const block_lu_factor &factor, const vec &b, vec &x)
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");
     }
-    const idx count = factor.blocks();
-    vec work = detail::gather_rows(b, factor.order);
-
-    for (idx k = 0; k < count; ++k) {
-        vec current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        if (k > 0) {
-            const vec previous =
-                detail::block_rows(work, factor.offsets[k - 1], factor.block_size(k - 1));
-            detail::subtract_from(current,
-                                  detail::product(transpose(factor.upper[k - 1]), previous));
-        }
-        vec solved(current.size(), 0.0);
-        solve_transpose(factor.diagonal[k], current, solved);
-        detail::set_block_rows(work, factor.offsets[k], solved);
-    }
-
-    for (idx k = count - 1; k-- > 0;) {
-        const vec next =
-            detail::block_rows(work, factor.offsets[k + 1], factor.block_size(k + 1));
-        vec current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        detail::subtract_from(current, detail::product(transpose(factor.lower[k]), next));
-        detail::set_block_rows(work, factor.offsets[k], current);
-    }
-
-    x = vec(factor.size, 0.0);
-    detail::scatter_rows(work, factor.order, x);
+    x = b;
+    vec work(factor.size, 0.0);
+    solve_transpose_in_place(factor, x.data(), 1, work.data());
 }
 
 // =============================================================================
@@ -792,35 +783,9 @@ inline void solve(const block_cholesky_factor &factor, const mat &B, mat &X) {
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
     }
-    const idx count = factor.blocks();
-    mat work = detail::gather_rows(B, factor.order);
-
-    // L Y = B
-    for (idx k = 0; k < count; ++k) {
-        mat current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        if (k > 0) {
-            const mat previous =
-                detail::block_rows(work, factor.offsets[k - 1], factor.block_size(k - 1));
-            detail::subtract_from(current, detail::product(factor.lower[k - 1], previous));
-        }
-        detail::set_block_rows(work, factor.offsets[k],
-                               detail::forward_substitute(factor.diagonal[k].L, current));
-    }
-
-    // L^T X = Y
-    for (idx k = count; k-- > 0;) {
-        mat current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        if (k + 1 < count) {
-            const mat next =
-                detail::block_rows(work, factor.offsets[k + 1], factor.block_size(k + 1));
-            detail::subtract_from(current, detail::product(transpose(factor.lower[k]), next));
-        }
-        detail::set_block_rows(work, factor.offsets[k],
-                               detail::backward_substitute(factor.diagonal[k].L, current));
-    }
-
-    X = mat(factor.size, B.cols(), 0.0);
-    detail::scatter_rows(work, factor.order, X);
+    X = B;
+    vec work(factor.size * B.cols(), 0.0);
+    solve_in_place(factor, X.data(), B.cols(), work.data());
 }
 
 /// @brief Solve \f$Ax = b\f$ using stored block Cholesky factors.
@@ -828,33 +793,9 @@ inline void solve(const block_cholesky_factor &factor, const vec &b, vec &x) {
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");
     }
-    const idx count = factor.blocks();
-    vec work = detail::gather_rows(b, factor.order);
-
-    for (idx k = 0; k < count; ++k) {
-        vec current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        if (k > 0) {
-            const vec previous =
-                detail::block_rows(work, factor.offsets[k - 1], factor.block_size(k - 1));
-            detail::subtract_from(current, detail::product(factor.lower[k - 1], previous));
-        }
-        detail::set_block_rows(work, factor.offsets[k],
-                               detail::forward_substitute(factor.diagonal[k].L, current));
-    }
-
-    for (idx k = count; k-- > 0;) {
-        vec current = detail::block_rows(work, factor.offsets[k], factor.block_size(k));
-        if (k + 1 < count) {
-            const vec next =
-                detail::block_rows(work, factor.offsets[k + 1], factor.block_size(k + 1));
-            detail::subtract_from(current, detail::product(transpose(factor.lower[k]), next));
-        }
-        detail::set_block_rows(work, factor.offsets[k],
-                               detail::backward_substitute(factor.diagonal[k].L, current));
-    }
-
-    x = vec(factor.size, 0.0);
-    detail::scatter_rows(work, factor.order, x);
+    x = b;
+    vec work(factor.size, 0.0);
+    solve_in_place(factor, x.data(), 1, work.data());
 }
 
 } // namespace num

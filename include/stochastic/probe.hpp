@@ -37,6 +37,33 @@ template <typename RNG = rng>
     return rademacher_probe(n, probes, generator);
 }
 
+/// @brief An \f$n \times p\f$ matrix of independent standard Gaussian probes.
+///
+/// Like `rademacher_probe`, column \f$k\f$ satisfies \f$E[z_k z_k^T] = I\f$, so
+/// either family drives a Hutchinson estimator. Gaussian probes are the ones to
+/// reach for when the estimator's concentration is stated through a chi-square
+/// tail bound, since each row of the probed block is then exactly chi-square.
+template <typename RNG = rng>
+[[nodiscard]] mat gaussian_probe(idx n, idx probes, RNG &generator) {
+    if (probes == 0) {
+        throw std::invalid_argument("gaussian_probe: at least one probe is required");
+    }
+    std::normal_distribution<real> normal(0.0, 1.0);
+    mat probe(n, probes, 0.0);
+    for (idx j = 0; j < n; ++j) {
+        for (idx p = 0; p < probes; ++p) {
+            probe(j, p) = normal(generator);
+        }
+    }
+    return probe;
+}
+
+/// @brief The same Gaussian probe from a fixed seed.
+[[nodiscard]] inline mat gaussian_probe(idx n, idx probes, unsigned seed) {
+    rng generator(seed);
+    return gaussian_probe(n, probes, generator);
+}
+
 /// @brief Row-wise mean square of probed columns: the Hutchinson estimate.
 ///
 /// If column \f$k\f$ of `probed` is \f$B z_k\f$ for Rademacher probes

@@ -187,41 +187,44 @@ to_approxchol_graph(const structures::basic_multigraph<Weight, Index> &mg) {
 }
 
 /// Construct ApproxChol preconditioner from a randommat::graph.
+template <detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const graph<real, idx> &G, idx samples = 1, std::uint64_t seed = 42) {
+approxchol_preconditioner(const graph<real, idx> &G, Algorithm algorithm, std::uint64_t seed = 42) {
     rng64 rng(seed);
-    auto factor = factorize<real, idx>(G, samples, false, &rng);
+    auto factor = factorize<real, idx>(G, algorithm, &rng);
     return approx_chol_preconditioner(std::move(factor));
 }
 
 /// Construct ApproxChol preconditioner from a num::basic_graph.
-template <typename Weight, std::integral Index>
+template <typename Weight, std::integral Index, detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const basic_graph<Weight, Index> &G, idx samples = 1,
+approxchol_preconditioner(const basic_graph<Weight, Index> &G, Algorithm algorithm,
                           std::uint64_t seed = 42) {
     auto ac_G = to_approxchol_graph(G);
-    return approxchol_preconditioner(ac_G, samples, seed);
+    return approxchol_preconditioner(ac_G, algorithm, seed);
 }
 
 /// Construct ApproxChol preconditioner from a num::multigraph.
-template <typename Weight, std::integral Index>
+template <typename Weight, std::integral Index, detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const structures::basic_multigraph<Weight, Index> &mg, idx samples = 1,
-                          std::uint64_t seed = 42) {
-    return approxchol_preconditioner(mg.adjacency(), samples, seed);
+approxchol_preconditioner(const structures::basic_multigraph<Weight, Index> &mg,
+                          Algorithm algorithm, std::uint64_t seed = 42) {
+    return approxchol_preconditioner(mg.adjacency(), algorithm, seed);
 }
 
 /// Construct ApproxChol preconditioner from a Laplacian spmat.
+template <detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const spmat &L, idx samples = 1, std::uint64_t seed = 42) {
+approxchol_preconditioner(const spmat &L, Algorithm algorithm, std::uint64_t seed = 42) {
     auto ac_G = to_approxchol_graph(L);
-    return approxchol_preconditioner(ac_G, samples, seed);
+    return approxchol_preconditioner(ac_G, algorithm, seed);
 }
 
 /// Construct a sparse approximate factor of a symmetric diagonally dominant
 /// M-matrix by adding one ground vertex for the diagonal excess.
+template <detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline grounded_approx_chol_factor
-grounded_approxchol_factor(const spmat &A, idx samples = 1, std::uint64_t seed = 42) {
+grounded_approxchol_factor(const spmat &A, Algorithm algorithm, std::uint64_t seed = 42) {
     const idx n = A.n_rows();
     if (A.n_cols() != n)
         throw std::invalid_argument("grounded_approxchol_factor: matrix must be square");
@@ -260,8 +263,7 @@ grounded_approxchol_factor(const spmat &A, idx samples = 1, std::uint64_t seed =
             "grounded_approxchol_factor: matrix has no positive grounding term");
 
     rng64 rng(seed);
-    auto factor = factorize<real, idx>(graph_with_ground.adjacency(), samples, false, &rng,
-                                       clique_sampler::independent, n);
+    auto factor = factorize<real, idx>(graph_with_ground.adjacency(), algorithm, &rng, n);
     return grounded_approx_chol_factor(std::move(factor));
 }
 
@@ -282,5 +284,7 @@ using grounded_approx_chol_factor = randommat::grounded_approx_chol_factor;
 using randommat::approxchol_preconditioner;
 using randommat::grounded_approxchol_factor;
 using randommat::to_approxchol_graph;
+
+namespace gao_kyng_spielman_2023 = randommat::gao_kyng_spielman_2023;
 
 } // namespace num

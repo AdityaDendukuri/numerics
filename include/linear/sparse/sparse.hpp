@@ -110,6 +110,33 @@ void sparse_matvec(const spmat &A, const vec &x, vec &y);
 /// @throws std::invalid_argument If dimensions mismatch or any weight is non-positive.
 [[nodiscard]] mat diagonal_similarity(const spmat &A, view<const real> weights);
 
+/// @brief Compute \f$D^{-1} A D\f$ without leaving the sparse representation.
+///
+/// A diagonal similarity rescales entries in place, so the result carries the
+/// pattern of `A`. Use this form when the transformed matrix is factored or
+/// multiplied rather than inspected, since `diagonal_similarity` densifies it.
+/// @param A Square CSR matrix.
+/// @param weights Positive diagonal weight entries \f$w_i > 0\f$.
+/// @return CSR matrix \f$D^{-1} A D\f$ with the pattern of `A`.
+/// @throws std::invalid_argument If dimensions mismatch or any weight is non-positive.
+[[nodiscard]] spmat sparse_diagonal_similarity(const spmat &A, view<const real> weights);
+
+/// @brief Compute \f$(A + A^{T})/2\f$, the symmetric part of a square matrix.
+/// @param A Square CSR matrix.
+/// @return CSR matrix whose pattern is that of `A` unioned with its transpose.
+/// @throws std::invalid_argument If `A` is not square.
+[[nodiscard]] spmat symmetric_part(const spmat &A);
+
+/// @brief Compute the congruence \f$W A W\f$ where \f$W = \text{diag}(\mathbf{w})\f$.
+///
+/// Unlike a similarity, a congruence does not preserve the spectrum; it preserves
+/// inertia, so it carries a symmetric positive-definite matrix to another one.
+/// @param A Square CSR matrix.
+/// @param weights Diagonal weight entries.
+/// @return CSR matrix \f$WAW\f$ with the pattern of `A`.
+/// @throws std::invalid_argument If dimensions mismatch.
+[[nodiscard]] spmat sparse_congruence(const spmat &A, view<const real> weights);
+
 
 
 inline spmat::spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx,
@@ -351,6 +378,60 @@ inline vec diagonal(const M &A) {
         }
     }
     return result;
+}
+
+inline spmat symmetric_part(const spmat &A) {
+    if (A.n_rows() != A.n_cols()) {
+        throw std::invalid_argument("symmetric_part: matrix must be square");
+    }
+    array<idx> rows, columns;
+    array<real> values;
+    for (idx row = 0; row < A.n_rows(); ++row) {
+        for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
+            const idx column = A.col_idx()[entry];
+            const real half = 0.5 * A.values()[entry];
+            rows.push_back(row);
+            columns.push_back(column);
+            values.push_back(half);
+            rows.push_back(column);
+            columns.push_back(row);
+            values.push_back(half);
+        }
+    }
+    return spmat::from_triplets(A.n_rows(), A.n_cols(), rows, columns, values);
+}
+
+inline spmat sparse_congruence(const spmat &A, view<const real> weights) {
+    if (A.n_rows() != A.n_cols() || weights.size() != A.n_rows()) {
+        throw std::invalid_argument("sparse_congruence: dimensions must match");
+    }
+    array<real> values(A.values(), A.values() + A.nnz());
+    for (idx row = 0; row < A.n_rows(); ++row) {
+        for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
+            values[entry] *= weights[row] * weights[A.col_idx()[entry]];
+        }
+    }
+    return {A.n_rows(), A.n_cols(), std::move(values),
+            array<idx>(A.col_idx(), A.col_idx() + A.nnz()),
+            array<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
+}
+
+inline spmat sparse_diagonal_similarity(const spmat &A, view<const real> weights) {
+    if (A.n_rows() != A.n_cols() || weights.size() != A.n_rows()) {
+        throw std::invalid_argument("sparse_diagonal_similarity: dimensions must match");
+    }
+    if (!std::all_of(weights.begin(), weights.end(), [](real value) { return value > 0.0; })) {
+        throw std::invalid_argument("sparse_diagonal_similarity: weights must be positive");
+    }
+    array<real> values(A.values(), A.values() + A.nnz());
+    for (idx row = 0; row < A.n_rows(); ++row) {
+        for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
+            values[entry] *= weights[A.col_idx()[entry]] / weights[row];
+        }
+    }
+    return {A.n_rows(), A.n_cols(), std::move(values),
+            array<idx>(A.col_idx(), A.col_idx() + A.nnz()),
+            array<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
 }
 
 inline mat diagonal_similarity(const spmat &A, view<const real> weights) {

@@ -37,15 +37,15 @@ It is both hashable and ordered, which is what makes it usable as a key:
 
 ```cpp
 // sparse state spaces are enumerated, not indexed, so states are stored as keys
-num::table<num::multi_index, double> probability;   // hashed, O(1) average
+num::unordered_map<num::multi_index, double> probability; // hashed, O(1) average
 probability[{2, 0, 1}] = 0.25;
 
-num::sorted_table<num::multi_index, double> ordered; // key order, for reproducible sweeps
+num::map<num::multi_index, double> ordered;                // key order, for reproducible sweeps
 ordered[{2, 0, 1}] = 0.25;
 ```
 
 `operator<` orders by coordinate count first and then lexicographically, so indices of
-different dimension never compare equal and a `sorted_table` keyed on them iterates in a
+different dimension never compare equal and a `num::map` keyed on them iterates in a
 stable, reproducible order.
 
 ---

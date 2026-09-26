@@ -12,3 +12,4 @@
 #include "structures/graph/generators.hpp"
 #include "structures/graph/graph.hpp"
 #include "structures/graph/multigraph.hpp"
+#include "structures/graph/structured_grid.hpp"

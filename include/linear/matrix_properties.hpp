@@ -2,13 +2,13 @@
 /// @brief Declared mathematical properties and compile-time wrappers for matrices.
 #pragma once
 
-#include "kernel/factor.hpp"
-#include "core/math/evidence.hpp"
+#include "algebra/properties.hpp"
 #include "container/concepts.hpp"
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
+#include "core/math/evidence.hpp"
+#include "kernel/factor.hpp"
 #include "linear/debug.hpp"
-#include "algebra/properties.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -135,10 +135,10 @@ class structured_mat final : public props_detail::square_tag<Ax> {
     /// silently collapsed every other law to `linear_map`.
     using math_laws = math::type_list<Ax>;
 
-    explicit structured_mat(
-        Mat A, math::evidence_provenance provenance =
-                   {math::evidence_origin::assumed, std::source_location::current(),
-                    "legacy direct assertion"})
+    explicit structured_mat(Mat A,
+                            math::evidence_provenance provenance = {math::evidence_origin::assumed,
+                                                                    std::source_location::current(),
+                                                                    "legacy direct assertion"})
         : A_(std::move(A)), provenance_(provenance) {}
 
     [[nodiscard]] const Mat &base() const noexcept { return A_; }
@@ -195,7 +195,8 @@ class sq_mat final {
     Mat A_;
 };
 
-/// @brief mat asserted self-adjoint: \f$A = A^T\f$ over \f$\mathbb{R}\f$, \f$A = A^*\f$ over \f$\mathbb{C}\f$.
+/// @brief mat asserted self-adjoint: \f$A = A^T\f$ over \f$\mathbb{R}\f$, \f$A = A^*\f$ over
+/// \f$\mathbb{C}\f$.
 template <class Mat = mat>
 using sym_mat = structured_mat<Mat, law::self_adjoint>;
 
@@ -288,7 +289,8 @@ assume_symmetric(Mat A, std::source_location loc = std::source_location::current
     return assume_property<law::self_adjoint>(std::move(A), loc);
 }
 
-/// @brief Attach a positive semi-definiteness guarantee \f$x^T A x \ge 0\f$, sampled under active preset.
+/// @brief Attach a positive semi-definiteness guarantee \f$x^T A x \ge 0\f$, sampled under active
+/// preset.
 ///
 /// @tparam Mat Concrete matrix container type.
 /// @param A PSD matrix to wrap.
@@ -342,7 +344,8 @@ template <class Mat = mat>
     return sq_mat<Mat>(std::move(A));
 }
 
-/// @brief Validate symmetry \f$A = A^T\f$ exhaustively in \f$\mathcal{O}(n^2)\f$ before constructing wrapper.
+/// @brief Validate symmetry \f$A = A^T\f$ exhaustively in \f$\mathcal{O}(n^2)\f$ before
+/// constructing wrapper.
 ///
 /// @tparam Mat Concrete matrix container type.
 /// @param A mat to validate.
@@ -357,12 +360,12 @@ make_symmetric(Mat A, real tol = 1e-12,
     if (!is_symmetric(A, tol)) {
         throw std::invalid_argument("make_symmetric: matrix is not symmetric");
     }
-    return sym_mat<Mat>(
-        std::move(A), {math::evidence_origin::verified, loc,
-                       "exhaustive symmetry validator"});
+    return sym_mat<Mat>(std::move(A),
+                        {math::evidence_origin::verified, loc, "exhaustive symmetry validator"});
 }
 
-/// @brief Validate positive definiteness exhaustively via \f$\mathcal{O}(n^3)\f$ Cholesky factorization.
+/// @brief Validate positive definiteness exhaustively via \f$\mathcal{O}(n^3)\f$ Cholesky
+/// factorization.
 ///
 /// Tests entrywise symmetry and executes unblocked Cholesky factorization. Fails if
 /// any pivot \f$L_{ii} \le 0\f$ or NaN is encountered.
@@ -375,16 +378,13 @@ make_symmetric(Mat A, real tol = 1e-12,
 /// @return `spd_mat<Mat>` wrapper carrying verified SPD evidence.
 template <class Mat = mat>
 [[nodiscard]] inline spd_mat<Mat>
-make_spd(Mat A, real tol = 1e-12,
-         std::source_location loc = std::source_location::current()) {
+make_spd(Mat A, real tol = 1e-12, std::source_location loc = std::source_location::current()) {
     if (!is_spd(A, tol)) {
         throw std::invalid_argument("make_spd: matrix is not symmetric positive definite");
     }
-    return spd_mat<Mat>(
-        std::move(A), {math::evidence_origin::verified, loc,
-                       "exhaustive Cholesky validator"});
+    return spd_mat<Mat>(std::move(A),
+                        {math::evidence_origin::verified, loc, "exhaustive Cholesky validator"});
 }
-
 
 // -----------------------------------------------------------------------------
 // Structural taggers
@@ -394,14 +394,14 @@ make_spd(Mat A, real tol = 1e-12,
 // data, not axioms about a linear map. So unlike assume_spd, which can only
 // sample, these verify exhaustively before attaching the tag.
 
-/// @brief mat carrying an asserted band structure \f$A_{ij} = 0\f$ outside \f$-k_l \leq j-i \leq k_u\f$.
+/// @brief mat carrying an asserted band structure \f$A_{ij} = 0\f$ outside \f$-k_l \leq j-i \leq
+/// k_u\f$.
 template <class Mat = mat>
 class band_mat_view final {
   public:
     using banded_matrix_tag = void;
 
-    band_mat_view(Mat A, idx lower, idx upper)
-        : A_(std::move(A)), kl_(lower), ku_(upper) {}
+    band_mat_view(Mat A, idx lower, idx upper) : A_(std::move(A)), kl_(lower), ku_(upper) {}
 
     [[nodiscard]] const Mat &base() const noexcept { return A_; }
     [[nodiscard]] idx rows() const noexcept { return A_.rows(); }
@@ -485,18 +485,18 @@ assume_sparse_csr(Mat A, std::source_location loc = std::source_location::curren
 } // namespace linear
 
 // Expose property types and assume_* / make_* taggers in top-level num:: namespace
-using linear::psd_matrix;
 using linear::dd_mat;
+using linear::hermitian_matrix;
+using linear::psd_matrix;
 using linear::spd_mat;
 using linear::sq_mat;
 using linear::structured_mat;
 using linear::sym_mat;
-using linear::hermitian_matrix;
 
+using linear::assume_diagonally_dominant;
 using linear::assume_hermitian;
 using linear::assume_property;
 using linear::assume_psd;
-using linear::assume_diagonally_dominant;
 using linear::assume_spd;
 using linear::assume_square;
 using linear::assume_symmetric;

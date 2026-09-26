@@ -1,5 +1,5 @@
 /// @file quadrature/talbot.hpp
-/// @brief Domain-independent midpoint Weideman--Talbot contour utilities.
+/// @brief The midpoint Weideman--Talbot contour for numerical inverse Laplace transforms.
 #pragma once
 
 #include "core/types.hpp"
@@ -10,12 +10,12 @@
 
 namespace num {
 
+/// One node of an inversion contour: f(t) is approximately the sum of
+/// `weight * F(shift)` over the nodes, with the weights including 1/(2 pi i).
 struct contour_node {
     cplx shift;
     cplx weight;
 };
-
-using talbot_node = contour_node;
 
 /// @brief Weideman--Talbot hyperbolic contour quadrature for Numerical Inverse Laplace Transformation.
 struct talbot_quadrature {
@@ -52,30 +52,12 @@ struct talbot_quadrature {
         }
         return result;
     }
-
-    template <typename Accumulate>
-    void accumulate(real t, Accumulate &&accumulate_fn) const {
-        for (const contour_node &node : nodes(t)) {
-            accumulate_fn(node.shift, node.weight);
-        }
-    }
 };
 
 /// Return quadrature nodes and weights on the Weideman--Talbot inversion contour for \f$f(t) = \mathcal{L}^{-1}[F](t), \; t > 0\f$.
 /// The contour is scaled per requested time; weights include \f$1/(2\pi i)\f$.
 inline array<contour_node> talbot_contour(real t, idx modes = 16) {
     return talbot_quadrature{modes}.nodes(t);
-}
-
-inline array<contour_node> talbot_nodes(real t, idx modes = 16) {
-    return talbot_contour(t, modes);
-}
-
-/// Drive inverse-Laplace accumulation without prescribing the transformed
-/// value type. The callback receives each shift and fully scaled weight.
-template <typename Accumulate>
-void inverse_laplace_accumulate(real time, idx modes, Accumulate &&accumulate) {
-    talbot_quadrature{modes}.accumulate(time, std::forward<Accumulate>(accumulate));
 }
 
 } // namespace num

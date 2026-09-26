@@ -91,8 +91,11 @@ double q = num::romberg(gaussian, 0.0, 1.0, 1e-12, 12);
 Evaluates the Bromwich contour integral \f$f(t) = \mathcal{L}^{-1}[F](t) \approx \sum_{k=1}^M w_k F(z_k)\f$ along the Weideman–Talbot hyperbolic contour:
 
 ```cpp
-num::talbot_quadrature contour{/*n_nodes=*/16};
-auto nodes = contour.nodes(/*t=*/1.0); // Precomputed complex nodes and weights
+// f(t) is approximately the sum of weight * F(shift) over the nodes
+num::cplx f = 0.0;
+for (const auto &[shift, weight] : num::talbot_contour(/*t=*/1.0, /*modes=*/16)) {
+    f += weight * F(shift);
+}
 ```
 
 ---

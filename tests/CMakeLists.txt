@@ -48,6 +48,11 @@ add_executable(numerics_tests
     test_graph_ds.cpp
     test_math_spine.cpp
     test_randommat.cpp
+    test_woodbury.cpp
+    test_probed_inverse_diagonal.cpp
+    test_levels_and_swap_remove.cpp
+    test_factor.cpp
+    test_reuse.cpp
 )
 
 

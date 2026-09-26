@@ -692,6 +692,20 @@ TEST(Selection, ArgmaxValueAndProjection) {
     EXPECT_THROW(static_cast<void>(argmax(std::span<const double>{})), std::invalid_argument);
 }
 
+TEST(Selection, ArgsortFilterAndGroupBy) {
+    const std::vector<int> values{3, 1, 3, 2, 1, 3};
+    EXPECT_EQ(argsort(values), (array<idx>{1, 4, 3, 0, 2, 5}));
+    EXPECT_EQ(smallest_indices(values, 2), (array<idx>{1, 4}));
+
+    const array<idx> odd = filter(values.size(), [&](idx index) { return values[index] % 2 == 1; });
+    EXPECT_EQ(odd, (array<idx>{0, 1, 2, 4, 5}));
+    EXPECT_TRUE(filter(values.size(), [](idx) { return false; }).empty());
+
+    const auto [keys, group_of] = group_by(values.size(), [&](idx index) { return values[index]; });
+    EXPECT_EQ(keys, (array<int>{3, 1, 2}));
+    EXPECT_EQ(group_of, (array<idx>{0, 1, 0, 2, 1, 0}));
+}
+
 TEST(Selection, WeightedSum) {
     const std::vector<double> weights{0.25, 0.75};
     EXPECT_DOUBLE_EQ(weighted_sum(std::span<const double>(weights),
@@ -732,8 +746,8 @@ TEST(Resolvent, ReusableFactorAndBatch) {
 }
 
 TEST(Talbot, NodesScaleWithTime) {
-    const auto a = talbot_nodes(1.0, 8);
-    const auto b = talbot_nodes(2.0, 8);
+    const auto a = talbot_contour(1.0, 8);
+    const auto b = talbot_contour(2.0, 8);
     ASSERT_EQ(a.size(), b.size());
     for (idx k = 0; k < a.size(); ++k) {
         EXPECT_NEAR((a[k].shift / b[k].shift).real(), 2.0, 1e-12);
@@ -741,14 +755,13 @@ TEST(Talbot, NodesScaleWithTime) {
     }
 }
 
-TEST(Talbot, GenericAccumulationDriver) {
-    idx count = 0;
-    inverse_laplace_accumulate(2.0, 8, [&](cplx shift, cplx weight) {
+TEST(Talbot, OneFiniteNodePerMode) {
+    const auto contour = talbot_contour(2.0, 8);
+    EXPECT_EQ(contour.size(), 8);
+    for (const auto &[shift, weight] : contour) {
         EXPECT_TRUE(std::isfinite(shift.real()));
         EXPECT_TRUE(std::isfinite(weight.real()));
-        ++count;
-    });
-    EXPECT_EQ(count, 8);
+    }
 }
 
 TEST(AutoResolvent, DenseSelectionAndSolve) {

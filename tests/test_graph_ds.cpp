@@ -235,6 +235,47 @@ TEST(graph, CanonicalFamilies) {
     EXPECT_TRUE(structures::is_connected(grid));
 }
 
+TEST(structured_grid_graph, CoordinatesNeighborsAndWeights) {
+    structured_grid_graph<2> grid({3, 2}, {0.5, 2.0});
+
+    EXPECT_EQ(grid.n_vertices(), 6);
+    EXPECT_EQ(grid.n_edges(), 7);
+    EXPECT_DOUBLE_EQ(grid.cell_volume(), 1.0);
+    EXPECT_EQ(grid.vertex({2, 1}), 5);
+    EXPECT_EQ(grid.coordinate(4), (structured_grid_graph<2>::coordinate_type{1, 1}));
+    EXPECT_EQ(grid.degree(0), 2);
+    EXPECT_EQ(grid.degree(1), 3);
+
+    const auto neighbors = grid.neighbors(0);
+    ASSERT_EQ(neighbors.size(), 2);
+    EXPECT_EQ(neighbors.begin()[0].to, 1);
+    EXPECT_DOUBLE_EQ(neighbors.begin()[0].weight, 4.0);
+    EXPECT_EQ(neighbors.begin()[1].to, 3);
+    EXPECT_DOUBLE_EQ(neighbors.begin()[1].weight, 0.25);
+}
+
+TEST(structured_grid_graph, PeriodicAxisWrapsWithoutStorage) {
+    std::array boundaries{grid_boundary::periodic, grid_boundary::reflecting};
+    structured_grid_graph<2> grid({4, 2}, {1.0, 1.0}, boundaries);
+
+    EXPECT_EQ(grid.n_edges(), 12);
+    EXPECT_EQ(grid.degree(0), 3);
+    const auto neighbors = grid.neighbors(0);
+    EXPECT_EQ(neighbors.begin()[0].to, 3);
+    EXPECT_EQ(neighbors.begin()[1].to, 1);
+    EXPECT_EQ(neighbors.begin()[2].to, 4);
+}
+
+TEST(structured_grid_graph, SatisfiesGraphLaplacianInterface) {
+    structured_grid_graph<1> grid({4}, {0.5});
+    const spmat L = num::linear::laplacian(grid);
+
+    EXPECT_EQ(L.n_rows(), 4);
+    EXPECT_DOUBLE_EQ(L(0, 0), 2.0);
+    EXPECT_DOUBLE_EQ(L(0, 1), -2.0);
+    EXPECT_DOUBLE_EQ(L(1, 1), 4.0);
+}
+
 // degree_queue Tests (ds module)
 
 TEST(degree_queue, InsertPopMinAndRekey) {

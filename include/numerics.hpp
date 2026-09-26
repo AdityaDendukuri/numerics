@@ -31,6 +31,7 @@
 #include "container/matrix_expr.hpp"
 #include "container/matrix_ops.hpp"
 #include "container/multi_index.hpp"
+#include "container/swap_remove.hpp"
 #include "cuda/cuda_ops.hpp"
 #include "mpi/mpi_ops.hpp"
 #include "container/util/integer_pow.hpp"

@@ -15,6 +15,7 @@
 #include "linear/sparse/sparse.hpp"
 #include "structures/graph/graph.hpp"
 #include "structures/graph/multigraph.hpp"
+#include "structures/graph/structured_grid.hpp"
 
 namespace num::linear {
 
@@ -79,6 +80,32 @@ template <typename Weight = real, typename Index = idx>
     }
     return spmat::from_triplets(static_cast<idx>(g.n_vertices()),
                                        static_cast<idx>(g.n_vertices()), rows, cols, vals);
+}
+
+/// @brief Laplacian of an implicit Cartesian grid without materializing adjacency lists.
+template <std::size_t D, typename Weight, std::integral Index>
+[[nodiscard]] inline spmat laplacian(const structured_grid_graph<D, Weight, Index> &g) {
+    array<idx> rows;
+    array<idx> cols;
+    array<double> vals;
+    rows.reserve(static_cast<std::size_t>(g.n_vertices() + 2 * g.n_edges()));
+    cols.reserve(rows.capacity());
+    vals.reserve(rows.capacity());
+
+    for (Index u = 0; u < g.n_vertices(); ++u) {
+        double degree = 0.0;
+        for (const auto &edge : g.neighbors(u)) {
+            rows.push_back(static_cast<idx>(u));
+            cols.push_back(static_cast<idx>(edge.to));
+            vals.push_back(-static_cast<double>(edge.weight));
+            degree += static_cast<double>(edge.weight);
+        }
+        rows.push_back(static_cast<idx>(u));
+        cols.push_back(static_cast<idx>(u));
+        vals.push_back(degree);
+    }
+    return spmat::from_triplets(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()),
+                                rows, cols, vals);
 }
 
 template <typename Weight = real, typename Index = idx>

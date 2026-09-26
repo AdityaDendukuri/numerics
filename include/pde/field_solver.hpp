@@ -91,7 +91,7 @@ inline solver_result field_solver::solve_var_poisson(scalar_field_3d &phi, const
         return static_cast<idx>((k * ny * nx) + (j * nx) + i);
     };
 
-    table<int, double> bc_map;
+    unordered_map<int, double> bc_map;
     bc_map.reserve(bcs.size());
     for (const auto &e : bcs) {
         bc_map[e.flat_idx] = e.value;
