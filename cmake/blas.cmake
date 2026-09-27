@@ -131,6 +131,16 @@ if(LAPACKE_INCLUDE_DIR AND (LAPACKE_LIB OR LAPACK_FOUND))
         endif()
         list(GET LAPACK_LIBRARIES 0 _lapack_probe)
     endif()
+    # Homebrew's OpenBLAS exports the LAPACKE C interface. Debian's OpenBLAS and reference
+    # LAPACK do not, and ship it in liblapacke, so link that too when the symbol is missing.
+    include(CheckLibraryExists)
+    check_library_exists("${_lapack_probe}" LAPACKE_dgetrf "" NUMERICS_LAPACKE_IN_LIB)
+    if(NOT NUMERICS_LAPACKE_IN_LIB)
+        find_library(LAPACKE_C_LIB NAMES lapacke QUIET)
+        if(LAPACKE_C_LIB)
+            target_link_libraries(numerics_backend_lapack INTERFACE ${LAPACKE_C_LIB})
+        endif()
+    endif()
     set(NUMERICS_HAS_LAPACK ON CACHE INTERNAL "")
 
     if(NUMERICS_LAPACK_OPTIMIZED STREQUAL "AUTO")
