@@ -17,7 +17,7 @@ namespace num {
 /// Updates every component from the previous iterate, so both sweeps thread. It needs strictly
 /// diagonally dominant A: pass `num::assume_diagonally_dominant(A)`.
 ///
-/// @param A        Square matrix
+/// @param A_in     Square matrix claiming the law
 /// @param b        Right-hand side vector
 /// @param x        Solution vector (initial guess on input, solution on output)
 /// @param tol      Convergence tolerance on residual norm (default 1e-10)

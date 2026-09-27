@@ -1,4 +1,4 @@
-# Library Structure & Architecture {#page_architecture}
+# Library Structure & Architecture
 
 Numerics is organized into unidirectional tiers. Each tier depends only on the tiers below it. Any tier can therefore be included, tested, or copied into another codebase on its own. This matters most for the kernel tier, which has no dependencies at all.
 
@@ -43,7 +43,7 @@ is a top-level directory (`include/omp/`, `include/blas/`, ...) holding one
 namespace of free functions with `num::kernel`'s signatures. They are not a tier
 because nothing in the stack is built on them: they are optional substitutions
 for leaf kernels, chosen by what the build links. See
-@ref page_parallel "Backend Namespaces & Hardware Acceleration" for how a call
+[Backend Namespaces & Hardware Acceleration](backends.md) for how a call
 site picks one.
 
 | Tier | Module | Responsibilities | Dependencies |
@@ -60,14 +60,14 @@ site picks one.
 
 ## 2. The Standalone Raw Compute Layer (num::kernel)
 
-Per-routine documentation is in @ref page_kernel "the num::kernel reference".
+Per-routine documentation is in [the num::kernel reference](reference/kernel.md).
 
 The bottom tier (`include/kernel/`) is a completely self-contained mathematical compute engine. It operates exclusively on raw pointers (`T*`), leading dimensions, caller-provided scratch workspaces, and generic callables.
 
 ### Key Characteristics of Tier 0
 * **Zero External Dependencies:** Depends strictly on standard C++ library headers (`<algorithm>`, `<cmath>`, `<complex>`, `<concepts>`, `<cstddef>`).
 * **Zero Dynamic Heap Allocations:** Never calls `new`, `malloc`, or allocates heap buffers. All temporary workspace is caller-managed (`T* work`).
-* **Foreign Type Agnostic:** The kernel takes raw pointers, so `std::vector<T>`, `std::array<T, N>`, Eigen vectors (`v.data()`), Armadillo matrices (`M.memptr()`), PyTorch/CUDA host tensors and raw buffers all work directly. Above the kernel, the matrix operations are constrained on storage layout rather than on `num::mat` and `num::spmat`, so a foreign type exposing the accessors of `num::repr::dense_row_major` or `num::repr::csr` participates in `matvec`, `transpose`, `diagonal`, `dense` and `scaled` with no adapter (see @ref page_container).
+* **Foreign Type Agnostic:** The kernel takes raw pointers, so `std::vector<T>`, `std::array<T, N>`, Eigen vectors (`v.data()`), Armadillo matrices (`M.memptr()`), PyTorch/CUDA host tensors and raw buffers all work directly. Above the kernel, the matrix operations are constrained on storage layout rather than on `num::mat` and `num::spmat`, so a foreign type exposing the accessors of `num::repr::dense_row_major` or `num::repr::csr` participates in `matvec`, `transpose`, `diagonal`, `dense` and `scaled` with no adapter (see [Containers](reference/containers.md)).
 * **100% Copyable / Vendorable:** Drop `include/kernel/` directly into any embedded, real-time, game engine, or legacy codebase.
 
 ### Including and Linking Tier 0

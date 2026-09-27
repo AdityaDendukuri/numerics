@@ -2,7 +2,7 @@
 /// @brief Over-aligned owning storage for the dense containers.
 ///
 /// The guarantee covers the base pointer only. Measurements and rationale are in the
-/// containers page, section 8.
+/// algorithm notes.
 #pragma once
 
 #include "core/types.hpp"

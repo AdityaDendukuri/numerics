@@ -352,6 +352,7 @@ inline spmat transpose(const M &A) {
     return {A.n_cols(), A.n_rows(), std::move(values), std::move(columns), std::move(column_ptr)};
 }
 
+/// @brief Expand a CSR matrix into a dense one.
 template <class M>
 requires repr::csr<M>
 inline mat dense(const M &A) {

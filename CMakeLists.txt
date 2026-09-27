@@ -195,6 +195,6 @@ if(Python3_Interpreter_FOUND)
         COMMAND ${Python3_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_doc_examples.py
                 --source-dir ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Compiling every C++ example in docs/pages"
+        COMMENT "Compiling every C++ example in the docs pages"
         VERBATIM)
 endif()

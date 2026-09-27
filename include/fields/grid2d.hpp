@@ -10,6 +10,7 @@
 
 namespace num {
 
+/// @brief A uniform \f$N \times N\f$ grid with spacing \f$h\f$.
 struct grid2d {
     int N;    ///< interior nodes per side
     double h; ///< grid spacing = 1/(N+1)

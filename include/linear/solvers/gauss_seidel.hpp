@@ -18,7 +18,7 @@ namespace num {
 /// `num::assume_diagonally_dominant(A)` or `num::assume_spd(A)`. The sweep is sequential;
 /// `Parallel` threads only the residual. Use `num::jacobi<true>` for a parallel sweep.
 ///
-/// @param A        Square matrix
+/// @param A_in     Square matrix claiming the law
 /// @param b        Right-hand side vector
 /// @param x        Solution vector (initial guess on input, solution on output)
 /// @param tol      Convergence tolerance on residual norm (default 1e-10)

@@ -10,6 +10,8 @@
 
 namespace num {
 
+/// @brief Convergence options of `num::cg`: an absolute tolerance on the residual norm and an
+/// iteration limit.
 struct cg_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;

@@ -23,11 +23,16 @@ enum class fft_backend : std::uint8_t {
     fftw,
 };
 
+/// @brief The in-tree FFT.
 inline constexpr fft_backend seq = fft_backend::seq;
+/// @brief The FFTW backend.
 inline constexpr fft_backend fftw = fft_backend::fftw;
+/// @brief The FFT with explicit SIMD intrinsics.
 inline constexpr fft_backend fft_simd = fft_backend::simd;
+/// @brief The FFT written with `std::simd`.
 inline constexpr fft_backend fft_stdsimd = fft_backend::stdsimd;
 
+/// @brief True when the build links FFTW.
 inline constexpr bool has_fftw =
 #ifdef NUMERICS_HAS_FFTW
     true;
@@ -35,6 +40,7 @@ inline constexpr bool has_fftw =
     false;
 #endif
 
+/// @brief True when the SIMD FFT is available.
 inline constexpr bool has_fft_simd =
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
     true;
@@ -42,6 +48,7 @@ inline constexpr bool has_fft_simd =
     false;
 #endif
 
+/// @brief True when the `std::simd` FFT is available.
 inline constexpr bool has_fft_stdsimd =
 #ifdef NUMERICS_HAS_STD_SIMD
     true;
@@ -49,6 +56,7 @@ inline constexpr bool has_fft_stdsimd =
     false;
 #endif
 
+/// @brief The FFT backend untagged calls use: FFTW when present, else the fastest in-tree one.
 inline constexpr fft_backend default_fft_backend =
 #ifdef NUMERICS_HAS_FFTW
     fft_backend::fftw;

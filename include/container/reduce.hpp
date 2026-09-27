@@ -94,6 +94,7 @@ namespace num::omp {
 
 namespace num {
 
+/// @brief The 1-norm \f$\sum_i |x_i|\f$.
 [[nodiscard]] inline real l1_norm(const vec &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::l1_norm(x);
@@ -102,6 +103,7 @@ namespace num {
 #endif
 }
 
+/// @brief The max-norm \f$\max_i |x_i|\f$.
 [[nodiscard]] inline real linf_norm(const vec &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::linf_norm(x);
@@ -110,6 +112,7 @@ namespace num {
 #endif
 }
 
+/// @brief The sum of the entries, \f$\sum_i x_i\f$.
 [[nodiscard]] inline real sum(const vec &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::sum(x);

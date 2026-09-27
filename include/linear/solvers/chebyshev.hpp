@@ -5,7 +5,7 @@
 /// \f$\max_{\lambda \in [\ell, h]} |1 - \lambda p(\lambda)|\f$, using only the operator's
 /// action. The caller supplies bounds with \f$0 < \ell \le \lambda_{\min}\f$ and
 /// \f$\lambda_{\max} \le h\f$; bounds that miss part of the spectrum make the preconditioner
-/// indefinite. See the solver best-practices page for when to use it.
+/// indefinite. See the algorithm notes for when to use it.
 #pragma once
 
 #include "container/vector.hpp"

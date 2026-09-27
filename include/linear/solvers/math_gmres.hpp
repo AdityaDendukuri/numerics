@@ -14,6 +14,7 @@
 
 namespace num {
 
+/// @brief Convergence options of `num::gmres`: tolerance, iteration limit, and restart length.
 struct gmres_options {
     real tolerance = 1e-6;
     idx max_iterations = 1000;

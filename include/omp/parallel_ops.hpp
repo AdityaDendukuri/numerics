@@ -2,7 +2,7 @@
 /// @brief Threaded block decomposition and reduction over the raw kernels.
 ///
 /// Each thread calls the raw kernel on a block, and block partials are summed in index order,
-/// so the result does not depend on the thread count. See the parallelism page, section 3.
+/// so the result does not depend on the thread count. See the backends page.
 ///
 /// Independent of `vec`/`mat`, so container headers can use it without a circular include.
 #pragma once
@@ -20,6 +20,7 @@ inline constexpr idx parallel_block = idx{1} << 14;
 #ifndef NUMERICS_PARALLEL_THRESHOLD
 #define NUMERICS_PARALLEL_THRESHOLD (1 << 18)
 #endif
+/// @brief The element count below which an operation stays on one thread.
 inline constexpr idx parallel_threshold = idx{NUMERICS_PARALLEL_THRESHOLD};
 
 /// @brief Upper bound on blocks, so the partial-sum buffer can live on the stack.

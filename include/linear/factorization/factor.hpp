@@ -17,32 +17,45 @@
 
 namespace num {
 
+/// @brief The block-level structure of a matrix, one level label per row, for `num::lu` and
+/// `num::cholesky` on block-tridiagonal matrices.
 struct block_structure {
     view<const idx> levels;
 };
 
+/// @brief Select block-tridiagonal factorization with one level label per row.
 [[nodiscard]] inline block_structure blocks(view<const idx> levels) {
     return {levels};
 }
 
+/// @brief The tag type of `num::sparse`.
 struct sparse_structure {};
+/// @brief Select sparse direct factorization.
 inline constexpr sparse_structure sparse{};
 
+/// @brief The tag type of `num::no_pivot`.
 struct no_pivot_structure {};
+/// @brief Select dense LU without pivoting, for matrices whose structure keeps the pivots
+/// nonzero.
 inline constexpr no_pivot_structure no_pivot{};
 
+/// @brief A factorization of the diagonal similarity of a matrix under the weights `h`, with
+/// the weights it used.
 template <class F>
 struct similar_factor {
     F factor;
     vec h;
 };
 
+/// @brief How many blocks a block factorization kept from the previous one, and how many rows
+/// they cover.
 struct suffix_reuse_report {
     idx blocks = 0;
     idx reused_blocks = 0;
     idx reused_rows = 0;
 };
 
+/// @brief Returned when no leading block of a factorization can be kept.
 inline constexpr idx no_reusable_block = static_cast<idx>(-1);
 
 namespace detail {

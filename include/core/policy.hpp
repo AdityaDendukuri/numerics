@@ -4,7 +4,7 @@
 /// A backend is a namespace of free functions matching `num::kernel` (`seq`, `omp`, `blas`,
 /// `cuda`), called by name. `num::accel` is the default for untagged calls. An algorithm that
 /// must run on several backends takes `template <bool Parallel>` and picks with
-/// `if constexpr`. See the performance page, section 4.
+/// `if constexpr`. See the performance page.
 #pragma once
 
 #include "core/types.hpp"
@@ -18,6 +18,7 @@ namespace num {
 // Build capabilities
 // -----------------------------------------------------------------------------
 
+/// @brief True when the build links a BLAS.
 inline constexpr bool has_blas =
 #if defined(NUMERICS_HAS_BLAS)
     true;
@@ -25,6 +26,7 @@ inline constexpr bool has_blas =
     false;
 #endif
 
+/// @brief True when the build links LAPACKE.
 inline constexpr bool has_lapack =
 #if defined(NUMERICS_HAS_LAPACK)
     true;
@@ -39,7 +41,7 @@ inline constexpr bool has_lapack =
 #endif
 
 /// Order above which the untagged LU takes LAPACK rather than the kernel. Cholesky and the
-/// triangular solves never do. Measurements are in the performance page, section 4.
+/// triangular solves never do. Measurements are on the performance page.
 inline constexpr idx lapack_factor_threshold = 768;
 
 /// True when the untagged SVD, LU inverse and large LU resolve to LAPACK.
@@ -50,6 +52,7 @@ inline constexpr bool lapack_default =
     false;
 #endif
 
+/// @brief True when the build uses OpenMP.
 inline constexpr bool has_omp =
 #if defined(NUMERICS_HAS_OMP)
     true;
@@ -59,6 +62,7 @@ inline constexpr bool has_omp =
 
 // whether the build enabled a wider instruction set than the baseline (`-mavx2 -mfma`).
 // Only the FFT's intrinsic path reads it; `num::kernel` relies on the compiler.
+/// @brief True when the build enables an instruction set wider than the target baseline.
 inline constexpr bool has_simd =
 #if defined(NUMERICS_HAS_SIMD)
     true;
@@ -66,6 +70,7 @@ inline constexpr bool has_simd =
     false;
 #endif
 
+/// @brief True when the build targets CUDA.
 inline constexpr bool has_cuda =
 #if defined(NUMERICS_HAS_CUDA)
     true;

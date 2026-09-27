@@ -1,4 +1,4 @@
-# Concepts, Laws & Diagnostics {#page_concepts}
+# Concepts, Laws & Diagnostics
 
 Concepts express two kinds of requirement. **Structure** is decided by the compiler from the
 operations a type provides. **Laws** are properties the compiler cannot decide, so a type
@@ -20,19 +20,7 @@ static_assert( num::self_adjoint_operator<decltype(sym)>);
 
 ---
 
-## All concepts
-
-### Scalars, spaces and operators
-
-<div class="sym-index">
-<div class="kidx-group"><span class="kidx-title">Scalars</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1field.html">field</a> &ndash; <a href="conceptnum_1_1scalar__function.html">scalar_function</a> &ndash; <a href="conceptnum_1_1differentiable__function.html">differentiable_function</a></span></div><div class="kidx-group"><span class="kidx-title">Spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1vector__space.html">vector_space</a> &ndash; <a href="conceptnum_1_1math_1_1inner__product__space.html">inner_product_space</a> &ndash; <a href="conceptnum_1_1math_1_1linear__subspace__of.html">linear_subspace_of</a></span></div><div class="kidx-group"><span class="kidx-title">Operators</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1linear__operator.html">linear_operator</a> &ndash; <a href="conceptnum_1_1math_1_1self__adjoint__operator.html">self_adjoint_operator</a> &ndash; <a href="conceptnum_1_1math_1_1psd__operator.html">psd_operator</a> &ndash; <a href="conceptnum_1_1math_1_1spd__operator.html">spd_operator</a> &ndash; <a href="conceptnum_1_1sparse__convertible.html">sparse_convertible</a></span></div><div class="kidx-group"><span class="kidx-title">Matrices</span><br/><span class="kidx-syms"><a href="conceptnum_1_1matrix__space.html">matrix_space</a></span></div><div class="kidx-group"><span class="kidx-title">Laws</span><br/><span class="kidx-syms"><a href="conceptnum_1_1claims.html">claims</a> &ndash; <a href="classnum_1_1with__law.html">with_law</a> &ndash; <a href="structnum_1_1law_1_1self__adjoint.html">law::self_adjoint</a> &ndash; <a href="structnum_1_1law_1_1psd.html">law::psd</a> &ndash; <a href="structnum_1_1law_1_1spd.html">law::spd</a> &ndash; <a href="structnum_1_1law_1_1diagonally__dominant.html">law::diagonally_dominant</a></span></div>
-</div>
-
-### Other interfaces
-
-<div class="sym-index">
-<div class="kidx-group"><span class="kidx-title">Storage layout</span><br/><span class="kidx-syms"><a href="conceptnum_1_1repr_1_1contiguous.html">contiguous</a> &ndash; <a href="conceptnum_1_1repr_1_1dense__row__major.html">dense_row_major</a> &ndash; <a href="conceptnum_1_1repr_1_1csr.html">csr</a> &ndash; <a href="conceptnum_1_1repr_1_1banded.html">banded</a> &ndash; <a href="conceptnum_1_1repr_1_1tridiagonal.html">tridiagonal</a></span></div><div class="kidx-group"><span class="kidx-title">Discrete structures</span><br/><span class="kidx-syms"><a href="conceptnum_1_1concepts_1_1equivalence__relation.html">equivalence_relation</a> &ndash; <a href="conceptnum_1_1concepts_1_1incidence__structure.html">incidence_structure</a> &ndash; <a href="conceptnum_1_1concepts_1_1weighted__incidence.html">weighted_incidence</a> &ndash; <a href="conceptnum_1_1concepts_1_1addressable__priority__queue.html">addressable_priority_queue</a> &ndash; <a href="conceptnum_1_1linear_1_1laplacian__graph.html">laplacian_graph</a></span></div><div class="kidx-group"><span class="kidx-title">Index spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1square__extent__2d.html">square_extent_2d</a> &ndash; <a href="conceptnum_1_1cartesian__index__space__2d.html">cartesian_index_space_2d</a> &ndash; <a href="conceptnum_1_1periodic__neighbourhood__2d.html">periodic_neighbourhood_2d</a></span></div><div class="kidx-group"><span class="kidx-title">Fields and grids</span><br/><span class="kidx-syms"><a href="conceptnum_1_1scalar__field__like.html">scalar_field_like</a> &ndash; <a href="conceptnum_1_1solvable__field.html">solvable_field</a></span></div><div class="kidx-group"><span class="kidx-title">Ordinary differential equations</span><br/><span class="kidx-syms"><a href="conceptnum_1_1vec__field.html">vec_field</a> &ndash; <a href="conceptnum_1_1is__ode__problem.html">is_ode_problem</a> &ndash; <a href="conceptnum_1_1is__symplectic__ode__problem.html">is_symplectic_ode_problem</a> &ndash; <a href="conceptnum_1_1is__ode__stepper.html">is_ode_stepper</a></span></div><div class="kidx-group"><span class="kidx-title">Partial differential equations</span><br/><span class="kidx-syms"><a href="conceptnum_1_1grid__stencil.html">grid_stencil</a> &ndash; <a href="conceptnum_1_1assemblable__grid__operator.html">assemblable_grid_operator</a> &ndash; <a href="conceptnum_1_1field__stepper.html">field_stepper</a></span></div><div class="kidx-group"><span class="kidx-title">Spatial acceleration</span><br/><span class="kidx-syms"><a href="conceptnum_1_1position__accessor__2d.html">position_accessor_2d</a> &ndash; <a href="conceptnum_1_1neighbor__query__2d.html">neighbor_query_2d</a> &ndash; <a href="conceptnum_1_1smoothing__kernel.html">smoothing_kernel</a></span></div><div class="kidx-group"><span class="kidx-title">Stochastic</span><br/><span class="kidx-syms"><a href="conceptnum_1_1categorical__sampling.html">categorical_sampling</a> &ndash; <a href="conceptnum_1_1energy__difference.html">energy_difference</a></span></div><div class="kidx-group"><span class="kidx-title">Quadrature</span><br/><span class="kidx-syms"><a href="conceptnum_1_1quadrature__rule.html">quadrature_rule</a> &ndash; <a href="conceptnum_1_1contour__rule.html">contour_rule</a></span></div><div class="kidx-group"><span class="kidx-title">Spectral</span><br/><span class="kidx-syms"><a href="conceptnum_1_1transform__plan.html">transform_plan</a></span></div><div class="kidx-group"><span class="kidx-title">Statistics</span><br/><span class="kidx-syms"><a href="conceptnum_1_1streaming__accumulator.html">streaming_accumulator</a> &ndash; <a href="conceptnum_1_1moment__accumulator.html">moment_accumulator</a></span></div><div class="kidx-group"><span class="kidx-title">Root finding</span><br/><span class="kidx-syms"><a href="conceptnum_1_1bracketable__function.html">bracketable_function</a></span></div><div class="kidx-group"><span class="kidx-title">Problem dispatch</span><br/><span class="kidx-syms"><a href="conceptnum_1_1is__explicit__ode__alg.html">is_explicit_ode_alg</a> &ndash; <a href="conceptnum_1_1is__mcmc__alg.html">is_mcmc_alg</a></span></div>
-</div>
+Every concept, grouped by what it describes, is listed under [All concepts](reference/concepts.md).
 
 ---
 
@@ -168,8 +156,8 @@ the caller takes responsibility and the diagnostics sample it.
 
 ## 3. Laws that follow from an operation
 
-\f$P_S A\f$ is not self-adjoint, since \f$(P_S A)^* = A P_S \neq P_S A\f$. But \f$P_S A x = P_S
-A P_S x\f$ for \f$x \in S\f$, and \f$P_S A P_S\f$ keeps the law of \f$A\f$ on \f$S\f$.
+$P_S A$ is not self-adjoint, since $(P_S A)^* = A P_S \neq P_S A$. But $P_S A x = P_S
+A P_S x$ for $x \in S$, and $P_S A P_S$ keeps the law of $A$ on $S$.
 `num::operators::projected` carries that law over, so a graph Laplacian can be solved on the
 zero-sum subspace without a second assertion.
 
@@ -184,8 +172,8 @@ static_assert(!num::claims<decltype(pa), num::law::self_adjoint>);
 
 A weaker operand gives a weaker restriction, and an operand claiming nothing gives nothing.
 
-Strict diagonal dominance and definiteness are incomparable. \f$\begin{pmatrix} 1 & 0.9 \\
-0.9 & 1\end{pmatrix}\f$ is SPD and not dominant, and a dominant matrix need not be symmetric.
+Strict diagonal dominance and definiteness are incomparable. $\begin{pmatrix} 1 & 0.9 \\
+0.9 & 1\end{pmatrix}$ is SPD and not dominant, and a dominant matrix need not be symmetric.
 A routine that accepts either says so with `||`:
 
 ```cpp
@@ -214,12 +202,12 @@ num::eig_sym(verified);                          // spd converts to self_adjoint
 
 | attach | law | checked by | cost |
 | :--- | :--- | :--- | :--- |
-| `assume_symmetric(A)` | `self_adjoint` | sampled \f$\langle x, Ay\rangle = \overline{\langle y, Ax\rangle}\f$ | \f$\mathcal{O}(n^2)\f$ |
-| `assume_psd(A)` | `psd` | sampled \f$\langle x, Ax\rangle \ge 0\f$ | \f$\mathcal{O}(n^2)\f$ |
-| `assume_spd(A)` | `spd` | sampled, plus a power-iteration bound on \f$\lambda_{\min}\f$ | \f$\mathcal{O}(n^2)\f$ |
-| `assume_diagonally_dominant(A)` | `diagonally_dominant` | every row, exactly | \f$\mathcal{O}(n^2)\f$ |
-| `make_symmetric(A)` | `self_adjoint` | every entry, exactly | \f$\mathcal{O}(n^2)\f$ |
-| `make_spd(A)` | `spd` | Cholesky, exactly | \f$\mathcal{O}(n^3)\f$ |
+| `assume_symmetric(A)` | `self_adjoint` | sampled $\langle x, Ay\rangle = \overline{\langle y, Ax\rangle}$ | $\mathcal{O}(n^2)$ |
+| `assume_psd(A)` | `psd` | sampled $\langle x, Ax\rangle \ge 0$ | $\mathcal{O}(n^2)$ |
+| `assume_spd(A)` | `spd` | sampled, plus a power-iteration bound on $\lambda_{\min}$ | $\mathcal{O}(n^2)$ |
+| `assume_diagonally_dominant(A)` | `diagonally_dominant` | every row, exactly | $\mathcal{O}(n^2)$ |
+| `make_symmetric(A)` | `self_adjoint` | every entry, exactly | $\mathcal{O}(n^2)$ |
+| `make_spd(A)` | `spd` | Cholesky, exactly | $\mathcal{O}(n^3)$ |
 
 Every `assume` samples linearity and checks squareness as well. Squareness is checked in
 every build, since it costs nothing.
@@ -321,7 +309,7 @@ definiteness is considered. Sampling can miss a violation. The algorithm then ca
 caught: cg: positive-definite curvature invariant was violated
 ```
 
-That check costs \f$\mathcal{O}(1)\f$ per iteration and stays in `NDEBUG` builds.
+That check costs $\mathcal{O}(1)$ per iteration and stays in `NDEBUG` builds.
 
 ---
 
@@ -354,7 +342,7 @@ decides whether it runs.
 | `1` | shape checks: dimensions, emptiness, finiteness | builds with `NDEBUG` |
 | `2` | property sampling as well | builds without `NDEBUG` |
 
-Sampling costs \f$\mathcal{O}(n^2)\f$, so it is not a Release default:
+Sampling costs $\mathcal{O}(n^2)$, so it is not a Release default:
 
 ```
 ceiling=1   assume_spd =  0.00 ms   cg = 3.38 ms
@@ -402,10 +390,10 @@ if (!num::preset_fully_applied()) {
 
 ## Example
 
-@example 14_concepts_and_property_invariants.cpp
+See the example program [14_concepts_and_property_invariants.cpp](reference/examples/14_concepts_and_property_invariants.md).
 
 ---
 
 ## See also
 
-* @ref page_kernel "num::kernel", the computational half of the library
+* [num::kernel](reference/kernel.md), the computational half of the library

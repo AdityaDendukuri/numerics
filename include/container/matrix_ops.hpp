@@ -59,6 +59,7 @@ inline void matvec(const M &A, const vec &x, vec &y) {
 
 inline void matmul(const mat &A, const mat &B, mat &C) { accel::matmul(A, B, C); }
 
+/// @brief \f$C \leftarrow \alpha A + \beta B\f$.
 inline void matadd(real alpha, const mat &A, real beta, const mat &B, mat &C) {
     if constexpr (requires { accel::matadd(alpha, A, beta, B, C); }) {
         accel::matadd(alpha, A, beta, B, C);

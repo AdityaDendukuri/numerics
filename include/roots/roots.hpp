@@ -11,6 +11,7 @@
 
 namespace num {
 
+/// @brief The root found, the iterations taken, the final residual, and whether it converged.
 template <typename Float = double>
 struct basic_root_result {
     Float root{};

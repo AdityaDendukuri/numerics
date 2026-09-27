@@ -14,6 +14,7 @@
 
 namespace num::structures {
 
+/// @brief Gather the neighbors of `v`, merging parallel edges, and return their total weight.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>>
 inline Weight collect_neighbors(Index v, array<array<multi_edge<Weight, Index>>> &G,
@@ -58,6 +59,7 @@ inline Weight collect_neighbors(Index v, array<array<multi_edge<Weight, Index>>>
     return total_weight;
 }
 
+/// @brief Add the exact clique that eliminating a vertex creates among its neighbors.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>>
 inline void add_exact_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
@@ -76,6 +78,8 @@ inline void add_exact_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &
     }
 }
 
+/// @brief Add a sampled sparse approximation of that clique, with at most `sample_limit` draws
+/// per neighbor.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>, typename Rng = rng64>
 inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
@@ -131,7 +135,7 @@ inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
 /// to the harmonic mean \f$c_i c_j / (c_i + c_j)\f$, so \f$\mathbb{E}[\widetilde L^{(v)}] =
 /// \mathrm{Sc}(L)\f$. The walk is capped: past the cap the remaining vertices attach to the
 /// heaviest neighbour, which keeps a spanning tree but loses exactness for that elimination.
-/// The derivation and measured behaviour are on the structures page.
+/// The derivation and measured behaviour are in the algorithm notes.
 ///
 /// @param G Adjacency being eliminated; sampled edges are appended.
 /// @param q Degree queue, rekeyed for each endpoint touched.
@@ -238,7 +242,7 @@ inline void sample_clique_tree(array<array<multi_edge<Weight, Index>>> &G, Queue
 /// \f$p_{ij} = 1 - (1-\alpha_i)(1-\beta_j)\f$, where \f$\alpha_i = x_i/X\f$ and
 /// \f$\beta_j = y_j/Y\f$, and reweighting by \f$w_{ij}/p_{ij}\f$ gives
 /// \f$\mathbb{E}[\widetilde S_v] = xy^{T}/a\f$. It requires \f$x_i, y_j, a > 0\f$, as in a
-/// nonsymmetric M-matrix; otherwise nothing is emitted. The derivation is on the structures page.
+/// nonsymmetric M-matrix; otherwise nothing is emitted. The derivation is in the algorithm notes.
 ///
 /// @param x Incoming conductances, all strictly positive.
 /// @param y Outgoing conductances, all strictly positive.

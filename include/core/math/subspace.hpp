@@ -32,7 +32,9 @@ struct project_t {
     }
 };
 
+/// @brief True when a vector lies in a subspace.
 inline constexpr contains_t contains{};
+/// @brief Project a vector onto a subspace, in place.
 inline constexpr project_t project{};
 
 /// @brief A linear subspace of V that can test membership and project onto itself.

@@ -54,6 +54,7 @@ void thomas_batched(const real *a, const real *b, const real *c, const real *d, 
 
 // Without a device build these are no-ops, so host code compiles and links
 // unchanged. The GPU backend tags fall back to seq in the same situation.
+/// @brief Thrown by every device routine in a build without CUDA.
 [[noreturn]] static void no_cuda() {
     throw std::runtime_error("CUDA not available");
 }

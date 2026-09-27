@@ -11,6 +11,7 @@
 
 namespace num {
 
+/// @brief Convergence options of `num::pcg`: tolerance and iteration limit.
 struct pcg_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;

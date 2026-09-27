@@ -126,6 +126,7 @@ NUM_K_AINLINE void householder_vector_strided(T *NUM_K_RESTRICT v, T &beta,
     beta = T(2) / v_sq;
 }
 
+/// @brief Apply \f$I - \beta v v^T\f$ from the left to an \f$m \times n\f$ block of `A`.
 template <std::floating_point T>
 NUM_K_AINLINE void householder_left(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K_RESTRICT v, T beta,
                                     idx m, idx n, T *NUM_K_RESTRICT work) noexcept;

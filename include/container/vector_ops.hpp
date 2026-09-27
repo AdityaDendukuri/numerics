@@ -67,8 +67,10 @@ inline void axpbyz(real a, const vec &x, real b, const vec &y, vec &z) noexcept 
 
 namespace num {
 
+/// @brief \f$v \leftarrow \alpha v\f$, through the build's default backend.
 inline void scale(vec &v, real alpha) noexcept { accel::scale(v, alpha); }
 
+/// @brief \f$y \leftarrow y + \alpha x\f$, through the build's default backend.
 inline void axpy(real alpha, const vec &x, vec &y) noexcept { accel::axpy(alpha, x, y); }
 
 [[nodiscard]] inline real dot(const vec &x, const vec &y) noexcept { return accel::dot(x, y); }
@@ -81,6 +83,7 @@ inline void axpy(real alpha, const vec &x, vec &y) noexcept { accel::axpy(alpha,
     return kernel::dot(x.data(), y.data(), x.size());
 }
 
+/// @brief The Euclidean norm \f$\|x\|_2\f$, through the build's default backend.
 [[nodiscard]] inline real norm(const vec &x) noexcept { return accel::norm(x); }
 
 inline void add(const vec &x, const vec &y, vec &z) noexcept { accel::add(x, y, z); }

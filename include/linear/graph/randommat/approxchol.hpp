@@ -30,7 +30,9 @@ namespace gao_kyng_spielman_2023 {
 
 struct ac_t {};
 struct ac2_t {};
+/// @brief Select the AC clique sampler, one sample per edge.
 inline constexpr ac_t ac{};
+/// @brief Select the AC2 clique sampler, two samples per edge.
 inline constexpr ac2_t ac2{};
 
 } // namespace gao_kyng_spielman_2023

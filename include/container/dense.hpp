@@ -47,6 +47,7 @@ inline void ger(real alpha, const vec &x, const vec &y, mat &A) {
 
 namespace num {
 
+/// @brief The rank-1 update \f$A \leftarrow A + \alpha x y^T\f$.
 inline void ger(real alpha, const vec &x, const vec &y, mat &A) {
 #if defined(NUMERICS_HAS_OMP)
     omp::ger(alpha, x, y, A);

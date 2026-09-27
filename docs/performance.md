@@ -1,4 +1,4 @@
-# Performance Benchmarks & Report Workflow {#page_performance}
+# Performance Benchmarks & Report Workflow
 
 This page documents the benchmark workflow, automated performance reporting, and dense kernel architecture.
 

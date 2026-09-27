@@ -64,6 +64,7 @@ struct dimension_t {
     }
 };
 
+/// @brief The number of coordinates of a vector.
 inline constexpr dimension_t dimension{};
 
 struct zero_like_t {
@@ -140,7 +141,9 @@ struct inner_t {
     }
 };
 
+/// @brief The inner product \f$\langle x, y \rangle = \sum_i \overline{x_i} y_i\f$.
 inline constexpr inner_t inner{};
+/// @brief \f$y \leftarrow y + a x\f$.
 inline constexpr axpy_t axpy{};
 
 struct axpy_norm_sq_t {
@@ -182,11 +185,17 @@ struct apply_t {
     }
 };
 
+/// @brief A zero vector of the same dimension.
 inline constexpr zero_like_t zero_like{};
+/// @brief \f$v \leftarrow a v\f$.
 inline constexpr scale_t scale{};
+/// @brief \f$y \leftarrow a x + b y\f$.
 inline constexpr linear_combination_t linear_combination{};
+/// @brief \f$y \leftarrow y + a x\f$, returning \f$\|y\|_2^2\f$.
 inline constexpr axpy_norm_sq_t axpy_norm_sq{};
+/// @brief The induced norm \f$\sqrt{\langle x, x \rangle}\f$.
 inline constexpr norm_t norm{};
+/// @brief \f$y \leftarrow A x\f$.
 inline constexpr apply_t apply{};
 
 } // namespace num::math

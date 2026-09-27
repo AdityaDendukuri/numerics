@@ -1,6 +1,6 @@
-# Getting Started {#page_getting_started}
+# Getting Started
 
-This guide introduces the core design philosophy of Numerics, its primary data structures, execution styles, mathematical invariant framework, and linear solvers.
+This page covers installation, the containers, the two programming styles, the laws solvers require, and the direct and iterative solvers.
 
 ---
 
@@ -90,20 +90,18 @@ for (num::idx step = 0; step < total_steps; ++step) {
 }
 ```
 
-See @ref page_expressive "Expression Interface" for an in-depth discussion on performance tradeoffs.
-
 ---
 
-## 4. Mathematical Invariants & Evidence-Based Solvers
+## 4. Laws and Solvers
 
 In numerical computing, specialized algorithms mathematically require specific operator properties to guarantee convergence and stability. For example:
-* **Conjugate Gradient (`num::cg`)** mathematically requires the system to be **Symmetric Positive Definite (SPD)**: \f$A = A^T\f$ and \f$x^T A x > 0\f$.
+* **Conjugate Gradient (`num::cg`)** mathematically requires the system to be **Symmetric Positive Definite (SPD)**: $A = A^T$ and $x^T A x > 0$.
 * **Cholesky Factorization (`num::cholesky`)** requires SPD matrices to guarantee real, positive diagonal pivots.
-* **MINRES (`num::minres`)** requires **Symmetric / Self-Adjoint** operators (\f$A = A^T\f$).
+* **MINRES (`num::minres`)** requires **Symmetric / Self-Adjoint** operators ($A = A^T$).
 
-Passing an uncertified general matrix to `num::cg` or `num::cholesky` produces a **compile-time concept failure**, preventing catastrophic runtime divergence.
+Passing a matrix without the required law to `num::cg` or `num::cholesky` produces a **compile-time concept failure**, preventing catastrophic runtime divergence.
 
-### Attaching Invariant Evidence to General Matrices
+### Attaching a Law to a Matrix
 
 When you know from domain physics that a matrix is positive-definite, attach the law explicitly:
 
@@ -140,7 +138,7 @@ num::vec solution(grid.size(), 0.0);
 const auto result = num::cg(system, rhs, solution);
 ```
 
-See @ref page_concepts "Concepts, Invariants & Diagnostics" for details on property hierarchys and diagnostic presets.
+See [Concepts, Laws & Diagnostics](concepts.md) for the laws and the diagnostic presets.
 
 ---
 
@@ -186,54 +184,25 @@ if (num::kernel::cholesky(L.data(), A.data(), 2)) {
 }
 ```
 
-See @ref page_architecture "Library Structure & Architecture" for details on the tiered hierarchy, how to vendor `include/kernel/`, and CMake integration.
+See [Library Structure & Architecture](architecture.md) for details on the tiered hierarchy, how to vendor `include/kernel/`, and CMake integration.
 
 ---
 
-## 7. Result Introspection & Terminal Documentation
+## 7. Printing Results
 
-### In-Code Stream Printing
-All solver and algorithm result structures (`num::solver_result`, `num::kernel::krylov_result`, `num::ode_result`, `num::symplectic_result`, `num::root_result`, `num::svd_result`, `num::eigen_result`, `num::power_result`, `num::banded_solver_result`, `num::cluster_result`) implement standard `operator<<` stream formatting:
+Every solver and algorithm result (`num::solver_result`, `num::kernel::krylov_result`, `num::ode_result`, `num::symplectic_result`, `num::root_result`, `num::svd_result`, `num::eigen_result`, `num::power_result`, `num::banded_solver_result`, `num::cluster_result`) has an `operator<<`:
 
 ```cpp
 auto res = num::cg(A, b, x);
 std::cout << res << "\n";
-// Output: solver_result{ converged: true, iterations: 24, residual: 1.42e-11 }
-```
-
-### CLI Documentation Lookup
-Building the documentation target automatically compiles Section-3 UNIX man pages into `build/docs/man/`:
-
-```bash
-# 1. Build documentation and man pages
-cmake --build build --target docs
-
-# 2. Query any symbol with the included helper script:
-./tools/doc solver_result
-./tools/doc krylov_result
-./tools/doc ode_result
-./tools/doc cg
-
-# Or query directly via standard man:
-man build/docs/man/man3/num_SolverResult.3
+// solver_result{ converged: true, iterations: 24, residual: 1.42e-11 }
 ```
 
 ---
 
-## 8. Next Steps & Detailed Guides
+## 8. Next Steps
 
-Explore dedicated guides for each numerical domain:
-
-* @ref page_architecture "Library Structure & Architecture" — Standalone raw kernel layer, tiered hierarchy, and dependency invariants.
-* @ref page_concepts "Mathematical Concepts & Diagnostics Framework" — Type-level laws, invariant tags, and diagnostic presets.
-* @ref page_linear "Linear Algebra Guide" — Direct factorizations, Krylov methods, eigenvalue/SVD algorithms, and banded solvers.
-* @ref page_solver_best_practices "Linear Solver Selection Guide" — Decision trees for picking optimal direct vs. iterative methods.
-* @ref page_ode "Ordinary Differential Equations" — Explicit, adaptive RK45, and symplectic Verlet/Yoshida integrators.
-* @ref page_quadrature "Quadrature & Integration" — Composite, Gaussian, adaptive, and Talbot contour integration.
-* @ref page_spectral "Spectral Methods & FFT" — Fast Fourier transforms, Poisson solvers, and discrete sine transforms.
-* @ref page_stochastic "Stochastic Methods" — Metropolis–Hastings sampling, Boltzmann tables, and umbrella sampling.
-* @ref page_expressive "Expression Interface" — Infix operators and zero-allocation idioms.
-* @ref page_examples "Browse Runnable Examples" — Code organized by numerical domain.
-* @ref page_reference "API Reference" — Generated index of classes, functions, and concepts.
-* @ref page_report "Performance Benchmark Report" — Empirical benchmarks and comparisons against vendor LAPACK.
-
+* [Concepts, Laws & Diagnostics](concepts.md): what each algorithm requires, and how a type states it.
+* [Architecture](architecture.md): the module tiers, and how to vendor `include/kernel/`.
+* [Reference](reference/index.md): one page per public name, grouped by topic and by directory.
+* [Examples](reference/examples/index.md): complete programs.

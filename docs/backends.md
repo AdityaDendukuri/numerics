@@ -1,4 +1,4 @@
-# Backend Namespaces, Parallelism, & Hardware Acceleration {#page_parallel}
+# Backend Namespaces, Parallelism, & Hardware Acceleration
 
 Optional hardware acceleration across BLAS/LAPACK, OpenMP, CUDA, MPI, and FFTW. Compiles to portable standard C++20 by default with compile-time capability detection.
 
@@ -60,7 +60,7 @@ was not configured. CUDA is the exception; see §4.
 
 These flags are attached only to the CMake target for that backend
 (`numerics::blas`, `numerics::omp`, and so on), not globally. See
-@ref page_architecture "the architecture page" for how `numerics::kernel` and
+[the architecture page](architecture.md) for how `numerics::kernel` and
 `numerics::core` stay dependency-free when every backend is present on the configuring
 machine.
 
@@ -142,7 +142,7 @@ num::blas::axpy(2.0, x, y);
 
 To swap which backend a whole build defaults to, change what's linked, not the
 call sites: link `numerics::blas`/`numerics::omp`/`numerics::cuda` (see
-@ref page_architecture) and `num::accel` re-resolves at the next compile.
+[Library Structure & Architecture](architecture.md)) and `num::accel` re-resolves at the next compile.
 
 ### Threaded reductions
 

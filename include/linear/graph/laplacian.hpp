@@ -29,6 +29,7 @@ concept laplacian_graph = concepts::incidence_structure<G> && requires(const G &
     {laplacian(g)};
 };
 
+/// @brief The weighted adjacency matrix of a graph, in CSR form.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat to_sparse_adjacency(const basic_graph<Weight, Index> &g) {
     array<idx> row_ptr(g.n_vertices() + 1, 0);
@@ -46,6 +47,7 @@ template <typename Weight = real, typename Index = idx>
                         std::move(values), std::move(col_idx), std::move(row_ptr));
 }
 
+/// @brief The weighted adjacency matrix of a graph, dense.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat to_dense_adjacency(const basic_graph<Weight, Index> &g) {
     mat A(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
@@ -108,6 +110,7 @@ template <std::size_t D, typename Weight, std::integral Index>
                                 rows, cols, vals);
 }
 
+/// @brief The graph Laplacian \f$L = D - W\f$, dense.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat dense_laplacian(const basic_graph<Weight, Index> &g) {
     mat L(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
@@ -124,6 +127,8 @@ template <typename Weight = real, typename Index = idx>
     return L;
 }
 
+/// @brief The rate matrix of the Markov chain on a graph, whose off-diagonal entries are the
+/// edge weights.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat markov_generator(const basic_graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
@@ -154,6 +159,7 @@ template <typename Weight = real, typename Index = idx>
                                        static_cast<idx>(g.n_vertices()), rows, cols, vals);
 }
 
+/// @brief The rate matrix of the Markov chain on a graph, dense.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat dense_markov_generator(const basic_graph<Weight, Index> &g,
                                                    bool column_oriented = true) {

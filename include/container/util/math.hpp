@@ -18,11 +18,16 @@
 namespace num {
 
 // Mathematical constants
+/// @brief \f$\pi\f$.
 constexpr real pi = 3.14159265358979323846;
+/// @brief Euler's number \f$e\f$.
 constexpr real e = 2.71828182845904523536;
 constexpr real phi = 1.61803398874989484820; ///< Golden ratio
+/// @brief \f$\sqrt{2}\f$.
 constexpr real sqrt2 = 1.41421356237309504880;
+/// @brief \f$\sqrt{3}\f$.
 constexpr real sqrt3 = 1.73205080756887729353;
+/// @brief \f$\ln 2\f$.
 constexpr real ln2 = 0.69314718055994530942;
 constexpr real inv_pi = 0.31830988618379067154;  ///< 1/pi
 constexpr real two_pi = 6.28318530717958647692;  ///< 2pi

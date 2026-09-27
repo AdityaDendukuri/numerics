@@ -48,6 +48,8 @@ requires math::linear_operator<Op>
     Subspace subspace_;
 };
 
+/// @brief \f$P_S A\f$, which carries the law of `A` onto the subspace `S`. It holds `A` by
+/// reference.
 template <class Op, class Subspace>
 [[nodiscard]] auto projected(const Op &op, Subspace subspace) {
     return projected_op<Op, Subspace>(op, std::move(subspace));

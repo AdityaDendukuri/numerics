@@ -38,10 +38,15 @@ enum class diagnostic_preset : std::uint8_t {
 };
 
 namespace preset {
+/// @brief Sample every property.
 inline constexpr diagnostic_preset strict = diagnostic_preset::strict;
+/// @brief Check shapes and dimensions, and skip the sampling.
 inline constexpr diagnostic_preset balanced = diagnostic_preset::balanced;
+/// @brief Silence the checks, for prototyping.
 inline constexpr diagnostic_preset unsafe = diagnostic_preset::unsafe;
+/// @brief The same as `unsafe`.
 inline constexpr diagnostic_preset prototype = diagnostic_preset::unsafe;
+/// @brief Turn every diagnostic off.
 inline constexpr diagnostic_preset production = diagnostic_preset::production;
 } // namespace preset
 
@@ -121,10 +126,12 @@ inline std::atomic<diagnostic_preset> g_preset{default_preset()};
 
 } // namespace detail
 
+/// @brief Set the diagnostic level, clamped to the compile-time ceiling.
 inline void set_level(diagnostic_level lvl) noexcept {
     detail::g_level.store(detail::clamp_to_ceiling(lvl), std::memory_order_relaxed);
 }
 
+/// @brief The active diagnostic level.
 [[nodiscard]] inline diagnostic_level get_level() noexcept {
     return detail::g_level.load(std::memory_order_relaxed);
 }

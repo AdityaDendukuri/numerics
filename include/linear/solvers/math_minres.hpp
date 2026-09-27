@@ -17,6 +17,7 @@
 
 namespace num {
 
+/// @brief Convergence options of `num::minres`: tolerance and iteration limit.
 struct minres_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;

@@ -51,6 +51,7 @@ inline vec dst1(const vec &x) {
     return out;
 }
 
+/// @brief Apply the DST-I to each row of an \f$N \times N\f$ row-major array, in place.
 inline void dst_rows(array<double> &A, int N) {
     vec row(static_cast<std::size_t>(N));
     for (int i = 0; i < N; ++i) {
@@ -65,6 +66,7 @@ inline void dst_rows(array<double> &A, int N) {
     }
 }
 
+/// @brief Apply the DST-I to each column, in place.
 inline void dst_cols(array<double> &A, int N) {
     vec col(static_cast<std::size_t>(N));
     for (int j = 0; j < N; ++j) {
@@ -81,6 +83,7 @@ inline void dst_cols(array<double> &A, int N) {
     }
 }
 
+/// @brief The 2D DST-I of an \f$N \times N\f$ array, in place.
 inline void dst2d(array<double> &A, int N) {
     dst_check_size(N);
     dst_cols(A, N);

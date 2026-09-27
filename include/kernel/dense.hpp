@@ -87,7 +87,7 @@ namespace detail {
 /// The Goto/BLIS structure: an `mr x nr` register-tiled microkernel over `kc` inner
 /// products, fed from packed panels of A and B. `mr` and `nr` come from the vector width
 /// and register count, and `kc`, `mc`, `nc` from `NUM_K_L1_BYTES`, `NUM_K_L2_BYTES` and
-/// `NUM_K_GEMM_PANEL_BYTES`. See the kernel reference page for the per-target shapes.
+/// `NUM_K_GEMM_PANEL_BYTES`. See the kernel page for the per-target shapes.
 template <std::floating_point T>
 struct gemm_config {
 #if defined(NUM_K_VECTOR_EXT)
@@ -514,6 +514,7 @@ inline void syrk_lower_strips(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTR
 
 } // namespace detail
 
+/// @brief The lower triangle of \f$C \leftarrow \alpha A A^T + \beta C\f$.
 template <std::floating_point T>
 inline void syrk_lower(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda, T alpha,
                        T beta, idx rows, idx columns) noexcept {

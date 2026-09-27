@@ -57,7 +57,7 @@ class preconditioned_symmetric_operator final {
 ///
 /// A diagonal similarity makes the symmetric part positive definite, so each entry is a
 /// squared row norm, estimated without bias by the probe mean square. The derivation is in the
-/// linear algebra page, section 1.
+/// algorithm notes.
 ///
 /// @param factor A retained factorization of `matrix`.
 /// @param matrix The nonsingular M-matrix A, in CSR form.

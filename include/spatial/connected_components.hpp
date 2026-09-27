@@ -8,6 +8,7 @@
 
 namespace num {
 
+/// @brief Per-site cluster labels, the size of each cluster, and the largest cluster.
 struct cluster_result {
     array<int> id;    ///< Per-site label: -2 excluded, >=0 cluster index
     array<int> sizes; ///< sizes[c] = number of sites in cluster c

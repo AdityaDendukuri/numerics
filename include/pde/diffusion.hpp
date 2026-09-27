@@ -63,18 +63,22 @@ class backward_euler_operator_2d final {
     spmat A_;
 };
 
+/// @brief One explicit diffusion step \f$u \leftarrow u + c\,\Delta_h u\f$, periodic.
 inline void diffusion_step_2d(vec &u, int N, double coeff) {
     vec lap(u.size());
     laplacian_stencil_2d_periodic(u, lap, N);
     axpy(coeff, lap, u);
 }
 
+/// @brief One explicit diffusion step with zero Dirichlet boundaries.
 inline void diffusion_step_2d_dirichlet(vec &u, int N, double coeff) {
     vec lap(u.size());
     laplacian_stencil_2d(u, lap, N);
     axpy(coeff, lap, u);
 }
 
+/// @brief One explicit diffusion step with the fourth-order stencil and zero Dirichlet
+/// boundaries.
 inline void diffusion_step_2d_4th_dirichlet(vec &u, int N, double coeff) {
     vec lap(u.size());
     laplacian_stencil_2d_4th(u, lap, N);
@@ -89,6 +93,7 @@ inline void diffusion_step_2d_4th_dirichlet(scalar_field_2d &g, double coeff) {
     diffusion_step_2d_4th_dirichlet(g.as_vec(), g.N(), coeff);
 }
 
+/// @brief The backward Euler operator \f$I - c\,\Delta_h\f$ on an \f$N \times N\f$ grid.
 inline backward_euler_operator_2d backward_euler_operator(int N, double coeff) {
     return backward_euler_operator_2d(N, coeff);
 }
@@ -97,6 +102,7 @@ inline backward_euler_operator_2d backward_euler_operator(const grid2d &grid, do
     return backward_euler_operator(grid.N, coeff);
 }
 
+/// @brief A linear solver running CG on `A`, which it holds by reference.
 inline linear_solver make_cg_solver(const spmat &A, real tol = 1e-6) {
     return [&A, tol](const vec &rhs, vec &x) {
         operators::sparse_op op(A);

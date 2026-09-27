@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile every C++ example in docs/pages and report the ones that no longer build.
+"""Compile every C++ example in the docs pages and report the ones that no longer build.
 
 The docs carry ~1500 lines of example code across ~270 fenced blocks. Nothing compiled
 any of it, so an API rename would silently leave the documentation describing a library
@@ -18,9 +18,8 @@ that compiles either way is fine.
 missing, so some blocks are supposed to fail. Mark those with a `DOES NOT COMPILE` comment
 on the first line; they are skipped, and the marker tells the reader the same thing.
 
-*Proposed API.* The refactor roadmap describes an architecture that does not exist yet.
-Mark those blocks `PROPOSED API`, which likewise skips them and tells a reader that the
-call is a design target rather than something they can write today.
+*Proposed API.* Mark a block that describes a call which does not exist yet `PROPOSED API`.
+It is skipped, and the marker tells a reader the same thing.
 
 Run it with `cmake --build <build> --target check-docs`. It is not part of `ctest`: it
 compiles the umbrella header once per block and takes minutes, where the whole test suite
@@ -112,7 +111,7 @@ def main():
     args = parser.parse_args()
 
     root = pathlib.Path(args.source_dir)
-    pages = root / "docs" / "pages"
+    pages = root / "docs"
     include = root / "include"
     defines = [f"-D{d}" for d in args.define]
 
@@ -129,7 +128,7 @@ def main():
 
     print(f"no longer building: {len(broken)}\n")
     for name, line, error in sorted(broken):
-        print(f"  docs/pages/{name}:{line}\n      {error[:110]}")
+        print(f"  docs/{name}:{line}\n      {error[:110]}")
     print(
         "\nEach block above names an API the documentation still describes but the library\n"
         "no longer provides. Fix the example, or the library if the example is the\n"

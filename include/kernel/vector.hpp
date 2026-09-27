@@ -103,8 +103,11 @@ struct alias_safe_t final {};
 struct throughput_t final {};
 struct ordered_t final {};
 
+/// @brief Tag a call whose output may alias an input.
 inline constexpr alias_safe_t alias_safe{};
+/// @brief Tag a call that may reorder floating-point sums for speed.
 inline constexpr throughput_t throughput{};
+/// @brief Tag a call that must sum in index order.
 inline constexpr ordered_t ordered{};
 } // namespace contract
 
@@ -336,6 +339,7 @@ struct dot2_result {
     T xz;
 };
 
+/// @brief Two inner products \f$(x^T y, x^T z)\f$ in one pass over \f$x\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE dot2_result<T> dot2(const T *NUM_K_RESTRICT x,
                                                 const T *NUM_K_RESTRICT y,
@@ -377,6 +381,7 @@ struct dot_norm_result {
     T norm_sq;
 };
 
+/// @brief \f$x^T y\f$ and \f$\|y\|_2^2\f$ in one pass.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE dot_norm_result<T>
 dot_norm_sq(const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y, idx n) noexcept {

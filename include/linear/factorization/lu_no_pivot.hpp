@@ -24,6 +24,7 @@ struct no_pivot_lu {
 };
 
 /// @throws std::invalid_argument If `matrix` is not square.
+/// @brief Factor \f$A = LU\f$ without row pivoting.
 [[nodiscard]] inline no_pivot_lu factor_no_pivot(const mat &matrix) {
     if (matrix.rows() != matrix.cols()) {
         throw std::invalid_argument("factor_no_pivot: matrix must be square");

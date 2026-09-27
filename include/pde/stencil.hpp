@@ -20,6 +20,7 @@
 
 namespace num {
 
+/// @brief \f$y = h^2 \Delta_h x\f$ by the 5-point stencil, with zero Dirichlet boundaries.
 template <typename T>
 void laplacian_stencil_2d(const basic_vec<T> &x, basic_vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {

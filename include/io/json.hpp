@@ -13,6 +13,7 @@
 
 namespace num::io {
 
+/// @brief The JSON value type, from nlohmann/json.
 using json = nlohmann::json;
 
 /// Parse a complete JSON document from disk.

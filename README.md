@@ -1,16 +1,6 @@
 # numerics
 
-`numerics` is a C++20 library for scientific computing.
-It provides dense and sparse linear algebra, direct factorizations, Krylov solvers, ODE integrators, spectral transforms, graph algorithms, and quadrature.
-The compute kernels are efficient, allocate nothing, and have no dependencies.
-The layers above them state the mathematical preconditions of each algorithm, such as symmetry or positive-definiteness, as C++20 concepts.
-A precondition that cannot be established at compile time is asserted by the caller and verified at run time under the diagnostic presets.
-
-The library originated as a consolidation of my research and coursework code, and it continues to grow in that manner.
-Tools developed for downstream projects are incorporated here and refined for reuse.
-Its contents span mesh-free fluid solvers from undergraduate work on surgical simulation, graph algorithms and Ising nucleation from my master's thesis, and finite state projection and iterative linear solvers from my doctoral research.
-It is maintained by one person in support of that research.
-Please use it with appropriate caution!!
+`numerics` is a C++20 scientific computing library developed from research and coursework in numerical methods. It combines dependency-free, allocation-conscious kernels with higher-level interfaces that express mathematical requirements such as symmetry and positive-definiteness through C++ concepts and runtime diagnostics. The project collects reusable work from fluid simulation, stochastic modeling, graph algorithms, and numerical linear algebra, and is maintained by one person in support of ongoing research.
 
 The library is covered by 366 unit tests.
 BLAS, LAPACK, OpenMP, and CUDA accelerate it when they are available.

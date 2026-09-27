@@ -13,6 +13,8 @@
 
 namespace num {
 
+/// @brief Crank--Nicolson time stepping by alternating direction implicit sweeps on an \f$N
+/// \times N\f$ grid.
 struct crank_nicolson_adi {
     int N = 0;
     double dt = 0.0;

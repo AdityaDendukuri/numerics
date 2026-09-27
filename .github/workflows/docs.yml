@@ -16,10 +16,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Doxygen
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y doxygen
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install documentation tools
+        run: python -m pip install libclang mkdocs-material
 
       - name: Configure
         run: |
@@ -32,23 +35,18 @@ jobs:
       - name: Build docs
         run: cmake --build build --target docs
 
-      - name: Assemble site
-        run: |
-          mkdir -p _site/report
-          # Doxygen API and landing page output
-          cp -r build/docs/html/. _site/
-          # Report (committed to repo, updated locally via `cmake --build --target report`)
-          if [ -d "docs/report" ]; then
-            cp -r docs/report/. _site/report/
-          fi
-          touch _site/.nojekyll
-
       - name: Check documentation links
         run: |
           missing=0
-          for page in index page_reference page_kernel page_concepts annotated namespaces files examples; do
-            if [ ! -f "_site/${page}.html" ]; then
-              echo "::error file=${page}.html::Doxygen did not generate ${page}.html"
+          for page in \
+            index.html \
+            reference/index.html \
+            reference/kernel/index.html \
+            reference/concepts/index.html \
+            reference/examples/index.html \
+            .nojekyll; do
+            if [ ! -f "build/docs/site/${page}" ]; then
+              echo "::error file=${page}::MkDocs did not generate ${page}"
               missing=1
             fi
           done
@@ -58,6 +56,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
+          publish_dir: ./build/docs/site
           publish_branch: gh-pages
           force_orphan: true        # keeps gh-pages history clean

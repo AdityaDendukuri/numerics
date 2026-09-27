@@ -11,6 +11,7 @@
 
 namespace num {
 
+/// @brief A uniform 3D grid.
 struct grid_3d {
     int nx{}, ny{}, nz{};                ///< nodes per axis
     double dx = 1.0;                     ///< uniform cell size

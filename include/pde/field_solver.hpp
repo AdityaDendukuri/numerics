@@ -14,6 +14,7 @@
 
 namespace num {
 
+/// @brief Poisson solves and vector calculus on 3D fields.
 class field_solver {
   public:
     /// Dirichlet boundary condition: fix phi = value at grid node flat_idx.
@@ -43,6 +44,7 @@ class field_solver {
     static vector_field_3d curl(const vector_field_3d &A);
 };
 
+/// @brief The static magnetic field of a current density, by three Poisson solves.
 class magnetic_solver {
   public:
     static constexpr double MU0 = 1.2566370614e-6; ///< mu_0 [H/m]

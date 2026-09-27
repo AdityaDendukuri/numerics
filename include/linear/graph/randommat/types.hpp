@@ -15,29 +15,34 @@ namespace num::randommat {
 template <typename Float = double, std::integral Index = num::idx>
 using graph_edge = num::structures::multi_edge<Float, Index>;
 
+/// @brief A weighted multigraph as adjacency lists.
 template <typename Float = double, std::integral Index = num::idx>
 using graph = std::vector<std::vector<graph_edge<Float, Index>>>;
 
 template <typename Float = double, std::integral Index = num::idx>
 using neighbor = num::structures::multi_edge<Float, Index>;
 
+/// @brief One entry of a factor column.
 template <typename Float = double, std::integral Index = num::idx>
 struct factor_entry {
     Index row{};
     Float value{};
 };
 
+/// @brief One column of a sparse Cholesky factor.
 template <typename Float = double, std::integral Index = num::idx>
 struct factor_column {
     std::vector<factor_entry<Float, Index>> entries;
 };
 
+/// @brief A sparse Cholesky factor by columns, with its elimination order.
 template <typename Float = double, std::integral Index = num::idx>
 struct cholesky_factor {
     std::vector<factor_column<Float, Index>> columns;
     std::vector<Index> order;
 };
 
+/// @brief The entry at (`row`, `col`) of a factor, or zero.
 template <typename Float = double, std::integral Index = num::idx>
 inline Float get_entry(const cholesky_factor<Float, Index> &F, Index row, Index col) {
     if (col >= F.columns.size()) {

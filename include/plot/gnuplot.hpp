@@ -12,6 +12,7 @@
 
 namespace num {
 
+/// @brief An \f$(x, y)\f$ point of a plotted line.
 using plot_point = std::pair<double, double>;
 
 /// Ordered (x,y) samples accepted by the plotting helpers.
