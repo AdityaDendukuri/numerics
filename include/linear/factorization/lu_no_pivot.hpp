@@ -2,12 +2,8 @@
 /// @brief LU factorization without row pivoting, for matrices whose structure
 /// guarantees nonzero pivots (e.g. diagonally dominant M-matrices).
 ///
-/// Skipping pivoting removes the row search and swap from `num::lu`'s inner
-/// loop, which matters when the factorization runs once per timestep (as in
-/// ELSE-style implicit solvers) and the matrix's structure already rules out a
-/// zero or tiny pivot. On a matrix that does not have that guarantee, `singular`
-/// reports a zero pivot but the factors are otherwise unchecked — prefer
-/// `num::lu`, which pivots, unless the structural guarantee is known to hold.
+/// It saves the row search and swap when factoring every step. `singular` reports a zero pivot,
+/// but small pivots go unchecked, so use `num::lu` without that guarantee.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -27,8 +23,12 @@ struct no_pivot_lu {
     [[nodiscard]] idx size() const { return packed.rows(); }
 };
 
-[[nodiscard]] inline no_pivot_lu factor_no_pivot(const linear::sq_mat<mat> &matrix) {
-    no_pivot_lu factor{matrix.base(), false};
+/// @throws std::invalid_argument If `matrix` is not square.
+[[nodiscard]] inline no_pivot_lu factor_no_pivot(const mat &matrix) {
+    if (matrix.rows() != matrix.cols()) {
+        throw std::invalid_argument("factor_no_pivot: matrix must be square");
+    }
+    no_pivot_lu factor{matrix, false};
     factor.singular = !kernel::lu_no_pivot(factor.packed.data(), factor.packed.rows());
     return factor;
 }

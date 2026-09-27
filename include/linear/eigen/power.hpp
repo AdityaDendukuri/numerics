@@ -125,7 +125,7 @@ inline power_result inverse_iteration(const mat &A, real sigma, real tol, idx ma
         M(i, i) -= sigma;
     }
     // M is A (rejected above unless square) shifted along its diagonal.
-    lu_result f = lu(assume_square(M));
+    lu_result f = lu(M);
 
     vec v(n, 0.0);
     v[0] = 1.0;
@@ -188,7 +188,7 @@ inline power_result rayleigh_iteration(const mat &A, const vec &x0, real tol, id
             M(i, i) -= sigma;
         }
         // M is A (rejected above unless square) shifted along its diagonal.
-        lu_result f = lu(assume_square(M));
+        lu_result f = lu(M);
 
         if (f.singular) {
             break;

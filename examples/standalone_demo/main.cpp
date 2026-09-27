@@ -31,7 +31,7 @@ int main() {
     // num::linear_solution s_fail = num::solve(num::linear_problem{Aop, b}, num::cg_method{});
 
     // 3. Attach the SPD property tag using assume_spd()
-    auto spd_A = num::operators::assume_spd(Aop);
+    auto spd_A = num::assume_spd(Aop);
     static_assert(num::spd_operator<decltype(spd_A)>);
 
     std::cout << "[2] Wrapped with assume_spd().\n";

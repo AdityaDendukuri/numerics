@@ -17,7 +17,7 @@ auto A = num::operators::make_op(
 ```cpp
 num::vec pressure(nx * ny, 0.0);
 num::solver_result info =
-    num::cg(num::operators::assume_spd(A), rhs, pressure, 1e-8, 1000);
+    num::cg(num::assume_spd(A), rhs, pressure, 1e-8, 1000);
 ```
 
 `num::cg` always runs the level-1 work through `num::accel` (see @ref
@@ -32,7 +32,7 @@ portable reference directly, call the vector ops it's built from
 advect_velocity(u, v, dt);
 build_divergence_rhs(u, v, rhs);
 
-num::cg(num::operators::assume_spd(A), rhs, pressure, 1e-8, 1000);
+num::cg(num::assume_spd(A), rhs, pressure, 1e-8, 1000);
 
 subtract_pressure_gradient(u, v, pressure, dt);
 apply_boundary_conditions(u, v);

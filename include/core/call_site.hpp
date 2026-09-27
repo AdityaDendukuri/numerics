@@ -8,14 +8,9 @@ namespace num {
 
 /// @brief A source location that records where a function was called.
 ///
-/// `std::source_location::current()` as a default argument of a *function
-/// template* records the wrong place under GCC (through 14): the default
-/// argument is instantiated once per specialization, and a program with many
-/// callers of `assume<spd>(mat)` sees every proof carry the first caller's
-/// location, from whichever translation unit the linker kept. The same call
-/// through a default argument of a non-template constructor is evaluated at
-/// each call, on every compiler. So the templates take a `call_site` whose
-/// default is `{}`, and the constructor does the capturing.
+/// Under GCC through 14, `std::source_location::current()` as a default argument of a function
+/// template records one location per specialization. A non-template constructor's default is
+/// evaluated at each call, so the templates take a `call_site` defaulted to `{}`.
 struct call_site {
     std::source_location location;
 

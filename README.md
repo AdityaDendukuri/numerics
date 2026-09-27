@@ -63,7 +63,7 @@ int main() {
     num::Vector b(n, 1.0);
     num::Vector x(n, 0.0);
 
-    auto spd_L = num::operators::assume_spd(laplacian);
+    auto spd_L = num::assume_spd(laplacian);
     auto res = num::cg(spd_L, b, x, 1e-8, 500);
 
     std::cout << "CG Converged: " << res.converged << " in " << res.iterations << " iters\n";

@@ -22,9 +22,9 @@ namespace {
 /// A retained factorization backed by dense pivoted LU, as in test_woodbury.
 class dense_base {
   public:
-    explicit dense_base(const mat &A) : n_(A.rows()), factor_(lu(assume_square(A))) {
+    explicit dense_base(const mat &A) : n_(A.rows()), factor_(lu(A)) {
         mat transposed = transpose(A);
-        transpose_factor_ = lu(assume_square(transposed));
+        transpose_factor_ = lu(transposed);
     }
 
     [[nodiscard]] idx size() const { return n_; }
@@ -108,7 +108,7 @@ mat birth_death_rate_matrix(idx n, real up, real down, real leak, vec &stationar
 /// diag(A^-1) by one solve per index, which is what the estimator replaces.
 vec exact_inverse_diagonal(const mat &A) {
     const idx n = A.rows();
-    const lu_result factor = lu(assume_square(A));
+    const lu_result factor = lu(A);
     vec diagonal(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         const vec e = unit_vector(n, i);

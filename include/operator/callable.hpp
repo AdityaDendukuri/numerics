@@ -4,7 +4,7 @@
 
 #include "container/vector.hpp"
 #include "core/math/associated.hpp"
-#include "core/math/models.hpp"
+#include "core/math/laws.hpp"
 #include <utility>
 
 namespace num::operators {
@@ -53,11 +53,3 @@ template <class F>
 
 } // namespace num::operators
 
-namespace num::math {
-
-template<class F>
-struct claims_of<operators::callable_op<F>> {
-    using type = type_list<law::linear_map>;
-};
-
-} // namespace num::math

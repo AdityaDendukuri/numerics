@@ -3,7 +3,6 @@
 #pragma once
 
 #include "core/math/concepts.hpp"
-#include "core/math/evidence.hpp"
 #include "linear/solvers/solver_result.hpp"
 #include <cmath>
 #include <concepts>
@@ -16,13 +15,12 @@ struct cg_options {
     idx max_iterations = 1000;
 };
 
-/// Conjugate gradients over any certified real inner-product space.
+/// Conjugate gradients for an SPD operator on a real inner product space.
 ///
 /// This is the canonical implementation: mathematical requirements are checked
 /// here and representation-specific operations lower through the shared CPOs.
 template <class Op, class V>
-requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
-    claims<Op, law::spd> &&
+requires math::inner_product_space<V> &&math::spd_operator<Op, V> &&
         std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
         cg(const Op &A, const V &b, V &x, cg_options options = {}) {
     using S = math::scalar_t<V>;

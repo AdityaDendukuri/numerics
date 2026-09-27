@@ -12,25 +12,12 @@ namespace num {
 
 /// @brief Label each row by its graph distance from a seed set.
 ///
-/// The undirected support graph joins two distinct rows whenever either
-/// corresponding off-diagonal entry is nonzero. Grouping rows by their distance
-/// from a seed set and ordering the groups by increasing distance makes the
-/// matrix block-tridiagonal, because an edge can only join rows whose distances
-/// differ by at most one. Feeding the result to `build_block_order` therefore
-/// yields a layout `factor_block_lu` accepts.
+/// An edge joins rows whose distances differ by at most one, so grouping by distance makes
+/// the matrix block-tridiagonal, as `build_block_order` and `factor_block_lu` need. A
+/// component no seed reaches restarts at distance zero from its own search. With L balanced
+/// levels, elimination costs \f$O(n^3/L^2)\f$.
 ///
-/// Rows in a component no seed reaches are labelled from their own component's
-/// breadth-first search, restarting at distance zero. That is sound for the same
-/// reason: no edge crosses between components, so no block picks up a coupling
-/// beyond its neighbours. A caller that needs one global ordering should seed
-/// every component, as Proposition 4.2 assumes.
-///
-/// The number of distinct levels controls the block width, and so the cost of
-/// the factorization: with L balanced levels the elimination work falls from
-/// \f$O(n^3)\f$ to \f$O(n^3/L^2)\f$. Seeding a single row of a long chain gives
-/// the most levels; seeding many rows at once gives fewer and wider ones.
-///
-/// @param A Square CSR matrix whose support graph is traversed.
+/// @param A Square CSR matrix whose undirected support graph is traversed.
 /// @param seeds Rows at distance zero. Empty means every component starts from
 ///        its lowest-numbered row.
 /// @return One level label per row.

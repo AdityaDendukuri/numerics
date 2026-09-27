@@ -5,21 +5,9 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// This file has no dependencies outside the standard library beyond
-/// kernel/vector.hpp and kernel/dense.hpp: copy the three into another project
-/// as-is, or lift a single routine out of it. Please keep the two attribution
-/// lines above with whatever you take.
-///
-/// These are the factorizations expressed the way a consuming project can
-/// actually use them: over `T *` and a dimension, with no owning container, no
-/// backend dispatch and no link dependency. A project with its own matrix type
-/// passes `A.data()`; a project using `std::vector<T>` passes `v.data()`.
-///
-/// The library's own `num::cholesky` and friends are thin wrappers over these, so
-/// there is one implementation of each algorithm rather than a container-coupled
-/// copy and a raw copy that drift apart.
-///
-/// Storage is row-major throughout, matching `num::basic_mat`.
+/// Depends only on kernel/vector.hpp and kernel/dense.hpp. Keep the two attribution lines above
+/// with whatever you copy. `num::cholesky` and `num::lu` wrap these, so each algorithm has one
+/// implementation. Storage is row-major.
 #pragma once
 
 #include "kernel/dense.hpp"
@@ -32,12 +20,8 @@ namespace num::kernel {
 
 /// @brief Cholesky factorization \f$A = L L^T\f$ for symmetric positive definite \f$A\f$.
 ///
-/// Writes the lower triangular factor into `L` (row-major, \f$n \times n\f$) and
-/// zeroes the strict upper triangle. `L` and `A` may alias.
-///
-/// Returns false as soon as a non-positive pivot appears, which is the exact point
-/// at which \f$A\f$ is shown not to be positive definite — the factorization is the
-/// definitive test, where sampling the quadratic form is only evidence.
+/// Writes L and zeroes the strict upper triangle; `L` and `A` may alias. Returns false at the
+/// first non-positive pivot, which proves A is not positive definite.
 ///
 /// @param L Output lower triangular factor, n*n.
 /// @param A Input symmetric matrix, n*n; only the lower triangle is read.
@@ -132,12 +116,8 @@ template <std::floating_point T>
 
 /// @brief In-place blocked Cholesky factorization, `A <- L` with `A = L*L^T`.
 ///
-/// The lower triangle is factored in panels of `block_size` columns. The panel
-/// solve and trailing update are the blocked `trsm` and `syrk` kernels, so past
-/// a few hundred rows the work runs at `gemm` speed; a diagonal block wider
-/// than their internal block is factored recursively. The default panel is
-/// wide so those updates are long; the panel factorization itself is
-/// \f$O(n b^2)\f$ and stays a small fraction for `b <= n/4`.
+/// Panels of `block_size` columns; the panel solve and trailing update are the blocked `trsm`
+/// and `syrk`, so large sizes run at `gemm` speed.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky_blocked(T *A, idx n, idx block_size = 256) noexcept {
     if (n == 0) {

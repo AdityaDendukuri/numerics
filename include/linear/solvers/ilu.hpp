@@ -1,32 +1,16 @@
 /// @file linear/solvers/ilu.hpp
 /// @brief Incomplete LU preconditioner with zero fill-in, ILU(0).
 ///
-/// The workhorse preconditioner for nonsymmetric sparse systems, and the reason
-/// GMRES is usable on them at all. It factors \f$A \approx LU\f$ subject to the
-/// constraint that \f$L\f$ and \f$U\f$ occupy exactly \f$A\f$'s own sparsity
-/// pattern — every entry the elimination would create outside that pattern is
-/// discarded. So the factors cost the same memory as the matrix, the setup is a
-/// single sweep, and applying the preconditioner is two sparse triangular
-/// solves.
+/// L and U keep A's sparsity pattern, so they cost the matrix's memory and applying them is two
+/// triangular solves. Reliable on diagonally dominant and M-matrix systems; on others a pivot
+/// can vanish, which the constructor reports. It is not symmetric, so it cannot precondition
+/// PCG or MINRES.
 ///
-/// ### What it does not promise
-///
-/// Dropping fill-in is a genuine approximation, and how good an approximation
-/// depends on the matrix. ILU(0) is reliable on diagonally dominant and M-matrix
-/// systems, which covers most convection-diffusion discretizations. It can
-/// break down outright on an indefinite or strongly non-diagonally-dominant
-/// matrix — a pivot reaches zero — and the constructor reports that as an error
-/// rather than producing a preconditioner that quietly amplifies the residual.
-/// It is also *not* symmetric even when \f$A\f$ is, so it carries no
-/// self-adjointness claim and must not be handed to PCG or MINRES; those need
-/// `approx_chol_preconditioner`, `chebyshev_preconditioner`, or Jacobi.
-///
-/// All arithmetic lives in `kernel/sparse.hpp` (`ilu0_factor`, `csr_lu_solve`);
-/// this class owns the storage, the evidence, and the error reporting.
+/// The arithmetic is in `kernel/sparse.hpp`; this class owns the storage and the errors.
 #pragma once
 
 #include "container/vector.hpp"
-#include "core/math/models.hpp"
+#include "core/math/laws.hpp"
 #include "core/types.hpp"
 #include "kernel/kernel.hpp"
 #include "linear/sparse/sparse.hpp"
@@ -106,25 +90,3 @@ class ilu0_preconditioner final {
 
 } // namespace num
 
-namespace num::math {
-
-template <>
-struct claims_of<ilu0_preconditioner> {
-    using type = type_list<law::linear_map>;
-};
-
-namespace detail {
-
-template <>
-struct domain_of<ilu0_preconditioner, void> {
-    using type = vec;
-};
-
-template <>
-struct codomain_of<ilu0_preconditioner, void> {
-    using type = vec;
-};
-
-} // namespace detail
-
-} // namespace num::math

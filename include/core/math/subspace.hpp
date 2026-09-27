@@ -35,8 +35,9 @@ struct project_t {
 inline constexpr contains_t contains{};
 inline constexpr project_t project{};
 
+/// @brief A linear subspace of V that can test membership and project onto itself.
 template <class Subspace, class V>
-concept linear_subspace_of = claims<Subspace, law::linear_subspace> && vector_space<V> &&
+concept linear_subspace_of = vector_space<V> &&
                            requires(const Subspace &subspace, const V &constant, V &value) {
     {contains(subspace, constant)}->std::same_as<bool>;
     project(subspace, value);
@@ -90,12 +91,3 @@ struct zero_sum final {
 };
 
 } // namespace num::space
-
-namespace num::math {
-
-template <>
-struct claims_of<space::zero_sum> {
-    using type = type_list<law::linear_subspace>;
-};
-
-} // namespace num::math

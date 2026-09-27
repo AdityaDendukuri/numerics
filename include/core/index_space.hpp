@@ -1,15 +1,8 @@
 /// @file core/index_space.hpp
 /// @brief Discrete index spaces: the root the grid and lattice families are built on.
 ///
-/// A structured grid and a periodic lattice are not vector spaces. They carry no addition
-/// and no scalar action, so they have no place in the algebraic hierarchy in
-/// `core/math/concepts.hpp`. They are the same kind of object as each other: a finite set
-/// of sites addressed by a linear index. This header names that, so both families refine a
-/// common concept instead of asserting their shape independently.
-///
-/// A field sampled on a grid does live in a vector space. The grid is the index set and
-/// the field over it is the space. Separating the two allows one discretization to carry a
-/// real field, a complex field, or several at once.
+/// A grid or lattice is a finite set of sites with a linear index, not a vector space. A field
+/// sampled on it is the vector space, so one grid can carry real, complex or several fields.
 #pragma once
 
 #include <concepts>

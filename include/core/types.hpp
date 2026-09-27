@@ -22,45 +22,12 @@ using cplx = std::complex<real>;
 
 /// @name Container vocabulary
 ///
-/// Four standard containers are named after things that already mean something
-/// else in linear algebra, so code mixing them with this library reads
-/// ambiguously:
+/// Alias templates, not wrappers: `num::array<T>` is `std::vector<T>`. `array`, `static_array`
+/// and `view` free the words vector and span for mathematics; the associative containers keep
+/// their C++ names. See the containers page, section 1.
 ///
-/// | standard name        | what the word means here instead              |
-/// |----------------------|-----------------------------------------------|
-/// | `std::vector`        | @ref num::vec, an element of a vector space   |
-/// | `std::span`          | the span of a set of vectors, i.e. a subspace |
-/// | `std::map`           | a linear map                                  |
-/// | `std::unordered_map` | likewise                                      |
-///
-/// The aliases below name those containers after what they are rather than
-/// after a word the library has already spent, so a declaration says at a
-/// glance whether it is about storage or about mathematics:
-///
-/// ```cpp
-/// num::array<num::idx> row_offsets;   // storage
-/// num::vec             x(n);          // mathematics
-/// ```
-///
-/// These are alias templates, not wrappers. `num::array<T>` *is*
-/// `std::vector<T>` -- the same type, no conversion anywhere, accepted
-/// unchanged by every standard algorithm and every third-party signature that
-/// takes a `std::vector`. Nothing is hidden and nothing is re-implemented; only
-/// the spelling differs. Compiler diagnostics still name the standard type.
-///
-/// Fixed and dynamic extent are two names rather than one name with an extent
-/// parameter, because an alias that selected between them through a trait would
-/// resolve to a dependent qualified name -- a non-deduced context -- and
-/// `template <class T> void f(array<T> &)` would then fail to deduce `T`.
-///
-/// Containers whose names carry no mathematical meaning -- `std::pair`,
-/// `std::tuple`, `std::optional`, `std::string` -- are deliberately left alone.
-/// Renaming those buys nothing and would oblige the library to maintain a
-/// parallel vocabulary for the whole standard library.
-///
-/// For numeric data prefer @ref num::vec over `num::array<real>`: it owns
-/// over-aligned storage, skips the zero-initialising pass on construction, and
-/// satisfies @ref num::math::vector_space, so the solvers take it directly.
+/// Fixed and dynamic extent get two names because an alias selecting between them through a
+/// trait would make `template <class T> void f(array<T> &)` a non-deduced context.
 /// @{
 
 /// @brief A growable array. Storage, not an element of a vector space.
@@ -94,18 +61,8 @@ using unordered_set = std::unordered_set<K, Hash, Eq, Alloc>;
 template <class K, class Compare = std::less<K>, class Alloc = std::allocator<K>>
 using set = std::set<K, Compare, Alloc>;
 
-/// @brief Add an element at the end of an array, constructed from `args`.
-///
-/// `push_back` and `emplace_back` name how the standard library stores the
-/// element; this names what the caller does. It is `emplace_back`, so it
-/// accepts either a finished value or the arguments of the element's
-/// constructor, and it returns a reference to the element it added.
-///
-/// ```cpp
-/// num::array<num::idx> rows;
-/// num::append(rows, i);
-/// num::append(transitions, source, destination, rate); // constructs in place
-/// ```
+/// @brief Add an element at the end of an array, constructed from `args`. It is `emplace_back`,
+/// named for what the caller does, and returns a reference to the new element.
 template <class T, class Alloc, class... Args>
 T &append(array<T, Alloc> &values, Args &&...args) {
     return values.emplace_back(std::forward<Args>(args)...);

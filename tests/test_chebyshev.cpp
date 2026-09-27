@@ -54,17 +54,17 @@ TEST(Chebyshev, IsPositiveDefiniteWhenTheIntervalEnclosesTheSpectrum) {
     const num::idx n = 300;
     const num::real sigma = 0.4;
     auto op = shifted_laplacian(n, sigma);
-    auto A = num::operators::assume_spd(op);
+    auto A = num::assume_spd(op);
 
     for (num::idx degree : {num::idx{1}, num::idx{2}, num::idx{4}, num::idx{8}}) {
         auto M = num::make_chebyshev_preconditioner(A, sigma, 4.0 + sigma, degree);
-        EXPECT_NO_THROW((void)num::operators::assume_spd(M)) << "degree " << degree;
+        EXPECT_NO_THROW((void)num::assume_spd(M)) << "degree " << degree;
     }
 }
 
 TEST(Chebyshev, RejectsADegenerateOrNonPositiveInterval) {
     auto op = shifted_laplacian(50, 0.5);
-    auto A = num::operators::assume_spd(op);
+    auto A = num::assume_spd(op);
     EXPECT_THROW((void)num::make_chebyshev_preconditioner(A, 0.0, 4.0, 4), std::invalid_argument);
     EXPECT_THROW((void)num::make_chebyshev_preconditioner(A, -1.0, 4.0, 4), std::invalid_argument);
     EXPECT_THROW((void)num::make_chebyshev_preconditioner(A, 2.0, 2.0, 4), std::invalid_argument);
@@ -75,7 +75,7 @@ TEST(Chebyshev, RejectsADegenerateOrNonPositiveInterval) {
 TEST(Chebyshev, DegreeOneIsTheScaledRichardsonStep) {
     const num::idx n = 64;
     auto op = shifted_laplacian(n, 1.0);
-    auto A = num::operators::assume_spd(op);
+    auto A = num::assume_spd(op);
     auto M = num::make_chebyshev_preconditioner(A, 1.0, 5.0, 1);
 
     num::vec r(n, 2.0);
@@ -92,7 +92,7 @@ TEST(Chebyshev, HigherDegreeApproximatesTheInverseMoreClosely) {
     const num::idx n = 200;
     const num::real sigma = 0.5;
     auto op = shifted_laplacian(n, sigma);
-    auto A = num::operators::assume_spd(op);
+    auto A = num::assume_spd(op);
 
     num::vec r(n);
     for (num::idx i = 0; i < n; ++i) {
@@ -117,7 +117,7 @@ TEST(Chebyshev, CutsKrylovIterationsRoughlyByTheDegree) {
     const num::idx n = 2000;
     const num::real sigma = 0.02; // condition number about 200
     auto op = shifted_laplacian(n, sigma);
-    auto A = num::operators::assume_spd(op);
+    auto A = num::assume_spd(op);
 
     num::vec b(n, 1.0);
     num::vec x_plain(n, 0.0);
@@ -126,7 +126,7 @@ TEST(Chebyshev, CutsKrylovIterationsRoughlyByTheDegree) {
     ASSERT_TRUE(plain.converged);
 
     auto M = num::make_chebyshev_preconditioner(A, sigma, 4.0 + sigma, 4);
-    auto spd_precond = num::operators::assume_spd(M);
+    auto spd_precond = num::assume_spd(M);
     num::vec x_prec(n, 0.0);
     const auto preconditioned = num::pcg(
         A, spd_precond, b, x_prec, num::pcg_options{.tolerance = 1e-10, .max_iterations = 20000});
@@ -157,9 +157,9 @@ TEST(Chebyshev, WorksOnAnExplicitDenseOperatorToo) {
         }
     }
     num::operators::dense_op op(A);
-    auto spd = num::operators::assume_spd(op);
+    auto spd = num::assume_spd(op);
     auto M = num::make_chebyshev_preconditioner(spd, 2.0, 6.0, 4);
-    EXPECT_NO_THROW((void)num::operators::assume_spd(M));
+    EXPECT_NO_THROW((void)num::assume_spd(M));
     EXPECT_EQ(M.rows(), n);
     EXPECT_EQ(M.degree(), 4u);
 }
@@ -169,7 +169,7 @@ TEST(Chebyshev, RepeatedApplicationIsStateless) {
     // would make the second application differ from the first.
     const num::idx n = 128;
     auto op = shifted_laplacian(n, 0.5);
-    auto A = num::operators::assume_spd(op);
+    auto A = num::assume_spd(op);
     auto M = num::make_chebyshev_preconditioner(A, 0.5, 4.5, 6);
 
     num::vec r(n, 1.5);
@@ -189,7 +189,7 @@ TEST(Chebyshev, RepeatedApplicationIsStateless) {
 // constraint an indefinite operator would reach pcg, which requires an SPD preconditioner.
 TEST(Chebyshev, OnlyAcceptsAnOperandThatCarriesSPD) {
     using bare = num::operators::dense_op;
-    using certified = num::operators::spd_op<bare>;
+    using certified = num::with_law<bare, num::law::spd>;
 
     static_assert(!num::math::spd_operator<bare>,
                   "a dense operator claims only law::linear_map");

@@ -14,7 +14,7 @@ namespace num {
 /// Welford's recurrence and a fixed-bin histogram qualify, while anything that
 /// retains the samples in order to summarize them does not.
 template <class A, class T = real>
-concept streaming_accumulator = scalars::field<T> && requires(A acc, T x) {
+concept streaming_accumulator = field<T> && requires(A acc, T x) {
     acc.update(x);
     { acc.count } -> std::convertible_to<idx>;
 };

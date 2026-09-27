@@ -56,15 +56,9 @@ inline void check_not_contains(bool exists, Index index,
     }
 }
 
-/// @brief Sample the equivalence-relation axioms a union-find claims to maintain.
-///
-/// `find`, `unite` and `connected` are an *implementation* of an equivalence
-/// relation, and the properties that make them correct are reflexivity, symmetry
-/// and transitivity of \f$\sim\f$, plus agreement between `connected(u,v)` and
-/// \f$\mathrm{find}(u) = \mathrm{find}(v)\f$. None of that is decidable from the
-/// type, so it is sampled here.
-/// Takes a mutable reference because path compression rewrites the forest while
-/// answering queries: `find` is observationally pure but not physically const.
+/// @brief Sample the equivalence-relation axioms a union-find claims: reflexivity, symmetry,
+/// transitivity, and `connected(u,v)` agreeing with \f$\mathrm{find}(u) = \mathrm{find}(v)\f$.
+/// Takes a mutable reference because path compression rewrites the forest.
 template <class DS, std::integral Index = num::idx>
 inline void
 verify_equivalence_relation(DS &ds, Index n,
@@ -243,16 +237,10 @@ inline void verify_handshake_lemma(const G &g,
     }
 }
 
-/// @brief Verify the defining structure of a graph Laplacian \f$\Delta = D - W\f$.
+/// @brief Verify the structure of a graph Laplacian \f$\Delta = D - W\f$: symmetric with
+/// \f$\Delta \mathbf{1} = 0\f$. That null space makes it `law::psd`, not `law::spd`.
 ///
-/// A Laplacian is symmetric with zero row sums, which is exactly the statement
-/// \f$\Delta \mathbf{1} = 0\f$: the constant vector lies in its null space. That
-/// null space is why a Laplacian is positive *semi*-definite and must be asserted
-/// `law::psd` rather than `law::spd` — asserting the latter claims an
-/// invertibility it does not have.
-///
-/// Accepts dense or CSR storage; for CSR only the stored entries are visited, so
-/// the check stays proportional to the number of non-zeros.
+/// Dense or CSR; CSR visits only stored entries.
 template <class Mat>
 inline void verify_laplacian_structure(const Mat &L, double tol = 1e-9,
                                        std::source_location loc = std::source_location::current()) {

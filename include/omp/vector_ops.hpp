@@ -1,16 +1,8 @@
 /// @file omp/vector_ops.hpp
 /// @brief OpenMP-accelerated Level-1 vector operations and threaded block reduction.
 ///
-/// Plain functions, no tag/enum indirection: a caller who wants this backend
-/// calls `num::omp::scale`/`num::omp::axpy`/... directly, or an algorithm
-/// templated on the backend namespace instantiates with `num::omp`.
-///
-/// Every function here hands each thread a block and calls the matching
-/// `num::kernel` routine on it — never a hand-written per-element loop. OMP's
-/// job is strictly the division of labor across threads; the arithmetic inside
-/// each thread's block is exactly the same inlined, vectorized loop `num::seq`
-/// runs, so there is exactly one implementation of "what scale/axpy/etc. does"
-/// in the whole tree, and OpenMP only decides how it's sliced up.
+/// Each thread takes a block and calls the matching `num::kernel` routine, so OpenMP only
+/// decides the slicing and the arithmetic has one implementation.
 #pragma once
 
 #include "container/vector.hpp"

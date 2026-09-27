@@ -206,7 +206,7 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
     matrix(2, 1) = 1.0;
     matrix(2, 2) = 2.0;
 
-    const auto lu_factor = lu(assume_square(matrix));
+    const auto lu_factor = lu(matrix);
     const auto cholesky_factor = cholesky(assume_spd(matrix));
     const mat inverse = lu_inv(lu_factor);
     const std::vector<idx> indices{2, 0};
@@ -263,7 +263,7 @@ TEST(LU, SolveSmall3x3) {
     A(2, 2) = 9;
     vec b{1.0, 2.0, 3.0};
 
-    auto f = lu(assume_square(A));
+    auto f = lu(A);
     EXPECT_FALSE(f.singular);
 
     vec x(3);
@@ -283,7 +283,7 @@ TEST(LU, SolveIdentitySystem) {
     }
     vec b{1.0, 2.0, 3.0, 4.0, 5.0};
 
-    auto f = lu(assume_square(A));
+    auto f = lu(A);
     vec x(n);
     lu_solve(f, b, x);
 
@@ -301,7 +301,7 @@ TEST(LU, SolveDiagonalSystem) {
     A(3, 3) = 4;
     vec b{3.0, 12.0, 5.0, 8.0};
 
-    auto f = lu(assume_square(A));
+    auto f = lu(A);
     vec x(4);
     lu_solve(f, b, x);
 
@@ -334,7 +334,7 @@ TEST(LU, SolveLargerSystem) {
         }
     }
 
-    auto f = lu(assume_square(A));
+    auto f = lu(A);
     vec x(n);
     lu_solve(f, b, x);
     for (idx i = 0; i < n; ++i) {
@@ -349,7 +349,7 @@ TEST(LU, Determinant2x2) {
     A(0, 1) = 8;
     A(1, 0) = 4;
     A(1, 1) = 6;
-    auto f = lu(assume_square(A));
+    auto f = lu(A);
     EXPECT_NEAR(lu_det(f), -14.0, 1e-10);
 }
 
@@ -367,7 +367,7 @@ TEST(LU, Determinant3x3) {
     A(2, 0) = 3;
     A(2, 1) = 9;
     A(2, 2) = 27;
-    auto f = lu(assume_square(A));
+    auto f = lu(A);
     EXPECT_NEAR(lu_det(f), 12.0, 1e-9);
 }
 
@@ -384,7 +384,7 @@ TEST(LU, InverseTimesOriginal) {
     A(2, 1) = 1;
     A(2, 2) = 2;
 
-    auto f = lu(assume_square(A));
+    auto f = lu(A);
     mat Ainv = lu_inv(f);
 
     // Check A * Ainv ~= I
@@ -449,7 +449,7 @@ TEST(LU, SingularMatrix) {
     A(2, 0) = 1;
     A(2, 1) = 2;
     A(2, 2) = 3;
-    auto f = lu(assume_square(A));
+    auto f = lu(A);
     EXPECT_TRUE(f.singular);
 }
 
@@ -683,7 +683,7 @@ TEST(Cholesky, SPDSolve) {
 
     vec b{1.0, 2.0, 3.0};
     vec x(3, 0.0);
-    auto f = cholesky(linear::assume_spd(A));
+    auto f = cholesky(assume_spd(A));
     ASSERT_TRUE(f.success);
     cholesky_solve(f, b, x);
 
@@ -706,7 +706,7 @@ TEST(Cholesky, MultipleRHS) {
     B(0, 0) = 1.0;
     B(1, 1) = 1.0;
     mat X;
-    const auto factor = cholesky(linear::assume_spd(A));
+    const auto factor = cholesky(assume_spd(A));
     ASSERT_TRUE(factor.success);
     cholesky_solve(factor, B, X);
 

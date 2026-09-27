@@ -22,7 +22,7 @@ auto_linear_solver::auto_linear_solver(const spmat &matrix, auto_linear_options 
         impl_->sparse_factor = std::make_unique<klu_factorization>(matrix);
     } else {
         // Squareness was rejected above, so the invariant holds here.
-        impl_->dense_factor = lu(assume_square(dense(matrix)));
+        impl_->dense_factor = lu(dense(matrix));
         if (impl_->dense_factor->singular) {
             throw std::runtime_error("auto_linear_solver encountered a singular matrix");
         }

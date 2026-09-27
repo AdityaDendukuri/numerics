@@ -1,26 +1,10 @@
 /// @file omp/parallel_ops.hpp
 /// @brief Threaded block decomposition and reduction over the raw kernels.
 ///
-/// Two rules shape everything here.
+/// Each thread calls the raw kernel on a block, and block partials are summed in index order,
+/// so the result does not depend on the thread count. See the parallelism page, section 3.
 ///
-/// **A thread must not be handed a scalar loop.** Splitting a reduction across
-/// threads and giving each one a single accumulator reintroduces exactly the
-/// loop-carried dependency the raw kernels exist to break: every core then runs
-/// at the latency of the adder, and eight of them reach roughly what one core
-/// reaches running at throughput. Threads take a block each and call the raw
-/// kernel on it, so the two levels of parallelism compose instead of cancelling.
-///
-/// **The answer must not depend on how many threads happened to run.** An
-/// OpenMP `reduction(+:s)` clause combines the per-thread partials in an
-/// unspecified order, so the same binary would return different bits under
-/// `OMP_NUM_THREADS=4` and `=8`. Instead each block writes its partial to a
-/// slot, and the slots are summed in index order afterwards. The block
-/// decomposition is a function of `n` alone, so the result depends only on the
-/// input and the build — never on the scheduler.
-///
-/// Independent of `vec`/`mat`, unlike the rest of `num::omp`: kept this
-/// way so container-tier headers can use the block helpers without a circular
-/// include back through `omp/vector_ops.hpp`.
+/// Independent of `vec`/`mat`, so container headers can use it without a circular include.
 #pragma once
 
 #include "core/types.hpp"
@@ -31,15 +15,8 @@ namespace num::omp {
 /// @brief Elements handled by one thread's call into a raw kernel.
 inline constexpr idx parallel_block = idx{1} << 14;
 
-/// @brief Below this element count an operation stays on one thread.
-///
-/// Entering an OpenMP parallel region is not free: measured at roughly 34 us on
-/// macOS libomp with eight threads, against about 6 us of actual work for a
-/// 32k-element dot product. Threading below the crossover is not a small loss,
-/// it is a large one — an order of magnitude at 16k elements — so the default
-/// errs high. Tunable at configure time with `-DNUMERICS_PARALLEL_THRESHOLD=<n>`;
-/// runtimes with cheaper team startup (typically libgomp on Linux) should set a
-/// considerably lower value.
+/// @brief Below this element count an operation stays on one thread. Starting a parallel region
+/// costs about 34 us on macOS libomp. Override with `-DNUMERICS_PARALLEL_THRESHOLD=<n>`.
 #ifndef NUMERICS_PARALLEL_THRESHOLD
 #define NUMERICS_PARALLEL_THRESHOLD (1 << 18)
 #endif

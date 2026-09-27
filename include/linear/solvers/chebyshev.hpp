@@ -1,57 +1,16 @@
 /// @file linear/solvers/chebyshev.hpp
-/// @brief mat-free Chebyshev polynomial preconditioner.
+/// @brief Matrix-free Chebyshev polynomial preconditioner.
 ///
-/// Every other preconditioner here needs the matrix entries: Jacobi reads the
-/// diagonal, ApproxChol eliminates a graph, an incomplete factorization walks
-/// the sparsity pattern. None of them can precondition an operator built with
-/// `num::operators::make_op`, which is the library's own headline pattern — a
-/// discrete Laplacian written as a stencil has no entries to read.
-///
-/// A polynomial preconditioner needs nothing but the operator's action. It
-/// approximates \f$A^{-1}\f$ by \f$p_m(A)\f$, where \f$p_m\f$ is the degree-m
-/// polynomial minimising \f$\max_{\lambda \in [\ell, h]} |1 - \lambda p(\lambda)|\f$ —
-/// the Chebyshev problem, whose solution is available as a three-term
-/// recurrence costing one operator application per degree and no setup at all.
-///
-/// ### The precondition, and what happens when it is wrong
-///
-/// \f$p_m(A)\f$ is positive definite exactly when \f$p_m > 0\f$ across the
-/// spectrum, which holds when \f$0 < \ell \le \lambda_{\min}\f$ and
-/// \f$\lambda_{\max} \le h\f$. bounds that exclude part of the spectrum produce
-/// an *indefinite* preconditioner, and preconditioned CG built on one silently
-/// loses the property that makes its error monotone.
-///
-/// This is why both bounds are the caller's to supply: they are a mathematical
-/// claim, so they go through the same channel as every other one in this
-/// library. `chebyshev_preconditioner` asserts positive definiteness, `num::pcg`
-/// requires that assertion, and the runtime property sampler rejects the
-/// operator if the claim was false. `estimate_largest_eigenvalue` will find
-/// \f$h\f$ for you; there is no equally cheap way to find \f$\ell\f$, and
-/// guessing it from an assumed condition number is how this preconditioner is
-/// most often gotten wrong.
-///
-/// ### What this is, and is not, good for
-///
-/// A degree-m polynomial can only improve a condition number by roughly a factor
-/// of m. On a second-order elliptic operator, where \f$\kappa\f$ grows with the
-/// mesh, that is not a competitive preconditioner and no degree makes it one —
-/// use ApproxChol for SDD systems, or an algebraic multigrid for the rest.
-///
-/// It earns its place in three situations a factorization cannot serve:
-///   - **matrix-free operators**, where there are no entries to factor at all;
-///   - **moderately conditioned systems** — mass matrices, shifted or damped
-///     operators, regularized least squares — where a factor of m is the whole
-///     problem;
-///   - as a **smoother**, damping the upper spectrum inside a multigrid cycle.
-///
-/// It also uses no global reductions, which is why polynomial preconditioning
-/// keeps reappearing in distributed solvers where those dominate the cost.
+/// Approximates \f$A^{-1}\f$ by the degree-m polynomial minimizing
+/// \f$\max_{\lambda \in [\ell, h]} |1 - \lambda p(\lambda)|\f$, using only the operator's
+/// action. The caller supplies bounds with \f$0 < \ell \le \lambda_{\min}\f$ and
+/// \f$\lambda_{\max} \le h\f$; bounds that miss part of the spectrum make the preconditioner
+/// indefinite. See the solver best-practices page for when to use it.
 #pragma once
 
 #include "container/vector.hpp"
 #include "core/math/concepts.hpp"
-#include "core/math/evidence.hpp"
-#include "core/math/models.hpp"
+#include "core/math/laws.hpp"
 #include "core/math/operations.hpp"
 #include "core/types.hpp"
 #include "kernel/kernel.hpp"
@@ -62,17 +21,9 @@ namespace num {
 
 /// @brief Estimate \f$\lambda_{\max}\f$ of a self-adjoint operator by power iteration.
 ///
-/// Needs only the operator's action, so it works on a matrix-free operator. The
-/// starting vector is fixed, so repeated calls on the same operator agree.
-///
-/// Power iteration approaches the dominant eigenvalue **from below**, so the
-/// raw Rayleigh quotient is an under-estimate and unsafe as an upper bound.
-/// `safety` inflates the result; the default leaves 10% of headroom.
-///
-/// @param A Self-adjoint linear operator.
-/// @param iterations Power iterations to run.
-/// @param safety Multiplier applied to the converged Rayleigh quotient.
-/// @return An estimate of \f$\lambda_{\max}\f$, or 0 for an empty operator.
+/// The starting vector is fixed, so repeated calls agree. Power iteration approaches
+/// \f$\lambda_{\max}\f$ from below, so the result is multiplied by `safety`, 10% headroom
+/// by default. Returns 0 for an empty operator.
 template <class Op>
 [[nodiscard]] inline real estimate_largest_eigenvalue(const Op &A, idx iterations = 25,
                                                       real safety = 1.1) {
@@ -108,13 +59,9 @@ template <class Op>
 
 /// @brief Chebyshev polynomial preconditioner \f$M^{-1} = p_m(A)\f$.
 ///
-/// Applies `degree` operator applications per invocation and allocates nothing
-/// after construction. Holds a reference to the operator, which must outlive it.
-///
-/// @tparam Op SPD operator type. The constraint is load-bearing rather than documentary:
-/// this class declares `law::spd` unconditionally, and \f$p(A)\f$ is positive definite
-/// only when \f$A\f$ is. Without it an indefinite operator could be wrapped here and
-/// handed to `pcg`, which requires an SPD preconditioner, with nothing to catch it.
+/// Each application costs `degree` operator applications and allocates nothing. It holds a
+/// reference to the operator, which must outlive it. `Op` must be SPD: this class declares
+/// `law::spd`, which holds only when \f$A\f$ is SPD.
 template <class Op>
 requires math::spd_operator<Op>
 class chebyshev_preconditioner final {
@@ -122,7 +69,7 @@ class chebyshev_preconditioner final {
     using domain_type = vec;
     using codomain_type = vec;
     /// Valid only for bounds that enclose the spectrum; see the file comment.
-    using math_laws = math::type_list<law::spd>;
+    using laws = law::list<law::spd>;
 
     /// @brief Build a degree-`degree` Chebyshev preconditioner for the spectrum \f$[lo, hi]\f$.
     /// @throws std::invalid_argument If the interval is not a positive, non-degenerate range.
@@ -214,19 +161,14 @@ requires math::spd_operator<Op>
     return chebyshev_preconditioner<Op>(A, lo, hi, degree);
 }
 
-/// @brief Build a Chebyshev preconditioner from a known \f$\lambda_{\min}\f$,
-/// estimating only the upper bound.
+/// @brief Build a Chebyshev preconditioner from a known \f$\lambda_{\min}\f$, estimating
+/// \f$\lambda_{\max}\f$ by power iteration.
 ///
-/// Power iteration gives \f$\lambda_{\max}\f$ cheaply and reliably. There is no
-/// equally cheap estimate of \f$\lambda_{\min}\f$, and it is deliberately *not*
-/// inferred here from an assumed condition number: too large a value excludes
-/// the bottom of the spectrum, which makes the polynomial indefinite and
-/// destroys the property PCG depends on. Supply a genuine lower bound — from the
-/// problem's physics, from a shift or regularization parameter, or from
-/// `num::lanczos` — or use the two-bound overload directly.
+/// `lambda_min` must be a true lower bound on the spectrum; it is not inferred from a condition
+/// number, since too large a value makes the polynomial indefinite.
 ///
-/// @param A Self-adjoint linear operator.
-/// @param lambda_min A true lower bound on the spectrum, greater than zero.
+/// @param A SPD operator.
+/// @param lambda_min Lower bound on the spectrum.
 /// @param degree Polynomial degree, and operator applications per solve.
 template <class Op>
 [[nodiscard]] inline chebyshev_preconditioner<Op>
@@ -244,25 +186,3 @@ chebyshev_preconditioner_from_below(const Op &A, real lambda_min, idx degree = 4
 
 } // namespace num
 
-namespace num::math {
-
-template <class Op>
-struct claims_of<chebyshev_preconditioner<Op>> {
-    using type = type_list<law::linear_map>;
-};
-
-namespace detail {
-
-template <class Op>
-struct domain_of<chebyshev_preconditioner<Op>, void> {
-    using type = vec;
-};
-
-template <class Op>
-struct codomain_of<chebyshev_preconditioner<Op>, void> {
-    using type = vec;
-};
-
-} // namespace detail
-
-} // namespace num::math

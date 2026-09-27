@@ -1,17 +1,9 @@
 /// @file omp/matrix_ops.hpp
 /// @brief OpenMP-accelerated Level-2/3 dense matrix operations.
 ///
-/// Same rule as `omp/vector_ops.hpp`: OpenMP only decides how the matrix is
-/// sliced into blocks across threads; the arithmetic inside each block is a
-/// `num::kernel` call, not a hand-written loop.
-///
-/// Row-tiled rather than routed through `dispatch::parallel_apply`: that
-/// helper's block size and threshold are tuned for vector *element* counts
-/// (blocks of ~16K elements, threading only above ~262K elements), which are
-/// the wrong units here — a matmul row does O(n*k) work, not O(1), so a matrix
-/// with a few hundred rows would never cross an element-counted threshold and
-/// would silently never thread. Always parallelizing over row-tiles (as the
-/// previous hand-written version did) is the correct granularity for Level-2/3.
+/// Threads split the rows into tiles and each tile is a `num::kernel` call. Not routed
+/// through `dispatch::parallel_apply`, whose element-count threshold would never thread a
+/// matrix of a few hundred rows.
 #pragma once
 
 #include "container/matrix.hpp"

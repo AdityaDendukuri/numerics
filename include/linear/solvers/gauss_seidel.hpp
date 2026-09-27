@@ -12,32 +12,19 @@
 
 namespace num {
 
-/// @brief Gauss-Seidel iterative solver for Ax = b
+/// @brief Gauss-Seidel iterative solver for Ax = b.
 ///
-/// Updates each component x[i] in-place using the latest values of all
-/// other components. Converges for strictly diagonally dominant or symmetric
-/// positive definite A.
+/// Requires strictly diagonally dominant or SPD A; the two are incomparable, so pass
+/// `num::assume_diagonally_dominant(A)` or `num::assume_spd(A)`. The sweep is sequential;
+/// `Parallel` threads only the residual. Use `num::jacobi<true>` for a parallel sweep.
 ///
-/// Standard Gauss-Seidel has sequential data dependencies (x[i] depends on
-/// x[0..i-1] updated in the same sweep): the update sweep stays sequential
-/// regardless of `Parallel` to preserve convergence properties; only the
-/// residual computation runs in parallel when `Parallel` is true. For a truly
-/// parallel relaxation scheme use the Jacobi solver (`num::jacobi<true>`).
-///
-/// @tparam Parallel  Thread the residual reduction with OpenMP (default: whatever
-///                    the build has available).
 /// @param A        Square matrix
 /// @param b        Right-hand side vector
 /// @param x        Solution vector (initial guess on input, solution on output)
 /// @param tol      Convergence tolerance on residual norm (default 1e-10)
 /// @param max_iter Maximum iterations (default 1000)
 /// @return solver_result with convergence info
-///
-/// Converges for strictly diagonally dominant *or* symmetric positive definite \f$A\f$.
-/// Those two laws are incomparable, so the requirement is a disjunction in the constraint
-/// rather than a single law: pass `num::assume_diagonally_dominant(A)` or
-/// `num::assume_spd(A)`.
-template <class Mat = dd_mat<mat>, bool Parallel = has_omp>
+template <class Mat = with_law<mat, law::diagonally_dominant>, bool Parallel = has_omp>
 requires claims<Mat, law::diagonally_dominant> || claims<Mat, law::spd>
 inline solver_result gauss_seidel(const Mat &A_in, const vec &b, vec &x, real tol = 1e-10,
                                  idx max_iter = 1000) {

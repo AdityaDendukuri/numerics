@@ -2,7 +2,7 @@
 /// @brief Diffusion operators and implicit system builders for 2D grids.
 #pragma once
 
-#include "algebra/properties.hpp"
+#include "operator/properties.hpp"
 
 #include "container/vector_ops.hpp"
 
@@ -13,7 +13,6 @@
 #include "linear/solvers/linear_solver.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "linear/sparse/sparse_op.hpp"
-#include "operator/properties.hpp"
 #include "pde/grid_operators.hpp"
 #include "pde/stencil.hpp"
 #include <stdexcept>
@@ -43,7 +42,7 @@ class backward_euler_operator_2d final {
   public:
     using domain_type = vec;
     using codomain_type = vec;
-    using math_laws = math::type_list<law::spd>;
+    using laws = law::list<law::spd>;
 
     backward_euler_operator_2d(int N, double coeff) : A_(validated_matrix(N, coeff)) {}
 
@@ -101,20 +100,12 @@ inline backward_euler_operator_2d backward_euler_operator(const grid2d &grid, do
 inline linear_solver make_cg_solver(const spmat &A, real tol = 1e-6) {
     return [&A, tol](const vec &rhs, vec &x) {
         operators::sparse_op op(A);
-        return cg(operators::assume_spd(op), rhs, x, tol);
+        return cg(num::assume_spd(op), rhs, x, tol);
     };
 }
 
 } // namespace num::pde
 
-namespace num::math {
-
-template <>
-struct claims_of<pde::backward_euler_operator_2d> {
-    using type = type_list<law::linear_map>;
-};
-
-} // namespace num::math
 
 namespace num {
 using pde::make_cg_solver;

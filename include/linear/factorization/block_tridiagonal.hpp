@@ -1,42 +1,23 @@
 /// @file linear/factorization/block_tridiagonal.hpp
 /// @brief Block LU and block Cholesky for block-tridiagonal sparse matrices.
 ///
-/// A matrix whose rows carry a *level* label is block tridiagonal when every
-/// nonzero couples rows of the same level or of adjacent levels. Reordering by
-/// level makes that structure explicit, and the factorization then proceeds one
-/// block row at a time: each step touches only a dense diagonal block and its two
-/// neighbours, so the work is \f$O(\sum_k n_k^3)\f$ rather than \f$O(n^3)\f$, and
-/// no fill appears outside the band.
-///
-/// The level labels are the caller's. This header takes them as given, compresses
-/// them to contiguous block indices, and never interprets them: what a level
-/// *means* — a copy number, a mesh layer, a time slice — belongs to the caller,
-/// as does the choice between LU and Cholesky.
+/// A matrix whose rows carry a level label is block tridiagonal when every nonzero couples
+/// rows of the same or adjacent levels. Reordered by level, it factors one block row at a time
+/// in \f$O(\sum_k n_k^3)\f$ work with no fill outside the band. The labels are the caller's
+/// and are only compressed to contiguous block indices.
 ///
 /// ### Index convention
 ///
-/// With `nb` blocks, `offsets` has `nb + 1` entries and block `k` spans the
-/// reordered rows `[offsets[k], offsets[k+1])`. Both `upper` and `lower` have
-/// `nb - 1` entries and are indexed by the *coupling*, not the block row:
+/// With `nb` blocks, `offsets` has `nb + 1` entries and block `k` spans the reordered rows
+/// `[offsets[k], offsets[k+1])`. `upper` and `lower` have `nb - 1` entries, indexed by the
+/// coupling:
 ///
 ///   - `upper[k]` is the block at row `k`, column `k+1`;
 ///   - `lower[k]` is the block at row `k+1`, column `k`.
 ///
-/// So the elimination reads `lower[k] <- lower[k] D_k^{-1}` followed by
-/// `D_{k+1} <- D_{k+1} - lower[k] upper[k]`.
-///
-/// ### The factors are public
-///
-/// `block_lu_factor` and `block_cholesky_factor` are plain aggregates rather than the
-/// internals of a solver object, so a later low-rank layer can reach the block
-/// factors directly: apply the factor to a tall `U`, apply its transpose to `V`,
-/// form the small Woodbury matrix \f$K = I + V^{T}A_0^{-1}U\f$, and keep reusing
-/// the same block factor until the update rank or residual makes that
-/// unprofitable. Nothing here needs to change for that to work.
-///
-/// All dense arithmetic lowers to the existing kernels — `num::factor_no_pivot`,
-/// `num::cholesky`, `num::matmul`, `num::transpose`, and the raw triangular
-/// solves. No GEMM or triangular solve is reimplemented.
+/// The elimination reads `lower[k] <- lower[k] D_k^{-1}`, then
+/// `D_{k+1} <- D_{k+1} - lower[k] upper[k]`. The factors are plain aggregates, so a low-rank
+/// update can apply them directly.
 #pragma once
 
 #include "blas/matrix_ops.hpp"
@@ -515,14 +496,12 @@ inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, re
 
 /// @brief Factor a block-tridiagonal matrix by block LU without row pivoting.
 ///
+/// The caller guarantees nonzero pivots in the block ordering, as for a nonsingular M-matrix,
+/// whose diagonal Schur blocks stay nonsingular M-matrices.
+///
 /// @param A Square sparse matrix whose nonzeros stay within adjacent level blocks.
 /// @param levels One level label per row; arbitrary values, compressed internally.
-/// @param scale Uniform scaling applied while assembling, so `factor(scale*A)`
-///        needs no separate scaled copy of `A`.
-/// The caller must guarantee that Gaussian elimination in the supplied block
-/// ordering has nonzero pivots. Nonsingular M-matrices satisfy this condition,
-/// and their diagonal Schur blocks remain nonsingular M-matrices.
-///
+/// @param scale Uniform scaling applied while assembling, so `factor(scale*A)` needs no copy.
 /// @throws std::invalid_argument If `A` is not square, the level count is wrong,
 ///         or a nonzero couples non-adjacent blocks.
 /// @throws std::runtime_error If a diagonal Schur block has a zero pivot.
@@ -542,7 +521,7 @@ inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, re
     factor.diagonal.reserve(count);
 
     for (idx k = 0; k < count; ++k) {
-        factor.diagonal.push_back(factor_no_pivot(assume_square(blocks.diagonal[k])));
+        factor.diagonal.push_back(factor_no_pivot(blocks.diagonal[k]));
         if (factor.diagonal.back().singular) {
             throw std::runtime_error("block_tridiagonal: zero pivot in diagonal block " +
                                      std::to_string(k));
@@ -610,7 +589,7 @@ refactor_block_lu_suffix(const spmat &A, view<const idx> levels,
     }
 
     for (idx k = first_changed_block; k < count; ++k) {
-        factor.diagonal.push_back(factor_no_pivot(assume_square(blocks.diagonal[k])));
+        factor.diagonal.push_back(factor_no_pivot(blocks.diagonal[k]));
         if (factor.diagonal.back().singular) {
             throw std::runtime_error("block_tridiagonal: zero pivot in diagonal block " +
                                      std::to_string(k));

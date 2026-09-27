@@ -60,8 +60,8 @@ void expect_solves(const Factor &Z, const mat &R) {
     }
     mat transposed = transpose(R);
     vec expected, expected_transpose;
-    lu_solve(lu(assume_square(R)), b, expected);
-    lu_solve(lu(assume_square(transposed)), b, expected_transpose);
+    lu_solve(lu(R), b, expected);
+    lu_solve(lu(transposed), b, expected_transpose);
 
     const vec x = num::solve(Z, b);
     const vec y = num::solve(transpose(Z), b);

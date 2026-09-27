@@ -23,7 +23,7 @@ struct integer_range {
     [[nodiscard]] bool empty() const noexcept { return first == last; }
 };
 
-template <scalars::field scalar>
+template <field scalar>
 /// Counting-sorted 2D spatial bins for local-neighbor iteration.
 class cell_list_2d {
   public:

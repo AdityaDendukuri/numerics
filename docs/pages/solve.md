@@ -17,7 +17,7 @@ num::mat A = make_spd_matrix();
 num::vec b{1.0, 2.0, 3.0};
 
 num::operators::dense_op op(A);
-auto spd = num::operators::assume_spd(op);
+auto spd = num::assume_spd(op);
 
 // Dispatch to CG
 auto solution = num::solve(

@@ -3,19 +3,17 @@
 #include <gtest/gtest.h>
 
 // Compile-time concept checks
-static_assert(num::scalar<double>);
-static_assert(num::scalar<float>);
+static_assert(num::field<double>);
+static_assert(num::field<float>);
 static_assert(num::vector_space<num::vec>);
-static_assert(num::mutable_vector_space<num::vec>);
 static_assert(num::repr::contiguous<num::vec>);
 static_assert(num::matrix_space<num::mat>);
-static_assert(num::mutable_matrix_space<num::mat>);
 static_assert(num::repr::dense_row_major<num::mat>);
 static_assert(num::repr::csr<num::spmat>);
-static_assert(num::preconditioner<num::jacobi_preconditioner>);
+static_assert(num::linear_operator<num::jacobi_preconditioner, num::vec, num::vec>);
 static_assert(num::linear_operator<num::operators::dense_op>);
-static_assert(num::self_adjoint_operator<num::operators::symmetric_op<num::operators::dense_op>>);
-static_assert(num::spd_operator<num::operators::spd_op<num::operators::dense_op>>);
+static_assert(num::self_adjoint_operator<num::with_law<num::operators::dense_op, num::law::self_adjoint>>);
+static_assert(num::spd_operator<num::with_law<num::operators::dense_op, num::law::spd>>);
 
 TEST(DebugCheck, DimensionMismatch) {
     EXPECT_THROW(num::debug::check_dim(5, 3, "test_vector"), std::invalid_argument);
@@ -35,7 +33,7 @@ TEST(DebugCheck, FalseSPDAssertionCaughtAtRuntime) {
     num::operators::dense_op Aop(A);
 
     // assume_spd() throws a PropertyError because sampled x^T A x is <= 0!
-    EXPECT_THROW(static_cast<void>(num::operators::assume_spd(Aop)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(num::assume_spd(Aop)), std::invalid_argument);
 }
 
 TEST(DebugCheck, SparseStructureValidation) {
@@ -63,7 +61,7 @@ TEST(DebugCheck, PresetModesAndScopedGuard) {
     num::operators::dense_op Aop(A);
 
     // In unsafe mode, assume_spd runs silently without throwing
-    EXPECT_NO_THROW(static_cast<void>(num::operators::assume_spd(Aop)));
+    EXPECT_NO_THROW(static_cast<void>(num::assume_spd(Aop)));
 
     // 2. Scoped preset guard
     num::set_preset(num::preset::strict);
@@ -72,12 +70,12 @@ TEST(DebugCheck, PresetModesAndScopedGuard) {
     {
         num::scoped_preset guard(num::preset::unsafe);
         EXPECT_EQ(num::get_preset(), num::diagnostic_preset::unsafe);
-        EXPECT_NO_THROW(static_cast<void>(num::operators::assume_spd(Aop)));
+        EXPECT_NO_THROW(static_cast<void>(num::assume_spd(Aop)));
     }
 
     // Restores strict preset automatically on scope exit
     EXPECT_EQ(num::get_preset(), num::diagnostic_preset::strict);
-    EXPECT_THROW(static_cast<void>(num::operators::assume_spd(Aop)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(num::assume_spd(Aop)), std::invalid_argument);
 
     num::set_preset(orig);
 }

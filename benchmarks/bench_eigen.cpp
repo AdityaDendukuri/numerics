@@ -76,7 +76,7 @@ static void BM_Lanczos(benchmark::State &state) {
     constexpr idx k = 10;
     mat A = make_sym(n);
     auto op = operators::make_op([&](const vec &v, vec &w) { matvec(A, v, w); }, n);
-    auto Aop = operators::assume_symmetric(op);
+    auto Aop = num::assume_symmetric(op);
     for (auto _ : state) {
         auto r = lanczos(Aop, k, 1e-10, 0);
         benchmark::DoNotOptimize(r.ritz_values.data());

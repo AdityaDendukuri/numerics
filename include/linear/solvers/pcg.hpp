@@ -11,10 +11,10 @@ namespace num {
 /// @brief Solve \f$A x = b\f$ using Preconditioned Conjugate Gradient (PCG).
 ///
 /// Accelerates CG convergence using a symmetric positive-definite preconditioner \f$M \approx A^{-1}\f$.
-/// Both the system operator `A` and the preconditioner `M` must carry positive-definite evidence.
+/// Both the system operator `A` and the preconditioner `M` must claim `law::spd`.
 ///
-/// @tparam Op System operator type satisfying `math::endomorphism_on<Op, vec>` and carrying SPD evidence.
-/// @tparam M preconditioner type satisfying @ref num::spd_preconditioner.
+/// @tparam Op System operator satisfying `num::spd_operator`.
+/// @tparam M Preconditioner satisfying `num::spd_operator`.
 /// @param A Symmetric positive-definite linear operator or matrix wrapper.
 /// @param preconditioner preconditioner operator approximating \f$A^{-1}\f$ (e.g. Jacobi, Incomplete Cholesky).
 /// @param b Right-hand side vector.
@@ -25,9 +25,8 @@ namespace num {
 /// @throws std::invalid_argument If dimensions of `A`, `preconditioner`, `b`, and `x` do not match.
 /// @see cg, minres, gmres, approx_chol_preconditioner
 template <class Op, class M>
-requires math::inner_product_space<vec> &&math::endomorphism_on<Op, vec> &&
-    claims<Op, law::spd> &&
-        spd_preconditioner<M, vec> inline solver_result
+requires math::spd_operator<Op, vec> &&
+        math::spd_operator<M, vec> inline solver_result
         pcg(const Op &A, const M &preconditioner, const vec &b, vec &x, real tolerance,
             idx max_iterations = 1000) {
     return pcg(A, preconditioner, b, x,

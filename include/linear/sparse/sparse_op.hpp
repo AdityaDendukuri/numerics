@@ -7,7 +7,7 @@
 #pragma once
 
 #include "core/math/associated.hpp"
-#include "core/math/models.hpp"
+#include "core/math/laws.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "operator/concepts.hpp"
 #include <stdexcept>
@@ -16,7 +16,6 @@ namespace num::operators {
 
 /// @brief Adapt a spmat to the operator protocol.
 struct sparse_op final {
-    using math_laws = math::type_list<law::linear_map>;
     using domain_type = vec;
     using codomain_type = vec;
 

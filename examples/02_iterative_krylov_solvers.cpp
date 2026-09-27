@@ -32,7 +32,7 @@ int main() {
 
     // 1. Conjugate Gradient (CG)
     operators::sparse_op aop(A);
-    auto spd_a = operators::assume_spd(aop);
+    auto spd_a = num::assume_spd(aop);
     auto cg_res = cg(spd_a, b, x0, 1e-8, 500);
     std::cout << "cg_method Converged: " << (cg_res.converged ? "YES" : "NO") << " in "
               << cg_res.iterations << " iters. Residual = " << cg_res.residual << "\n";

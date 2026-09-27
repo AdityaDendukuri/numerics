@@ -1,11 +1,11 @@
 /// @file math_adapters.hpp
-/// @brief Linear-algebra validators for the foundational evidence system.
+/// @brief Dense matrices as linear operators: their action and their spaces.
 #pragma once
 
-#include "core/math/evidence.hpp"
 #include "core/math/operations.hpp"
 #include "kernel/kernel.hpp"
-#include "linear/matrix_properties.hpp"
+#include "container/matrix.hpp"
+#include "container/vector.hpp"
 #include <stdexcept>
 
 namespace num {
@@ -26,59 +26,17 @@ inline void tag_invoke(math::apply_t, const basic_mat<T> &matrix, const basic_ve
 
 } // namespace num
 
-namespace num::linear {
+namespace num::math::detail {
 
-template <class Mat, class Ax, class X, class Y>
-inline void tag_invoke(math::apply_t, const structured_mat<Mat, Ax> &matrix, const X &x, Y &y) {
-    math::apply(matrix.base(), x, y);
-}
-
-} // namespace num::linear
-
-namespace num::math {
-
+/// A dense matrix maps vectors to vectors of its own scalar.
 template <std::floating_point T>
-struct claims_of<basic_mat<T>> {
-    using type = type_list<law::linear_map>;
-};
-
-/// A structured matrix claims exactly the law it was tagged with. Because the lattice
-/// carries implication, that one entry also supplies `linear_map` and everything else
-/// weaker — there is no mapping table to keep in step, and nothing is lost in
-/// translation the way it was when operator laws and evidence axioms were separate
-/// hierarchies (`unitary`, `skew_adjoint` and `projection` all used to collapse to
-/// `linear_map` crossing that boundary).
-template <class Mat, class Ax>
-struct claims_of<linear::structured_mat<Mat, Ax>> {
-    using type = type_list<Ax>;
-};
-
-namespace detail {
-
-template <std::floating_point T>
-struct domain_of<basic_mat<T>, void> {
+struct domain_of<basic_mat<T>> {
     using type = basic_vec<T>;
 };
 
 template <std::floating_point T>
-struct codomain_of<basic_mat<T>, void> {
+struct codomain_of<basic_mat<T>> {
     using type = basic_vec<T>;
 };
 
-template <class Mat, class Ax>
-struct domain_of<linear::structured_mat<Mat, Ax>, void> : domain_of<Mat> {};
-
-template <class Mat, class Ax>
-struct codomain_of<linear::structured_mat<Mat, Ax>, void> : codomain_of<Mat> {};
-
-} // namespace detail
-
-
-template <>
-struct evidence_validator<mat, law::spd> {
-    static constexpr bool available = true;
-
-    [[nodiscard]] static bool verify(const mat &matrix) { return linear::is_spd(matrix); }
-};
-
-} // namespace num::math
+} // namespace num::math::detail

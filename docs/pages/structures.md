@@ -229,3 +229,61 @@ num::structures::debug::verify_degree_consistency(G);
 num::structures::debug::verify_handshake_lemma(G);
 ```
 
+
+## 9. Spanning-tree clique sampling
+
+`structures/graph/clique.hpp` replaces the fill of one elimination by a random spanning tree
+of it, reweighted so the elimination stays unbiased in expectation.
+
+### The symmetric clique
+
+Eliminating `v` adds a clique on its neighbours with Schur-complement weights
+\f$w_{ij} = c_i c_j / C\f$, where \f$c_i\f$ is the conductance from `v` to neighbour `i`
+and \f$C = \sum_i c_i\f$. For a weighted uniform spanning tree, Kirchhoff gives the inclusion
+probability \f$p_e = w_e R_{\mathrm{eff}}(e)\f$. Effective resistances usually need
+Laplacian solves, but this clique Laplacian is \f$\operatorname{diag}(c) - cc^{T}/C\f$, and
+solving it gives the series path through `v`:
+\f[
+  R_{\mathrm{eff}}(i,j) = \frac{1}{c_i} + \frac{1}{c_j}, \qquad
+  p_{ij} = \frac{c_i + c_j}{C}, \qquad
+  \sum_{i<j} p_{ij} = d - 1.
+\f]
+The sum is the edge count of a spanning tree. The reweighting
+\f$\widehat c_{ij} = w_{ij}/p_{ij} = c_i c_j / (c_i + c_j)\f$ is the harmonic mean, the same
+series conductance the independent sampler assigns, so
+\f$\mathbb{E}[\widetilde L^{(v)}] = \mathrm{Sc}(L)\f$.
+
+Aldous--Broder degenerates on this clique. Its transition kernel
+\f$P(i \to j) = c_j / (C - c_i)\f$ does not depend on the current vertex, so the walk is a
+coupon collector: draw i.i.d. from \f$c/C\f$ and record the entering edge at each first visit.
+
+### The directed biclique
+
+A nonsymmetric pivot leaves the rank-one update \f$xy^{T}/a\f$, with \f$x_i = -A_{iv}\f$,
+\f$y_j = -A_{vj}\f$ and \f$a = A_{vv}\f$. Lifting to a bipartite graph with vertices
+\f$i_L\f$ for in-neighbours, \f$j_R\f$ for out-neighbours, and conductances \f$x_iy_j/a\f$
+keeps the two directions of an edge distinct. With \f$X = \sum_i x_i\f$ and
+\f$Y = \sum_j y_j\f$,
+\f[
+  R_{\mathrm{eff}}(i_L, j_R) = a\Big[\tfrac{1}{x_iY} + \tfrac{1}{y_jX} - \tfrac{1}{XY}\Big],
+  \qquad
+  p_{ij} = 1 - (1-\alpha_i)(1-\beta_j),
+\f]
+where \f$\alpha_i = x_i/X\f$ and \f$\beta_j = y_j/Y\f$. The probabilities sum to \f$m + n - 1\f$,
+the edge count of a spanning tree on the duplicated vertices. The walk alternates the fixed
+distributions \f$y/Y\f$ and \f$x/X\f$. The conductance reading needs \f$x_i, y_j, a > 0\f$.
+Matrix Chernoff bounds for strongly Rayleigh measures are Hermitian results, so they say
+nothing about concentration for this nonsymmetric update.
+
+### Measured behaviour
+
+On 2D grid Laplacians with n up to 40k, one tree per elimination is worse than the
+independent sampler: 44 PCG iterations against 41 for `ac1` and 29 for `ac2`. On
+higher-degree graphs with skewed weights the coupon collector also makes setup several
+times more expensive.
+
+Averaging k trees per elimination concentrates, as the strongly Rayleigh Chernoff theory
+predicts. On a 14400-vertex grid it takes 44, 27, 20 and 15 iterations at k = 1, 2, 4 and 8,
+against 29 for `ac2`. Setup grows faster than k, because each tree raises the degree of later
+eliminations: 11 ms, 82 ms, 616 ms and 2.7 s. It pays only when one factorization serves many
+solves, about 50 to break even at k = 2 and 600 at k = 8.

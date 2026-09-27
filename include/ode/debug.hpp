@@ -1,19 +1,9 @@
 /// @file ode/debug.hpp
 /// @brief Runtime verification of the laws an integrator is supposed to obey.
 ///
-/// The diagnostic sibling of ode/concepts.hpp. What distinguishes a correct ODE
-/// integrator from a plausible one is not its interface but two mathematical
-/// properties, and both are measurable at runtime:
-///
-///   - **Order of accuracy.** A method of order \f$p\f$ has local error
-///     \f$O(h^{p+1})\f$, so halving the step must shrink the error by
-///     \f$2^{p+1}\f$. Comparing the observed ratio against the claimed order
-///     catches a mis-specified Butcher tableau, which otherwise merely converges
-///     more slowly than advertised and is easy to miss.
-///   - **Symplecticity.** A symplectic map preserves the 2-form
-///     \f$\omega = dq \wedge dp\f$. On a Hamiltonian system this is what bounds
-///     energy error over long integrations; a method that loses it drifts
-///     secularly no matter how small the step.
+/// The order of accuracy is measured from step halving, which catches a wrong Butcher
+/// tableau. Symplecticity is checked as preservation of \f$\omega = dq \wedge dp\f$, which bounds
+/// long-time energy drift.
 #pragma once
 
 #include "container/vector.hpp"
@@ -31,10 +21,8 @@ using num::debug::panic;
 
 /// @brief Measure the observed order of accuracy of a one-step integrator.
 ///
-/// Advances the same initial state over one interval with step \f$h\f$ and again
-/// with \f$h/2\f$, and compares both against a reference taken at \f$h/16\f$. For a
-/// method of order \f$p\f$ the error ratio approaches \f$2^p\f$ over the fixed
-/// interval, so \f$\log_2\f$ of the ratio recovers \f$p\f$.
+/// Integrates with steps \f$h\f$ and \f$h/2\f$ against a reference at \f$h/16\f$. The error
+/// ratio approaches \f$2^p\f$, so its \f$\log_2\f$ recovers \f$p\f$.
 ///
 /// @param advance Callable `(real t0, real t1, real h, const vec &y0, vec &y1)`.
 /// @param y0 Initial state.
@@ -95,12 +83,8 @@ inline void verify_order_of_accuracy(Advance &&advance, const vec &y0, real t0, 
 
 /// @brief Verify that one step preserves the symplectic 2-form \f$\omega = dq \wedge dp\f$.
 ///
-/// Propagates two tangent vectors through the discrete flow by finite differences
-/// and checks that their symplectic pairing
-/// \f$\omega(u,v) = \delta q_u \cdot \delta p_v - \delta q_v \cdot \delta p_u\f$
-/// is unchanged. This is the defining property of a symplectic map, and it is
-/// strictly stronger than energy conservation: a method can nearly conserve energy
-/// over a short window while destroying \f$\omega\f$, and will then drift.
+/// Two tangent vectors are propagated by finite differences, and their pairing
+/// \f$\omega(u,v) = \delta q_u \cdot \delta p_v - \delta q_v \cdot \delta p_u\f$ must be unchanged.
 ///
 /// @param step Callable `(const vec &q, const vec &p, real h, vec &q1, vec &p1)`.
 /// @param q0 Position at which to test.

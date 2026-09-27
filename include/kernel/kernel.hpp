@@ -5,13 +5,8 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// Everything reachable from this header is templated on the scalar type, takes
-/// raw pointers and callables, allocates nothing, and includes nothing outside
-/// the standard library. No containers, no concepts, no algebra: the kernel
-/// computes and makes no claims about what it computes on.
-///
-/// That is what makes this tier copyable. A consuming project can vendor these
-/// files, or a single routine out of them, without adopting anything else.
+/// Everything here is templated on the scalar, takes raw pointers and callables, allocates
+/// nothing and needs only the standard library, so the files can be vendored alone.
 #pragma once
 
 #include "kernel/complex.hpp"

@@ -12,7 +12,9 @@
 
 #include "container/vector_ops.hpp"
 
-#include "linear/concepts.hpp"
+#include "linear/matrix_properties.hpp"
+#include "linear/solvers/solver_result.hpp"
+#include "operator/concepts.hpp"
 
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
@@ -20,7 +22,6 @@
 #include "linear/eigen/jacobi_eig.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "linear/subspace.hpp"
-#include "operator/concepts.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -67,7 +68,7 @@ namespace detail {
         }
     }
 
-    const eigen_result eig = eig_sym(linear::sym_mat<mat>(tridiagonal), 1e-13);
+    const eigen_result eig = eig_sym(with_law<mat, law::self_adjoint>(tridiagonal), 1e-13);
     vec coefficients(steps, 0.0);
     for (idx eigenvector = 0; eigenvector < steps; ++eigenvector) {
         if (!(eig.values[eigenvector] > 0.0)) {
@@ -100,7 +101,7 @@ namespace detail {
         }
     }
 
-    const eigen_result eig = eig_sym(linear::sym_mat<mat>(tridiagonal), 1e-13);
+    const eigen_result eig = eig_sym(with_law<mat, law::self_adjoint>(tridiagonal), 1e-13);
     vec coefficients(steps, 0.0);
     for (idx eigenvector = 0; eigenvector < steps; ++eigenvector) {
         if (!(eig.values[eigenvector] > 0.0)) {
@@ -325,7 +326,7 @@ requires linear_operator<Op, vec, vec>
     // T is the Lanczos tridiagonal, symmetric by construction: it is filled from a
     // single alpha/beta recurrence with T(j,j+1) and T(j+1,j) written from the same
     // beta. The invariant is established here rather than assumed downstream.
-    eigen_result teig = eig_sym(linear::sym_mat<mat>(T), tol * real(1e-2));
+    eigen_result teig = eig_sym(with_law<mat, law::self_adjoint>(T), tol * real(1e-2));
     const idx nret = std::min(k, m);
 
     mat ritz_vecs(n, nret, 0.0);
@@ -367,7 +368,7 @@ requires linear_operator<Op, vec, vec>
 /// projected actions differ by at most `tolerance` in relative Euclidean norm,
 /// or when `max_steps` is reached.
 template <class Op>
-requires spd_operator<Op, vec, vec> [[nodiscard]] lanczos_inverse_sqrt_result
+requires spd_operator<Op, vec> [[nodiscard]] lanczos_inverse_sqrt_result
 inverse_sqrt_lanczos(const Op &A, const vec &right_hand_side, real tolerance = 1e-8,
                      idx max_steps = 0) {
     return detail::inverse_sqrt_lanczos_impl(A, right_hand_side, tolerance, max_steps);
@@ -375,7 +376,7 @@ inverse_sqrt_lanczos(const Op &A, const vec &right_hand_side, real tolerance = 1
 
 /// Approximate \f$A^{1/2}b\f$ for a symmetric positive-definite operator.
 template <class Op>
-requires spd_operator<Op, vec, vec> [[nodiscard]] lanczos_sqrt_result
+requires spd_operator<Op, vec> [[nodiscard]] lanczos_sqrt_result
 sqrt_lanczos(const Op &A, const vec &right_hand_side, real tolerance = 1e-8, idx max_steps = 0) {
     return detail::sqrt_lanczos_impl(A, right_hand_side, tolerance, max_steps);
 }
@@ -386,7 +387,7 @@ sqrt_lanczos(const Op &A, const vec &right_hand_side, real tolerance = 1e-8, idx
 /// Builds an orthonormal Krylov basis with modified Gram-Schmidt reorthogonalization, generates
 /// a symmetric tridiagonal projection \f$T_m\f$, and extracts Ritz values and Ritz vectors.
 ///
-/// @tparam Op Linear operator type satisfying `self_adjoint_operator<Op, vec, vec>`.
+/// @tparam Op Linear operator type satisfying `self_adjoint_operator<Op, vec>`.
 /// @param A Self-adjoint linear operator (matrix-free callable, sparse, or dense wrapper).
 /// @param k Number of extremal eigenpairs to compute (\f$0 < k \le n\f$).
 /// @param tol Residual tolerance \f$\|A v - \lambda v\|_2\f$ for declaring convergence (default:
@@ -397,7 +398,7 @@ sqrt_lanczos(const Op &A, const vec &right_hand_side, real tolerance = 1e-8, idx
 /// @throws std::invalid_argument If `k` is invalid or operator is not square.
 /// @see eig_sym, power_iteration
 template <class Op>
-requires self_adjoint_operator<Op, vec, vec>
+requires self_adjoint_operator<Op, vec>
     lanczos_result lanczos(const Op &A, idx k, real tol = 1e-10, idx max_steps = 0) {
     return detail::lanczos_operator_impl(A, k, tol, max_steps);
 }
@@ -415,23 +416,23 @@ lanczos_result lanczos(const spmat &A, idx k, real tol = 1e-10, idx max_steps = 
 
 } // namespace unsafe
 
-/// @brief Compute largest \f$k\f$ Ritz pairs of a matrix carrying certified symmetry evidence.
+/// @brief Compute the largest \f$k\f$ Ritz pairs of a matrix claiming `law::self_adjoint`.
 ///
-/// @param A Symmetric matrix carrying symmetry evidence (e.g. `num::assume_symmetric(A)`).
+/// @param A Symmetric matrix, e.g. `num::assume_symmetric(A)`.
 /// @param k Number of extremal eigenpairs to compute.
 /// @param tol Residual tolerance (default: 1e-10).
 /// @param max_steps Maximum Lanczos steps (default: \f$\min(3k, n)\f$).
 /// @return `lanczos_result` with Ritz pairs and convergence metadata.
-inline lanczos_result lanczos(const linear::sym_mat<mat> &A, idx k, real tol = 1e-10,
+inline lanczos_result lanczos(const with_law<mat, law::self_adjoint> &A, idx k, real tol = 1e-10,
                               idx max_steps = 0) {
     return unsafe::lanczos(A.base(), k, tol, max_steps);
 }
 
 /// @brief Rejects an untagged matrix at compile time.
 template <class M>
-    requires matrix_space<M> && (!symmetric_matrix_like<M>)lanczos_result
-                                lanczos(const M & /*untagged*/, idx, real = 1e-10, idx = 0) {
-    static_assert(symmetric_matrix_like<M>,
+requires matrix_space<M> && (!claims<M, law::self_adjoint>)
+lanczos_result lanczos(const M & /*untagged*/, idx, real = 1e-10, idx = 0) {
+    static_assert(claims<M, law::self_adjoint>,
                   "lanczos() requires a matrix carrying the symmetry invariant: the three-term "
                   "recurrence is a consequence of A = A^T and produces meaningless Ritz values "
                   "without it. "
@@ -448,7 +449,7 @@ inline lanczos_result lanczos(const mat &A, idx k, real tol, idx max_steps) {
         throw std::invalid_argument("lanczos: matrix must be square");
     }
     operators::dense_op op(A);
-    return num::lanczos(operators::assume_symmetric(op), k, tol, max_steps);
+    return num::lanczos(num::assume_symmetric(op), k, tol, max_steps);
 }
 
 inline lanczos_result lanczos(const spmat &A, idx k, real tol, idx max_steps) {
@@ -456,7 +457,7 @@ inline lanczos_result lanczos(const spmat &A, idx k, real tol, idx max_steps) {
         throw std::invalid_argument("lanczos: matrix must be square");
     }
     operators::sparse_op op(A);
-    return num::lanczos(operators::assume_symmetric(op), k, tol, max_steps);
+    return num::lanczos(num::assume_symmetric(op), k, tol, max_steps);
 }
 
 } // namespace unsafe

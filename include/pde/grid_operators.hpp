@@ -3,11 +3,10 @@
 #pragma once
 
 #include "core/types.hpp"
-#include "algebra/properties.hpp"
+#include "operator/properties.hpp"
 
 #include "container/vector.hpp"
-#include "core/math/evidence.hpp"
-#include "core/math/models.hpp"
+#include "core/math/laws.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "operator/concepts.hpp"
 #include <stdexcept>
@@ -20,7 +19,7 @@ class laplacian_2d final {
   public:
     using domain_type = vec;
     using codomain_type = vec;
-    using math_laws = math::type_list<law::self_adjoint>;
+    using laws = law::list<law::self_adjoint>;
 
     explicit laplacian_2d(int N) : N_(N) {
         if (N_ <= 0) {
@@ -109,7 +108,7 @@ class backward_euler_2d final {
   public:
     using domain_type = vec;
     using codomain_type = vec;
-    using math_laws = math::type_list<law::spd>;
+    using laws = law::list<law::spd>;
 
     backward_euler_2d(int N, double coeff) : N_(N), coeff_(coeff) {
         if (N_ <= 0) {
@@ -215,16 +214,3 @@ static_assert(sparse_convertible<backward_euler_2d>);
 
 } // namespace num::operators
 
-namespace num::math {
-
-template<>
-struct claims_of<operators::laplacian_2d> {
-    using type = type_list<law::linear_map>;
-};
-
-template<>
-struct claims_of<operators::backward_euler_2d> {
-    using type = type_list<law::linear_map>;
-};
-
-} // namespace num::math

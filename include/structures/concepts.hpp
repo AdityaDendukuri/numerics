@@ -51,7 +51,7 @@ concept addressable_priority_queue = std::totally_ordered<Key> &&
 
 /// @brief Directed incidence \f$u \to v\f$ carrying a weight in a scalar field.
 template <typename E, typename Index = num::idx, typename Weight = double>
-concept weighted_incidence = scalars::field<Weight> && requires(E e) {
+concept weighted_incidence = field<Weight> && requires(E e) {
     { e.to } -> std::convertible_to<Index>;
     { e.weight } -> std::convertible_to<Weight>;
 };

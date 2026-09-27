@@ -125,63 +125,13 @@ inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
 /// @brief Replace the star-mesh clique by a random spanning tree of it, reweighted
 /// so the elimination stays unbiased in expectation.
 ///
-/// Eliminating `v` adds a clique on its neighbours with the Schur-complement
-/// weights \f$w_{ij} = c_i c_j / C\f$, where \f$c_i\f$ is the conductance from
-/// `v` to neighbour `i` and \f$C = \sum_i c_i\f$. `sample_clique` approximates
-/// that clique by independent draws; this samples a *spanning tree* of it
-/// instead, keeping \f$d-1\f$ edges rather than \f$d\f$ and drawing them from a
-/// negatively dependent (strongly Rayleigh) distribution.
-///
-/// ### Why this is unbiased, and why it needs no effective-resistance solve
-///
-/// For a weighted uniform spanning tree, Kirchhoff gives the inclusion
-/// probability \f$p_e = w_e R_{\mathrm{eff}}(e)\f$. Computing
-/// \f$R_{\mathrm{eff}}\f$ in general needs Laplacian solves — the very problem
-/// this factorization exists to precondition — but on *this* clique it is
-/// closed form. The clique Laplacian is a rank-one update of a diagonal,
-/// \f$\operatorname{diag}(c) - cc^{T}/C\f$, and solving it gives
-/// \f[
-///   R_{\mathrm{eff}}(i,j) = \frac{1}{c_i} + \frac{1}{c_j},
-/// \f]
-/// which is just the series path \f$i \to v \to j\f$ that the clique replaced.
-/// Hence
-/// \f[
-///   p_{ij} = \frac{c_i + c_j}{C}, \qquad
-///   \sum_{i<j} p_{ij} = d - 1,
-/// \f]
-/// exactly the edge count of a spanning tree, and the reweighting
-/// \f$\widehat c_{ij} = w_{ij}/p_{ij} = c_i c_j / (c_i + c_j)\f$ is the harmonic
-/// mean — the same series conductance the independent sampler assigns. So
-/// \f$\mathbb{E}[\widetilde L^{(v)}] = \mathrm{Sc}(L)\f$ holds by construction.
-///
-/// ### Aldous--Broder degenerates here
-///
-/// The clique's transition kernel is \f$P(i \to j) = c_j / (C - c_i)\f$, which
-/// does not depend on where the walk currently is. Sampling the tree is
-/// therefore not a graph traversal but a coupon-collector process: draw
-/// i.i.d. from \f$c/C\f$, and record the entering edge on each first visit.
-///
-/// ### Measured behaviour
-///
-/// On 2D grid Laplacians (n up to 40k), one tree per elimination is *worse* than
-/// the independent sampler: 44 PCG iterations against `ac1`'s 41 and `ac2`'s 29,
-/// and on higher-degree graphs with skewed weights the coupon-collector walk
-/// makes setup several times more expensive as well. Unbiasedness alone does not
-/// buy a preconditioner -- a single tree has too much variance.
-///
-/// Averaging `trees` independent trees per elimination does concentrate, as the
-/// strongly-Rayleigh matrix Chernoff theory predicts, and overtakes the existing
-/// samplers on quality (n = 14400, grid): 44 iterations at k=1, 27 at k=2, 20 at
-/// k=4, 15 at k=8, against `ac2`'s 29. Setup cost grows faster than k, because
-/// each tree adds edges that raise the degree of every later elimination:
-/// 11 ms, 82 ms, 616 ms, 2.7 s for the same k. So this pays only when one
-/// factorization is reused across many solves -- roughly 50 solves to break even
-/// at k=2, 600 at k=8 -- and loses outright for a single solve.
-///
-/// A skewed weight distribution also makes the collection slow, so the walk is
-/// capped. On reaching the cap the remaining vertices are attached to the
-/// heaviest neighbour, which keeps the result a spanning tree and the cost
-/// bounded, at the price of exactness in expectation for that elimination.
+/// Eliminating `v` adds a clique on its neighbours with weights \f$w_{ij} = c_i c_j / C\f$,
+/// where \f$c_i\f$ is the conductance from `v` to `i` and \f$C = \sum_i c_i\f$. Edge
+/// \f$ij\f$ enters the tree with probability \f$p_{ij} = (c_i + c_j)/C\f$ and is reweighted
+/// to the harmonic mean \f$c_i c_j / (c_i + c_j)\f$, so \f$\mathbb{E}[\widetilde L^{(v)}] =
+/// \mathrm{Sc}(L)\f$. The walk is capped: past the cap the remaining vertices attach to the
+/// heaviest neighbour, which keeps a spanning tree but loses exactness for that elimination.
+/// The derivation and measured behaviour are on the structures page.
 ///
 /// @param G Adjacency being eliminated; sampled edges are appended.
 /// @param q Degree queue, rekeyed for each endpoint touched.
@@ -281,55 +231,14 @@ inline void sample_clique_tree(array<array<multi_edge<Weight, Index>>> &G, Queue
 
 /// @brief Sample a spanning tree of the directed product biclique left by an LU pivot.
 ///
-/// Eliminating pivot `v` from a nonsymmetric matrix leaves the rank-one Schur
-/// update \f$xy^{T}/a\f$, with \f$x_i = -A_{iv}\f$, \f$y_j = -A_{vj}\f$ and
-/// \f$a = A_{vv}\f$. That is not an undirected clique: \f$i \to j\f$ and
-/// \f$j \to i\f$ carry genuinely different weights \f$x_iy_j/a\f$ and
-/// \f$x_jy_i/a\f$.
-///
-/// Lifting to an undirected *bipartite* graph on duplicated vertices recovers the
-/// symmetric machinery without losing that asymmetry: put \f$i_L\f$ for each
-/// incoming neighbour, \f$j_R\f$ for each outgoing one, and give edge
-/// \f$i_L - j_R\f$ conductance \f$x_iy_j/a\f$. Opposite directed edges become
-/// \f$i_L-j_R\f$ and \f$j_L-i_R\f$, distinct objects, so nothing is forced
-/// together. A vertex that is both an in- and out-neighbour contributes
-/// \f$i_L-i_R\f$, which maps back to the diagonal fill \f$x_iy_i/a\f$ — the lift
-/// handles diagonal and off-diagonal fill in one object.
-///
-/// ### Closed-form marginals again
-///
-/// Writing \f$X = \sum_i x_i\f$, \f$Y = \sum_j y_j\f$, solving the bipartite
-/// Laplacian gives
-/// \f[
-///   R_{\mathrm{eff}}(i_L, j_R)
-///     = a\Big[\tfrac{1}{x_iY} + \tfrac{1}{y_jX} - \tfrac{1}{XY}\Big],
-/// \f]
-/// so with \f$\alpha_i = x_i/X\f$ and \f$\beta_j = y_j/Y\f$,
-/// \f[
-///   p_{ij} = w_{ij}R_{\mathrm{eff}} = \alpha_i + \beta_j - \alpha_i\beta_j
-///          = 1 - (1-\alpha_i)(1-\beta_j) \in [0,1],
-/// \f]
-/// which sums to \f$m + n - 1\f$: the edge count of a spanning tree on the
-/// \f$m+n\f$ duplicated vertices. Reweighting by \f$w_{ij}/p_{ij}\f$ therefore
-/// leaves \f$\mathbb{E}[\widetilde S_v] = xy^{T}/a\f$, the exact LU Schur update.
-///
-/// The walk simplifies too: \f$P(i_L \to j_R) = y_j/Y\f$ and
-/// \f$P(j_R \to i_L) = x_i/X\f$, neither depending on where it currently is, so
-/// tree sampling is a bipartite coupon collector alternating two fixed
-/// distributions.
-///
-/// ### Restriction
-///
-/// The conductance reading needs \f$x_i, y_j, a > 0\f$ — a nonsymmetric M-matrix
-/// or directed Laplacian. Under general signed LU the "conductances" go negative
-/// and none of the above applies. Callers are responsible for that check; this
-/// routine returns without emitting anything if it is violated.
-///
-/// Note also that unbiasedness is weaker here than in the symmetric case. mat
-/// Chernoff bounds for strongly Rayleigh measures are Hermitian results, so they
-/// say nothing about \f$\|\widetilde S_v - S_v\|\f$ concentrating for a
-/// nonsymmetric update. Whether this makes a good preconditioner is an empirical
-/// question, not one the expectation settles.
+/// Eliminating pivot `v` leaves the rank-one Schur update \f$xy^{T}/a\f$, with
+/// \f$x_i = -A_{iv}\f$, \f$y_j = -A_{vj}\f$ and \f$a = A_{vv}\f$. Each in-neighbour becomes
+/// \f$i_L\f$ and each out-neighbour \f$j_R\f$ of a bipartite graph with conductances
+/// \f$x_iy_j/a\f$. Edge \f$i_L j_R\f$ enters the tree with probability
+/// \f$p_{ij} = 1 - (1-\alpha_i)(1-\beta_j)\f$, where \f$\alpha_i = x_i/X\f$ and
+/// \f$\beta_j = y_j/Y\f$, and reweighting by \f$w_{ij}/p_{ij}\f$ gives
+/// \f$\mathbb{E}[\widetilde S_v] = xy^{T}/a\f$. It requires \f$x_i, y_j, a > 0\f$, as in a
+/// nonsymmetric M-matrix; otherwise nothing is emitted. The derivation is on the structures page.
 ///
 /// @param x Incoming conductances, all strictly positive.
 /// @param y Outgoing conductances, all strictly positive.

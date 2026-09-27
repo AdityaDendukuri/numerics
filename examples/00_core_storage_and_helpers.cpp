@@ -83,7 +83,7 @@ int main() {
     const bool symmetric = linear::is_symmetric(A);
     const bool positive_definite = linear::is_spd(A);
     const auto checked_spd = linear::make_spd(A);
-    const auto assumed_spd = linear::assume_spd(A);
+    const auto assumed_spd = num::assume_spd(A);
 
     // Selection and probability helpers replace common application loops.
     const idx largest = argmax(std::span<const real>(diag.data(), diag.size()));

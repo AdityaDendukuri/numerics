@@ -1,13 +1,8 @@
 /// @file ode/implicit.hpp
-/// @brief Implicit time integration via a user-supplied linear_solver.
+/// @brief Fixed-step backward Euler through a user-supplied linear_solver.
 ///
-/// advance(u, solver, params)          -- fixed-step backward Euler, no
-/// observer advance(u, solver, params, obs)     -- same, with step callback
-///
-/// The field type is constrained by the vec_field concept (ode/concepts.hpp):
-/// any object exposing .as_vec() -> vec& works (vec itself, scalar_field_2d,
-/// scalar_field_3d, ...). This keeps ode/ independent of the fields/ module while
-/// supporting all types.
+/// `advance(u, solver, params)` and `advance(u, solver, params, obs)`, the latter with a step
+/// callback. The field is any `vec_field`, meaning anything with `.as_vec()`.
 /// @todo Add Crank-Nicolson, BDF2, and IMEX step drivers with explicit mass
 /// matrix/operator hooks.
 #pragma once

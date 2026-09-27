@@ -27,7 +27,7 @@ concept categorical_sampling = std::uniform_random_bit_generator<G> && requires(
 /// callable reports the change rather than the total, which is what makes a sweep
 /// cost \f$O(1)\f$ per site instead of \f$O(N)\f$.
 template <class F, class T = real>
-concept energy_difference = scalars::field<T> && requires(F &&delta_e, idx site) {
+concept energy_difference = field<T> && requires(F &&delta_e, idx site) {
     { delta_e(site) } -> std::convertible_to<T>;
 };
 

@@ -74,13 +74,13 @@ namespace detail {
 // The (operator x algorithm) dispatch, run in place into u (warm-startable).
 // cg()/gmres()/minres()/pcg() are themselves overloaded on the operand type.
 
-inline solver_result run(const linear::spd_mat<mat> &A, const vec &b, vec &u,
+inline solver_result run(const with_law<mat, law::spd> &A, const vec &b, vec &u,
                         const cg_method &a) {
     return cg(A, b, u, a.tol, a.max_iter);
 }
 
 template <class Op>
-requires spd_operator<Op, vec, vec> solver_result run(const Op &A, const vec &b, vec &u,
+requires spd_operator<Op, vec> solver_result run(const Op &A, const vec &b, vec &u,
                                                           const cg_method &a) {
     return cg(A, b, u, a.tol, a.max_iter);
 }
@@ -94,27 +94,26 @@ inline solver_result run(const spmat &A, const vec &b, vec &u, const gmres_metho
 }
 
 template <class Op>
-requires math::endomorphism_on<Op, vec> solver_result run(const Op &A, const vec &b, vec &u,
+requires math::linear_operator<Op, vec, vec> solver_result run(const Op &A, const vec &b, vec &u,
                                                            const gmres_method &a) {
     return gmres(A, b, u, a.tol, a.max_iter, a.restart);
 }
 
 template <class Op>
-requires math::endomorphism_on<Op, vec> &&claims<Op, law::self_adjoint>
+requires math::self_adjoint_operator<Op, vec>
     solver_result run(const Op &A, const vec &b, vec &u, const minres_method &a) {
     return minres(A, b, u, a.tol, a.max_iter);
 }
 
 template <class Op, class M>
-requires math::endomorphism_on<Op, vec> &&math::endomorphism_on<M, vec> &&
-    claims<Op, law::spd> &&claims<M, law::spd>
+requires math::spd_operator<Op, vec> && math::spd_operator<M, vec>
         solver_result run(const Op &A, const vec &b, vec &u, const pcg_method<M> &a) {
     return pcg(A, a.preconditioner, b, u, a.tol, a.max_iter);
 }
 
 template <class Op, class M, class Subspace>
-requires math::linear_subspace_of<Subspace, vec> &&math::endomorphism_on<Op, vec> &&
-    math::endomorphism_on<M, vec> &&claims<Op, law::spd_on<Subspace>> &&
+requires math::linear_subspace_of<Subspace, vec> &&math::linear_operator<Op, vec, vec> &&
+    math::linear_operator<M, vec, vec> &&claims<Op, law::spd_on<Subspace>> &&
         claims<M, law::spd_on<Subspace>>
             solver_result run(const Op &A, const vec &b, vec &u, const pcg_on_method<M, Subspace> &a) {
     return pcg(A, a.preconditioner, b, u, a.subspace,

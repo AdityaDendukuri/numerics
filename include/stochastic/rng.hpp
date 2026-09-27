@@ -7,12 +7,8 @@ namespace num {
 
 /// @name Random engines
 ///
-/// Consumers declare a generator far more often than they care which engine it
-/// is, and every `std::mt19937` they spell is one more place to touch if the
-/// default ever changes. These aliases name the library's default engines so the
-/// choice lives here and nowhere else. They are plain aliases: `num::rng` *is*
-/// `std::mt19937`, accepted unchanged by every standard distribution and by
-/// every generic `RNG` parameter in this library.
+/// The library's default engines, named once here. They are plain aliases: `num::rng` is
+/// `std::mt19937`.
 /// @{
 
 /// @brief The default 32-bit engine, used wherever a sampler takes a generator.

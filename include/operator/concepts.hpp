@@ -1,21 +1,8 @@
 /// @file operator/concepts.hpp
-/// @brief Container-facing entry points to the operator half of the hierarchy.
-///
-/// The operator concepts — `linear_operator`, `normal_operator`, `self_adjoint_operator`,
-/// `psd_operator`, `spd_operator`, `skew_adjoint_operator`, `unitary_operator`,
-/// `projection_operator` — are defined once in `core/math/concepts.hpp`, where they are
-/// generic over the domain and codomain and depend on nothing but the standard library.
-/// They are re-exported into `num`, so `num::spd_operator` is that one definition.
-///
-/// This header used to define a parallel copy of that chain, parameterized on
-/// `X = vec, Y = vec`. It no longer does: the hierarchy takes its domain and codomain
-/// from the operator's own associated types, so `num::spd_operator<Op>` already means what
-/// the copy meant, and `num::spd_operator<Op, vec, vec>` still pins them explicitly.
-///
-/// What is left here is what genuinely needs the container tier.
+/// @brief Operator concepts that need the container tier. The rest are in
+/// `core/math/concepts.hpp`.
 #pragma once
 
-#include "algebra/properties.hpp"
 #include "container/concepts.hpp"
 #include "container/vector.hpp"
 #include "core/math/concepts.hpp"

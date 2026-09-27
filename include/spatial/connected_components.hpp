@@ -1,19 +1,5 @@
 /// @file spatial/connected_components.hpp
 /// @brief Iterative BFS connected-component labelling.
-///
-/// connected_components(n_sites, in_cluster, neighbors)
-///
-/// Template parameters:
-///   InCluster  callable: bool(int i)        -- true if site i is in the
-///   cluster Neighbors  callable: void(int i, F&& f) -- calls f(nb) for each
-///   neighbor nb of i
-///
-/// Returns cluster_result where id[i] is:
-///   -2  = excluded (in_cluster returned false)
-///   >=0 = cluster index
-///
-/// cluster_result::largest_id and largest_size track the biggest connected
-/// component.
 #pragma once
 
 #include "core/types.hpp"
@@ -36,13 +22,13 @@ struct cluster_result {
     }
 };
 
-/// BFS connected-component labelling with pre-allocated flat queue (no heap per
-/// call).
+/// @brief Label connected components by BFS over one flat queue.
 ///
-/// @param n_sites   Total number of sites
-/// @param in_cluster  bool(int i) -- include site i?
-/// @param neighbors   void(int i, auto&& visit) -- call visit(nb) per neighbor
-/// of i
+/// @param n_sites    Total number of sites
+/// @param in_cluster bool(int i): include site i?
+/// @param neighbors  void(int i, auto&& visit): call visit(nb) per neighbor of i
+/// @return id[i] is -2 for an excluded site and the cluster index otherwise; also the
+///         cluster sizes and the largest cluster.
 template <typename InCluster, typename Neighbors>
 cluster_result connected_components(int n_sites, InCluster &&in_cluster, Neighbors &&neighbors) {
     cluster_result res;

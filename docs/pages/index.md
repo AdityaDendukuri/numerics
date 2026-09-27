@@ -48,7 +48,7 @@ auto laplacian = num::operators::make_op(
         apply_fd_laplacian(u, Lu, N);
     }, N * N);
 
-auto spd_L = num::operators::assume_spd(laplacian);
+auto spd_L = num::assume_spd(laplacian);
 num::vec u(N * N, 0.0);
 num::cg(spd_L, rhs, u, 1e-8);
 ```

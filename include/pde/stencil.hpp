@@ -108,31 +108,18 @@ void laplacian_stencil_2d_4th(const basic_vec<T> &x, basic_vec<T> &y, int N) {
     }
 }
 
-/// Bilinear interpolation on a periodic NxN grid with configurable stagger
-/// offset.
+/// Bilinear interpolation on a periodic NxN grid with a stagger offset.
 ///
-/// field[i,j] is defined at physical position ((i + ox/h)*h, (j + oy/h)*h).
-/// Returns the interpolated field value at physical point (px, py).
+/// field[i,j] sits at physical position (i*h + ox, j*h + oy). On a MAC grid, u takes
+/// (ox, oy) = (0, h/2) and v takes (h/2, 0).
 ///
 /// @param field Flattened grid samples.
 /// @param N Grid width and height.
 /// @param h Grid spacing.
 /// @param px Physical x coordinate.
 /// @param py Physical y coordinate.
-/// @param ox  x-axis origin offset in physical units (0 for unstaggered, h/2
-/// for v-face)
-/// @param oy  y-axis origin offset in physical units (0 for unstaggered, h/2
-/// for u-face)
-///
-/// MAC grid usage:
-/// \f[
-///   \text{interp\_u}(px,py) = \texttt{sample\_2d\_periodic}(u, N, h,\; px,
-///   py,\; 0,\; h/2)
-/// \f]
-/// \f[
-///   \text{interp\_v}(px,py) = \texttt{sample\_2d\_periodic}(v, N, h,\; px,
-///   py,\; h/2,\; 0)
-/// \f]
+/// @param ox x offset in physical units.
+/// @param oy y offset in physical units.
 inline real sample_2d_periodic(const vec &field, idx N, real h, real px, real py, real ox,
                                real oy) {
     real fx = std::fmod((px - ox) / h, static_cast<real>(N));

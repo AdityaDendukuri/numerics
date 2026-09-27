@@ -1,22 +1,8 @@
 /// @file container/matrix_expr.hpp
 /// @brief Value-returning dense arithmetic, and opt-in operators built on it.
 ///
-/// Numerics' primary kernels write into caller-provided buffers so that no
-/// allocation happens inside a simulation loop.  That remains the default.  The
-/// functions here are the convenience tier above them: each returns its result
-/// and checks conformance, which the out-parameter forms cannot do because the
-/// caller has already sized the output.
-///
-/// Operators live in the nested `num::ops` namespace and are therefore opt-in.
-/// Ordinary lookup does not find them until a translation unit asks:
-///
-/// ```cpp
-/// using namespace num::ops;
-/// const vec r = y - Z * q;
-/// ```
-///
-/// Prefer the out-parameter forms in hot loops; prefer these where the code is
-/// stating a formula and clarity is worth one temporary.
+/// Each function returns its result and checks conformance. The operators sit in `num::ops`,
+/// so they need `using namespace num::ops;`. Prefer the out-parameter forms in hot loops.
 #pragma once
 
 #include "container/matrix.hpp"

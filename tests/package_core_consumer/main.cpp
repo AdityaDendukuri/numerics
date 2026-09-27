@@ -2,15 +2,7 @@
 
 #include <vector>
 
-namespace num::math {
-
-template <>
-struct claims_of<std::vector<double>> {
-    using type = type_list<law::inner_product_space>;
-};
-
-} // namespace num::math
-
+// A standard container is a space by its operations alone; nothing is declared.
 static_assert(num::math::inner_product_space<std::vector<double>>);
 
 int main() {

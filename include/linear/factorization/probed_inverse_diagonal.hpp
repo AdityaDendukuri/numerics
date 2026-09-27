@@ -29,7 +29,6 @@ namespace detail {
 /// applied without forming either the product or its square root.
 class preconditioned_symmetric_operator final {
   public:
-    using math_laws = math::type_list<law::linear_map>;
     using domain_type = vec;
     using codomain_type = vec;
 
@@ -53,35 +52,17 @@ class preconditioned_symmetric_operator final {
 
 } // namespace detail
 
-/// @brief Estimate \f$\operatorname{diag}(A^{-1})\f$ for a nonsingular M-matrix
-/// by Gaussian probing, without extracting one column per entry.
+/// @brief Estimate \f$\operatorname{diag}(A^{-1})\f$ for a nonsingular M-matrix from one block
+/// of Gaussian probes, without one solve per entry.
 ///
-/// Reading the inverse diagonal exactly costs one solve per index, which is the
-/// whole cost of a sparse factorization repeated n times. This instead writes
-/// each entry as a squared row norm and estimates every entry from one shared
-/// block of right-hand sides.
+/// A diagonal similarity makes the symmetric part positive definite, so each entry is a
+/// squared row norm, estimated without bias by the probe mean square. The derivation is in the
+/// linear algebra page, section 1.
 ///
-/// Two solves give \f$q = A^{-1}\mathbf{1}\f$ and \f$r = A^{-T}\mathbf{1}\f$,
-/// both positive because A is a nonsingular M-matrix. Scaling by
-/// \f$D = \operatorname{Diag}(\sqrt{r_j/q_j})\f$ makes the symmetric part
-/// \f$S\f$ of \f$\tilde{A} = DAD^{-1}\f$ positive definite, and a diagonal
-/// similarity leaves the inverse diagonal alone, so
-/// \f$\operatorname{diag}(\tilde{A}^{-1}S\tilde{A}^{-T}) = \operatorname{diag}(A^{-1})\f$.
-/// Writing \f$S = \tilde{K}\tilde{S}\tilde{K}^{T}\f$ for an approximate Cholesky
-/// factor makes that matrix a Gram matrix, so entry j is
-/// \f$\|\delta_j^{T}\tilde{A}^{-1}\tilde{K}\tilde{S}^{1/2}\|_2^2\f$ and the
-/// row-wise mean square over Gaussian probes is unbiased for it.
-///
-/// Each row of the probed block is chi-square with `probes` degrees of freedom,
-/// so the estimate concentrates multiplicatively and stays positive.
-///
-/// @param factor A retained factorization of `matrix`, used for the two solves
-///        and, in the general case, for applying \f$\tilde{A}^{-1}\f$.
+/// @param factor A retained factorization of `matrix`.
 /// @param matrix The nonsingular M-matrix A, in CSR form.
-/// @param symmetrizer When A is similar to a symmetric matrix through
-///        \f$\operatorname{Diag}(\sqrt{\pi})\f$, pass \f$\sqrt{\pi}\f$ and the
-///        scaling above is replaced by that similarity, which needs no solves
-///        and lets the square root be applied in inverse form. Leave empty
+/// @param symmetrizer \f$\sqrt{\pi}\f$ when A is similar to a symmetric matrix through
+///        \f$\operatorname{Diag}(\sqrt{\pi})\f$, which saves the two scaling solves. Empty
 ///        otherwise.
 /// @param options Probe count, Krylov depth, tolerance, and seed.
 /// @throws std::invalid_argument If no probes are requested.
@@ -137,7 +118,7 @@ template <retained_factorization F>
     const grounded_approx_chol_factor approximate = grounded_approxchol_factor(
         laplacian, gao_kyng_spielman_2023::ac2, options.seed ^ 0x9e3779b9U);
     const auto preconditioned =
-        operators::assume_spd(detail::preconditioned_symmetric_operator(laplacian, approximate));
+        num::assume_spd(detail::preconditioned_symmetric_operator(laplacian, approximate));
 
     // The general case applies A~^-1 to each probe; the reversible case reaches
     // the same operator through the inverse square root and needs no extra factor.

@@ -6,19 +6,9 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// This file has no dependencies outside the standard library beyond
-/// kernel/vector.hpp, whose macro block and NUM_K_* prefix it reuses: copy the
-/// two into another project as-is, or lift a single routine out of it. Please
-/// keep the two attribution lines above with whatever you take.
-///
-/// Split out of `dense.hpp`/`factor.hpp` because `<complex>` is by far the
-/// heaviest thing the kernel tier would otherwise pull: on libc++ it costs
-/// ~95k preprocessed lines on its own — more than doubling the rest of the
-/// tier combined — and drags the whole iostream/locale machinery with it, which
-/// a freestanding or embedded target may not even have. Real-valued work (the
-/// common case for a vendored kernel) now pays none of that; complex callers
-/// include this header and opt in. `kernel/kernel.hpp` includes it, so nothing
-/// changes for callers who take the umbrella.
+/// Depends only on kernel/vector.hpp. Keep the two attribution lines above with whatever you
+/// copy. Kept apart from the real kernels because `<complex>` costs about 95k preprocessed
+/// lines on libc++; `kernel/kernel.hpp` still includes it.
 #pragma once
 
 #include "kernel/vector.hpp"
@@ -48,12 +38,8 @@ NUM_K_AINLINE void matvec_real_complex(std::complex<T> *NUM_K_RESTRICT x, const 
     }
 }
 
-/// @brief Mixed transpose product \f$x = Q^T y\f$ with a real matrix and complex result.
-///
-/// The transpose companion to `matvec_real_complex`. Projecting a right-hand side
-/// onto a real orthonormal basis produces complex coordinates when the right-hand
-/// side is complex, and real ones widened to complex when it is not, so the input
-/// scalar is a separate parameter.
+/// @brief Mixed transpose product \f$x = Q^T y\f$ with a real matrix and complex result. The
+/// input scalar is a separate parameter, so `y` may be real or complex.
 ///
 /// @param x Output, length n.
 /// @param Q Real matrix, m*n row-major.
@@ -77,15 +63,10 @@ NUM_K_AINLINE void matvec_transpose_into_complex(std::complex<T> *NUM_K_RESTRICT
 
 // Shifted Hessenberg resolvent
 
-/// @brief Factor \f$sI - H\f$ in place for an upper Hessenberg \f$H\f$.
+/// @brief Factor \f$sI - H\f$ in place for an upper Hessenberg \f$H\f$, in \f$O(n^2)\f$.
 ///
-/// Gaussian elimination needs to clear only one subdiagonal entry per column, so
-/// this costs \f$O(n^2)\f$ rather than the \f$O(n^3)\f$ of a general LU. That is
-/// what makes a Krylov resolvent affordable: the Hessenberg form is computed once
-/// and each shift factors cheaply on top of it.
-///
-/// Partial pivoting compares the diagonal against the single subdiagonal entry,
-/// since no other entry in the column can be larger.
+/// Only one subdiagonal entry per column is eliminated, and pivoting compares it against the
+/// diagonal. This makes each shift of a Krylov resolvent cheap.
 ///
 /// @param work  In/out, n*n. Receives \f$sI - H\f$ and its factors.
 /// @param H     Upper Hessenberg matrix, n*n row-major, real.

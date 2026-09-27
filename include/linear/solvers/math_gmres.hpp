@@ -20,9 +20,9 @@ struct gmres_options {
     idx restart = 30;
 };
 
-/// Restarted GMRES over a real inner-product space and certified linear map.
+/// Restarted GMRES for a linear operator on a real inner product space.
 template <class Op, class V>
-requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
+requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&
     std::same_as<math::scalar_t<V>, real> [[nodiscard]] solver_result
     gmres(const Op &A, const V &b, V &x, gmres_options options = {}) {
     const auto dimension = math::dimension(b);
@@ -137,27 +137,16 @@ requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
 
 /// @brief Right-preconditioned restarted GMRES: solves \f$A M^{-1} u = b\f$, \f$x = M^{-1} u\f$.
 ///
-/// Right preconditioning rather than left, because it leaves the residual alone.
-/// Under left preconditioning the Arnoldi process minimises \f$\|M^{-1}(b-Ax)\|\f$,
-/// so the quantity the stopping test sees is not the residual the caller asked
-/// about, and a badly scaled `M` makes the solver stop early or late for reasons
-/// that have nothing to do with the problem. Here `result.residual` remains
-/// \f$\|b - Ax\|_2\f$ throughout.
+/// Right preconditioning keeps `result.residual` equal to \f$\|b - Ax\|_2\f$, so the stopping
+/// test does not depend on the scaling of `M`. `M` need not be symmetric, as with ILU(0).
 ///
-/// The preconditioner carries no symmetry requirement — an ILU(0) is not
-/// self-adjoint even for symmetric `A` — so this takes any linear operator of
-/// matching dimension.
-///
-/// @tparam Op Linear operator type.
-/// @tparam M preconditioner type; only its action is used.
-/// @tparam V vec space type.
 /// @param A System operator.
 /// @param preconditioner Approximate inverse applied on the right.
 /// @param b Right-hand side.
 /// @param x Solution; initial guess on input.
 /// @param options Tolerance, restart length, and iteration limit.
 template <class Op, class M, class V>
-requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::endomorphism_on<M, V> &&
+requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::linear_operator<M, V, V> &&
     std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
     gmres(const Op &A, const M &preconditioner, const V &b, V &x, gmres_options options = {}) {
     const auto dimension = math::dimension(b);

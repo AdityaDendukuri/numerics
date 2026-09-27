@@ -23,7 +23,7 @@ auto A = num::operators::make_op(
     N * N);
 
 num::solver_result info =
-    num::cg(num::operators::assume_spd(A), rhs, sol, 1e-8, 1000);
+    num::cg(num::assume_spd(A), rhs, sol, 1e-8, 1000);
 ```
 
 The operator represents

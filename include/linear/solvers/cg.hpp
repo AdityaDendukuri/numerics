@@ -11,12 +11,11 @@
 #include "container/vector_ops.hpp"
 #include "core/policy.hpp"
 #include "kernel/krylov.hpp"
-#include "linear/concepts.hpp"
-#include "linear/math_adapters.hpp"
 #include "linear/matrix_properties.hpp"
-#include "linear/solvers/math_cg.hpp"
 #include "linear/solvers/solver_result.hpp"
 #include "operator/concepts.hpp"
+#include "linear/math_adapters.hpp"
+#include "linear/solvers/math_cg.hpp"
 #include <algorithm>
 #include <cmath>
 #include <span>
@@ -32,14 +31,8 @@ namespace unsafe {
 
 /// @brief Conjugate gradients on a stored matrix, without requiring the SPD invariant.
 ///
-/// CG minimizes \f$\tfrac12 x^T A x - b^T x\f$, which is bounded below only when
-/// \f$A\f$ is positive definite. On an indefinite matrix the search direction can
-/// have \f$p^T A p \leq 0\f$ and the iteration breaks down; on a non-symmetric one
-/// the Krylov recurrence is invalid from the first step. Neither is reported as an
-/// error, which is why the invariant is normally required.
-///
-/// Runs on the host via `num::accel` (the build's best available backend). For
-/// the GPU path operating on device buffers directly, see `num::unsafe::cuda::cg`.
+/// On an indefinite or non-symmetric matrix the iteration breaks down silently. Runs through
+/// `num::accel`; `num::unsafe::cuda::cg` works on device buffers.
 /// @return `solver_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
 inline solver_result cg(const mat &A, const vec &b, vec &x, real tol = 1e-10,
                        idx max_iter = 1000) {
@@ -133,24 +126,18 @@ inline solver_result cg(const mat &A, const vec &b, vec &x, real tol = 1e-10,
 
 } // namespace unsafe
 
-/// @brief Solve \f$A x = b\f$ using Conjugate Gradients for certified SPD operators.
+/// @brief Solve \f$A x = b\f$ by conjugate gradients for an operator claiming `law::spd`.
 ///
-/// Iteratively minimizes the quadratic form \f$\phi(x) = \frac{1}{2} x^T A x - b^T x\f$ over
-/// the Krylov subspace \f$\mathcal{K}_k(A, r_0)\f$. The operator `A` must carry
-/// compile-time or runtime positive-definite evidence (`law::spd`).
-///
-/// @tparam Op Linear operator type satisfying `math::endomorphism_on<Op, vec>` and carrying SPD evidence.
-/// @param A Symmetric positive-definite linear operator or matrix wrapper (e.g. `num::assume_spd(A)`).
+/// @param A SPD operator, e.g. `num::assume_spd(A)`.
 /// @param b Right-hand side vector.
 /// @param x Solution vector (serves as initial guess on input, updated in place).
-/// @param tolerance Convergence tolerance on Euclidean residual norm \f$\|b - A x\|_2\f$.
-/// @param max_iterations Maximum number of Krylov iterations before termination.
+/// @param tolerance Convergence tolerance on \f$\|b - A x\|_2\f$.
+/// @param max_iterations Maximum number of Krylov iterations.
 /// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
 /// @throws std::invalid_argument If dimensions of `A`, `b`, and `x` do not match.
 /// @see assume_spd, pcg, minres, gmres
 template <class Op>
-requires math::inner_product_space<vec> && math::endomorphism_on<Op, vec> &&
-         claims<Op, law::spd>
+requires math::spd_operator<Op, vec>
 inline solver_result cg(const Op &A, const vec &b, vec &x, real tolerance,
                        idx max_iterations = 1000) {
     return cg(A, b, x, cg_options{.tolerance = tolerance, .max_iterations = max_iterations});

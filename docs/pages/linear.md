@@ -10,19 +10,19 @@ Direct factorizations, iterative Krylov solvers, eigenvalue/SVD routines, banded
 Decomposes square matrix \f$A \in \mathbb{R}^{n \times n}\f$ into \f$P A = L U\f$ with partial pivoting.
 
 ```cpp
-num::lu_result lu(const num::square_matrix_like auto& A);
+num::lu_result lu(const num::mat &A);
 ```
 
 Picks LAPACK (`dgetrf`) if configured, else the in-tree sequential kernel — see
 @ref page_parallel. To force one explicitly: `num::lapack::lu(A)` / `num::seq::lu(A)`.
 
 * **Complexity:** \f$\mathcal{O}(n^3)\f$ time, \f$\mathcal{O}(n^2)\f$ space.
-* **Preconditions:** `A.rows() == A.cols()`. Wrap with `num::assume_square(A)` if untagged.
+* **Preconditions:** `A.rows() == A.cols()`. Wrap with `A` if untagged.
 
 ```cpp
 num::mat A(3, 3, 0.0);
 // fill A...
-num::lu_result factor = num::lu(num::assume_square(A));
+num::lu_result factor = num::lu(A);
 if (factor.singular) {
     // A is singular to machine precision
 }
@@ -48,7 +48,7 @@ num::mat inv = num::lu_inv(factor); // A^{-1}
 Decomposes symmetric positive-definite (SPD) matrix \f$A \in \mathbb{R}^{n \times n}\f$ into \f$A = L L^T\f$.
 
 ```cpp
-num::cholesky_result cholesky(const num::spd_matrix_like auto& A);
+num::cholesky_result cholesky(const num::with_law<num::mat, num::law::spd> &A);
 ```
 
 * **Complexity:** \f$\mathcal{O}(n^3/3)\f$ time, \f$\mathcal{O}(n^2)\f$ space.
@@ -164,7 +164,7 @@ num::banded_solve(A, b, x);
 Computes entries of \f$A^{-1}\f$ without materializing the full inverse.
 
 ```cpp
-auto factor = num::lu(num::assume_square(A));
+auto factor = num::lu(A);
 num::inverse_diagonal_workspace work;
 
 // 1. Diagonal entries diag(A^{-1})
@@ -181,6 +181,27 @@ num::array<num::idx> subset{0, 1};
 num::mat block;
 num::inverse_principal_block(factor, subset, block, work);
 ```
+
+### Probed Inverse Diagonal (M-matrices)
+
+`num::inverse_diagonal(factor, A, symmetrizer, options)` estimates \f$\operatorname{diag}(A^{-1})\f$
+for a sparse nonsingular M-matrix from one block of Gaussian probes, instead of one solve per
+entry.
+
+Two solves give \f$q = A^{-1}\mathbf{1}\f$ and \f$r = A^{-T}\mathbf{1}\f$, both positive. With
+\f$D = \operatorname{Diag}(\sqrt{r_j/q_j})\f$, the symmetric part \f$S\f$ of
+\f$\tilde{A} = DAD^{-1}\f$ is positive definite. A diagonal similarity leaves the inverse
+diagonal unchanged, so \f$\operatorname{diag}(\tilde{A}^{-1}S\tilde{A}^{-T}) = \operatorname{diag}(A^{-1})\f$.
+An approximate Cholesky factorization \f$S = \tilde{K}\tilde{S}\tilde{K}^{T}\f$ makes this a Gram
+matrix. Entry j is then \f$\|\delta_j^{T}\tilde{A}^{-1}\tilde{K}\tilde{S}^{1/2}\|_2^2\f$, and the
+row-wise mean square over Gaussian probes estimates it without bias.
+
+Each row of the probed block is chi-square with `probes` degrees of freedom. The estimate
+therefore concentrates multiplicatively and stays positive.
+
+When A is similar to a symmetric matrix through \f$\operatorname{Diag}(\sqrt{\pi})\f$, passing
+\f$\sqrt{\pi}\f$ as `symmetrizer` replaces the scaling above. That needs no solves, and the
+square root is applied in inverse form.
 
 ---
 
@@ -256,7 +277,7 @@ num::solver_result res = num::pcg(restricted_L, restricted_M, b, x, S,
 Computes all eigenvalues \f$\lambda_i\f$ and eigenvectors \f$v_i\f$ of symmetric \f$A = A^T\f$ via cyclic Jacobi rotations.
 
 ```cpp
-num::eigen_result eig_sym(const num::symmetric_matrix_like auto& A);
+num::eigen_result eig_sym(const num::with_law<num::mat, num::law::self_adjoint> &A);
 ```
 
 ```cpp
@@ -270,7 +291,7 @@ Computes top-\f$k\f$ extremal eigenvalues and Ritz vectors of a symmetric operat
 
 ```cpp
 num::operators::dense_op Aop(A);
-auto sym = num::operators::assume_symmetric(Aop);
+auto sym = num::assume_symmetric(Aop);
 num::lanczos_result res = num::lanczos(sym, /*k=*/4, /*tol=*/1e-10, /*max_iter=*/100);
 ```
 

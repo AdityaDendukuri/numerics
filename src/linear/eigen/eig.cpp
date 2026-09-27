@@ -225,7 +225,7 @@ eigen_result eig_sym(const mat &A) {
 }
 } // namespace lapack
 
-eigen_result eig_sym(const linear::sym_mat<mat> &A, real tol, idx max_sweeps) {
+eigen_result eig_sym(const with_law<mat, law::self_adjoint> &A, real tol, idx max_sweeps) {
 #if defined(NUMERICS_HAS_LAPACK)
     return lapack::eig_sym(A.base());
 #elif defined(NUMERICS_HAS_OMP)
@@ -238,7 +238,7 @@ eigen_result eig_sym(const linear::sym_mat<mat> &A, real tol, idx max_sweeps) {
 namespace unsafe {
 
 eigen_result eig_sym(const mat &A, real tol, idx max_sweeps) {
-    return num::eig_sym(linear::sym_mat<mat>(A), tol, max_sweeps);
+    return num::eig_sym(with_law<mat, law::self_adjoint>(A), tol, max_sweeps);
 }
 
 } // namespace unsafe

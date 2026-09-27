@@ -5,7 +5,7 @@
 #include "cuda/cuda_ops.hpp"
 #include "container/util/aligned_storage.hpp"
 #include "omp/parallel_ops.hpp"
-#include "core/math/models.hpp"
+#include "core/math/laws.hpp"
 #include "core/math/operations.hpp"
 #include "core/types.hpp"
 #include "kernel/kernel.hpp"
@@ -310,17 +310,5 @@ template <std::floating_point T>
     return kernel::norm(data, n);
 }
 
-namespace math {
-
-template <class T>
-requires claims<T, law::field> struct claims_of<basic_vec<T>> {
-    // `hilbert_space`, not merely `inner_product_space`: `norm` here is
-    // sqrt(inner(x, x)), the norm the inner product induces, which is exactly what
-    // separates the two laws. Every Krylov method relies on that identity, so claiming
-    // only the weaker law would leave `hilbert_space<vec>` false.
-    using type = type_list<law::hilbert_space>;
-};
-
-} // namespace math
 
 } // namespace num

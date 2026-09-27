@@ -81,11 +81,11 @@ TEST(Diagnostics, SamplingRunsWhenCompiledInAndThePresetAsksForIt) {
         indefinite(1, 1) = 1.0;
         operators::dense_op op(indefinite);
 
-        EXPECT_THROW(static_cast<void>(operators::assume_spd(op)), std::invalid_argument);
+        EXPECT_THROW(static_cast<void>(num::assume_spd(op)), std::invalid_argument);
 
         // The same claim under `production` is a tag and nothing more.
         set_preset(preset::production);
-        EXPECT_NO_THROW(static_cast<void>(operators::assume_spd(op)));
+        EXPECT_NO_THROW(static_cast<void>(num::assume_spd(op)));
     }
 }
 

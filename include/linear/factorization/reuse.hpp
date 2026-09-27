@@ -31,7 +31,7 @@ namespace detail {
 // Skeel's condition number || |A^{-1}| |A| ||_inf, or infinity for a singular A.
 // Unlike the plain condition number it ignores the scaling of the rows of A.
 inline real skeel_condition(const mat &A) {
-    const lu_result factor = lu(assume_square(A));
+    const lu_result factor = lu(A);
     if (factor.singular) {
         return std::numeric_limits<real>::infinity();
     }

@@ -42,14 +42,13 @@ int main() {
     // 3. Demonstration of Tagged Input via assume_spd(A) -> 100% Warning-Free
     // -------------------------------------------------------------------------
     std::cout << "--- [Case 2: Tagged Invariant Input cholesky(assume_spd(A))] ---\n";
-    std::cout << "Wrapping with assume_spd(A) satisfies spd_matrix_like and runs 100% warning-free:\n";
+    std::cout << "Wrapping with assume_spd(A) makes it an spd_operator and runs 100% warning-free:\n";
 
     auto spd_matrix = assume_spd(A);
 
     // Static concept verification at compile time:
-    static_assert(spd_matrix_like<decltype(spd_matrix)>, "Must satisfy spd_matrix_like concept");
-    static_assert(symmetric_matrix_like<decltype(spd_matrix)>, "Must satisfy symmetric_matrix_like concept");
-    static_assert(square_matrix_like<decltype(spd_matrix)>, "Must satisfy square_matrix_like concept");
+    static_assert(spd_operator<decltype(spd_matrix)>, "assume_spd attaches law::spd");
+    static_assert(self_adjoint_operator<decltype(spd_matrix)>, "spd implies self-adjoint");
 
     auto chol_tagged = cholesky(spd_matrix);
     vec x_tagged(4, 0.0);

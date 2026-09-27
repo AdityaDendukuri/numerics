@@ -1,20 +1,15 @@
 /// @file linear/graph/randommat/preconditioner.hpp
 /// @brief Adapting the ApproxChol factorization to numerics' operator vocabulary.
 ///
-/// The factorization is in `approxchol.hpp` and depends on nothing above `num::structures`,
-/// so it can be lifted out of this project on its own. This header is the part that cannot:
-/// it converts a `num::spmat` Laplacian into the graph the algorithm wants, wraps the
-/// resulting factor in something satisfying `num::preconditioner`, and records the law that
-/// wrapper claims.
-///
-/// The split is what lets one implementation serve both audiences. A caller who wants the
-/// algorithm takes `approxchol.hpp` and the `structures/` tier; a caller inside numerics
-/// takes this and gets a preconditioner that drops into `num::pcg`.
+/// `approxchol.hpp` needs only `num::structures` and can be lifted out alone. This header
+/// converts a `num::spmat` Laplacian to its graph and wraps the factor as a
+/// `num::preconditioner` for `num::pcg`.
 #pragma once
 
 #include "container/vector.hpp"
-#include "core/math/evidence.hpp"
-#include "linear/concepts.hpp"
+#include "linear/matrix_properties.hpp"
+#include "linear/solvers/solver_result.hpp"
+#include "operator/concepts.hpp"
 #include "linear/graph/laplacian.hpp"
 #include "linear/graph/randommat/approxchol.hpp"
 #include "linear/sparse/sparse.hpp"
@@ -33,9 +28,8 @@ class approx_chol_preconditioner final {
     using domain_type = vec;
     using codomain_type = vec;
     // A graph-Laplacian factor is singular on the constant-vector nullspace.
-    // Callers using PCG on a compatible subspace must attach that stronger,
-    // problem-specific evidence explicitly.
-    using math_laws = math::type_list<law::psd>;
+    // PCG on a compatible subspace needs `law::spd_on<S>`, which the caller attaches.
+    using laws = law::list<law::psd>;
 
     /// Construct from an existing factor.
     explicit approx_chol_preconditioner(cholesky_factor<real, idx> factor)
@@ -163,8 +157,7 @@ class grounded_approx_chol_factor final {
     idx n_ = 0;
 };
 
-static_assert(preconditioner<approx_chol_preconditioner>,
-              "approx_chol_preconditioner must satisfy num::preconditioner concept");
+static_assert(linear_operator<approx_chol_preconditioner, vec, vec>);
 
 /// Convert num::basic_graph to randommat::graph.
 template <typename Weight, std::integral Index>
@@ -269,14 +262,6 @@ grounded_approxchol_factor(const spmat &A, Algorithm algorithm, std::uint64_t se
 
 } // namespace randommat
 
-namespace math {
-
-template <>
-struct claims_of<randommat::approx_chol_preconditioner> {
-    using type = type_list<law::linear_map>;
-};
-
-} // namespace math
 
 // Convenience top-level num:: aliases
 using approx_chol_preconditioner = randommat::approx_chol_preconditioner;

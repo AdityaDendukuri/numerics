@@ -430,6 +430,32 @@ num::matvec(D, x, y);   // selected by num::repr::dense_row_major
 num::matvec(S, x, z);   // selected by num::repr::csr
 ```
 
+### Over-aligned storage
+
+The dense containers allocate through `num::make_aligned`, which places the first element on
+a `num::storage_alignment` boundary (64 bytes by default). Plain `new T[n]` guarantees only
+16.
+
+On AArch64/NEON and x86-64/AVX-512, clang emits identical code for the level-1 kernels with
+and without the guarantee. It already prefers the unaligned move forms, which cost nothing on
+an aligned address. The `std::assume_aligned` in `data()` is there for kernels that will need
+it, not for speed today.
+
+The alignment buys three structural properties.
+
+- A vector load never straddles a cache line.
+- Two containers never share a line at their boundaries, so a threaded reduction over
+  adjacent buffers has no false sharing.
+- Aligned SIMD loads, non-temporal stores and pinned host memory registration require it.
+
+It also costs something. The aligned `operator new` bypasses the small-size fast path of
+libc++, which on macOS measured about 4x the latency of plain `new` below a kilobyte. Only
+code that allocates inside a loop sees this.
+
+The guarantee covers the base pointer. `A.data() + j` is aligned only when `j * sizeof(T)`
+is a multiple of `storage_alignment`, so a matrix row starts on a boundary only when its
+stride does. The stride is not padded.
+
 ### Using your own storage
 
 Because the constraint is on the accessors rather than on a type, a matrix the library has
@@ -533,7 +559,6 @@ auto spd = num::linear::assume_spd(A_dense);
 
 ```cpp
 static_assert(num::vector_space<num::vec>);
-static_assert(num::mutable_vector_space<num::vec>);
 static_assert(num::repr::contiguous<num::vec>);
 static_assert(num::matrix_space<num::mat>);
 ```
@@ -565,7 +590,7 @@ num::mat A_dense = num::identity(3);
 num::operators::dense_op op(A_dense);
 static_assert(num::linear_operator<decltype(op)>);
 
-auto spd = num::operators::assume_spd(op); // Sample x^T*A*x when diagnostics are full.
+auto spd = num::assume_spd(op); // Sample x^T*A*x when diagnostics are full.
 static_assert(num::spd_operator<decltype(spd)>);
 ```
 

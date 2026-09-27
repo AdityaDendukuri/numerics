@@ -62,7 +62,7 @@ template <class M>
 pcg_method(const M &) -> pcg_method<M>;
 
 template <class M, class Subspace>
-/// PCG configuration for an operator and preconditioner certified on Subspace.
+/// PCG configuration for an operator and preconditioner claiming `law::spd_on<Subspace>`.
 struct pcg_on_method {
     const M &preconditioner;
     Subspace subspace;

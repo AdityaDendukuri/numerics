@@ -5,14 +5,8 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// Kept out of `kernel/krylov.hpp` (and out of the `kernel/kernel.hpp` umbrella)
-/// so the compute headers never pull `<ostream>`: on libc++ that costs ~38k
-/// preprocessed lines against a 54k baseline, and a freestanding or embedded
-/// target may have no iostreams at all. Nothing in the compute path needs it —
-/// include this header only where you actually want to print a result.
-///
-/// The operator is declared in `num::kernel` so ADL finds it for
-/// `std::cout << result` without a using-declaration.
+/// Separate so the compute headers never pull `<ostream>`. The operator is in `num::kernel`, so
+/// ADL finds it.
 #pragma once
 
 #include "kernel/krylov.hpp"

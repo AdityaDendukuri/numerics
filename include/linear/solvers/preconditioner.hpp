@@ -6,10 +6,11 @@
 
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
-#include "core/math/evidence.hpp"
-#include "core/math/models.hpp"
+#include "core/math/laws.hpp"
 #include "kernel/kernel.hpp"
-#include "linear/concepts.hpp"
+#include "linear/matrix_properties.hpp"
+#include "linear/solvers/solver_result.hpp"
+#include "operator/concepts.hpp"
 #include "linear/sparse/sparse.hpp"
 #include <cmath>
 #include <concepts>
@@ -23,7 +24,7 @@ class jacobi_preconditioner final {
   public:
     using domain_type = vec;
     using codomain_type = vec;
-    using math_laws = math::type_list<law::spd>;
+    using laws = law::list<law::spd>;
 
     /// Take ownership of a precomputed inverse diagonal.
     explicit jacobi_preconditioner(vec inv_diag) : inv_diag_(std::move(inv_diag)) {
@@ -94,11 +95,3 @@ class jacobi_preconditioner final {
 
 } // namespace num
 
-namespace num::math {
-
-template <>
-struct claims_of<jacobi_preconditioner> {
-    using type = type_list<law::linear_map>;
-};
-
-} // namespace num::math

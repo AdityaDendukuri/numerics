@@ -15,7 +15,7 @@ namespace num {
 /// Constructs an orthogonal Arnoldi basis \f$V_m\f$ and solves the projected least-squares
 /// problem \f$\min \| \beta e_1 - \bar{H}_m y \|_2\f$ with Givens plane rotations.
 ///
-/// @tparam Op Linear operator type satisfying `math::endomorphism_on<Op, vec>`.
+/// @tparam Op Linear operator type satisfying `math::linear_operator<Op, vec, vec>`.
 /// @param A General square linear operator (dense, sparse, or matrix-free).
 /// @param b Right-hand side vector.
 /// @param x Solution vector (serves as initial guess on input, updated in place).
@@ -26,7 +26,7 @@ namespace num {
 /// @throws std::invalid_argument If dimensions do not match.
 /// @see cg, minres, pcg
 template <class Op>
-requires math::inner_product_space<vec> &&math::endomorphism_on<Op, vec> inline solver_result
+requires math::linear_operator<Op, vec, vec> inline solver_result
 gmres(const Op &A, const vec &b, vec &x, real tolerance, idx max_iterations = 1000,
       idx restart = 30) {
     return gmres(

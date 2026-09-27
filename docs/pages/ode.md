@@ -125,7 +125,7 @@ Advances parabolic PDE fields via implicit backward Euler solves \f$(I - \Delta 
 ```cpp
 num::spmat A = num::pde::laplacian_sparse_2d(/*N=*/64);
 num::operators::sparse_op op(A);
-auto spd = num::operators::assume_spd(op);
+auto spd = num::assume_spd(op);
 
 num::linear_solver solver = [&](const num::vec& rhs, num::vec& x) {
     return num::cg(spd, rhs, x, 1e-8, 1000);

@@ -1,12 +1,11 @@
 /// @file math_minres.hpp
-/// @brief Generic MINRES constrained by self-adjoint evidence.
+/// @brief Generic MINRES for a self-adjoint operator.
 #pragma once
 
 #include "core/types.hpp"
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
 #include "core/math/concepts.hpp"
-#include "core/math/evidence.hpp"
 #include "linear/factorization/qr.hpp"
 #include "linear/solvers/solver_result.hpp"
 #include <algorithm>
@@ -44,10 +43,9 @@ inline vec minres_projected_solve(const array<real> &alpha, const array<real> &b
 
 } // namespace math_krylov_detail
 
-/// Minimum residual projection for a certified self-adjoint endomorphism.
+/// Minimum residual projection for a self-adjoint operator.
 template <class Op, class V>
-requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&
-    claims<Op, law::self_adjoint> &&
+requires math::inner_product_space<V> &&math::self_adjoint_operator<Op, V> &&
         std::same_as<math::scalar_t<V>, real> [[nodiscard]] solver_result
         minres(const Op &A, const V &b, V &x, minres_options options = {}) {
     const auto n = math::dimension(b);

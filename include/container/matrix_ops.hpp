@@ -1,14 +1,8 @@
 /// @file container/matrix_ops.hpp
 /// @brief Untagged Level-2/3 dense matrix operations: resolve through `num::accel`.
 ///
-/// A caller who wants a specific backend calls it by name — `num::omp::matmul`,
-/// `num::blas::matvec` — directly. These untagged overloads exist only for call
-/// sites that do not care which backend runs.
-///
-/// There is one `matmul` and no tuning knobs beside it: `kernel::gemm` blocks
-/// itself for the register file and the cache, so the `matmul_blocked` /
-/// `matmul_register_blocked` / `matmul_simd` variants that used to sit here are
-/// gone. Each was slower than the kernel now is.
+/// Call a backend by name, such as `num::omp::matmul`, to pick one. `kernel::gemm` blocks
+/// itself, so `matmul` has no tuning variants.
 #pragma once
 
 #include "container/concepts.hpp"
@@ -19,12 +13,9 @@
 #include <algorithm>
 #include <type_traits>
 
-// `blas` and `omp` are included unconditionally. Each degrades to `num::kernel`
-// internally when its library was not configured (see `blas::warn_unavailable`), so the
-// namespace and its functions exist in every build — which is what lets a call site write
-// `num::blas::dot(x, y)` without an `#ifdef` around it, as the docs promise. CUDA is the
-// deliberate exception: it throws rather than silently running on the CPU, and its header
-// needs a device toolkit, so it stays gated.
+// `blas` and `omp` are always included and fall back to `num::kernel` when unconfigured, so
+// `num::blas::dot(x, y)` needs no `#ifdef`. CUDA throws instead and needs a toolkit, so it
+// stays gated.
 #include "blas/matrix_ops.hpp"
 #include "omp/matrix_ops.hpp"
 #if defined(NUMERICS_HAS_CUDA)
@@ -53,14 +44,9 @@ namespace num {
 
 /// @brief \f$y \leftarrow Ax\f$ for any row-major dense matrix.
 ///
-/// Constrained on @ref num::repr::dense_row_major rather than taking `mat`, so a foreign
-/// dense matrix exposing `data()`, `rows()` and `cols()` works with no adapter. `num::mat`
-/// takes the configured backend; anything else takes the kernel, which needs only the
-/// three accessors the concept requires.
-///
-/// The CSR counterpart is declared in `linear/sparse/sparse.hpp` under this same name and
-/// selected by @ref num::repr::csr. The two concepts are disjoint, so there is no
-/// ambiguity and neither header needs the other.
+/// Constrained on @ref num::repr::dense_row_major, so a foreign matrix with `data()`, `rows()`
+/// and `cols()` works. `num::mat` takes the configured backend, anything else the kernel. The
+/// CSR overload in `linear/sparse/sparse.hpp` is selected by the disjoint @ref num::repr::csr.
 template <class M>
 requires repr::dense_row_major<M>
 inline void matvec(const M &A, const vec &x, vec &y) {

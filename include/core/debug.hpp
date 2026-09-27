@@ -51,23 +51,14 @@ inline constexpr diagnostic_preset production = diagnostic_preset::production;
 // The compile-time ceiling
 // -----------------------------------------------------------------------------
 //
-// `NUMERICS_DIAGNOSTICS` bounds what this build can do; the runtime preset selects from
-// what is left. The two answer different questions. The ceiling decides what code exists,
-// the preset decides whether it runs.
+// `NUMERICS_DIAGNOSTICS` decides what checks exist; the runtime preset decides which run.
 //
-//   0  nothing. Every check and probe is discarded at compile time.
-//   1  shape checks. Dimensions, emptiness, finiteness. O(1) or O(n), and worth keeping.
-//   2  property sampling as well. Symmetry, definiteness and linearity probes over random
-//      vectors, which cost O(n^2) in the operator's size.
+//   0  nothing.
+//   1  shape checks: dimensions, emptiness, finiteness.
+//   2  property sampling as well, O(n^2) in the operator size.
 //
-// The default is 2 without NDEBUG and 1 with it. Level 2 is not a Release default because
-// it is not a small cost: attaching an SPD claim to a 1024x1024 operator sampled at about
-// 15 ms against a 1.5 ms conjugate-gradient solve of the same system. A default that
-// makes the assertion ten times more expensive than the work it guards is one that gets
-// measured and blamed on the library.
-//
-// Override it explicitly. `-DNUMERICS_DIAGNOSTICS=2` keeps full sampling in an optimized
-// build, which is what a test suite or a numerically suspicious run wants.
+// The default is 2 without NDEBUG and 1 with it. Sampling an SPD claim on a 1024x1024
+// operator took about 15 ms against a 1.5 ms CG solve, so it is off in Release unless set.
 #if !defined(NUMERICS_DIAGNOSTICS)
 #if defined(NDEBUG)
 #define NUMERICS_DIAGNOSTICS 1

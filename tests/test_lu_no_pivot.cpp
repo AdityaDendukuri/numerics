@@ -39,7 +39,7 @@ mat make_diagonally_dominant(idx n) {
 
 TEST(LUNoPivot, NotSingularOnDiagonallyDominantMatrix) {
     mat A = make_diagonally_dominant(5);
-    const auto factor = factor_no_pivot(assume_square(A));
+    const auto factor = factor_no_pivot(A);
     EXPECT_FALSE(factor.singular);
 }
 
@@ -51,12 +51,12 @@ TEST(LUNoPivot, SolveMatchesPivotedLU) {
         b[i] = static_cast<real>(i + 1);
     }
 
-    const auto factor = factor_no_pivot(assume_square(A));
+    const auto factor = factor_no_pivot(A);
     ASSERT_FALSE(factor.singular);
     vec x(n);
     solve(factor, b, x);
 
-    const auto reference = lu(assume_square(A));
+    const auto reference = lu(A);
     vec x_ref(n);
     lu_solve(reference, b, x_ref);
 
@@ -74,11 +74,11 @@ TEST(LUNoPivot, SolveMultipleRHSMatchesPivotedLU) {
         B(i, 1) = static_cast<real>(n - i);
     }
 
-    const auto factor = factor_no_pivot(assume_square(A));
+    const auto factor = factor_no_pivot(A);
     mat X;
     solve(factor, B, X);
 
-    const auto reference = lu(assume_square(A));
+    const auto reference = lu(A);
     mat X_ref;
     lu_solve(reference, B, X_ref);
 
@@ -97,11 +97,11 @@ TEST(LUNoPivot, SolveTransposeMatchesPivotedLU) {
         b[i] = static_cast<real>(2 * i + 1);
     }
 
-    const auto factor = factor_no_pivot(assume_square(A));
+    const auto factor = factor_no_pivot(A);
     vec x(n);
     solve_transpose(factor, b, x);
 
-    const auto reference = lu(assume_square(A));
+    const auto reference = lu(A);
     vec x_ref(n);
     lu_solve_transpose(reference, b, x_ref);
 
@@ -118,6 +118,6 @@ TEST(LUNoPivot, ReportsSingularOnZeroPivot) {
     A(1, 1) = 2.0;
     A(2, 2) = 3.0;
 
-    const auto factor = factor_no_pivot(assume_square(A));
+    const auto factor = factor_no_pivot(A);
     EXPECT_TRUE(factor.singular);
 }

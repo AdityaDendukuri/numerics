@@ -6,7 +6,9 @@
 #include "container/matrix.hpp"
 #include "container/matrix_expr.hpp"
 #include "kernel/factor.hpp"
-#include "linear/concepts.hpp"
+#include "linear/matrix_properties.hpp"
+#include "linear/solvers/solver_result.hpp"
+#include "operator/concepts.hpp"
 #include "linear/factorization/lu.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/sparse/sparse.hpp"
@@ -129,8 +131,8 @@ class woodbury_solver {
         using namespace ops;
         detail::apply_solve_transpose(*base_, right_, transpose_right_);
         mat reduced_transpose = identity(rank()) + transpose(left_) * transpose_right_;
-        reduced_transpose_ = lu(assume_square(reduced_transpose));
-        reduced_ = lu(assume_square(transpose(reduced_transpose)));
+        reduced_transpose_ = lu(reduced_transpose);
+        reduced_ = lu(transpose(reduced_transpose));
         if (reduced_transpose_.singular || reduced_.singular) {
             throw std::runtime_error("the Woodbury correction is singular");
         }

@@ -49,7 +49,7 @@ site picks one.
 | Tier | Module | Responsibilities | Dependencies |
 | :--- | :--- | :--- | :--- |
 | **Tier 0** | `kernel` | Raw compute over pointers (`T*`), dimensions, and callables; zero allocations | *None* (Pure Standard C++20) |
-| **Tier 1** | `core`, `algebra` | scalar fields, vector spaces, property hierarchy, and runtime diagnostic evidence | `kernel` |
+| **Tier 1** | `core`, `algebra` | scalar fields, vector spaces, operator laws, and their runtime probes | `kernel` |
 | **Tier 2** | `container`, `operator` | `vec`, `mat`, `spmat`, matrix-free operators; defines `num::seq` (container-aware wrapper over `num::kernel`) and the untagged `num::` entry points that resolve through `num::accel` | `core`, `algebra`, `kernel` |
 | **Tier 3** | `linear`, `ode`, `pde`, `spectral`, `quadrature`, `roots`, `structures`, `spatial`, `stochastic` | Numerical domain algorithms (factorizations, Krylov solvers, RK45, Verlet, FFT, graph structures) | Tier 0–2 |
 | **Tier 4** | `solve` | Unified problem dispatch (`linear_problem`, `ode_problem`) | All tiers |
@@ -214,7 +214,7 @@ int main() {
 
 Every high-level algorithm in Numerics lowers directly to the Tier-0 raw kernels. There is **exactly one mathematical implementation** for each algorithm in the codebase:
 
-1. **Typed High-Level Layer (`num::cg`, `num::cholesky`):** Enforces C++20 concepts (`spd_operator`, `normed_space`), validates invariants under active diagnostic presets, extracts buffer pointers, and dispatches to the raw kernel.
+1. **Typed High-Level Layer (`num::cg`, `num::cholesky`):** Enforces C++20 concepts (`spd_operator`, `inner_product_space`), validates invariants under active diagnostic presets, extracts buffer pointers, and dispatches to the raw kernel.
 2. **Container Adaptors (`num::mat`, `num::vec`):** Manage contiguous memory lifetimes and provide convenient algebraic syntax.
 3. **Hardware Dispatch:** When BLAS/LAPACK backends are linked, typed wrappers route large matrix operations to vendor GEMM/POTRF microkernels while small matrices and matrix-free operators execute in-tree Tier-0 code.
 
@@ -228,7 +228,7 @@ know about?**
 | You are adding | It goes in | Because |
 | :--- | :--- | :--- |
 | A loop over `T*` and lengths: a new BLAS-like primitive, a factorization step, a stencil apply | `include/kernel/<area>.hpp` | It knows only pointers. Nothing above Tier 0 may be mentioned: no `vec`, no `mat`, no external library, no allocation. |
-| A new concept or property tag (`spd_operator`, `normed_space`) | `include/algebra/` | Tier 1 is where mathematical structure is *stated*; Tier 0 is where it is *computed*. |
+| A new concept or property tag (`spd_operator`, `inner_product_space`) | `include/algebra/` | Tier 1 is where mathematical structure is *stated*; Tier 0 is where it is *computed*. |
 | A container operation on `vec`/`mat` | `include/container/<name>_ops.hpp` | Define it in `num::seq` (the portable path) and, if it needs one, an untagged `num::` forward that resolves through `num::accel`. |
 | A numerical algorithm: a solver, an integrator, a transform | `include/<domain>/` (`linear`, `ode`, `pde`, `spectral`, ...) | Tier 3. It composes containers and concepts; it must not re-implement arithmetic that belongs in `kernel`. |
 | A faster path using an external library | `include/<backend>/<area>_ops.hpp` | A new sibling namespace, matching `num::kernel`'s signatures exactly. Add a CMake target that carries the `NUMERICS_HAS_<X>` define, and give it a `num::seq` fallback so the namespace always compiles. |

@@ -13,7 +13,7 @@
 
 namespace num {
 
-template <scalars::field scalar>
+template <field scalar>
 /// Counting-sorted 3D spatial bins for local-neighbor iteration.
 class cell_list_3d {
   public:

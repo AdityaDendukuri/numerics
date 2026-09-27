@@ -57,11 +57,11 @@ auto proj_M = num::operators::projected(M, S);
 
 ```cpp
 // 1. Tag symmetry / self-adjointness
-auto sym_op = num::operators::assume_symmetric(op);
+auto sym_op = num::assume_symmetric(op);
 static_assert(num::self_adjoint_operator<decltype(sym_op)>);
 
 // 2. Tag positive definiteness (SPD)
-auto spd_op = num::operators::assume_spd(op);
+auto spd_op = num::assume_spd(op);
 static_assert(num::spd_operator<decltype(spd_op)>);
 
 // Solve with CG using tagged operator
@@ -77,7 +77,7 @@ Any struct satisfying `num::linear_operator` can be passed to solvers without in
 
 ```cpp
 struct Custom1DLaplacian {
-    using math_laws = num::math::type_list<num::law::spd>; // the law it claims
+    using laws = num::law::list<num::law::spd>; // the law it claims
     using domain_type = num::vec;                       // the spaces it maps between
     using codomain_type = num::vec;
     num::idx n;

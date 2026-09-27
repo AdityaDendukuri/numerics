@@ -13,7 +13,7 @@ namespace num {
 /// Minimizes the 2-norm of the residual \f$\|b - A x_k\|_2\f$ over the Krylov subspace \f$\mathcal{K}_k(A, r_0)\f$.
 /// Unlike CG, MINRES converges stably on symmetric **indefinite** linear systems.
 ///
-/// @tparam Op Linear operator type satisfying `math::endomorphism_on<Op, vec>` and carrying self-adjoint evidence.
+/// @tparam Op Operator satisfying `num::self_adjoint_operator`.
 /// @param A Symmetric / self-adjoint linear operator (e.g. `num::assume_symmetric(A)`).
 /// @param b Right-hand side vector.
 /// @param x Solution vector (serves as initial guess on input, updated in place).
@@ -23,8 +23,7 @@ namespace num {
 /// @throws std::invalid_argument If dimensions of `A`, `b`, and `x` do not match.
 /// @see cg, gmres, pcg, assume_symmetric
 template <class Op>
-requires math::inner_product_space<vec> &&math::endomorphism_on<Op, vec> &&
-    claims<Op, law::self_adjoint> inline solver_result
+requires math::self_adjoint_operator<Op, vec> inline solver_result
     minres(const Op &A, const vec &b, vec &x, real tolerance, idx max_iterations = 1000) {
     return minres(A, b, x, minres_options{.tolerance = tolerance, .max_iterations = max_iterations});
 }

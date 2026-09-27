@@ -26,7 +26,6 @@ add_executable(numerics_tests
     test_lu_no_pivot.cpp
     test_kernel_reductions.cpp
     test_ode_guards.cpp
-    test_concept_hierarchy.cpp
     test_diagnostics.cpp
     test_law_derivation.cpp
     test_storage_dispatch.cpp
@@ -66,9 +65,6 @@ if(TARGET numerics_io)
     target_compile_definitions(numerics_tests PRIVATE NUMERICS_HAS_JSON=1)
 endif()
 
-# test_concept_hierarchy.cpp parses the headers to assert the shape of the concept graph,
-# so it needs to find them at run time.
-#
 # NUMERICS_DIAGNOSTICS=2 raises the diagnostic ceiling to include property sampling, which
 # an optimized build otherwise leaves out. The suite exists to exercise the checks, so it
 # opts into the strongest configuration regardless of build type.

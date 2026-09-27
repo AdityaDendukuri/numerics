@@ -9,8 +9,9 @@
 #include "kernel/factor.hpp"
 #include "kernel/kernel.hpp"
 #include "lapack/lapack_wrapper.hpp"
-#include "linear/concepts.hpp"
 #include "linear/matrix_properties.hpp"
+#include "linear/solvers/solver_result.hpp"
+#include "operator/concepts.hpp"
 #include "linear/matrix_utils.hpp"
 #include <algorithm>
 #include <cmath>
@@ -34,32 +35,13 @@ struct lu_result {
     }
 };
 
-/// Factor a square matrix carrying a certified square dimension guarantee.
-/// Picks the best available implementation at compile time: LAPACK (`dgetrf`)
-/// if configured, else the in-tree sequential kernel. To force one explicitly,
-/// call `num::lapack::lu`/`num::seq::lu` directly.
+/// @brief Factor \f$PA = LU\f$ with partial pivoting.
+///
+/// Uses LAPACK `dgetrf` above `lapack_factor_threshold` when an optimized LAPACK is configured,
+/// else the in-tree blocked kernel. Call `num::lapack::lu` or `num::seq::lu` to force one.
 /// @return `lu_result`: `.LU` (packed factors), `.piv` (row pivots), `.singular`.
-inline lu_result lu(const linear::sq_mat<mat> &A);
-
-namespace unsafe {
-
-/// @brief Factor \f$PA = LU\f$ without requiring the square-dimension invariant.
-/// @return `lu_result`: `.LU` (packed factors), `.piv` (row pivots), `.singular`.
-inline lu_result lu(const mat &A) {
-    return num::lu(linear::sq_mat<mat>(A));
-}
-
-} // namespace unsafe
-
-/// @brief Rejects an untagged matrix at compile time.
-template <class M>
-    requires matrix_space<M> && (!square_matrix_like<M>)lu_result lu(const M & /*untagged*/) {
-    static_assert(square_matrix_like<M>,
-                  "lu() requires a matrix carrying the square-dimension invariant. "
-                  "Establish it with num::assume_square(A) or num::make_square(A). "
-                  "To bypass the invariant deliberately, call num::unsafe::lu(A).");
-    return {};
-}
+/// @throws std::invalid_argument If `A` is not square.
+inline lu_result lu(const mat &A);
 
 /// @brief Solve \f$Ax=b\f$ from a precomputed \f$PA=LU\f$ factorization.
 void lu_solve(const lu_result &f, const vec &b, vec &x);
@@ -133,15 +115,16 @@ inline lu_result lu(const mat &A) {
 }
 } // namespace lapack
 
-/// Blocked kernel LU up to `lapack_factor_threshold`, LAPACK's dgetrf beyond
-/// it when an optimized LAPACK is configured.
-inline lu_result lu(const linear::sq_mat<mat> &A) {
+inline lu_result lu(const mat &A) {
+    if (A.rows() != A.cols()) {
+        throw std::invalid_argument("lu: matrix must be square");
+    }
 #if defined(NUMERICS_LAPACK_DEFAULT)
-    if (A.base().rows() > lapack_factor_threshold) {
-        return lapack::lu(A.base());
+    if (A.rows() > lapack_factor_threshold) {
+        return lapack::lu(A);
     }
 #endif
-    return seq::lu(A.base());
+    return seq::lu(A);
 }
 
 inline void lu_solve(const lu_result &f, const vec &b, vec &x) {

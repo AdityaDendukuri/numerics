@@ -47,7 +47,7 @@ TEST(Solve, LinearCacheWarmStart) {
     const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
                                                {4.0, 1.0, 1.0, 4.0, 1.0, 1.0, 4.0});
     operators::sparse_op op(A);
-    const auto Aspd = operators::assume_spd(op); // named: must outlive the cache
+    const auto Aspd = num::assume_spd(op); // named: must outlive the cache
     const vec b{1.0, 2.0, 3.0};
 
     auto cache = init(linear_problem{Aspd, b}, cg_method{});

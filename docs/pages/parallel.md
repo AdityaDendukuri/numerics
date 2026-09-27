@@ -95,11 +95,11 @@ and level-2 operations, and the reverse also holds, so each factorization choose
 independently.
 
 ```cpp
-inline lu_result lu(const linear::sq_mat<mat> &A) {
+inline lu_result lu(const mat &A) {
 #if defined(NUMERICS_HAS_LAPACK)
-    return lapack::lu(A.base());
+    return lapack::lu(A);
 #else
-    return seq::lu(A.base());
+    return seq::lu(A);
 #endif
 }
 ```
@@ -131,7 +131,7 @@ num::lu_result ref = num::seq::lu(A);
 num::lu_result fast = num::lapack::lu(A);
 
 // Let the build decide: LAPACK if configured, else seq. The common case.
-num::lu_result f = num::lu(num::assume_square(A));
+num::lu_result f = num::lu(A);
 
 // Force OpenMP for a vector op:
 num::omp::axpy(2.0, x, y);
@@ -143,6 +143,25 @@ num::blas::axpy(2.0, x, y);
 To swap which backend a whole build defaults to, change what's linked, not the
 call sites: link `numerics::blas`/`numerics::omp`/`numerics::cuda` (see
 @ref page_architecture) and `num::accel` re-resolves at the next compile.
+
+### Threaded reductions
+
+`num::omp` follows two rules.
+
+A thread never runs a scalar loop. A single accumulator per thread brings back the
+loop-carried dependency that the raw kernels break, so eight threads reach about what one
+core reaches at full throughput. Each thread takes a block and calls the raw kernel on it.
+
+The result does not depend on the thread count. An OpenMP `reduction(+:s)` combines partials
+in an unspecified order, so `OMP_NUM_THREADS=4` and `=8` would give different bits. Each
+block writes its partial to a slot, and the slots are summed in index order. The blocks
+depend on `n` alone.
+
+Below `NUMERICS_PARALLEL_THRESHOLD` elements an operation stays on one thread. Entering a
+parallel region measured about 34 us on macOS libomp with eight threads, against about 6 us
+of work for a 32k-element dot product. At 16k elements threading is an order of magnitude
+slower, so the default errs high. Runtimes with cheaper team startup, typically libgomp on
+Linux, should set a lower value.
 
 ---
 

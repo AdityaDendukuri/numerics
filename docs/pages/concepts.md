@@ -1,17 +1,19 @@
-# Concepts, Invariants & Diagnostics {#page_concepts}
+# Concepts, Laws & Diagnostics {#page_concepts}
 
-Concepts express two kinds of requirement. **Structure** the compiler decides. **Laws** the
-caller asserts and a probe samples.
+Concepts express two kinds of requirement. **Structure** is decided by the compiler from the
+operations a type provides. **Laws** are properties the compiler cannot decide, so a type
+declares them and a probe samples them.
 
 ```cpp
-// Structure is syntax, so a requires-clause settles it outright.
+// Structure: the operations settle it.
 static_assert( num::vector_space<num::vec>);
-static_assert(!num::vector_space<std::vector<int>>);   // integers are a ring, not a field
+static_assert( num::vector_space<std::vector<double>>);
+static_assert(!num::vector_space<std::vector<int>>);   // int is not a field
 
-// A law cannot be read off a type. The caller states it.
+// A law: the caller states it.
 num::mat A = num::identity(4);
-auto op  = num::operators::dense_op(A);                // claims law::linear_map, nothing more
-auto sym = num::operators::assume_symmetric(op);       // now claims law::self_adjoint
+auto op  = num::operators::dense_op(A);        // a linear operator, claiming nothing
+auto sym = num::assume_symmetric(op);          // now claims law::self_adjoint
 static_assert(!num::self_adjoint_operator<decltype(op)>);
 static_assert( num::self_adjoint_operator<decltype(sym)>);
 ```
@@ -20,23 +22,13 @@ static_assert( num::self_adjoint_operator<decltype(sym)>);
 
 ## All concepts
 
-Grouped by what each describes. Every one is a structural requirement the compiler
-decides, a law the caller asserts, or a conjunction of the two, and every one refines
-another.
-
-### Laws
-
-These require a *claim* about the type they constrain -- a property a runtime probe
-could falsify, carried in the type via @ref num::claims.
+### Scalars, spaces and operators
 
 <div class="sym-index">
-<div class="kidx-group"><span class="kidx-title">Scalars</span><br/><span class="kidx-syms"><a href="conceptnum_1_1scalar.html">scalar</a> &ndash; <a href="conceptnum_1_1math_1_1field.html">field</a> &ndash; <a href="conceptnum_1_1differentiable__function.html">differentiable_function</a> &ndash; <a href="conceptnum_1_1scalar__function.html">scalar_function</a></span></div><div class="kidx-group"><span class="kidx-title">Spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1additive__group.html">additive_group</a> &ndash; <a href="conceptnum_1_1math_1_1vector__space.html">vector_space</a> &ndash; <a href="conceptnum_1_1math_1_1normed__space.html">normed_space</a> &ndash; <a href="conceptnum_1_1math_1_1inner__product__space.html">inner_product_space</a> &ndash; <a href="conceptnum_1_1math_1_1hilbert__space.html">hilbert_space</a> &ndash; <a href="conceptnum_1_1math_1_1mutable__vector__space.html">mutable_vector_space</a> &ndash; <a href="conceptnum_1_1math_1_1contiguous__vector.html">contiguous_vector</a> &ndash; <a href="conceptnum_1_1math_1_1linear__subspace__of.html">linear_subspace_of</a></span></div><div class="kidx-group"><span class="kidx-title">Maps and operators</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1linear__map.html">linear_map</a> &ndash; <a href="conceptnum_1_1math_1_1linear__operator.html">linear_operator</a> &ndash; <a href="conceptnum_1_1math_1_1adjointable__linear__operator.html">adjointable_linear_operator</a> &ndash; <a href="conceptnum_1_1math_1_1endomorphism.html">endomorphism</a> &ndash; <a href="conceptnum_1_1math_1_1endomorphism__on.html">endomorphism_on</a> &ndash; <a href="conceptnum_1_1math_1_1nonlinear__operator.html">nonlinear_operator</a> &ndash; <a href="conceptnum_1_1sparse__convertible.html">sparse_convertible</a></span></div><div class="kidx-group"><span class="kidx-title">Operator laws</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1normal__operator.html">normal_operator</a> &ndash; <a href="conceptnum_1_1math_1_1self__adjoint__operator.html">self_adjoint_operator</a> &ndash; <a href="conceptnum_1_1math_1_1psd__operator.html">psd_operator</a> &ndash; <a href="conceptnum_1_1math_1_1spd__operator.html">spd_operator</a> &ndash; <a href="conceptnum_1_1math_1_1projection__operator.html">projection_operator</a> &ndash; <a href="conceptnum_1_1math_1_1skew__adjoint__operator.html">skew_adjoint_operator</a> &ndash; <a href="conceptnum_1_1math_1_1unitary__operator.html">unitary_operator</a> &ndash; <a href="structnum_1_1law_1_1diagonally__dominant.html">law::diagonally_dominant</a></span></div><div class="kidx-group"><span class="kidx-title">Matrices</span><br/><span class="kidx-syms"><a href="conceptnum_1_1matrix__space.html">matrix_space</a> &ndash; <a href="conceptnum_1_1mutable__matrix__space.html">mutable_matrix_space</a> &ndash; <a href="conceptnum_1_1square__matrix__like.html">square_matrix_like</a> &ndash; <a href="conceptnum_1_1symmetric__matrix__like.html">symmetric_matrix_like</a> &ndash; <a href="conceptnum_1_1psd__matrix__like.html">psd_matrix_like</a> &ndash; <a href="conceptnum_1_1spd__matrix__like.html">spd_matrix_like</a> &ndash; <a href="conceptnum_1_1triangular__factor.html">triangular_factor</a></span></div><div class="kidx-group"><span class="kidx-title">Claims and evidence</span><br/><span class="kidx-syms"><a href="conceptnum_1_1claims.html">claims</a> &ndash; <a href="conceptnum_1_1math_1_1law__tag.html">law_tag</a> &ndash; <a href="conceptnum_1_1math_1_1proposition.html">proposition</a></span></div><div class="kidx-group"><span class="kidx-title">Solvers and preconditioners</span><br/><span class="kidx-syms"><a href="conceptnum_1_1direct__factorization.html">direct_factorization</a> &ndash; <a href="conceptnum_1_1preconditioner.html">preconditioner</a> &ndash; <a href="conceptnum_1_1symmetric__preconditioner.html">symmetric_preconditioner</a> &ndash; <a href="conceptnum_1_1spd__preconditioner.html">spd_preconditioner</a></span></div><div class="kidx-group"><span class="kidx-title">Spectral</span><br/><span class="kidx-syms"><a href="conceptnum_1_1unitary__transform.html">unitary_transform</a></span></div>
+<div class="kidx-group"><span class="kidx-title">Scalars</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1field.html">field</a> &ndash; <a href="conceptnum_1_1scalar__function.html">scalar_function</a> &ndash; <a href="conceptnum_1_1differentiable__function.html">differentiable_function</a></span></div><div class="kidx-group"><span class="kidx-title">Spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1vector__space.html">vector_space</a> &ndash; <a href="conceptnum_1_1math_1_1inner__product__space.html">inner_product_space</a> &ndash; <a href="conceptnum_1_1math_1_1linear__subspace__of.html">linear_subspace_of</a></span></div><div class="kidx-group"><span class="kidx-title">Operators</span><br/><span class="kidx-syms"><a href="conceptnum_1_1math_1_1linear__operator.html">linear_operator</a> &ndash; <a href="conceptnum_1_1math_1_1self__adjoint__operator.html">self_adjoint_operator</a> &ndash; <a href="conceptnum_1_1math_1_1psd__operator.html">psd_operator</a> &ndash; <a href="conceptnum_1_1math_1_1spd__operator.html">spd_operator</a> &ndash; <a href="conceptnum_1_1sparse__convertible.html">sparse_convertible</a></span></div><div class="kidx-group"><span class="kidx-title">Matrices</span><br/><span class="kidx-syms"><a href="conceptnum_1_1matrix__space.html">matrix_space</a></span></div><div class="kidx-group"><span class="kidx-title">Laws</span><br/><span class="kidx-syms"><a href="conceptnum_1_1claims.html">claims</a> &ndash; <a href="classnum_1_1with__law.html">with_law</a> &ndash; <a href="structnum_1_1law_1_1self__adjoint.html">law::self_adjoint</a> &ndash; <a href="structnum_1_1law_1_1psd.html">law::psd</a> &ndash; <a href="structnum_1_1law_1_1spd.html">law::spd</a> &ndash; <a href="structnum_1_1law_1_1diagonally__dominant.html">law::diagonally_dominant</a></span></div>
 </div>
 
-### Interfaces
-
-These require operations to exist. The compiler settles them outright;
-there is nothing for a probe to falsify.
+### Other interfaces
 
 <div class="sym-index">
 <div class="kidx-group"><span class="kidx-title">Storage layout</span><br/><span class="kidx-syms"><a href="conceptnum_1_1repr_1_1contiguous.html">contiguous</a> &ndash; <a href="conceptnum_1_1repr_1_1dense__row__major.html">dense_row_major</a> &ndash; <a href="conceptnum_1_1repr_1_1csr.html">csr</a> &ndash; <a href="conceptnum_1_1repr_1_1banded.html">banded</a> &ndash; <a href="conceptnum_1_1repr_1_1tridiagonal.html">tridiagonal</a></span></div><div class="kidx-group"><span class="kidx-title">Discrete structures</span><br/><span class="kidx-syms"><a href="conceptnum_1_1concepts_1_1equivalence__relation.html">equivalence_relation</a> &ndash; <a href="conceptnum_1_1concepts_1_1incidence__structure.html">incidence_structure</a> &ndash; <a href="conceptnum_1_1concepts_1_1weighted__incidence.html">weighted_incidence</a> &ndash; <a href="conceptnum_1_1concepts_1_1addressable__priority__queue.html">addressable_priority_queue</a> &ndash; <a href="conceptnum_1_1linear_1_1laplacian__graph.html">laplacian_graph</a></span></div><div class="kidx-group"><span class="kidx-title">Index spaces</span><br/><span class="kidx-syms"><a href="conceptnum_1_1square__extent__2d.html">square_extent_2d</a> &ndash; <a href="conceptnum_1_1cartesian__index__space__2d.html">cartesian_index_space_2d</a> &ndash; <a href="conceptnum_1_1periodic__neighbourhood__2d.html">periodic_neighbourhood_2d</a></span></div><div class="kidx-group"><span class="kidx-title">Fields and grids</span><br/><span class="kidx-syms"><a href="conceptnum_1_1scalar__field__like.html">scalar_field_like</a> &ndash; <a href="conceptnum_1_1solvable__field.html">solvable_field</a></span></div><div class="kidx-group"><span class="kidx-title">Ordinary differential equations</span><br/><span class="kidx-syms"><a href="conceptnum_1_1vec__field.html">vec_field</a> &ndash; <a href="conceptnum_1_1is__ode__problem.html">is_ode_problem</a> &ndash; <a href="conceptnum_1_1is__symplectic__ode__problem.html">is_symplectic_ode_problem</a> &ndash; <a href="conceptnum_1_1is__ode__stepper.html">is_ode_stepper</a></span></div><div class="kidx-group"><span class="kidx-title">Partial differential equations</span><br/><span class="kidx-syms"><a href="conceptnum_1_1grid__stencil.html">grid_stencil</a> &ndash; <a href="conceptnum_1_1assemblable__grid__operator.html">assemblable_grid_operator</a> &ndash; <a href="conceptnum_1_1field__stepper.html">field_stepper</a></span></div><div class="kidx-group"><span class="kidx-title">Spatial acceleration</span><br/><span class="kidx-syms"><a href="conceptnum_1_1position__accessor__2d.html">position_accessor_2d</a> &ndash; <a href="conceptnum_1_1neighbor__query__2d.html">neighbor_query_2d</a> &ndash; <a href="conceptnum_1_1smoothing__kernel.html">smoothing_kernel</a></span></div><div class="kidx-group"><span class="kidx-title">Stochastic</span><br/><span class="kidx-syms"><a href="conceptnum_1_1categorical__sampling.html">categorical_sampling</a> &ndash; <a href="conceptnum_1_1energy__difference.html">energy_difference</a></span></div><div class="kidx-group"><span class="kidx-title">Quadrature</span><br/><span class="kidx-syms"><a href="conceptnum_1_1quadrature__rule.html">quadrature_rule</a> &ndash; <a href="conceptnum_1_1contour__rule.html">contour_rule</a></span></div><div class="kidx-group"><span class="kidx-title">Spectral</span><br/><span class="kidx-syms"><a href="conceptnum_1_1transform__plan.html">transform_plan</a></span></div><div class="kidx-group"><span class="kidx-title">Statistics</span><br/><span class="kidx-syms"><a href="conceptnum_1_1streaming__accumulator.html">streaming_accumulator</a> &ndash; <a href="conceptnum_1_1moment__accumulator.html">moment_accumulator</a></span></div><div class="kidx-group"><span class="kidx-title">Root finding</span><br/><span class="kidx-syms"><a href="conceptnum_1_1bracketable__function.html">bracketable_function</a></span></div><div class="kidx-group"><span class="kidx-title">Problem dispatch</span><br/><span class="kidx-syms"><a href="conceptnum_1_1is__explicit__ode__alg.html">is_explicit_ode_alg</a> &ndash; <a href="conceptnum_1_1is__mcmc__alg.html">is_mcmc_alg</a></span></div>
@@ -46,62 +38,40 @@ there is nothing for a probe to falsify.
 
 ## 1. The hierarchy
 
-Each concept is the one above it equipped with one more operation, or carrying one more law.
-
 ```
-field<T>                  + - * /, 0, 1
- └ additive_group<V>      dimension, zero_like, copy
-    └ vector_space<V>     + scale, axpy                  ── law::vector_space
-       └ normed_space<V>  + norm                         ── law::normed_space
-          └ inner_product_space<V>  + inner              ── law::inner_product_space
-             └ hilbert_space<V>     ‖x‖² = ⟨x,x⟩         ── law::hilbert_space
-
-linear_map<Op>            domain and codomain are spaces ── law::linear_map
- └ linear_operator<Op>    + apply, rows, cols
-    └ endomorphism<Op>    domain == codomain             ── law::endomorphism
-       └ normal_operator          AA* = A*A              ── law::normal
-          ├ self_adjoint_operator     A = A*             ── law::self_adjoint
-          │  └ psd_operator             ⟨x,Ax⟩ ≥ 0       ── law::psd
-          │     ├ spd_operator            ⟨x,Ax⟩ > 0     ── law::spd
-          │     └ projection_operator     P = P* = P²    ── law::projection
-          ├ skew_adjoint_operator     A = −A*            ── law::skew_adjoint
-          └ unitary_operator          A*A = I            ── law::unitary
+field<T>                         floating point, real or complex
+vector_space<V>                  dimension, zero_like, scale, axpy over a field
+ └ inner_product_space<V>        + inner, norm
+linear_operator<Op, X, Y>        apply, rows, cols between vector spaces
+ └ self_adjoint_operator<Op, V>  + claims law::self_adjoint
+    └ psd_operator<Op, V>        + claims law::psd
+       └ spd_operator<Op, V>     + claims law::spd
 ```
 
-The stronger concept implies every weaker one, with nothing restated:
+A space is anything the operations `num::math::dimension`, `zero_like`, `scale`, `axpy`,
+`inner` and `norm` accept. Each operation calls a `tag_invoke` overload when the type has
+one, and otherwise loops over `v[i]`. So `std::vector<double>` is an inner product space
+with no declaration.
+
+Linearity has no law. It is a precondition of `linear_operator`, in the way `std::regular`
+states requirements the compiler cannot check. A law exists only where an algorithm depends
+on it:
+
+| law | implies | required by |
+| :--- | :--- | :--- |
+| `law::self_adjoint` | | `minres`, `lanczos`, `eig_sym` |
+| `law::psd` | `self_adjoint` | graph Laplacians, before a subspace restriction |
+| `law::spd` | `psd` | `cg`, `pcg`, `cholesky`, `sqrt_lanczos` |
+| `law::diagonally_dominant` | | `jacobi`, `gauss_seidel` |
+| `law::spd_on<S>` | `psd_on<S>`, `self_adjoint_on<S>` | `pcg` on the subspace `S` |
+
+A stronger law derives from the weaker ones, so one claim satisfies every weaker concept:
 
 ```cpp
-// num::vec carries an inner product, so it satisfies everything below that.
-static_assert(num::hilbert_space<num::vec>);
-static_assert(num::inner_product_space<num::vec>);
-static_assert(num::normed_space<num::vec>);
-static_assert(num::vector_space<num::vec>);
-static_assert(num::additive_group<num::vec>);
-
-// One law in, every weaker concept out.
-num::mat A = num::identity(4);
-auto spd   = num::operators::assume_spd(num::operators::dense_op(A));
+auto spd = num::assume_spd(num::operators::dense_op(A));
 static_assert(num::spd_operator<decltype(spd)>);
-static_assert(num::psd_operator<decltype(spd)>);           // implied
-static_assert(num::self_adjoint_operator<decltype(spd)>);  // implied
-static_assert(num::normal_operator<decltype(spd)>);        // implied
-static_assert(num::linear_operator<decltype(spd)>);        // implied
-```
-
-The laws are partially ordered by implication. That order has meets but no joins.
-
-```cpp
-namespace L = num::law;
-
-// A projector is positive semidefinite: ⟨x,Px⟩ = ⟨x,P²x⟩ = ‖Px‖² ≥ 0.
-static_assert(std::derived_from<L::projection, L::psd>);
-
-// Every pair has a greatest lower bound...
-static_assert(std::same_as<L::meet_t<L::spd, L::psd>,     L::psd>);
-static_assert(std::same_as<L::meet_t<L::spd, L::unitary>, L::normal>);
-
-// ...but nothing implies both spd and unitary, so there is no least upper bound.
-// The structure is a partial order, not a lattice.
+static_assert(num::psd_operator<decltype(spd)>);
+static_assert(num::self_adjoint_operator<decltype(spd)>);
 ```
 
 Storage layout is described separately, under `num::repr`. Bandedness is a statement about
@@ -115,14 +85,14 @@ static_assert(num::repr::csr<num::spmat>);
 
 ---
 
-## 2. Declaring what a type satisfies
+## 2. Declaring a law
 
-A type you own declares its laws with a member typedef. Implication supplies the rest.
+A type declares the laws it satisfies with a member alias:
 
 ```cpp
 struct custom_1d_laplacian {
-    using math_laws     = num::math::type_list<num::law::spd>;  // the law it claims
-    using domain_type   = num::vec;                             // the spaces it maps between
+    using laws          = num::law::list<num::law::spd>;
+    using domain_type   = num::vec;
     using codomain_type = num::vec;
 
     num::idx n;
@@ -139,33 +109,25 @@ struct custom_1d_laplacian {
 static_assert(num::spd_operator<custom_1d_laplacian>);
 ```
 
-For a type you do not control, attach the claim from outside:
+A type may declare several laws, including incomparable ones such as `spd` and
+`diagonally_dominant`. `num::claims<T, L>` is true when `T` declares `L` or a law that
+implies it.
+
+A value whose type you do not control gets a law from `num::assume` instead; see section 4.
+
+### A declared law must be impossible to violate
+
+A declaration is a promise about every instance, and nothing checks it. It is sound only
+when no violating instance can be built. Every declaration in the library earns its law in
+one of three ways.
+
+A constructor can reject the bad inputs:
 
 ```cpp
-namespace num::math {
-template <> struct claims_of<third_party_matrix> {
-    using type = type_list<law::self_adjoint>;
-};
-}
-```
-
-A type never acquires a law from its syntax. `std::string` defines `operator+` and is not a
-vector space.
-
-### A declared law must be unconstructible to violate
-
-Declaring `math_laws` is an unconditional promise about *every* instance, and nothing
-checks it. It is sound only when the type makes a violating instance impossible to build.
-There are three ways to achieve that, and every claim in the library uses one:
-
-**A closing constructor** rejects the bad inputs, at a cost proportional to the structure:
-
-```cpp
-// jacobi_preconditioner: SPD because a non-positive diagonal cannot get past the ctor.
-// O(n), against the O(n^2) sampled probe a general assume_spd would run.
+// SPD because a non-positive diagonal cannot get past the constructor.
 class positive_diagonal {
   public:
-    using math_laws = num::math::type_list<num::law::spd>;
+    using laws = num::law::list<num::law::spd>;
 
     explicit positive_diagonal(num::vec d) : d_(std::move(d)) {
         for (const num::real value : d_) {
@@ -177,264 +139,173 @@ class positive_diagonal {
   private:
     num::vec d_;
 };
-
-// there is no way to build one that is not SPD, so the claim needs no probe
-num::vec good{1.0, 2.0, 3.0};
-positive_diagonal ok(good);
 ```
 
-**A constrained template** rejects the bad operands at compile time:
+A constraint can reject the bad operands:
 
 ```cpp
-// p(A) is positive definite only when A is, so the operand must already carry it.
+// p(A) is positive definite only when A is.
 template <class Op>
-requires math::spd_operator<Op>
+requires num::spd_operator<Op>
 class chebyshev_preconditioner final { /* ... */ };
 ```
 
-**Structure**, where the shape of `apply` leaves nothing to violate — a symmetric stencil
-is self-adjoint whatever its coefficients, and \f$\langle r, L^{-T}L^{-1} r\rangle =
-\lVert L^{-1}r \rVert^2 \ge 0\f$ however \f$L\f$ was built.
-
-The library's claims and what earns each:
+The structure of `apply` can leave nothing to violate. A symmetric stencil is self-adjoint
+whatever its coefficients.
 
 | type | claims | earned by |
 | :--- | :--- | :--- |
-| `jacobi_preconditioner` | `spd` | ctor: every entry positive and finite |
+| `jacobi_preconditioner` | `spd` | constructor: every entry positive and finite |
 | `chebyshev_preconditioner<Op>` | `spd` | `requires spd_operator<Op>` |
-| `backward_euler_2d` | `spd` | ctor: `coeff >= 0`, so \f$1+4c > 4c\f$ and Gershgorin applies |
-| `backward_euler_operator_2d` | `spd` | the same check, in `validated_matrix` |
+| `backward_euler_2d` | `spd` | constructor: `coeff >= 0`, so Gershgorin applies |
+| `backward_euler_operator_2d` | `spd` | the same check |
 | `laplacian_2d` | `self_adjoint` | structure: symmetric 5-point stencil |
-| `basic_vec<T>`, `array<T>` | `hilbert_space` | structure, given `claims<T, law::field>` |
 
-When adding a claim, the question to answer is: *can I write a program that constructs a
-violating instance?* If yes, the claim belongs behind `assume` — where the caller takes
-responsibility and the diagnostics sample it — rather than in `math_laws`.
-
-One claim is a deliberate approximation. `claims_of<double>` reports `law::field`, and
-floating-point addition is not associative, so `double` is not a field. Every numerical
-library makes this assumption; it is recorded here rather than hidden.
+If a program can construct a violating instance, the law belongs behind `num::assume`, where
+the caller takes responsibility and the diagnostics sample it.
 
 ---
 
-## 3. Laws survive operations that preserve them
+## 3. Laws that follow from an operation
 
-A caller who has established that \f$A\f$ is positive definite should not have to establish
-it again for \f$A + A\f$. Each operation below carries its operands' laws forward by a
-theorem, so the conclusion is available to the compiler with no probe and no second
-assertion.
-
-Every rule is stated once, proved once, and applied automatically:
-
-| you write | the result claims | the theorem |
-| :--- | :--- | :--- |
-| `sum(A, B)` | the strongest law **both** carry | \f$\langle x,(A{+}B)x\rangle = \langle x,Ax\rangle + \langle x,Bx\rangle\f$ |
-| `projected(A, S)` | the law restricted to \f$S\f$ | \f$PAx = PAPx\f$ for \f$x \in S\f$ |
-
-### Sum: the meet
-
-\f$A + B\f$ satisfies whatever *both* operands satisfy.
+\f$P_S A\f$ is not self-adjoint, since \f$(P_S A)^* = A P_S \neq P_S A\f$. But \f$P_S A x = P_S
+A P_S x\f$ for \f$x \in S\f$, and \f$P_S A P_S\f$ keeps the law of \f$A\f$ on \f$S\f$.
+`num::operators::projected` carries that law over, so a graph Laplacian can be solved on the
+zero-sum subspace without a second assertion.
 
 ```cpp
-num::mat M = num::identity(4);
-num::mat N = num::identity(4);
-auto a = num::operators::assume_spd(num::operators::dense_op(M));
-auto b = num::operators::assume_spd(num::operators::dense_op(N));
-
-auto s = num::operators::sum(a, b);
-static_assert(num::spd_operator<decltype(s)>);   // derived at compile time, no probe
-
-num::vec rhs(4, 1.0), x(4, 0.0);
-num::cg(s, rhs, x, 1e-12, 100);                  // accepted with nothing re-asserted
-```
-
-Where the operands disagree, the result keeps only their common consequence — never more:
-
-```cpp
-num::mat M = num::identity(4);
-auto spd  = num::operators::assume_spd(num::operators::dense_op(M));
-auto sym  = num::operators::assume_symmetric(num::operators::dense_op(M));
-auto uni  = num::operators::assume_orthogonal(num::operators::dense_op(M));
-auto bare = num::operators::dense_op(M);
-
-// spd + self_adjoint -> self_adjoint: a symmetric operand may be indefinite
-auto with_sym = num::operators::sum(spd, sym);
-static_assert( num::self_adjoint_operator<decltype(with_sym)>);
-static_assert(!num::spd_operator<decltype(with_sym)>);
-
-// spd + unitary -> normal: nothing implies both definiteness and unitarity
-auto with_uni = num::operators::sum(spd, uni);
-static_assert( num::normal_operator<decltype(with_uni)>);
-static_assert(!num::self_adjoint_operator<decltype(with_uni)>);
-
-// spd + nothing -> nothing
-auto with_bare = num::operators::sum(spd, bare);
-static_assert(!num::self_adjoint_operator<decltype(with_bare)>);
-```
-
-### Projection: the law restricted to a subspace
-
-\f$PA\f$ is not self-adjoint globally, since \f$(PA)^* = AP \neq PA\f$. But \f$PAx = PAPx\f$ for
-every \f$x \in S\f$, and \f$PAP\f$ inherits definiteness from \f$A\f$ — which is exactly what a
-`_on<S>` law asserts.
-
-```cpp
-num::mat M = num::identity(4);
-auto a  = num::operators::assume_spd(num::operators::dense_op(M));
+auto a  = num::assume_spd(num::operators::dense_op(M));
 auto pa = num::operators::projected(a, num::space::zero_sum{});
 
 static_assert( num::claims<decltype(pa), num::law::spd_on<num::space::zero_sum>>);
-static_assert(!num::claims<decltype(pa), num::law::spd>);           // correctly refused
-static_assert(!num::claims<decltype(pa), num::law::self_adjoint>);  // correctly refused
+static_assert(!num::claims<decltype(pa), num::law::spd>);
+static_assert(!num::claims<decltype(pa), num::law::self_adjoint>);
 ```
 
-A weaker operand restricts to a weaker law, and an operand claiming nothing restricts to
-nothing:
+A weaker operand gives a weaker restriction, and an operand claiming nothing gives nothing.
+
+Strict diagonal dominance and definiteness are incomparable. \f$\begin{pmatrix} 1 & 0.9 \\
+0.9 & 1\end{pmatrix}\f$ is SPD and not dominant, and a dominant matrix need not be symmetric.
+A routine that accepts either says so with `||`:
 
 ```cpp
-num::mat M = num::identity(4);
-auto sym = num::operators::assume_symmetric(num::operators::dense_op(M));
-auto ps  = num::operators::projected(sym, num::space::zero_sum{});
-static_assert( num::claims<decltype(ps), num::law::self_adjoint_on<num::space::zero_sum>>);
-static_assert(!num::claims<decltype(ps), num::law::psd_on<num::space::zero_sum>>);
-
-auto bare = num::operators::dense_op(M);
-auto pb   = num::operators::projected(bare, num::space::zero_sum{});
-static_assert(!num::claims<decltype(pb), num::law::self_adjoint_on<num::space::zero_sum>>);
+// gauss_seidel converges for strictly diagonally dominant or SPD A.
+num::gauss_seidel(num::assume_diagonally_dominant(A), b, x);
+num::gauss_seidel(num::assume_spd(A), b, y);
 ```
-
-### Reading what was derived
-
-`law::strongest_law_t` reports the conclusion the rules reached:
-
-```cpp
-num::mat M = num::identity(4);
-auto a = num::operators::assume_spd(num::operators::dense_op(M));
-auto b = num::operators::assume_orthogonal(num::operators::dense_op(M));
-
-using conclusion = num::law::strongest_law_t<decltype(num::operators::sum(a, b))>;
-static_assert(conclusion::name == "normal");         // spd meet unitary
-
-```
-
-### Laws that do not compare
-
-Not every pair of laws has one stronger than the other. Strict diagonal dominance and
-definiteness are independent: \f$\begin{pmatrix} 1 & 0.9 \\ 0.9 & 1\end{pmatrix}\f$ is SPD and
-not dominant, and a dominant matrix need not be symmetric.
-
-```cpp
-// their meet is the common ancestor, not either of them
-static_assert(std::same_as<num::law::meet_t<num::law::diagonally_dominant, num::law::spd>,
-                           num::law::endomorphism>);
-```
-
-So a routine accepting either cannot name one law. The ordering on laws is a partial order;
-the *constraint* is ordinary logic and may use `||`:
-
-```cpp
-// gauss_seidel converges for strictly diagonally dominant or SPD A, so it asks for both
-// by name rather than for a single law that covers them
-num::mat A(3, 3, 0.0);
-for (num::idx i = 0; i < 3; ++i) { A(i, i) = 4.0; }
-A(0, 1) = 1.0; A(1, 0) = 1.0; A(1, 2) = 1.0; A(2, 1) = 1.0;
-
-num::vec b{1.0, 2.0, 3.0}, x(3, 0.0), y(3, 0.0);
-num::gauss_seidel(num::assume_diagonally_dominant(A), b, x);   // one arm
-num::gauss_seidel(num::assume_spd(A), b, y);                   // the other
-```
-
-Passing an uncertified matrix is a compile error rather than an iteration that quietly
-returns `converged == false`.
-
-### Where derivation stops
-
-Only unconditional theorems are applied. A congruence \f$P^\top A P\f$ preserves definiteness
-only when \f$P\f$ has full column rank; a product is self-adjoint only when the operands
-commute; \f$A^*A\f$ is definite only when \f$A\f$ has trivial kernel. None of those side
-conditions is decidable from the types, so each stays an explicit assumption you make with
-`assume_*` and the diagnostics sample.
 
 ---
 
-## 4. What the compiler says
+## 4. Attaching a law to a value
 
-Output below is from real compiler and program runs, trimmed to the lines that identify the
-cause.
+`num::with_law<T, L>` owns a matrix or operator `T` and claims `L`. It forwards the shape, the
+entries and the action. A value with a stronger law converts to one with a weaker law, so an
+SPD matrix is accepted where a symmetric one is required.
+
+```cpp
+num::mat A = num::identity(3);
+
+auto claimed  = num::assume_spd(A);              // sampled under the active preset
+auto by_law   = num::assume<num::law::spd>(A);   // the same, naming the law
+auto verified = num::make_spd(A);                // Cholesky, O(n^3); throws on failure
+
+num::eig_sym(verified);                          // spd converts to self_adjoint
+```
+
+| attach | law | checked by | cost |
+| :--- | :--- | :--- | :--- |
+| `assume_symmetric(A)` | `self_adjoint` | sampled \f$\langle x, Ay\rangle = \overline{\langle y, Ax\rangle}\f$ | \f$\mathcal{O}(n^2)\f$ |
+| `assume_psd(A)` | `psd` | sampled \f$\langle x, Ax\rangle \ge 0\f$ | \f$\mathcal{O}(n^2)\f$ |
+| `assume_spd(A)` | `spd` | sampled, plus a power-iteration bound on \f$\lambda_{\min}\f$ | \f$\mathcal{O}(n^2)\f$ |
+| `assume_diagonally_dominant(A)` | `diagonally_dominant` | every row, exactly | \f$\mathcal{O}(n^2)\f$ |
+| `make_symmetric(A)` | `self_adjoint` | every entry, exactly | \f$\mathcal{O}(n^2)\f$ |
+| `make_spd(A)` | `spd` | Cholesky, exactly | \f$\mathcal{O}(n^3)\f$ |
+
+Every `assume` samples linearity and checks squareness as well. Squareness is checked in
+every build, since it costs nothing.
+
+Constructing `with_law<T, L>(value)` directly attaches the law with no check. That is for
+code that has established the law by other means.
+
+---
+
+## 5. What the compiler says
+
+The output below is from real compiler runs, trimmed to the lines that identify the cause.
 
 ### No law claimed
 
 ```cpp
-// DOES NOT COMPILE -- the diagnostic is below.
-num::mat A(3, 3, 1.0);
-num::vec b(3, 1.0), x(3, 0.0);
+// DOES NOT COMPILE
 num::cg(num::operators::dense_op(A), b, x, 1e-10, 100);
 ```
 
 ```
 error: no matching function for call to 'cg'
-cg.hpp:151: note: because 'claims<num::operators::dense_op, law::spd>' evaluated to false
+note: because 'math::spd_operator<num::operators::dense_op, vec>' evaluated to false
+note: because 'psd_operator<num::operators::dense_op, num::basic_vec<double>>' evaluated to false
+note: because 'self_adjoint_operator<num::operators::dense_op, num::basic_vec<double>>' evaluated to false
+note: because 'claims<num::operators::dense_op, law::self_adjoint>' evaluated to false
 ```
 
 ### Law too weak
 
 ```cpp
-// DOES NOT COMPILE -- the diagnostic is below.
-auto sym = num::operators::assume_symmetric(num::operators::dense_op(A));
+// DOES NOT COMPILE
+auto sym = num::assume_symmetric(num::operators::dense_op(A));
 num::cg(sym, b, x, 1e-10, 100);
 ```
 
 ```
 error: no matching function for call to 'cg'
-cg.hpp:151: note: because 'claims<structured_op<dense_op, law::self_adjoint>, law::spd>'
-                  evaluated to false
+note: because 'claims<num::with_law<num::operators::dense_op, num::law::self_adjoint>, law::psd>'
+      evaluated to false
 ```
 
-The wrapper carries its law in its type, so the message shows what was claimed beside what
-was required. `num::minres` accepts this operator; `num::cg` does not.
+The claimed law is in the type, so the message shows it beside the one required. `num::minres`
+accepts this operator.
 
 ### Type outside the hierarchy
 
 ```cpp
-// DOES NOT COMPILE -- the diagnostic is below.
+// DOES NOT COMPILE
 static_assert(num::vector_space<std::vector<int>>);
 ```
 
 ```
 error: static assertion failed
 note: because 'std::vector<int>' does not satisfy 'vector_space'
-concepts.hpp:82: note: because 'std::vector<int>' does not satisfy 'additive_group'
-concepts.hpp:74: note: because 'scalar_t<vector<int>>' (aka 'int') does not satisfy 'field'
+note: because 'scalar_t<std::vector<int>>' (aka 'int') does not satisfy 'field'
 ```
-
-The notes descend the hierarchy to the cause.
 
 ### Spaces not declared
 
 ```cpp
-// DOES NOT COMPILE -- the diagnostic is below.
+// DOES NOT COMPILE
 struct my_op {
-    using math_laws = num::math::type_list<num::law::spd>;
-    // no domain_type / codomain_type
+    using laws = num::law::list<num::law::spd>;
+    // no domain_type or codomain_type
+    /* rows, cols, apply */
 };
 static_assert(num::spd_operator<my_op>);
 ```
 
 ```
-note: because 'psd_operator<my_op, void, void>' evaluated to false
+note: because 'linear_operator<my_op, void, void>' evaluated to false
+note: because 'void' does not satisfy 'vector_space'
 ```
 
-`void, void` is the tell: the spaces defaulted to nothing.
+`void, void` means the spaces were never named.
 
 ### A claim that is false
 
-The compiler checks that a law was *claimed*. Two runtime layers check that it is *true*.
+The compiler checks that a law was claimed. Two runtime layers check that it is true.
 
 ```cpp
-// Compiles; throws at run time. The output is below.
+// Compiles; throws at run time.
 num::mat A(3, 3, 0.0);
 A(0,0) = 2; A(1,1) = 2; A(2,2) = 2; A(0,1) = 5.0; A(1,0) = -5.0;   // not symmetric
-auto spd = num::operators::assume_spd(num::operators::dense_op(A));
+auto spd = num::assume_spd(num::operators::dense_op(A));
 ```
 
 ```
@@ -443,57 +314,21 @@ auto spd = num::operators::assume_spd(num::operators::dense_op(A));
   on probe 0 exceeds tolerance 0.000000, so the operator is NOT self-adjoint.
 ```
 
-`assume_spd` verifies the whole chain beneath `law::spd`, weakest first, so the
-*self-adjointness* probe fires before definiteness is ever considered.
-
-Sampling can miss a violation. The algorithm then catches it:
+`assume_spd` checks the weaker laws first, so the self-adjointness probe fires before
+definiteness is considered. Sampling can miss a violation. The algorithm then catches it:
 
 ```
 caught: cg: positive-definite curvature invariant was violated
 ```
 
-That check costs \f$\mathcal{O}(1)\f$ per iteration against \f$\mathcal{O}(n)\f$ of work,
-and `NDEBUG` does not remove it.
-
----
-
-## 5. Attaching evidence to a value
-
-A law describes a type. Evidence describes a particular matrix.
-
-```cpp
-num::mat A = num::identity(3);
-
-auto claimed   = num::assume_spd(A);              // claim; sampled under the active preset
-auto validated = num::make_spd(A);                // Cholesky, O(n^3); throws on failure
-auto by_law    = num::assume<num::law::spd>(A);   // claim, stated as a law
-auto checked   = num::require<num::law::spd>(A);  // exhaustive, where a validator exists
-```
-
-`assume` records `evidence_origin::assumed`; `require` records `verified`. Both store the
-source location the diagnostics report.
-
-A law that a *rule* produced needs neither, because there is nothing to trust and nothing
-to test: \f$A^*A\f$ is positive semidefinite for every \f$A\f$, so a probe could only
-re-test the proof. Those conclusions live in the type, not as evidence on a value -- see
-section 3.
-
-| Matrix tagger | Operator tagger | Invariant | Cost |
-| :--- | :--- | :--- | :--- |
-| `assume_square(A)` | — | \f$\text{rows} = \text{cols}\f$ | \f$\mathcal{O}(1)\f$ |
-| `assume_symmetric(A)` | `operators::assume_symmetric(op)` | \f$A = A^T\f$ | Sampled |
-| `assume_psd(A)` | `operators::assume_psd(op)` | \f$x^T A x \ge 0\f$ | Sampled |
-| `assume_spd(A)` | `operators::assume_spd(op)` | \f$x^T A x > 0\f$ | Sampled |
-| `assume_banded(A, kl, ku)` | — | Occupancy inside the band | \f$\mathcal{O}(n^2)\f$ |
-| `assume_tridiagonal(...)` | — | Three occupied diagonals | \f$\mathcal{O}(1)\f$ |
-| `assume_sparse_csr(A)` | — | Monotonic offsets, valid indices | \f$\mathcal{O}(\text{nnz})\f$ |
+That check costs \f$\mathcal{O}(1)\f$ per iteration and stays in `NDEBUG` builds.
 
 ---
 
 ## 6. Bypassing enforcement
 
-Each enforced solver has a counterpart under `num::unsafe` that takes an untagged argument
-and reports failure through its return value.
+Each law-gated routine has a counterpart under `num::unsafe` that takes a plain matrix and
+reports failure through its return value.
 
 ```cpp
 num::mat indefinite(2, 2, 0.0);
@@ -503,8 +338,8 @@ indefinite(1, 1) = -1.0;
 auto factor = num::unsafe::cholesky(indefinite);   // factor.success == false, no throw
 ```
 
-Available: `num::unsafe::cholesky`, `num::unsafe::lu`, `num::unsafe::eig_sym`,
-`num::unsafe::cg`, `num::unsafe::lanczos`.
+Available: `num::unsafe::cholesky`, `num::unsafe::eig_sym`, `num::unsafe::cg`,
+`num::unsafe::lanczos`.
 
 ---
 
@@ -515,7 +350,7 @@ decides whether it runs.
 
 | `NUMERICS_DIAGNOSTICS` | Contains | Default in |
 | :--- | :--- | :--- |
-| `0` | nothing; every check and probe discarded | — |
+| `0` | nothing | |
 | `1` | shape checks: dimensions, emptiness, finiteness | builds with `NDEBUG` |
 | `2` | property sampling as well | builds without `NDEBUG` |
 
@@ -526,16 +361,15 @@ ceiling=1   assume_spd =  0.00 ms   cg = 3.38 ms
 ceiling=2   assume_spd = 31.19 ms   cg = 3.39 ms
 ```
 
-At ceiling 1 no `verify_*_sample` symbol is emitted at all. Build with
-`-DNUMERICS_DIAGNOSTICS=2` to keep sampling in an optimized build; this library's own test
-suite does.
+Build with `-DNUMERICS_DIAGNOSTICS=2` to keep sampling in an optimized build. This library's
+own test suite does.
 
 ```cpp
 num::set_preset(num::preset::strict);      // sample every property
 num::set_preset(num::preset::balanced);    // shape and dimension checks only
 num::set_preset(num::preset::production);  // everything off
 
-// A request above the ceiling is clamped, and says so rather than downgrading silently.
+// A request above the ceiling is clamped, and reports it.
 num::set_preset(num::preset::strict);
 if (!num::preset_fully_applied()) {
     // built below the requested level; rebuild with -DNUMERICS_DIAGNOSTICS=2
@@ -549,33 +383,20 @@ if (!num::preset_fully_applied()) {
 
 ---
 
-## 8. Axiom verification suites
-
-These test a type against the axioms of a space over random elements. Use them on a type
-you are adding to the hierarchy.
-
-```cpp
-num::debug::verify_additive_group_axioms<num::vec>(64);
-num::debug::verify_vector_space_axioms<num::vec>(64);
-num::debug::verify_inner_product_axioms<num::cvec>(64);
-num::debug::verify_norm_axioms<num::vec>(64);
-num::debug::verify_hilbert_space_axioms<num::vec>(64);
-```
-
----
-
-## 9. Requirements by routine
+## 8. Requirements by routine
 
 | Routine | Requires | Alternative for weaker input |
 | :--- | :--- | :--- |
-| `num::cholesky` | `num::spd_matrix_like` | `num::lu` |
+| `num::cholesky` | a dense matrix claiming `law::spd` | `num::lu` |
 | `num::cg` | `num::spd_operator` | `num::minres`, `num::gmres` |
 | `num::pcg` | `num::spd_operator` for operator and preconditioner | `num::gmres` |
 | `num::minres` | `num::self_adjoint_operator` | `num::gmres` |
-| `num::gmres` | `num::linear_operator` | — |
-| `num::lu` | `num::square_matrix_like` | `num::qr` |
-| `num::eig_sym` | `num::symmetric_matrix_like` | `num::power_iteration` |
+| `num::gmres` | `num::linear_operator` | |
+| `num::lu` | a square matrix, checked at run time | `num::qr` |
+| `num::eig_sym` | a dense matrix claiming `law::self_adjoint` | `num::power_iteration` |
 | `num::lanczos` | `num::self_adjoint_operator` | `num::power_iteration` |
+| `num::jacobi` | a matrix claiming `law::diagonally_dominant` | `num::gauss_seidel` |
+| `num::gauss_seidel` | `law::diagonally_dominant` or `law::spd` | |
 
 ---
 
@@ -587,4 +408,4 @@ num::debug::verify_hilbert_space_axioms<num::vec>(64);
 
 ## See also
 
-* @ref page_kernel "num::kernel" — the computational half of the library
+* @ref page_kernel "num::kernel", the computational half of the library

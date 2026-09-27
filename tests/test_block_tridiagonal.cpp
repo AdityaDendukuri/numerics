@@ -211,7 +211,7 @@ TEST(BlockTridiagonal, SingleBlockMatchesDenseLU) {
     ASSERT_EQ(factor.blocks(), 1u);
     ASSERT_FALSE(factor.singular());
 
-    const auto reference = num::lu(num::assume_square(problem.dense));
+    const auto reference = num::lu(problem.dense);
     const auto b = make_rhs(problem.size, 12);
     num::vec expected(problem.size, 0.0);
     num::vec actual(problem.size, 0.0);
@@ -228,7 +228,7 @@ TEST(BlockTridiagonal, MultipleBlocksMatchDenseLU) {
     ASSERT_EQ(factor.blocks(), 4u);
     ASSERT_FALSE(factor.singular());
 
-    const auto reference = num::lu(num::assume_square(problem.dense));
+    const auto reference = num::lu(problem.dense);
     const auto b = make_rhs(problem.size, 22);
     num::vec expected(problem.size, 0.0);
     num::vec actual(problem.size, 0.0);
@@ -244,7 +244,7 @@ TEST(BlockTridiagonal, MultipleBlocksMatchDenseLU) {
 TEST(BlockTridiagonal, MatrixSolveMatchesDenseSolve) {
     const auto problem = make_problem({4, 3, 4}, 31);
     const auto factor = num::factor_block_lu(problem.sparse, problem.levels);
-    const auto reference = num::lu(num::assume_square(problem.dense));
+    const auto reference = num::lu(problem.dense);
 
     const auto B = make_rhs_matrix(problem.size, 3, 32);
     num::mat expected;
@@ -288,7 +288,7 @@ TEST(BlockTridiagonal, ManyRightHandSidesAgreeColumnwiseWithSingleSolves) {
 TEST(BlockTridiagonal, TransposeSolveMatchesDenseTransposeSolve) {
     const auto problem = make_problem({3, 5, 2}, 51);
     const auto factor = num::factor_block_lu(problem.sparse, problem.levels);
-    const auto reference = num::lu(num::assume_square(problem.dense));
+    const auto reference = num::lu(problem.dense);
 
     const auto b = make_rhs(problem.size, 52);
     num::vec expected(problem.size, 0.0);
@@ -417,7 +417,7 @@ TEST(BlockTridiagonal, HandlesStronglyUnequalBlockSizes) {
     EXPECT_EQ(factor.block_size(1), 7u);
     EXPECT_EQ(factor.block_size(3), 1u);
 
-    const auto reference = num::lu(num::assume_square(problem.dense));
+    const auto reference = num::lu(problem.dense);
     const auto b = make_rhs(problem.size, 82);
     num::vec expected(problem.size, 0.0);
     num::vec actual(problem.size, 0.0);
@@ -475,7 +475,7 @@ TEST(BlockTridiagonal, HandlesLevelsGivenOutOfOrder) {
     EXPECT_EQ(factor.order[0], 1u);
     EXPECT_EQ(factor.order[1], 3u);
 
-    const auto reference = num::lu(num::assume_square(builder.dense()));
+    const auto reference = num::lu(builder.dense());
     const auto b = make_rhs(6, 101);
     num::vec expected(6, 0.0);
     num::vec actual(6, 0.0);
@@ -494,7 +494,7 @@ TEST(BlockTridiagonal, AppliedToATallBlockMatchesDenseSolveForWoodbury) {
     // with the dense solve entrywise, or K is formed from the wrong operator.
     const auto problem = make_problem({4, 3, 5}, 111);
     const auto factor = num::factor_block_lu(problem.sparse, problem.levels);
-    const auto reference = num::lu(num::assume_square(problem.dense));
+    const auto reference = num::lu(problem.dense);
 
     const num::idx rank = 3;
     const auto U = make_rhs_matrix(problem.size, rank, 112);

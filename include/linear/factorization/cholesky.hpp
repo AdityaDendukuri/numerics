@@ -9,7 +9,9 @@
 #include "kernel/factor.hpp"
 #include "kernel/kernel.hpp"
 #include "lapack/lapack_wrapper.hpp"
-#include "linear/concepts.hpp"
+#include "linear/matrix_properties.hpp"
+#include "linear/solvers/solver_result.hpp"
+#include "operator/concepts.hpp"
 #include <cmath>
 #include <ostream>
 #include <stdexcept>
@@ -34,7 +36,7 @@ cholesky_result cholesky_impl(const mat &A);
 }
 
 /// Factor a matrix whose SPD property has already been established.
-cholesky_result cholesky(const linear::spd_mat<mat> &A);
+cholesky_result cholesky(const with_law<mat, law::spd> &A);
 
 namespace unsafe {
 
@@ -55,9 +57,9 @@ cholesky_result cholesky(const mat &A);
 /// diagnostic rather than to run: a warning can be silenced by an unrelated
 /// `-Wno-` flag, whereas this cannot compile.
 template <class M>
-    requires matrix_space<M> &&
-    (!spd_matrix_like<M>)cholesky_result cholesky(const M & /*untagged*/) {
-    static_assert(spd_matrix_like<M>,
+requires matrix_space<M> && (!claims<M, law::spd>)
+cholesky_result cholesky(const M & /*untagged*/) {
+    static_assert(claims<M, law::spd>,
                   "cholesky() requires a matrix carrying the SPD invariant. "
                   "Establish it with num::assume_spd(A) (asserted, sampled at runtime) or "
                   "num::make_spd(A) (verified exhaustively). "
@@ -129,7 +131,7 @@ inline cholesky_result cholesky_impl(const mat &A) {
 
 } // namespace detail
 
-inline cholesky_result cholesky(const linear::spd_mat<mat> &A) {
+inline cholesky_result cholesky(const with_law<mat, law::spd> &A) {
     return detail::cholesky_impl(A.base());
 }
 

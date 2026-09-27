@@ -22,19 +22,4 @@ concept transform_plan = inner_product_space<V> && requires(const P &plan, const
     plan.execute(in, out);
 };
 
-/// @brief Transform preserving the inner product up to a scale factor.
-///
-/// \f[ \sum_n |x_n|^2 = \frac{1}{N} \sum_k |X_k|^2 \f]
-///
-/// Parseval's identity is a statement about the inner product, which is why the
-/// domain is required to be an inner product space rather than merely indexable.
-/// It is the property that makes a spectral method conserve energy.
-///
-/// Having `execute` is not evidence of it -- a plan that loses energy has exactly the
-/// same interface -- so the plan must claim @ref num::law::unitary, and
-/// `num::spectral::debug::verify_parseval` samples the claim at the configured
-/// diagnostic level. Use @ref num::transform_plan for the interface alone.
-template <class P, class V = cvec>
-concept unitary_transform = transform_plan<P, V> && claims<P, law::unitary>;
-
 } // namespace num

@@ -125,7 +125,7 @@ inline void record_suffix_reuse(suffix_reuse_report *report, const block_layout 
 
 /// Factor a dense unstructured nonsingular M-matrix by no-pivot LU.
 [[nodiscard]] inline no_pivot_lu lu(const mat &R, no_pivot_structure) {
-    no_pivot_lu Z = factor_no_pivot(assume_square(R));
+    no_pivot_lu Z = factor_no_pivot(R);
     if (Z.singular) {
         throw std::runtime_error("lu: matrix is singular");
     }
@@ -134,7 +134,7 @@ inline void record_suffix_reuse(suffix_reuse_report *report, const block_layout 
 
 /// Factor a sparse unstructured nonsingular M-matrix by no-pivot LU.
 [[nodiscard]] inline no_pivot_lu lu(const spmat &R, no_pivot_structure) {
-    no_pivot_lu Z = factor_no_pivot(assume_square(dense(R)));
+    no_pivot_lu Z = factor_no_pivot(dense(R));
     if (Z.singular) {
         throw std::runtime_error("lu: matrix is singular");
     }

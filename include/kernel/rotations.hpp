@@ -5,12 +5,8 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// This file has no dependencies outside the standard library beyond
-/// kernel/vector.hpp, whose macro block and NUM_K_* prefix it reuses: copy the
-/// two into another project as-is, or lift a single routine out of it. Please
-/// keep the two attribution lines above with whatever you take.
-///
-/// Kernels assume non-owning, caller-sized buffers and do not allocate.
+/// Depends only on kernel/vector.hpp, and does not allocate. Keep the two attribution lines
+/// above with whatever you copy.
 #pragma once
 
 #include "kernel/dense.hpp"
@@ -222,11 +218,9 @@ inline void qr_apply_block_left(T *NUM_K_RESTRICT C, idx ldc, idx rows, idx cols
 
 /// @brief Compact Householder QR factorization; reflector tails remain below R's diagonal.
 ///
-/// Blocked: each panel of `qr_block` columns is factored by unblocked
-/// Householder reflections applied only within the panel, then the panel's
-/// reflectors are aggregated into one compact-WY block (`qr_form_block`) and
-/// applied to the trailing columns with two `gemm`s. `tau` receives
-/// `min(m, n)` scalars; `work` holds `qr_workspace(m, n)` elements.
+/// Each panel of `qr_block` columns is aggregated into a compact-WY block and applied to the
+/// trailing columns with two `gemm`s. `tau` receives `min(m, n)` scalars; `work` holds
+/// `qr_workspace(m, n)` elements.
 template <std::floating_point T>
 inline void qr_factor_blocked(T *NUM_K_RESTRICT A, idx lda, idx m, idx n, T *NUM_K_RESTRICT tau,
                               T *NUM_K_RESTRICT work) noexcept {

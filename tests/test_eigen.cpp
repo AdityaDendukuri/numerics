@@ -159,7 +159,7 @@ TEST(Lanczos, TopKEigenvalues) {
     idx n = 50;
     mat A = make_sym(n);
     auto op = operators::make_op([&](const vec &v, vec &w) { matvec(A, v, w); }, n);
-    auto r = lanczos(operators::assume_symmetric(op), 5, 1e-10);
+    auto r = lanczos(num::assume_symmetric(op), 5, 1e-10);
     EXPECT_TRUE(r.converged);
 
     // Compare against Jacobi for top 5 eigenvalues
@@ -181,8 +181,8 @@ TEST(Lanczos, DenseOperator) {
     idx n = 50;
     mat A = make_sym(n);
     operators::dense_op op(A);
-    static_assert(self_adjoint_operator<decltype(operators::assume_symmetric(op))>);
-    auto r = lanczos(operators::assume_symmetric(op), 5, 1e-10);
+    static_assert(self_adjoint_operator<decltype(num::assume_symmetric(op))>);
+    auto r = lanczos(num::assume_symmetric(op), 5, 1e-10);
     EXPECT_TRUE(r.converged);
 
     auto ref = seq::eig_sym(A, 1e-12, 100);
@@ -208,7 +208,7 @@ TEST(Lanczos, InverseSquareRootAction) {
         right_hand_side[j] = static_cast<real>(j + 1);
     }
 
-    const auto result = inverse_sqrt_lanczos(operators::assume_spd(operators::dense_op(A)),
+    const auto result = inverse_sqrt_lanczos(num::assume_spd(operators::dense_op(A)),
                                              right_hand_side, 1e-12, n);
 
     EXPECT_TRUE(result.converged);
@@ -222,7 +222,7 @@ TEST(Lanczos, InverseSquareRootOfZeroVector) {
         A(j, j) = 2.0;
 
     const auto result =
-        inverse_sqrt_lanczos(operators::assume_spd(operators::dense_op(A)), vec(4, 0.0));
+        inverse_sqrt_lanczos(num::assume_spd(operators::dense_op(A)), vec(4, 0.0));
 
     EXPECT_TRUE(result.converged);
     EXPECT_EQ(result.steps, 0u);
@@ -239,7 +239,7 @@ TEST(Lanczos, SquareRootAction) {
     }
 
     const auto result =
-        sqrt_lanczos(operators::assume_spd(operators::dense_op(A)), right_hand_side, 1e-12, n);
+        sqrt_lanczos(num::assume_spd(operators::dense_op(A)), right_hand_side, 1e-12, n);
 
     EXPECT_TRUE(result.converged);
     for (idx j = 0; j < n; ++j)
@@ -251,7 +251,7 @@ TEST(Lanczos, SquareRootOfZeroVector) {
     for (idx j = 0; j < 4; ++j)
         A(j, j) = 2.0;
 
-    const auto result = sqrt_lanczos(operators::assume_spd(operators::dense_op(A)), vec(4, 0.0));
+    const auto result = sqrt_lanczos(num::assume_spd(operators::dense_op(A)), vec(4, 0.0));
 
     EXPECT_TRUE(result.converged);
     EXPECT_EQ(result.steps, 0u);

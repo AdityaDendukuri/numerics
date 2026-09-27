@@ -159,10 +159,8 @@ TEST(MatrixProperties, CheckedConstructorsRejectInvalidInput) {
 }
 
 static_assert(vector_space<vec>);
-static_assert(mutable_vector_space<vec>);
 static_assert(repr::contiguous<vec>);
 static_assert(matrix_space<mat>);
-static_assert(mutable_matrix_space<mat>);
 static_assert(repr::dense_row_major<mat>);
 
 TEST(cg_method, DenseOperator) {
@@ -177,12 +175,12 @@ TEST(cg_method, DenseOperator) {
 
     operators::dense_op op(A);
     static_assert(linear_operator<operators::dense_op>);
-    static_assert(self_adjoint_operator<decltype(operators::assume_symmetric(op))>);
-    static_assert(spd_operator<decltype(operators::assume_spd(op))>);
+    static_assert(self_adjoint_operator<decltype(num::assume_symmetric(op))>);
+    static_assert(spd_operator<decltype(num::assume_spd(op))>);
 
     vec b{1.0, 2.0, 3.0};
     vec x(3, 0.0);
-    solver_result r = cg(operators::assume_spd(op), b, x);
+    solver_result r = cg(num::assume_spd(op), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -231,11 +229,11 @@ TEST(cg_method, SparseOperator) {
 
     operators::sparse_op op(A);
     static_assert(linear_operator<operators::sparse_op>);
-    static_assert(spd_operator<decltype(operators::assume_spd(op))>);
+    static_assert(spd_operator<decltype(num::assume_spd(op))>);
 
     vec b{1.0, 2.0, 3.0};
     vec x(3, 0.0);
-    solver_result r = cg(operators::assume_spd(op), b, x, 1e-10, 100);
+    solver_result r = cg(num::assume_spd(op), b, x, 1e-10, 100);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -273,7 +271,7 @@ TEST(pcg_method, jacobi_preconditioner) {
     vec b{1.0, 2.0, 3.0, 4.0};
     vec x(4, 0.0);
 
-    solver_result r = pcg(operators::assume_spd(op), M, b, x, 1e-10, 100);
+    solver_result r = pcg(num::assume_spd(op), M, b, x, 1e-10, 100);
     EXPECT_TRUE(r.converged);
 
     vec Ax(4);
@@ -298,7 +296,7 @@ TEST(minres_method, SymmetricIndefiniteOperator) {
     vec b{2.0, -2.0, 6.0};
     vec x(3, 0.0);
 
-    solver_result r = minres(operators::assume_symmetric(op), b, x, 1e-10, 10);
+    solver_result r = minres(num::assume_symmetric(op), b, x, 1e-10, 10);
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(x[0], 1.0, 1e-8);
     EXPECT_NEAR(x[1], 2.0, 1e-8);

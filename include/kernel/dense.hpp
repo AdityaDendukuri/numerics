@@ -5,13 +5,8 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// This file has no dependencies outside the standard library beyond
-/// kernel/vector.hpp, whose macro block and NUM_K_* prefix it reuses: copy the
-/// two into another project as-is, or lift a single routine out of it. Please
-/// keep the two attribution lines above with whatever you take.
-///
-/// Kernels assume non-owning, caller-sized, row-major buffers and do not
-/// allocate.
+/// Depends only on kernel/vector.hpp. Kernels take non-owning, caller-sized, row-major
+/// buffers and do not allocate.
 #pragma once
 
 #include "kernel/vector.hpp"
@@ -72,35 +67,9 @@ NUM_K_AINLINE void rotate_columns(T *NUM_K_RESTRICT A, idx lda, idx rows, idx p,
     }
 }
 
-// Dense matrix product.
-//
-// The shape of this is forced by the arithmetic intensity of the operation. A
-// product does O(n^3) work over O(n^2) data, so it is compute-bound in
-// principle, but the textbook i-k-j triple loop does not get anywhere near the
-// machine's peak: each fused multiply-add reads a fresh element of C from
-// memory and writes it straight back, so the loop runs at the rate the store
-// unit and the L1 cache can retire traffic, not at the rate the FMA units can
-// issue. On this tree the plain version sustained ~13 GFLOP/s.
-//
-// Two nested levels of blocking fix that, and nothing else is needed.
-//
-//   Register tile (`mr` x `nr`): the innermost loop holds a small block of C in
-//   vector registers across the entire k sweep. Each element of A loaded is
-//   reused across `nr` columns and each element of B across `mr` rows, so one
-//   pair of loads feeds `mr*nr` FMAs instead of one. The tile is deliberately
-//   sized to about half the architectural vector register file: large enough to
-//   hide FMA latency, small enough that the accumulators are never spilled --
-//   a spilled tile is slower than no tile at all.
-//
-//   Cache panel (`kc`): the k range is cut so the slice of B the tile loop
-//   sweeps (kc x n) stays resident while every row block streams past it.
-//   Without this, a large product re-reads B from DRAM once per row block.
-//
-// Both bounds come from the target's own properties, not from a tuning
-// parameter, so there is nothing for a caller to get wrong. Together they take
-// the same computation to ~2.5x the plain loop, and the summation order per
-// output element is unchanged (still ascending in p), so results are
-// bit-identical to the naive triple loop.
+// Dense matrix product, blocked for the register file and the cache; see @ref gemm_config.
+// The summation order per output element is ascending in p, as in the naive triple loop,
+// so results are bit-identical to it.
 
 namespace detail {
 
@@ -115,23 +84,10 @@ namespace detail {
 
 /// @brief The blocking `gemm` uses on this target, derived at compile time.
 ///
-/// The structure is the Goto/BLIS one: a register-tiled microkernel computing an
-/// `mr x nr` block of C over `kc` inner products, fed from packed copies of A and
-/// B so that it streams contiguous, zero-padded panels rather than strided rows
-/// of the caller's matrices. Three loops around it block for the memory
-/// hierarchy: an `mc x kc` slab of A held in L2, a `kc x nc` panel of B held
-/// across one sweep of that slab, and the `mr x kc` / `kc x nr` slivers the
-/// microkernel touches held in L1.
-///
-/// Only five integers are target-specific, and every one is derived from the
-/// macros in `kernel/vector.hpp`:
-///
-/// | | NEON / SSE2 | AVX2 | AVX-512 |
-/// |---|---|---|---|
-/// | `mr x nr` (double) | 8 x 6 / 6 x 4 | 6 x 8 | 14 x 16 |
-///
-/// which are the shapes BLIS ships for those targets. `kc`, `mc` and `nc` come
-/// from `NUM_K_L1_BYTES`, `NUM_K_L2_BYTES` and `NUM_K_GEMM_PANEL_BYTES`.
+/// The Goto/BLIS structure: an `mr x nr` register-tiled microkernel over `kc` inner
+/// products, fed from packed panels of A and B. `mr` and `nr` come from the vector width
+/// and register count, and `kc`, `mc`, `nc` from `NUM_K_L1_BYTES`, `NUM_K_L2_BYTES` and
+/// `NUM_K_GEMM_PANEL_BYTES`. See the kernel reference page for the per-target shapes.
 template <std::floating_point T>
 struct gemm_config {
 #if defined(NUM_K_VECTOR_EXT)
@@ -151,11 +107,8 @@ struct gemm_config {
 #endif
     /// Columns of the register tile.
     static constexpr idx nr = b_vectors * width;
-    /// Inner-product length per microkernel call. The `kc x nr` B sliver stays
-    /// in L1 across the whole sweep of A tiles, so it gets half of L1; the A
-    /// slivers stream from the L2-resident slab. Capped at 512: on a large L1
-    /// a longer `kc` only shrinks the other two blocks, measured here as a
-    /// loss at n = 256..512 and no gain above.
+    /// Inner-product length per microkernel call: the `kc x nr` B sliver takes half of L1.
+    /// Capped at 512, since a longer `kc` only shrinks the other blocks.
     static constexpr idx kc =
         std::clamp<idx>(detail::round_down((NUM_K_L1_BYTES / 2) / (sizeof(T) * nr), 8), 8, 512);
     /// Rows of the packed A slab: half of L2, at most 1 MiB.
@@ -409,28 +362,12 @@ inline void gemm_strided(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A
     }
 }
 
-/// @brief Per-thread packing storage for the overloads that take no workspace.
-///
-/// The one place in the kernel with storage of its own. It is static and
-/// thread-local rather than heap-allocated, so the routine still never calls
-/// an allocator and is still safe to call from any thread; the cost is
-/// `gemm_config<T>::workspace` elements of TLS per thread that uses it.
 /// @brief Packing storage for the overloads that take no workspace.
 ///
-/// A per-thread static buffer of `gemm_config<T>::workspace` elements: the
-/// one place in the kernel with storage of its own. It never calls an
-/// allocator and is safe to call from any thread; the cost is that many
-/// elements of TLS per thread that uses it. `get()` is the buffer.
-///
-/// One toolchain is the exception. GCC on macOS implements `thread_local`
-/// through emulated TLS, whose control block is a weak symbol in `.data`, and
-/// its Darwin backend then emits other local data in that section (among
-/// them every `std::source_location` record) as an offset from that weak
-/// symbol. Once the linker coalesces the weak copies, each such offset lands
-/// in one translation unit's data, and every caller's source location comes
-/// out as the first unit's. No `thread_local` in a header survives that, so
-/// on that toolchain alone the workspace is allocated per call and freed
-/// when this object goes out of scope.
+/// A per-thread static buffer of `gemm_config<T>::workspace` elements, so the call never
+/// allocates. GCC on macOS is the exception: its emulated `thread_local` corrupts
+/// `std::source_location` records across translation units, so there the workspace is
+/// allocated per call.
 template <std::floating_point T>
 class gemm_scratch {
   public:
@@ -485,9 +422,8 @@ inline void gemm(T *NUM_K_RESTRICT C, const T *NUM_K_RESTRICT A, const T *NUM_K_
     gemm(C, n, A, k, B, n, alpha, beta, m, n, k);
 }
 
-// Packed LU without row pivoting. Suitable for matrices whose structure
-// guarantees nonzero pivots, including the M-matrices used by ELSE.
-/// @brief In-place LU without row pivoting. Returns false if a pivot fell below tolerance.
+/// @brief In-place LU without row pivoting, for matrices such as M-matrices whose pivots
+/// stay nonzero. Returns false if a pivot fell below tolerance.
 template <std::floating_point T>
 [[nodiscard]] inline bool lu_no_pivot(T *A, idx n) noexcept {
     constexpr T tolerance = T(1e-15);
@@ -542,23 +478,12 @@ inline void lu_no_pivot_solve_transpose_multiple(T *X, const T *LU, idx n, idx c
 
 /// @brief Symmetric rank-k update of the lower triangle, `C <- alpha*A*A^T + beta*C`.
 ///
-/// `A` is `rows x columns`; `C` is a row-major `rows x rows` matrix.  Only
-/// `C(i,j)` for `j <= i` is touched, which is the update required by lower
-/// Cholesky and avoids doing work for the implied symmetric half.
-///
-/// Column strips of the triangle: each diagonal block is formed entry by entry
-/// so nothing above the diagonal is written, and the rectangle beneath it is
-/// one `gemm` with `A^T` as the right operand, so the bulk of the work runs at
-/// `gemm` speed.
+/// `A` is `rows x columns` and `C` is row-major `rows x rows`; only `C(i,j)` with `j <= i`
+/// is written. Diagonal blocks are formed entry by entry and the rectangles beneath them
+/// by `gemm`.
 namespace detail {
 
-/// @brief `syrk_lower` over column strips of width `strip`.
-///
-/// Each diagonal block is formed entry by entry when `strip` is the narrow
-/// base width, else by recursion at the base width; the rectangle beneath it
-/// is one `gemm`. Two levels because the base width is what keeps the
-/// entry-wise part negligible, while wide strips are what let `gemm` reuse
-/// its packed A slab.
+/// @brief `syrk_lower` over column strips of width `strip`, recursing at the base width.
 template <std::floating_point T>
 inline void syrk_lower_strips(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda,
                               T alpha, T beta, idx rows, idx columns, idx strip,
@@ -645,9 +570,8 @@ inline void combine_columns(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT V, idx 
 
 /// @brief Modified Gram--Schmidt against row-major basis columns.
 ///
-/// This intentionally retains sequential projection/update ordering; callers
-/// requiring the faster classical block operation use `project_columns` followed
-/// by `combine_columns` and accept its different stability contract.
+/// Keeps the sequential projection order; `project_columns` then `combine_columns` is the
+/// faster classical variant, with weaker stability.
 template <std::floating_point T>
 inline void mgs_columns(T *NUM_K_RESTRICT v, const T *NUM_K_RESTRICT basis, idx ldb, idx rows,
                         idx columns, T *coefficients = nullptr) noexcept {
@@ -714,9 +638,7 @@ NUM_K_AINLINE void trsv_lower(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT L,
     }
 }
 
-/// @brief In-place lower triangular solve.  This is the alias-safe form of
-/// `trsv_lower(x, L, x, n)` and therefore carries no contradictory no-alias
-/// promise.
+/// @brief In-place lower triangular solve, the alias-safe form of `trsv_lower(x, L, x, n)`.
 template <std::floating_point T>
 NUM_K_AINLINE void trsv_lower_inplace(T *x, const T *NUM_K_RESTRICT L, idx n) noexcept {
     for (idx i = 0; i < n; ++i) {

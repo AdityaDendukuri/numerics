@@ -35,7 +35,7 @@ num::solver_result info = num::cg(A, rhs, x); // Accepted directly without assum
 num::spmat A_sp = assemble_spd_matrix();
 num::operators::sparse_op op(A_sp);
 
-auto spd = num::operators::assume_spd(op); // Assertion tag
+auto spd = num::assume_spd(op); // Assertion tag
 num::solver_result info = num::cg(spd, b, x);
 ```
 
@@ -50,8 +50,31 @@ num::spmat A = assemble_spd_matrix();
 num::operators::sparse_op Aop(A);
 
 auto M = num::make_jacobi_preconditioner(A); // M represents M^{-1} action
-num::solver_result info = num::pcg(num::operators::assume_spd(Aop), M, b, x);
+num::solver_result info = num::pcg(num::assume_spd(Aop), M, b, x);
 ```
+
+### Chebyshev polynomial preconditioning
+
+`num::chebyshev_preconditioner` approximates \f$A^{-1}\f$ by the degree-m polynomial that
+minimizes \f$\max_{\lambda \in [\ell, h]} |1 - \lambda p(\lambda)|\f$. It needs only the
+operator's action, so it is the one preconditioner here that works on a matrix-free operator
+built with `num::operators::make_op`. It also uses no global reductions.
+
+A degree-m polynomial improves the condition number by about a factor of m. That is not
+competitive on a second-order elliptic operator, whose condition number grows with the mesh;
+use ApproxChol for SDD systems, or algebraic multigrid. It fits three cases:
+
+- matrix-free operators, which have no entries to factor;
+- moderately conditioned systems, such as mass matrices, shifted or damped operators, and
+  regularized least squares;
+- smoothing the upper spectrum inside a multigrid cycle.
+
+The polynomial is positive definite only when \f$0 < \ell \le \lambda_{\min}\f$ and
+\f$\lambda_{\max} \le h\f$. Bounds that miss part of the spectrum make it indefinite, and PCG
+then loses its monotone error. `num::estimate_largest_eigenvalue` finds \f$h\f$ by power
+iteration. There is no equally cheap estimate of \f$\ell\f$. Take it from the problem's
+physics, from a shift or regularization parameter, or from `num::lanczos`, not from an assumed
+condition number.
 
 ---
 

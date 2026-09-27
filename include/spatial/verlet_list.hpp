@@ -12,7 +12,7 @@
 
 namespace num {
 
-template <scalars::field scalar>
+template <field scalar>
 /// Cached 2D neighbor lists valid until motion consumes half the skin distance.
 class verlet_list_2d {
   public:

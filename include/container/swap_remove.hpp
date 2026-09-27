@@ -17,15 +17,9 @@ struct index_move {
 
 /// @brief Plan the relocations that compact `n` elements after removing some.
 ///
-/// Erasing from the middle of a dense array costs a shift of everything after
-/// it. Swap-remove instead fills each hole with an element from the tail, which
-/// is O(1) per removal but renames the moved elements. This returns exactly
-/// those renames, so several parallel arrays can be compacted consistently and
-/// any index a caller holds can be repaired.
-///
-/// Holes below the surviving length are filled by survivors above it, both taken
-/// in ascending order, so the plan is deterministic and independent of the order
-/// `removed` is given in.
+/// Each hole is filled from the tail, which is O(1) per removal but renames the moved
+/// elements. The returned renames let parallel arrays and held indices follow. Holes and
+/// survivors are taken in ascending order, so the plan ignores the order of `removed`.
 ///
 /// @param n Current number of elements.
 /// @param removed Indices to remove. Must be distinct and less than `n`.

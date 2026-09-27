@@ -3,7 +3,7 @@
 #pragma once
 
 #include "algebra/concepts.hpp"
-#include "algebra/properties.hpp"
+#include "operator/properties.hpp"
 #include "container/vector.hpp"
 #include "core/types.hpp"
 #include "ode/concepts.hpp"

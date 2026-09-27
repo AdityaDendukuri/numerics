@@ -20,7 +20,7 @@ namespace num {
 /// accessor, so positions may live in a struct of arrays, an array of structs,
 /// or a simulation's own particle type.
 template <class A, class Scalar = real>
-concept position_accessor_2d = scalars::field<Scalar> && requires(const A &get_pos, int i) {
+concept position_accessor_2d = field<Scalar> && requires(const A &get_pos, int i) {
     { get_pos(i) } -> std::convertible_to<std::pair<Scalar, Scalar>>;
 };
 
@@ -29,7 +29,7 @@ concept position_accessor_2d = scalars::field<Scalar> && requires(const A &get_p
 /// The contract is a visitor rather than a returned container: `query` calls
 /// `f(j)` for each candidate, so nothing allocates in the inner loop.
 template <class L, class Scalar = real>
-concept neighbor_query_2d = scalars::field<Scalar> &&
+concept neighbor_query_2d = field<Scalar> &&
     requires(const L &list, Scalar px, Scalar py) {
     list.query(px, py, [](int) {});
 };
@@ -40,7 +40,7 @@ concept neighbor_query_2d = scalars::field<Scalar> &&
 /// vanishes beyond \f$r = 2h\f$. Both are properties of the values rather than the
 /// type, and `num::spatial::debug::verify_kernel_normalization` samples them.
 template <class K, class Scalar = float>
-concept smoothing_kernel = scalars::field<Scalar> && requires(Scalar r, Scalar h) {
+concept smoothing_kernel = field<Scalar> && requires(Scalar r, Scalar h) {
     { K::W(r, h) } -> std::convertible_to<Scalar>;
     { K::dW_dr(r, h) } -> std::convertible_to<Scalar>;
 };

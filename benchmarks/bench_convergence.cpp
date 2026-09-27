@@ -56,7 +56,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     const double b_norm = norm(b);
 
     operators::dense_op dense_op{A};
-    operators::spd_op<operators::dense_op> spd_op{dense_op};
+    num::with_law<operators::dense_op, law::spd> spd_op{dense_op};
     auto jacobi = make_jacobi_preconditioner(A);
 
     const idx max_iters = 80;
@@ -202,7 +202,7 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
     operators::dense_op dense_op{A};
     dense_op.apply(x_star, b);
 
-    operators::spd_op<operators::dense_op> spd_op{dense_op};
+    num::with_law<operators::dense_op, law::spd> spd_op{dense_op};
 
     std::vector<double> iters;
     std::vector<double> err_minres, res_minres, err_cg, res_cg;

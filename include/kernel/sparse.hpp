@@ -5,12 +5,8 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// This file has no dependencies outside the standard library beyond
-/// kernel/vector.hpp, whose macro block and NUM_K_* prefix it reuses: copy the
-/// two into another project as-is, or lift a single routine out of it. Please
-/// keep the two attribution lines above with whatever you take.
-///
-/// Kernels assume non-owning, caller-sized buffers and do not allocate.
+/// Depends only on kernel/vector.hpp, and does not allocate. Keep the two attribution lines
+/// above with whatever you copy.
 #pragma once
 
 #include "kernel/vector.hpp"
@@ -22,16 +18,9 @@ namespace num::kernel {
 
 namespace detail {
 
-/// @brief Row length below which `reduce`'s blocked accumulation costs more than
-/// it saves, so a plain running sum wins.
-///
-/// `reduce` splits a range across several vector accumulators and combines them
-/// pairwise at the end. That is a large win on a long run and a pure loss on a
-/// row too short to fill even one accumulator block: the setup and the final
-/// combine still happen, but no lane is ever reused. A five-point stencil — the
-/// single most common sparse pattern there is — has five entries per row, and
-/// measured ~15% slower through `reduce` than through a plain loop. One
-/// accumulator block is the natural cutoff.
+/// @brief Row length below which a plain running sum beats `reduce`'s blocked accumulation.
+/// One accumulator block is the cutoff; a five-point stencil row measured about 15% slower
+/// through `reduce`.
 template <std::floating_point T>
 inline constexpr idx short_row_cutoff = 4 * (NUM_K_VECTOR_BYTES / sizeof(T));
 
@@ -72,15 +61,8 @@ NUM_K_AINLINE void spmv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT val,
 
 // Sparse incomplete factorization
 //
-// ILU(0) computes L and U whose product approximates A while reusing A's own
-// sparsity pattern exactly: no fill-in is admitted, so the factors cost the same
-// storage as the matrix and the whole computation is a rewrite of the value
-// array in place. The unit diagonal of L is implicit, so L's strict lower part
-// and all of U share one array, distinguished by the position of each row's
-// diagonal.
-//
-// These take a caller-supplied `diagonal` index and scratch buffer rather than
-// allocating, in keeping with the rest of this file.
+// ILU(0) keeps A's pattern exactly, so it rewrites the value array in place. L's unit
+// diagonal is implicit, and L's strict lower part shares the array with U.
 
 /// @brief Locate each row's diagonal entry in a CSR pattern.
 ///
@@ -115,15 +97,8 @@ template <std::integral Index>
 
 /// @brief In-place ILU(0) factorization of a CSR value array.
 ///
-/// On success `val` holds the strict lower part of L and the whole of U, sharing
-/// the original pattern; L's diagonal is unit and not stored. The pattern arrays
-/// are untouched.
-///
-/// The inner update needs, for each entry of the pivot row, the matching column
-/// in the current row. Searching for it would make the factorization quadratic
-/// in the row length, so `scratch` holds a column-to-position map for the row
-/// being eliminated: written on entry to the row, cleared on exit, so its state
-/// never leaks between rows.
+/// `scratch` maps columns to positions in the row being eliminated, so matching a pivot row's
+/// column is O(1). It is cleared on exit from each row.
 ///
 /// @param val CSR values, overwritten with the combined factors.
 /// @param row_ptr CSR row offsets, size n+1. Not modified.
@@ -158,9 +133,7 @@ ilu0_factor(T *NUM_K_RESTRICT val, const Index *NUM_K_RESTRICT row_ptr,
             }
             const T multiplier = val[k] / pivot;
             val[k] = multiplier;
-            // Subtract multiplier times the U part of row j, but only where the
-            // column already exists in row i: that restriction is what makes
-            // this ILU(0) rather than a complete factorization.
+            // only columns already in row i: this is what makes it ILU(0)
             for (Index p = diagonal[j] + 1; p < row_ptr[j + 1]; ++p) {
                 const Index target = scratch[col_idx[p]];
                 if (target != unmarked) {
@@ -220,11 +193,8 @@ NUM_K_AINLINE void spmv_axpy(T *NUM_K_RESTRICT y, T alpha, const T *NUM_K_RESTRI
     }
 }
 
-/// @brief CSR sparse matrix times a row-major dense block, `Y <- A*X`.
-///
-/// `X` and `Y` contain `nrhs` contiguous values per matrix row.  Traversing the
-/// right-hand-side dimension innermost amortizes CSR index/value loads and gives
-/// the compiler a regular SIMD loop even though the sparse row itself is irregular.
+/// @brief CSR sparse matrix times a row-major dense block, `Y <- A*X`, with `nrhs` values per
+/// row. The right-hand-side loop is innermost, so it vectorizes.
 template <std::floating_point T, std::integral Index>
 inline void spmm(T *NUM_K_RESTRICT Y, idx ldy, const T *NUM_K_RESTRICT val,
                  const Index *NUM_K_RESTRICT row_ptr, const Index *NUM_K_RESTRICT col_idx,

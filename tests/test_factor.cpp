@@ -63,13 +63,13 @@ vec path_symmetrizer(idx n, real up, real down) {
 vec reference_solve(const mat &R, const vec &b, bool transposed) {
     mat A = transposed ? mat(transpose(R)) : R;
     vec x(b.size(), 0.0);
-    lu_solve(lu(assume_square(A)), b, x);
+    lu_solve(lu(A), b, x);
     return x;
 }
 
 vec exact_inverse_diagonal(const mat &R) {
     const idx n = R.rows();
-    const lu_result Z = lu(assume_square(R));
+    const lu_result Z = lu(R);
     vec diagonal(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         vec column(n, 0.0);

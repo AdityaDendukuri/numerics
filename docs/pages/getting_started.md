@@ -105,7 +105,7 @@ Passing an uncertified general matrix to `num::cg` or `num::cholesky` produces a
 
 ### Attaching Invariant Evidence to General Matrices
 
-When you know from domain physics that a matrix is positive-definite, attach evidence explicitly:
+When you know from domain physics that a matrix is positive-definite, attach the law explicitly:
 
 ```cpp
 num::mat A(3, 3, 0.0);
@@ -153,7 +153,7 @@ auto factor = num::cholesky(num::assume_spd(A));
 num::cholesky_solve(factor, b, x); // Solves A * x = b in O(n^2)
 
 // LU factorization with partial pivoting for general square systems
-auto lu_factor = num::lu(num::assume_square(A));
+auto lu_factor = num::lu(A);
 num::lu_solve(lu_factor, b, x);
 ```
 

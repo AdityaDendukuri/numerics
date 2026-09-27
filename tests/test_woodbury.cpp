@@ -22,9 +22,9 @@ namespace {
 /// a dense pivoted LU. The concept asks only for the four out-parameter solves.
 class dense_base {
   public:
-    explicit dense_base(const mat &A) : n_(A.rows()), factor_(lu(assume_square(A))) {
+    explicit dense_base(const mat &A) : n_(A.rows()), factor_(lu(A)) {
         mat transposed = transpose(A);
-        transpose_factor_ = lu(assume_square(transposed));
+        transpose_factor_ = lu(transposed);
     }
 
     [[nodiscard]] idx size() const { return n_; }
@@ -162,7 +162,7 @@ TEST(WoodburySolver, MatchesAFreshFactorization) {
 
     const vec b = random_vector(n, 43);
     vec expected(n, 0.0);
-    const lu_result fresh = lu(assume_square(current));
+    const lu_result fresh = lu(current);
     lu_solve(fresh, b, expected);
 
     const vec corrected = correction.solve(b);
@@ -184,7 +184,7 @@ TEST(WoodburySolver, MatchesAFreshTransposeFactorization) {
     const vec b = random_vector(n, 53);
     mat transposed = transpose(current);
     vec expected(n, 0.0);
-    lu_solve(lu(assume_square(transposed)), b, expected);
+    lu_solve(lu(transposed), b, expected);
 
     const vec corrected = correction.solve_transpose(b);
     for (idx i = 0; i < n; ++i) {
@@ -210,7 +210,7 @@ TEST(WoodburySolver, CorrectsSeveralRightHandSidesAtOnce) {
         }
     }
     mat expected(n, 3, 0.0);
-    lu_solve(lu(assume_square(current)), rhs, expected);
+    lu_solve(lu(current), rhs, expected);
 
     const mat corrected = correction.solve(rhs);
     for (idx i = 0; i < n; ++i) {
@@ -228,8 +228,8 @@ TEST(WoodburySolver, InverseDiagonalMatchesAFreshInverse) {
 
     // The base diagonal by explicit solves, which is what a caller retains.
     vec base_diagonal(n, 0.0);
-    const lu_result base_factor = lu(assume_square(base));
-    const lu_result current_factor = lu(assume_square(current));
+    const lu_result base_factor = lu(base);
+    const lu_result current_factor = lu(current);
     vec expected_diagonal(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         const vec e = unit_vector(n, i);
@@ -269,13 +269,13 @@ TEST(UpdateInverseRows, MatchesRowsOfAFreshInverseAndItsSquare) {
     const array<idx> carried{1, 4, 6};
 
     // Rows of the base inverse and its square, which the caller holds already.
-    const lu_result base_factor = lu(assume_square(base));
+    const lu_result base_factor = lu(base);
     mat first(carried.size(), n, 0.0), second(carried.size(), n, 0.0);
     for (idx k = 0; k < carried.size(); ++k) {
         const vec e = unit_vector(n, carried[k]);
         vec row(n, 0.0), row_squared(n, 0.0);
         mat transposed_base = transpose(base);
-        const lu_result transposed_factor = lu(assume_square(transposed_base));
+        const lu_result transposed_factor = lu(transposed_base);
         lu_solve(transposed_factor, e, row);
         lu_solve(transposed_factor, row, row_squared);
         for (idx j = 0; j < n; ++j) {
@@ -292,7 +292,7 @@ TEST(UpdateInverseRows, MatchesRowsOfAFreshInverseAndItsSquare) {
 
     // The same rows from a fresh factorization of the changed matrix.
     mat transposed_current = transpose(current);
-    const lu_result fresh = lu(assume_square(transposed_current));
+    const lu_result fresh = lu(transposed_current);
     for (idx k = 0; k < carried.size(); ++k) {
         const vec e = unit_vector(n, carried[k]);
         vec row(n, 0.0), row_squared(n, 0.0);

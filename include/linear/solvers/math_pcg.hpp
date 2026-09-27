@@ -1,9 +1,8 @@
 /// @file math_pcg.hpp
-/// @brief Generic PCG constrained by operator and preconditioner evidence.
+/// @brief Generic PCG for an SPD operator and an SPD preconditioner.
 #pragma once
 
 #include "core/math/concepts.hpp"
-#include "core/math/evidence.hpp"
 #include "core/math/subspace.hpp"
 #include "linear/solvers/solver_result.hpp"
 #include <cmath>
@@ -20,7 +19,7 @@ struct pcg_options {
 namespace math_krylov_detail {
 
 template <class Op, class M, class V, class Invariant>
-requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::endomorphism_on<M, V> &&
+requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::linear_operator<M, V, V> &&
     std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
     pcg_recurrence(const Op &A, const M &preconditioner, const V &b, V &x, pcg_options options,
                    const Invariant &check_invariant) {
@@ -106,8 +105,7 @@ requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::end
 /// PCG on the whole vector space. Both A and the approximate inverse M must be
 /// globally positive definite.
 template <class Op, class M, class V>
-requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::endomorphism_on<M, V> &&
-    claims<Op, law::spd> &&claims<M, law::spd> &&
+requires math::inner_product_space<V> &&math::spd_operator<Op, V> && math::spd_operator<M, V> &&
         std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
         pcg(const Op &A, const M &preconditioner, const V &b, V &x, pcg_options options = {}) {
     const auto no_restriction = [](const V &, const char *) {};
@@ -118,7 +116,7 @@ requires math::inner_product_space<V> &&math::endomorphism_on<Op, V> &&math::end
 /// same Subspace type, and membership is checked throughout the recurrence.
 template <class Subspace, class Op, class M, class V>
 requires math::inner_product_space<V> &&math::linear_subspace_of<Subspace, V> &&
-    math::endomorphism_on<Op, V> &&math::endomorphism_on<M, V> &&
+    math::linear_operator<Op, V, V> &&math::linear_operator<M, V, V> &&
         claims<Op, law::spd_on<Subspace>> &&
             claims<M, law::spd_on<Subspace>> &&
                 std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result

@@ -17,7 +17,7 @@ namespace num {
 /// exposed as a vector space, so a field can be handed to a Krylov solver without
 /// being copied.
 template <class F, class T = real>
-concept scalar_field_like = scalars::field<T> && requires(F &f, const F &cf, int i, int j) {
+concept scalar_field_like = field<T> && requires(F &f, const F &cf, int i, int j) {
     { cf(i, j) } -> std::convertible_to<T>;
     { f(i, j) } -> std::convertible_to<T &>;
     { f.as_vec() };

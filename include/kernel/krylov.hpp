@@ -5,18 +5,9 @@
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// This file has no dependencies outside the standard library beyond
-/// kernel/vector.hpp: copy the two into another project as-is, or lift a single
-/// routine. Please keep the two attribution lines above with whatever you take.
-///
-/// The operator enters as a callable `A(const T *x, T *y)` writing \f$y = Ax\f$, so
-/// a consuming project supplies its own matrix type, its own sparse format, or a
-/// matrix-free stencil without adapting to any interface here. Workspace is
-/// caller-supplied; nothing in this file allocates.
-///
-/// The invariants these methods require are stated in the documentation rather
-/// than enforced, because a raw kernel has no type to carry them. Callers working
-/// inside numerics should prefer `num::cg`, which does enforce them.
+/// Depends only on kernel/vector.hpp. Keep the two attribution lines above with whatever you
+/// copy. The operator is a callable `A(const T *x, T *y)` and workspace is caller-supplied.
+/// Preconditions are documented, not enforced; inside numerics prefer `num::cg`.
 #pragma once
 
 #include "kernel/vector.hpp"
@@ -25,13 +16,8 @@
 
 namespace num::kernel {
 
-/// @brief Iteration count, final residual norm, and convergence flag.
-///
-/// A plain aggregate, deliberately without a streaming operator: printing it
-/// would require `<ostream>`, which costs ~38k preprocessed lines here — a 70%
-/// tax on a header whose whole pitch is that you can copy it and
-/// `kernel/vector.hpp` into another project. `kernel/debug.hpp` supplies the
-/// `operator<<` for anyone who wants it.
+/// @brief Iteration count, final residual norm, and convergence flag. `operator<<` lives in
+/// `kernel/debug.hpp`, to keep `<ostream>` out of this header.
 template <std::floating_point T>
 struct krylov_result {
     idx iterations = 0;
@@ -39,12 +25,8 @@ struct krylov_result {
     bool converged = false;
 };
 
-/// @brief Conjugate gradients for symmetric positive definite \f$A\f$.
-///
-/// Minimizes \f$\tfrac12 x^T A x - b^T x\f$ over the Krylov space
-/// \f$\mathcal{K}_k(A, r_0)\f$. Requires \f$A = A^T\f$ and \f$A \succ 0\f$: on an
-/// indefinite operator some search direction has \f$p^T A p \leq 0\f$, and the
-/// iteration is stopped rather than continued with a meaningless step length.
+/// @brief Conjugate gradients for symmetric positive definite \f$A\f$. Stops if some
+/// \f$p^T A p \leq 0\f$.
 ///
 /// @param A        Callable `A(const T *x, T *y)` writing \f$y = Ax\f$.
 /// @param x        Solution, used as the initial guess on entry.
@@ -105,12 +87,8 @@ template <std::floating_point T, class MatVec>
     return result;
 }
 
-/// @brief Preconditioned conjugate gradients.
-///
-/// Applies \f$M^{-1}\f$ once per iteration. \f$M\f$ must itself be symmetric
-/// positive definite: PCG is CG in the \f$M^{-1}\f$ inner product, and a
-/// non-symmetric preconditioner makes that form non-symmetric, so the short
-/// recurrence no longer generates a Krylov basis.
+/// @brief Preconditioned conjugate gradients. \f$M\f$ must be symmetric positive definite,
+/// since PCG is CG in the \f$M^{-1}\f$ inner product.
 ///
 /// @param A        Callable `A(const T *x, T *y)` writing \f$y = Ax\f$.
 /// @param M        Callable `M(const T *r, T *z)` writing \f$z \approx M^{-1} r\f$.

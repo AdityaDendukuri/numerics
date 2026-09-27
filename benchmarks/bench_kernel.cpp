@@ -29,7 +29,7 @@ namespace benchmark_math {
 struct DiagonalOperator {
     using domain_type = num::vec;
     using codomain_type = num::vec;
-    using math_laws = num::math::type_list<num::law::spd>;
+    using laws = num::law::list<num::law::spd>;
 
     num::idx dimension;
 
@@ -44,15 +44,6 @@ struct DiagonalOperator {
 };
 
 } // namespace benchmark_math
-
-namespace num::math {
-
-template <>
-struct claims_of<benchmark_math::DiagonalOperator> {
-    using type = type_list<law::linear_map>;
-};
-
-} // namespace num::math
 
 // Tier-2: array::axpby (y = a*x + b*y)
 

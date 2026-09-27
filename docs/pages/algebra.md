@@ -31,25 +31,24 @@ num::scalars::eps<T>(); // Machine epsilon of underlying real field
 
 | Concept | Structure |
 | :--- | :--- |
-| `num::additive_group<V>` | Additive closure, identity zero, and inverses |
-| `num::vector_space<V>` | Compatible scalar multiplication |
-| `num::inner_product_space<V>` | Inner product \f$\langle x, y \rangle\f$ with conjugate symmetry |
-| `num::normed_space<V>` | Norm \f$\Vert x \Vert\f$ satisfying homogeneity and triangle inequality |
-| `num::hilbert_space<V>` | Inner product + norm with \f$\Vert x \Vert^2 = \langle x, x \rangle\f$ |
+| `num::vector_space<V>` | `dimension`, `zero_like`, `scale` and `axpy` over a field |
+| `num::inner_product_space<V>` | plus `inner` and its induced `norm` |
+
+A space is decided by its operations, so a standard container qualifies with no declaration.
 
 ```cpp
 static_assert(num::vector_space<num::vec>);
 static_assert(num::vector_space<num::cvec>);
-static_assert(num::vector_space<std::vector<float>>);       // Foreign container
-static_assert(num::hilbert_space<num::vec>);
+static_assert(num::vector_space<std::vector<float>>);       // foreign container
+static_assert(num::inner_product_space<num::vec>);
 ```
 
 ### Generic Vector Space Algorithms
 
 ```cpp
-template <num::vector_space V>
+template <num::inner_product_space V>
 void normalize(V& v) {
-    num::algebra::scale_inplace(v, num::scalar_t<V>(1) / num::algebra::norm_of(v));
+    num::math::scale(num::scalar_t<V>(1) / num::math::norm(v), v);
 }
 ```
 
@@ -58,39 +57,25 @@ num::math::inner(x, y);          // <x, y> (conjugating for complex field)
 num::math::norm(x);              // ||x||
 num::math::axpy(a, x, y);        // y <- y + a * x
 num::math::scale(a, v);          // v <- a * v
-num::math::zero_like(v);         // Additive zero of the same dimension
+num::math::zero_like(v);         // additive zero of the same dimension
 ```
+
+Each operation calls a type's `tag_invoke` overload when it has one, and otherwise loops over
+`v[i]`.
 
 ---
 
-## 3. Axiom Verification
+## 3. Operator Laws
 
-```cpp
-num::debug::verify_additive_group_axioms<num::vec>(64);
-num::debug::verify_vector_space_axioms<num::vec>(64);
-num::debug::verify_inner_product_axioms<num::cvec>(64);
-num::debug::verify_norm_axioms<num::vec>(64);
-num::debug::verify_hilbert_space_axioms<num::vec>(64);
-```
-
----
-
-## 4. Property Hierarchy
-
-The properties of linear operators form an axiomatic hierarchy. Declaring a specialized property tag automatically satisfies all parent concepts:
+The laws an algorithm depends on are ordered by implication:
 
 \f[
-\text{linear} \subset \text{normal} \subset
-\begin{cases}
-\text{self-adjoint} \subset \text{psd} \subset \text{spd} \\
-\text{skew-adjoint} \\
-\text{unitary}
-\end{cases}
+\text{spd} \Rightarrow \text{psd} \Rightarrow \text{self-adjoint}
 \f]
 
 ```cpp
 struct MyOperator {
-    using math_laws = num::math::type_list<num::law::spd>;
+    using laws = num::law::list<num::law::spd>;
     using domain_type = num::vec;
     using codomain_type = num::vec;
 
@@ -100,7 +85,7 @@ struct MyOperator {
 };
 
 static_assert(num::spd_operator<MyOperator>);
-static_assert(num::self_adjoint_operator<MyOperator>); // Implied
-static_assert(num::normal_operator<MyOperator>);      // Implied
+static_assert(num::self_adjoint_operator<MyOperator>); // implied
 ```
 
+See @ref page_concepts for the laws, how to attach one, and what each routine requires.

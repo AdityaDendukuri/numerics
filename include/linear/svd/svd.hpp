@@ -36,32 +36,24 @@ struct svd_result {
 
 /// @brief Compute full singular value decomposition \f$A = U \Sigma V^T\f$.
 ///
-/// Dispatches to LAPACK divide-and-conquer (`dgesdd`) when available, or executes
-/// in-tree one-sided Hestenes-Jacobi orthogonalization sweeps with Givens rotations.
+/// Uses LAPACK `dgesdd` when configured, else in-tree one-sided Jacobi sweeps. Call
+/// `num::lapack::svd` or `num::seq::svd` to force one.
 ///
 /// @param A Input \f$m \times n\f$ dense matrix.
 /// @param tol Orthogonality tolerance for Jacobi sweeps (default: 1e-12).
 /// @param max_sweeps Maximum one-sided Jacobi sweeps (default: 100).
 /// @return `svd_result` with left singular vectors \f$U\f$, singular values \f$\Sigma\f$, and
 /// transposed right vectors \f$V^T\f$.
-///
-/// Picks LAPACK (`dgesdd`) if configured, else the in-tree one-sided
-/// Hestenes-Jacobi sweeps. To force one explicitly, call
-/// `num::lapack::svd`/`num::seq::svd` directly.
 /// @see svd_truncated, eig_sym, qr
 svd_result svd(const mat &A, real tol = 1e-12, idx max_sweeps = 100);
 
-/// @brief Compute randomized truncated rank-\f$k\f$ SVD approximation \f$A \approx U_k \Sigma_k
-/// V_k^T\f$.
-///
-/// Uses Gaussian random test matrices and QR range-finder to project \f$A\f$ into a small
-/// subspace of dimension \f$l = k + \text{oversampling}\f$, achieving near-optimal low-rank
-/// reconstruction.
+/// @brief Randomized rank-\f$k\f$ SVD \f$A \approx U_k \Sigma_k V_k^T\f$, from a Gaussian range
+/// finder of dimension \f$k + \text{oversampling}\f$.
 ///
 /// @param A Input \f$m \times n\f$ dense matrix.
-/// @param k Target low-rank approximation dimension (\f$0 < k \le \min(m, n)\f$).
-/// @param oversampling Additional random test vectors for spectral gap safety (default: 10).
-/// @param rng Optional pointer to custom random number generator for reproducible sampling.
+/// @param k Target rank (\f$0 < k \le \min(m, n)\f$).
+/// @param oversampling Extra random test vectors (default: 10).
+/// @param rng Optional generator for reproducible sampling.
 /// @return `svd_result` containing rank-\f$k\f$ truncated factors \f$U_k, \Sigma_k, V_k^T\f$.
 /// @throws std::invalid_argument If \f$k\f$ is out of range.
 /// @see svd, lanczos
@@ -70,14 +62,8 @@ svd_result svd_truncated(const mat &A, idx k, idx oversampling = 10, rng_state *
 namespace seq {
 /// One-sided Jacobi (Hestenes) SVD on the transpose.
 ///
-/// The algorithm orthogonalizes the columns of A by plane rotations. Columns
-/// of a row-major matrix are strided, so the work is done on rows of
-/// \f$A^T\f$ instead, where every dot product and rotation is contiguous;
-/// column norms are computed once per sweep and carried through the
-/// rotations rather than recomputed per pair. Jacobi is slower than a
-/// bidiagonalization-based SVD by a constant factor but computes small
-/// singular values to high relative accuracy, and it is what the library
-/// falls back to when no optimized LAPACK is available.
+/// It rotates rows of \f$A^T\f$, which are contiguous, and carries the norms through each
+/// sweep. It is slower than bidiagonalization but accurate for small singular values.
 inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
     constexpr real tiny = 1e-300;
     const idx m = A_in.rows(), n = A_in.cols();
