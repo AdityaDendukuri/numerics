@@ -11,7 +11,7 @@ becomes Markdown math, which mkdocs renders with MathJax.
 
 The compile flags come from build/compile_commands.json when it exists, so the headers are
 parsed in the configuration they are built in. Set NUMERICS_BUILD to use another build
-directory.
+directory and NUMERICS_DOC_INCLUDE to add dependency include directories.
 """
 
 import json
@@ -78,6 +78,9 @@ def compile_flags():
     """The -I, -isystem, -D and -std flags of one translation unit of the build."""
     database = Path(os.environ.get("NUMERICS_BUILD", ROOT / "build")) / "compile_commands.json"
     flags = ["-x", "c++", "-std=c++20", f"-I{INCLUDE}"]
+    for directory in os.environ.get("NUMERICS_DOC_INCLUDE", "").split(os.pathsep):
+        if directory:
+            flags.append(f"-I{directory}")
     if not database.exists():
         return flags
     entries = json.loads(database.read_text())
@@ -93,7 +96,7 @@ def compile_flags():
         if word.startswith(("-I", "-D", "-std=", "-isystem")):
             keep.append(word)
         i += 1
-    return ["-x", "c++"] + keep
+    return ["-x", "c++"] + flags[3:] + keep
 
 
 def system_flags():
