@@ -78,17 +78,17 @@ All test suites. A failed suite must be investigated before using the library in
 | MatvecPolicy | 1 | 1 | 0 | 0.0 ms |
 | MatrixExpr | 3 | 3 | 0 | 0.0 ms |
 | Resolvent | 2 | 2 | 0 | 0.0 ms |
-| cg_method | 5 | 5 | 0 | 0.0 ms |
+| CG | 5 | 5 | 0 | 0.0 ms |
 | MatrixProperties | 2 | 2 | 0 | 0.0 ms |
 | SolveDispatch | 2 | 2 | 0 | 0.0 ms |
 | Operators | 1 | 1 | 0 | 0.0 ms |
-| pcg_method | 2 | 2 | 0 | 0.0 ms |
-| minres_method | 1 | 1 | 0 | 3.0 ms |
+| PCG | 2 | 2 | 0 | 0.0 ms |
+| MINRES | 1 | 1 | 0 | 3.0 ms |
 | PDEOperators | 2 | 2 | 0 | 0.0 ms |
 | Thomas | 3 | 3 | 0 | 0.0 ms |
 | GaussSeidel | 3 | 3 | 0 | 2.0 ms |
 | Jacobi | 3 | 3 | 0 | 0.0 ms |
-| gmres_method | 5 | 5 | 0 | 0.0 ms |
+| GMRES | 5 | 5 | 0 | 0.0 ms |
 | spmat | 5 | 5 | 0 | 0.0 ms |
 | Probability | 1 | 1 | 0 | 0.0 ms |
 | Selection | 2 | 2 | 0 | 0.0 ms |
@@ -302,21 +302,21 @@ pivoting for stability.
 
 | Suite | Tests | Passed | Failed | Time |
 |-------|------:|-------:|-------:|-----:|
-| cg_method | 5 | 5 | 0 | 0.0 ms |
+| CG | 5 | 5 | 0 | 0.0 ms |
 | GaussSeidel | 3 | 3 | 0 | 2.0 ms |
 | Jacobi | 3 | 3 | 0 | 0.0 ms |
 
 
 ### Conjugate Gradient
 
-cg_method inner-product and axpy calls dispatch to `best_backend` (BLAS when available).
+CG inner-product and axpy calls dispatch to `best_backend` (BLAS when available).
 
 ![Conjugate gradient: time vs n](plots/cg.png)
 
 
 | Variant | n=32 us | n=64 us | n=128 us | n=256 us |
 |---------|---------|---------|----------|----------|
-| cg_method | 57.6 | 292.6 | 1554.4 | 6460.9 |
+| CG | 57.6 | 292.6 | 1554.4 | 6460.9 |
 
 *Time in us. Lower is better.*
 
@@ -327,11 +327,11 @@ Relative residual reduction $\frac{\|r_k\|}{\|b\|}$ across iterations on anisotr
 
 ![Iterative Solvers Convergence](plots/iterative_convergence.png)
 
-### minres_method vs Conjugate Gradient (Error & Residual Comparison)
+### MINRES vs Conjugate Gradient (Error & Residual Comparison)
 
-Comparison of monotonicity in residual 2-norm versus $A$-norm energy minimization between minres_method and cg_method:
+Comparison of monotonicity in residual 2-norm versus $A$-norm energy minimization between MINRES and CG:
 
-![minres_method vs cg_method](plots/cg_vs_minres.png)
+![MINRES vs CG](plots/cg_vs_minres.png)
 
 ---
 

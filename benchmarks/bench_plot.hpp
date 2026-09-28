@@ -289,7 +289,7 @@ static void plot_cg(gnuplot &gp, const std::vector<Run> &runs, const std::string
         gp.send1d(cpu);
         gp.send1d(gpu);
     } else if (!cpu.empty()) {
-        gp << plot_cmd({{"cg_method", 1}});
+        gp << plot_cmd({{"CG", 1}});
         gp.send1d(cpu);
     } else {
         gp << plot_cmd({{"GPU", 2}});
@@ -848,7 +848,7 @@ inline void plot_all_ascii(const std::vector<Run> &runs,
                              {"BM_" + op.first + "_Omp", "omp"},
                          });
 
-    ascii_time(runs, outdir + "/cg.txt", "Conjugate Gradient: time vs n", {{"BM_CG/", "cg_method"}});
+    ascii_time(runs, outdir + "/cg.txt", "Conjugate Gradient: time vs n", {{"BM_CG/", "CG"}});
     ascii_time(runs, outdir + "/thomas.txt", "Thomas Algorithm: time vs n",
                {{"BM_Thomas/", "Thomas"}});
     ascii_time(runs, outdir + "/banded.txt", "banded Solver: time vs n", {{"BM_Band", "banded"}});

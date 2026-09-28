@@ -33,13 +33,13 @@ int main() {
     // 1. Conjugate Gradient (CG)
     operators::sparse_op aop(A);
     auto spd_a = num::assume_spd(aop);
-    auto cg_res = cg(spd_a, b, x0, 1e-8, 500);
-    std::cout << "cg_method Converged: " << (cg_res.converged ? "YES" : "NO") << " in "
+    auto cg_res = cg(spd_a, b, x0, {.tolerance = 1e-8, .max_iterations = 500});
+    std::cout << "CG converged: " << (cg_res.converged ? "YES" : "NO") << " in "
               << cg_res.iterations << " iters. Residual = " << cg_res.residual << "\n";
 
     // 2. GMRES Solver
-    auto gmres_res = gmres(aop, b, x0, 1e-8, 500, 30);
-    std::cout << "gmres_method Converged: " << (gmres_res.converged ? "YES" : "NO") << " in "
+    auto gmres_res = gmres(aop, b, x0, {.tolerance = 1e-8, .max_iterations = 500, .restart = 30});
+    std::cout << "GMRES converged: " << (gmres_res.converged ? "YES" : "NO") << " in "
               << gmres_res.iterations << " iters. Residual = " << gmres_res.residual << "\n";
 
     // Plot solution vector x over grid (140x35)

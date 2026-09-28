@@ -16,7 +16,6 @@
 #include "operator/operator.hpp"
 
 #include "pde/diffusion.hpp"
-#include "solve/solve.hpp"
 #include "stats/stats.hpp"
 #include "stochastic/categorical.hpp"
 #include <cmath>
@@ -56,7 +55,7 @@ TEST(Resolvent, DenseSolve) {
     EXPECT_NEAR(res1.imag(), 0.0, 1e-10);
 }
 
-TEST(cg_method, Small3x3) {
+TEST(CG, Small3x3) {
     // A = [4 1 0; 1 4 1; 0 1 4], b = [1; 2; 3]  =>  x = [5/28, 2/7, 19/28]
     mat A(3, 3, 0.0);
     A(0, 0) = 4;
@@ -78,7 +77,7 @@ TEST(cg_method, Small3x3) {
     EXPECT_NEAR(x[2], 19.0 / 28.0, 1e-6);
 }
 
-TEST(cg_method, DiagonalDominant5x5) {
+TEST(CG, DiagonalDominant5x5) {
     idx n = 5;
     mat A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
@@ -105,7 +104,7 @@ TEST(cg_method, DiagonalDominant5x5) {
     EXPECT_LT(std::sqrt(err), 1e-9);
 }
 
-TEST(cg_method, ConvergesWithinN) {
+TEST(CG, ConvergesWithinN) {
     idx n = 10;
     mat A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
@@ -163,7 +162,7 @@ static_assert(repr::contiguous<vec>);
 static_assert(matrix_space<mat>);
 static_assert(repr::dense_row_major<mat>);
 
-TEST(cg_method, DenseOperator) {
+TEST(CG, DenseOperator) {
     mat A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
@@ -189,7 +188,7 @@ TEST(cg_method, DenseOperator) {
     EXPECT_NEAR(x[2], 19.0 / 28.0, 1e-6);
 }
 
-TEST(SolveDispatch, MatrixCGWithCheckedSPD) {
+TEST(CG, CheckedSPDMatrix) {
     mat A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
@@ -200,15 +199,16 @@ TEST(SolveDispatch, MatrixCGWithCheckedSPD) {
     A(2, 2) = 4;
 
     vec b{1.0, 2.0, 3.0};
-    const linear_solution r = solve(linear_problem{linear::make_spd(A), b}, cg_method{});
+    vec x(3, 0.0);
+    const solver_result r = cg(linear::make_spd(A), b, x);
 
     EXPECT_TRUE(r.converged);
-    EXPECT_NEAR(r.u[0], 5.0 / 28.0, 1e-6);
-    EXPECT_NEAR(r.u[1], 2.0 / 7.0, 1e-6);
-    EXPECT_NEAR(r.u[2], 19.0 / 28.0, 1e-6);
+    EXPECT_NEAR(x[0], 5.0 / 28.0, 1e-6);
+    EXPECT_NEAR(x[1], 2.0 / 7.0, 1e-6);
+    EXPECT_NEAR(x[2], 19.0 / 28.0, 1e-6);
 }
 
-TEST(SolveDispatch, DenseGMRES) {
+TEST(GMRES, NonSymmetric2x2Dense) {
     mat A(2, 2, 0.0);
     A(0, 0) = 3.0;
     A(0, 1) = 1.0;
@@ -216,14 +216,15 @@ TEST(SolveDispatch, DenseGMRES) {
     A(1, 1) = 2.0;
 
     vec b{5.0, 4.0};
-    const linear_solution r = solve(linear_problem{A, b}, gmres_method{.tol = 1e-12, .max_iter = 20});
+    vec x(2, 0.0);
+    const solver_result r = gmres(A, b, x, {.tolerance = 1e-12, .max_iterations = 20});
 
     EXPECT_TRUE(r.converged);
-    EXPECT_NEAR(r.u[0], 1.0, 1e-8);
-    EXPECT_NEAR(r.u[1], 2.0, 1e-8);
+    EXPECT_NEAR(x[0], 1.0, 1e-8);
+    EXPECT_NEAR(x[1], 2.0, 1e-8);
 }
 
-TEST(cg_method, SparseOperator) {
+TEST(CG, SparseOperator) {
     auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
                                          {4.0, 1.0, 1.0, 4.0, 1.0, 1.0, 4.0});
 
@@ -233,7 +234,7 @@ TEST(cg_method, SparseOperator) {
 
     vec b{1.0, 2.0, 3.0};
     vec x(3, 0.0);
-    solver_result r = cg(num::assume_spd(op), b, x, 1e-10, 100);
+    solver_result r = cg(num::assume_spd(op), b, x, {.tolerance = 1e-10, .max_iterations = 100});
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -262,7 +263,7 @@ TEST(Operators, CallableOperator) {
     EXPECT_DOUBLE_EQ(y[1], 15.0);
 }
 
-TEST(pcg_method, jacobi_preconditioner) {
+TEST(PCG, jacobi_preconditioner) {
     auto A = spmat::from_triplets(4, 4, {0, 0, 1, 1, 1, 2, 2, 2, 3, 3},
                                          {0, 1, 0, 1, 2, 1, 2, 3, 2, 3},
                                          {4.0, 1.0, 1.0, 4.0, 1.0, 1.0, 4.0, 1.0, 1.0, 4.0});
@@ -271,7 +272,7 @@ TEST(pcg_method, jacobi_preconditioner) {
     vec b{1.0, 2.0, 3.0, 4.0};
     vec x(4, 0.0);
 
-    solver_result r = pcg(num::assume_spd(op), M, b, x, 1e-10, 100);
+    solver_result r = pcg(num::assume_spd(op), M, b, x, {.tolerance = 1e-10, .max_iterations = 100});
     EXPECT_TRUE(r.converged);
 
     vec Ax(4);
@@ -281,12 +282,12 @@ TEST(pcg_method, jacobi_preconditioner) {
     }
 }
 
-TEST(pcg_method, JacobiPreconditionerRejectsNonPositiveDiagonal) {
+TEST(PCG, JacobiPreconditionerRejectsNonPositiveDiagonal) {
     EXPECT_THROW((void)jacobi_preconditioner(vec{1.0, -0.5}), std::invalid_argument);
     EXPECT_THROW((void)jacobi_preconditioner(vec{1.0, 0.0}), std::invalid_argument);
 }
 
-TEST(minres_method, SymmetricIndefiniteOperator) {
+TEST(MINRES, SymmetricIndefiniteOperator) {
     mat A(3, 3, 0.0);
     A(0, 0) = 2.0;
     A(1, 1) = -1.0;
@@ -296,7 +297,7 @@ TEST(minres_method, SymmetricIndefiniteOperator) {
     vec b{2.0, -2.0, 6.0};
     vec x(3, 0.0);
 
-    solver_result r = minres(num::assume_symmetric(op), b, x, 1e-10, 10);
+    solver_result r = minres(num::assume_symmetric(op), b, x, {.tolerance = 1e-10, .max_iterations = 10});
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(x[0], 1.0, 1e-8);
     EXPECT_NEAR(x[1], 2.0, 1e-8);
@@ -309,7 +310,7 @@ TEST(PDEOperators, BackwardEulerOperatorIsSPD) {
 
     vec b(A.rows(), 1.0);
     vec x(A.rows(), 0.0);
-    solver_result r = cg(A, b, x, 1e-10, 100); // A is already an SPD-tagged operator
+    solver_result r = cg(A, b, x, {.tolerance = 1e-10, .max_iterations = 100}); // A is already an SPD-tagged operator
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -489,7 +490,7 @@ TEST(Jacobi, ResidualVerified) {
 
 // GMRES (Krylov)
 
-TEST(gmres_method, SPD3x3Dense) {
+TEST(GMRES, SPD3x3Dense) {
     // Same SPD system  -- GMRES should also solve it
     mat A(3, 3, 0.0);
     A(0, 0) = 4;
@@ -511,7 +512,7 @@ TEST(gmres_method, SPD3x3Dense) {
     EXPECT_NEAR(x[2], 19.0 / 28.0, 1e-5);
 }
 
-TEST(gmres_method, DenseOperator) {
+TEST(GMRES, DenseOperator) {
     mat A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
@@ -534,7 +535,7 @@ TEST(gmres_method, DenseOperator) {
     EXPECT_NEAR(x[2], 19.0 / 28.0, 1e-5);
 }
 
-TEST(gmres_method, NonSymmetricDense) {
+TEST(GMRES, NonSymmetricDense) {
     // Non-symmetric system: A = [3 1; 1 2], b = [5; 3]  =>  x = [1, 2]
     mat A(2, 2, 0.0);
     A(0, 0) = 3;
@@ -551,7 +552,7 @@ TEST(gmres_method, NonSymmetricDense) {
     EXPECT_NEAR(x[1], 0.8, 1e-5);
 }
 
-TEST(gmres_method, SparseLaplacian1D) {
+TEST(GMRES, SparseLaplacian1D) {
     // 1D Laplacian on 10 nodes via spmat
     idx n = 10;
     std::vector<idx> rows, cols;
@@ -587,7 +588,7 @@ TEST(gmres_method, SparseLaplacian1D) {
     }
 }
 
-TEST(gmres_method, MatrixFree) {
+TEST(GMRES, MatrixFree) {
     idx n = 5;
     vec diag(n);
     for (idx i = 0; i < n; ++i) {
@@ -1061,9 +1062,9 @@ TEST(PDEOperators, MatrixFreeLaplacianAndBackwardEulerMatchesSparseMatrix) {
     vec b(n, 1.0);
     vec u_free(n, 0.0), u_sparse(n, 0.0);
 
-    auto res_free = cg(be_op, b, u_free, 1e-10, 500);
+    auto res_free = cg(be_op, b, u_free, {.tolerance = 1e-10, .max_iterations = 500});
     pde::backward_euler_operator_2d be_assembled_op(N, coeff);
-    auto res_sparse = cg(be_assembled_op, b, u_sparse, 1e-10, 500);
+    auto res_sparse = cg(be_assembled_op, b, u_sparse, {.tolerance = 1e-10, .max_iterations = 500});
 
     EXPECT_TRUE(res_free.converged);
     EXPECT_TRUE(res_sparse.converged);

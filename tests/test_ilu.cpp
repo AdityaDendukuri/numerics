@@ -10,7 +10,7 @@
 
 #include "linear/solvers/ilu.hpp"
 #include "kernel/kernel.hpp"
-#include "linear/solvers/math_gmres.hpp"
+#include "linear/solvers/gmres.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "linear/sparse/sparse_op.hpp"
 #include <cmath>

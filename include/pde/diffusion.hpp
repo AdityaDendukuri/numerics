@@ -106,7 +106,7 @@ inline backward_euler_operator_2d backward_euler_operator(const grid2d &grid, do
 inline linear_solver make_cg_solver(const spmat &A, real tol = 1e-6) {
     return [&A, tol](const vec &rhs, vec &x) {
         operators::sparse_op op(A);
-        return cg(num::assume_spd(op), rhs, x, tol);
+        return cg(num::assume_spd(op), rhs, x, {.tolerance = tol});
     };
 }
 

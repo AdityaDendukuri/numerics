@@ -54,7 +54,7 @@ int main() {
     num::Vector x(n, 0.0);
 
     auto spd_L = num::assume_spd(laplacian);
-    auto res = num::cg(spd_L, b, x, 1e-8, 500);
+    auto res = num::cg(spd_L, b, x, {.tolerance = 1e-8, .max_iterations = 500});
 
     std::cout << "CG Converged: " << res.converged << " in " << res.iterations << " iters\n";
 }

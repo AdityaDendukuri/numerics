@@ -68,7 +68,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         res_cg.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
             vec x(n, 0.0);
-            auto res = cg(spd_op, b, x, 1e-15, k);
+            auto res = cg(spd_op, b, x, {.tolerance = 1e-15, .max_iterations = k});
             iters_cg.push_back(static_cast<double>(k));
             res_cg.push_back(std::max(1e-16, res.residual / b_norm));
             if (res.residual / b_norm < 1e-15) break;
@@ -82,7 +82,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         res_pcg.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
             vec x(n, 0.0);
-            auto res = pcg(spd_op, jacobi, b, x, 1e-15, k);
+            auto res = pcg(spd_op, jacobi, b, x, {.tolerance = 1e-15, .max_iterations = k});
             iters_pcg.push_back(static_cast<double>(k));
             res_pcg.push_back(std::max(1e-16, res.residual / b_norm));
             if (res.residual / b_norm < 1e-15) break;
@@ -96,7 +96,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         res_gmres.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
             vec x(n, 0.0);
-            auto res = gmres(dense_op, b, x, 1e-15, /*max_iter=*/k, /*restart=*/30);
+            auto res = gmres(dense_op, b, x, {.tolerance = 1e-15, .max_iterations = k, .restart = 30});
             iters_gmres.push_back(static_cast<double>(k));
             res_gmres.push_back(std::max(1e-16, res.residual / b_norm));
             if (res.residual / b_norm < 1e-15) break;
@@ -110,7 +110,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         res_minres.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
             vec x(n, 0.0);
-            auto res = minres(spd_op, b, x, 1e-15, k);
+            auto res = minres(spd_op, b, x, {.tolerance = 1e-15, .max_iterations = k});
             iters_minres.push_back(static_cast<double>(k));
             res_minres.push_back(std::max(1e-16, res.residual / b_norm));
             if (res.residual / b_norm < 1e-15) break;
@@ -164,10 +164,10 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     }
 
     // Plot residual curves
-    plt::plot(iters_cg, res_cg, "Conjugate Gradient (cg_method)", "lines lw 2.5 lc rgb '#1f77b4'");
-    plt::plot(iters_pcg, res_pcg, "Preconditioned cg_method (Jacobi)", "lines lw 2.5 lc rgb '#2ca02c'");
-    plt::plot(iters_gmres, res_gmres, "gmres_method (m=30)", "lines lw 2.5 lc rgb '#d62728'");
-    plt::plot(iters_minres, res_minres, "minres_method", "lines lw 2.0 lc rgb '#9467bd'");
+    plt::plot(iters_cg, res_cg, "Conjugate gradient", "lines lw 2.5 lc rgb '#1f77b4'");
+    plt::plot(iters_pcg, res_pcg, "Preconditioned CG (Jacobi)", "lines lw 2.5 lc rgb '#2ca02c'");
+    plt::plot(iters_gmres, res_gmres, "GMRES (m=30)", "lines lw 2.5 lc rgb '#d62728'");
+    plt::plot(iters_minres, res_minres, "MINRES", "lines lw 2.0 lc rgb '#9467bd'");
     plt::plot(iters_gs, res_gs, "Gauss-Seidel", "lines lw 2.0 lc rgb '#ff7f0e'");
     plt::plot(iters_jac, res_jac, "Jacobi Iteration", "lines lw 1.8 lc rgb '#8c564b'");
 
@@ -214,7 +214,7 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
 
         // MINRES
         vec x_m(n, 0.0);
-        auto res_m = minres(spd_op, b, x_m, 1e-15, k);
+        auto res_m = minres(spd_op, b, x_m, {.tolerance = 1e-15, .max_iterations = k});
         vec e_m(n, 0.0);
         for (idx i = 0; i < n; ++i) e_m[i] = x_m[i] - x_star[i];
         err_minres.push_back(std::max(1e-16, norm(e_m)));
@@ -222,19 +222,19 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
 
         // CG
         vec x_c(n, 0.0);
-        auto res_c = cg(spd_op, b, x_c, 1e-15, k);
+        auto res_c = cg(spd_op, b, x_c, {.tolerance = 1e-15, .max_iterations = k});
         vec e_c(n, 0.0);
         for (idx i = 0; i < n; ++i) e_c[i] = x_c[i] - x_star[i];
         err_cg.push_back(std::max(1e-16, norm(e_c)));
         res_cg.push_back(std::max(1e-16, res_c.residual));
     }
 
-    plt::plot(iters, err_minres, "Error ||x_k - x*|| (minres_method)", "lines lw 2.5 lc rgb '#2ca02c'");
-    plt::plot(iters, res_minres, "Residual ||r_k|| (minres_method)", "lines dt 2 lw 2.5 lc rgb '#2ca02c'");
-    plt::plot(iters, err_cg, "Error ||x_k - x*|| (cg_method)", "lines lw 2.5 lc rgb '#1f77b4'");
-    plt::plot(iters, res_cg, "Residual ||r_k|| (cg_method)", "lines dt 2 lw 2.5 lc rgb '#1f77b4'");
+    plt::plot(iters, err_minres, "Error ||x_k - x*|| (MINRES)", "lines lw 2.5 lc rgb '#2ca02c'");
+    plt::plot(iters, res_minres, "Residual ||r_k|| (MINRES)", "lines dt 2 lw 2.5 lc rgb '#2ca02c'");
+    plt::plot(iters, err_cg, "Error ||x_k - x*|| (CG)", "lines lw 2.5 lc rgb '#1f77b4'");
+    plt::plot(iters, res_cg, "Residual ||r_k|| (CG)", "lines dt 2 lw 2.5 lc rgb '#1f77b4'");
 
-    plt::title("minres_method vs Conjugate Gradient (Error and Residual Norms)");
+    plt::title("MINRES vs conjugate gradient (error and residual norms)");
     plt::xlabel("Iteration (k)");
     plt::ylabel("Error / Residual Euclidean Norm");
     plt::semilogy();
@@ -399,8 +399,8 @@ void generate_symplectic_energy_plot(const std::string &out_dir) {
         }
     }
 
-    plt::plot(time_steps, e_euler, "Explicit euler_method (O(t) Explosion)", "lines lw 2.0 lc rgb '#d62728'");
-    plt::plot(time_steps, e_rk4, "Classical rk4_method (Dissipative Drift)", "lines lw 2.0 lc rgb '#ff7f0e'");
+    plt::plot(time_steps, e_euler, "Explicit Euler (O(t) explosion)", "lines lw 2.0 lc rgb '#d62728'");
+    plt::plot(time_steps, e_rk4, "Classical RK4 (dissipative drift)", "lines lw 2.0 lc rgb '#ff7f0e'");
     plt::plot(time_steps, e_verlet, "Störmer-Verlet 2nd-Order (Bounded O(h^2))", "lines lw 2.0 lc rgb '#1f77b4'");
     plt::plot(time_steps, e_yoshida, "Yoshida 4th-Order Symplectic (Bounded O(h^4))", "lines lw 2.5 lc rgb '#2ca02c'");
 

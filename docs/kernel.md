@@ -1,3 +1,7 @@
+---
+scope: num::kernel
+---
+
 # num::kernel
 
 `num::kernel` is the computational core of the library. Every routine operates on raw

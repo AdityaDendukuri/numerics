@@ -229,7 +229,7 @@ struct vec2_view {
 };
 
 // Native mathematical operations lower to the dependency-free raw kernels, one
-// block per thread. This is the path every generic solver takes: `math_cg` and
+// block per thread. This is the path every generic solver takes: `num::cg` and
 // friends call these CPOs and nothing else, so threading has to arrive here
 // rather than through an explicit `num::omp::dot(x, y)` call, which no
 // algorithm uses. Foreign vectors use the coordinate fallbacks or provide their

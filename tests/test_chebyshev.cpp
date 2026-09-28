@@ -12,7 +12,7 @@
 #include "linear/solvers/chebyshev.hpp"
 #include "container/matrix.hpp"
 #include "linear/solvers/cg.hpp"
-#include "linear/solvers/math_pcg.hpp"
+#include "linear/solvers/pcg.hpp"
 #include "operator/callable.hpp"
 #include "operator/dense.hpp"
 #include "operator/properties.hpp"

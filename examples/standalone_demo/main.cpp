@@ -28,7 +28,8 @@ int main() {
     std::cout << "    - Satisfies spd_operator? NO\n\n";
 
     // UNCOMMENTING THE LINE BELOW FAILS TO COMPILE:
-    // num::linear_solution s_fail = num::solve(num::linear_problem{Aop, b}, num::cg_method{});
+    // num::vec x_fail(3, 0.0);
+    // num::cg(Aop, b, x_fail);
 
     // 3. Attach the SPD property tag using assume_spd()
     auto spd_A = num::assume_spd(Aop);
@@ -38,13 +39,14 @@ int main() {
     std::cout << "    - Satisfies spd_operator? YES!\n\n";
 
     // 4. Solve Ax = b using Conjugate Gradient (CG)
-    num::linear_solution s = num::solve(num::linear_problem{spd_A, b}, num::cg_method{});
+    num::vec x(3, 0.0);
+    num::solver_result s = num::cg(spd_A, b, x);
 
-    std::cout << "[3] Solved Ax = b using Conjugate Gradient (cg_method):\n";
+    std::cout << "[3] Solved Ax = b using conjugate gradients:\n";
     std::cout << "    - Converged:     " << (s.converged ? "YES" : "NO") << "\n";
     std::cout << "    - Iterations:    " << s.iterations << "\n";
     std::cout << "    - Residual norm: " << s.residual << "\n";
-    std::cout << "    - Solution x:    [" << s.u[0] << ", " << s.u[1] << ", " << s.u[2] << "]\n";
+    std::cout << "    - Solution x:    [" << x[0] << ", " << x[1] << ", " << x[2] << "]\n";
 
     return 0;
 }

@@ -1,3 +1,7 @@
+---
+scope: num::math
+---
+
 # Concepts, Laws & Diagnostics
 
 Concepts express two kinds of requirement. **Structure** is decided by the compiler from the
@@ -241,7 +245,7 @@ note: because 'claims<num::operators::dense_op, law::self_adjoint>' evaluated to
 ```cpp
 // DOES NOT COMPILE
 auto sym = num::assume_symmetric(num::operators::dense_op(A));
-num::cg(sym, b, x, 1e-10, 100);
+num::cg(sym, b, x, {.tolerance = 1e-10, .max_iterations = 100});
 ```
 
 ```

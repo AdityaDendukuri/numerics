@@ -79,7 +79,8 @@ inline solver_result field_solver::solve_poisson(scalar_field_3d &phi, const sca
     // solves in place -- no copy in or out.
     auto A = num::assume_spd(operators::make_op(
         [&](const vec &v, vec &Av) { neg_laplacian_3d(v, Av, nx, ny, nz, inv_dx2); }, N));
-    return num::cg(A, b, phi.as_vec(), tol, static_cast<idx>(max_iter));
+    return num::cg(A, b, phi.as_vec(),
+                   {.tolerance = tol, .max_iterations = static_cast<idx>(max_iter)});
 }
 
 inline solver_result field_solver::solve_var_poisson(scalar_field_3d &phi, const scalar_field_3d &coeff,
@@ -153,7 +154,8 @@ inline solver_result field_solver::solve_var_poisson(scalar_field_3d &phi, const
 
     // Solve A phi = b in place; phi's storage is the solution vector.
     auto A = num::assume_spd(operators::make_op(matvec, N));
-    return num::cg(A, b, phi.as_vec(), tol, static_cast<idx>(max_iter));
+    return num::cg(A, b, phi.as_vec(),
+                   {.tolerance = tol, .max_iterations = static_cast<idx>(max_iter)});
 }
 
 inline vector_field_3d field_solver::gradient(const scalar_field_3d &phi) {

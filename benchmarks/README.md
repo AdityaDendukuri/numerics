@@ -112,7 +112,7 @@ BM_Thomas/4096             2.69         74.0 KB         1.16 MB         1.16 MB
 ```
 
 `bytes/iter` scales linearly with `N`.  The allocations again come from the setup
-vectors (`a`, `b`, `c`, `d`, `x` for Thomas; four work vectors inside cg_method), not
+vectors (`a`, `b`, `c`, `d`, `x` for Thomas; four work vectors inside CG), not
 from the algorithms themselves.  Both are allocation-free in their hot paths.
 
 ### What to watch for when parallelizing

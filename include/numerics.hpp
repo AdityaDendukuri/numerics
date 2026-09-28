@@ -48,8 +48,6 @@
 #include "pde/pde.hpp"
 #include "plot/plot.hpp"
 #include "linear/graph/randommat/randommat.hpp"
-#include "solve/sample.hpp"
-#include "solve/solve.hpp"
 #include "spatial/spatial.hpp"
 #include "spectral/dst.hpp"
 #include "spectral/fft.hpp"

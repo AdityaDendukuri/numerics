@@ -155,16 +155,6 @@ auto lu_factor = num::lu(A);
 num::lu_solve(lu_factor, b, x);
 ```
 
-### High-Level Problem Dispatch (num::solve)
-For high-level algorithms and configuration-driven workflows, Numerics provides a unified problem abstraction:
-
-```cpp
-auto op = num::operators::dense_op(A);
-auto result = num::solve(
-    num::linear_problem{op, b},
-    num::gmres_method{.tol = 1e-10, .max_iter = 200});
-```
-
 ---
 
 ## 6. Standalone Raw Compute Tier (num::kernel)

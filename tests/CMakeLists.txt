@@ -40,7 +40,6 @@ add_executable(numerics_tests
     test_eigen.cpp
     test_svd.cpp
     test_fields.cpp
-    test_solve.cpp
     test_stochastic.cpp
     test_umbrella.cpp
     test_debug.cpp

@@ -214,7 +214,7 @@ BENCHMARK(BM_Raw_BlockProjection_RowMajor)->RangeMultiplier(4)->Range(1 << 10, 1
 
 static void BM_Kernel_MgsVec_Manual(benchmark::State &state) {
     idx n = state.range(0);
-    idx k = 30; // typical gmres_method restart size
+    idx k = 30; // typical GMRES restart size
     std::vector<vec> basis;
     basis.reserve(k);
     for (idx i = 0; i < k; ++i) {

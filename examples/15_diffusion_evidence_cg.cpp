@@ -32,7 +32,7 @@ int main() {
         num::cg(system, rhs, solution,
                 num::cg_options{.tolerance = 1e-12, .max_iterations = 4 * solution.size()});
 
-    std::cout << "backward-euler_method diffusion: " << result.iterations << " cg_method iterations, residual "
+    std::cout << "backward-Euler diffusion: " << result.iterations << " CG iterations, residual "
               << result.residual << '\n';
     return result.converged ? 0 : 1;
 }

@@ -8,10 +8,6 @@ Numerics is organized into unidirectional tiers. Each tier depends only on the t
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Tier 4: Problem Dispatch (num::solve, linear_problem)        │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────┐
 │ Tier 3: Domain Modules (linear, ode, pde, spectral, etc.)   │
 └──────────────────────────────┬──────────────────────────────┘
                                │
@@ -52,9 +48,8 @@ site picks one.
 | **Tier 1** | `core`, `algebra` | scalar fields, vector spaces, operator laws, and their runtime probes | `kernel` |
 | **Tier 2** | `container`, `operator` | `vec`, `mat`, `spmat`, matrix-free operators; defines `num::seq` (container-aware wrapper over `num::kernel`) and the untagged `num::` entry points that resolve through `num::accel` | `core`, `algebra`, `kernel` |
 | **Tier 3** | `linear`, `ode`, `pde`, `spectral`, `quadrature`, `roots`, `structures`, `spatial`, `stochastic` | Numerical domain algorithms (factorizations, Krylov solvers, RK45, Verlet, FFT, graph structures) | Tier 0–2 |
-| **Tier 4** | `solve` | Unified problem dispatch (`linear_problem`, `ode_problem`) | All tiers |
 | **Accelerators** | `omp`, `blas`, `lapack`, `cuda`, `mpi` | One namespace each (`num::omp`, `num::blas`, ...), same signatures as `num::kernel`. Optional; selected by what the build links, never by a tag or enum | `container`, plus the external library |
-| **Auxiliary** | `io`, `plot` | Header-only I/O and terminal plotting. Nothing in Tiers 0–4 includes them, so they can be deleted or lifted out on their own | `container` |
+| **Auxiliary** | `io`, `plot` | Header-only I/O and terminal plotting. Nothing in Tiers 0–3 includes them, so they can be deleted or lifted out on their own | `container` |
 
 ---
 

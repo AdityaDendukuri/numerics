@@ -270,7 +270,7 @@ static void BM_CG_GPU(benchmark::State &state) {
         for (idx i = 0; i < n; ++i)
             x[i] = 0.0;
         state.ResumeTiming();
-        auto r = unsafe::cuda::cg(A, b, x, 1e-10, 1000);
+        auto r = unsafe::cuda::cg(A, b, x, {.tolerance = 1e-10, .max_iterations = 1000});
         cudaDeviceSynchronize();
         benchmark::DoNotOptimize(x.data());
         state.counters["iters"] = static_cast<double>(r.iterations);

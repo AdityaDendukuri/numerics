@@ -40,17 +40,7 @@ auto laplacian = num::operators::make_op(
 
 auto spd_L = num::assume_spd(laplacian);
 num::vec u(N * N, 0.0);
-num::cg(spd_L, rhs, u, 1e-8);
-```
-
-### 3. Unified Problem Dispatch
-```cpp
-#include <numerics.hpp>
-
-auto op = num::operators::dense_op(A);
-auto solution = num::solve(
-    num::linear_problem{op, b},
-    num::gmres_method{.tol = 1e-10, .max_iter = 200});
+num::cg(spd_L, rhs, u, {.tolerance = 1e-8});
 ```
 
 ---

@@ -451,6 +451,7 @@ def collect(cindex):
                                                   "template struct")):
             continue
         entry = {
+            "kind": cursor.kind.name,
             "header": str(path.relative_to(include)),
             "line": cursor.location.line,
             "start": cursor.extent.start.line,
@@ -754,6 +755,27 @@ def render_examples():
     (directory / "index.md").write_text("\n".join(rows) + "\n")
 
 
+TYPE_KINDS = {"STRUCT_DECL", "CLASS_DECL", "CLASS_TEMPLATE", "TYPE_ALIAS_DECL",
+              "TYPE_ALIAS_TEMPLATE_DECL", "CONCEPT_DECL"}
+
+
+def write_symbols(names):
+    """The name-to-page map the mkdocs hook links symbols with, and every parameter name, which
+    the hook does not link as a short name in prose."""
+    symbols = {}
+    for name, overloads in names.items():
+        kind = overloads[0]["kind"]
+        symbols[name] = {
+            "page": str(page_path(name).relative_to(OUT.parent)),
+            "kind": "type" if kind in TYPE_KINDS else
+                    "variable" if kind == "VAR_DECL" else "function",
+        }
+    parameters = sorted({p for overloads in names.values() for o in overloads
+                         for p in o["parameters"] + o["template_parameters"]})
+    (OUT / "symbols.json").write_text(json.dumps({"names": symbols, "parameters": parameters},
+                                                 indent=0, sort_keys=True))
+
+
 def build(cindex):
     names, headers = collect(cindex)
     if OUT.exists():
@@ -764,6 +786,7 @@ def build(cindex):
         render_page(name, overloads, linker)
     problems = render_indexes(names, headers, linker)
     render_examples()
+    write_symbols(names)
     for problem in problems:
         print(f"refdoc: {problem}")
     documented = sum(1 for o in names.values() if any(e["doc"]["brief"] for e in o))

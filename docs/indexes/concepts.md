@@ -30,7 +30,7 @@ square_extent_2d cartesian_index_space_2d periodic_neighbourhood_2d
 scalar_field_like solvable_field
 
 ## Ordinary differential equations
-vec_field is_ode_problem is_symplectic_ode_problem is_ode_stepper
+vec_field is_ode_stepper
 
 ## Partial differential equations
 grid_stencil assemblable_grid_operator field_stepper
@@ -53,5 +53,3 @@ streaming_accumulator moment_accumulator
 ## Root finding
 bracketable_function
 
-## Problem dispatch
-is_explicit_ode_alg is_mcmc_alg
