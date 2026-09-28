@@ -1,0 +1,1694 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A C++20 library for scientific computing">
+      
+      
+      
+      
+        <link rel="prev" href="../getting-started/">
+      
+      
+        <link rel="next" href="../architecture/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Concepts, laws and diagnostics - numerics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/numerics.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#concepts-laws--diagnostics" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="numerics" class="md-header__button md-logo" aria-label="numerics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            numerics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Concepts, laws and diagnostics
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/AdityaDendukuri/numerics" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="numerics" class="md-nav__button md-logo" aria-label="numerics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    numerics
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/AdityaDendukuri/numerics" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts, laws and diagnostics
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts, laws and diagnostics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-declaring-a-law" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Declaring a law
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Declaring a law">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-declared-law-must-be-impossible-to-violate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A declared law must be impossible to violate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-laws-that-follow-from-an-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Laws that follow from an operation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-attaching-a-law-to-a-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Attaching a law to a value
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-what-the-compiler-says" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. What the compiler says
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. What the compiler says">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-law-claimed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No law claimed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#law-too-weak" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Law too weak
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-outside-the-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type outside the hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spaces-not-declared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spaces not declared
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-claim-that-is-false" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A claim that is false
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-bypassing-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Bypassing enforcement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-diagnostic-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Diagnostic presets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-requirements-by-routine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Requirements by routine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../backends/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backends
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kernel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    num::kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Algorithm notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/containers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All containers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/kernel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All kernels
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../report/REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-declaring-a-law" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Declaring a law
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Declaring a law">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-declared-law-must-be-impossible-to-violate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A declared law must be impossible to violate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-laws-that-follow-from-an-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Laws that follow from an operation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-attaching-a-law-to-a-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Attaching a law to a value
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-what-the-compiler-says" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. What the compiler says
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. What the compiler says">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-law-claimed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No law claimed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#law-too-weak" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Law too weak
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-outside-the-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type outside the hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spaces-not-declared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spaces not declared
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-claim-that-is-false" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A claim that is false
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-bypassing-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Bypassing enforcement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-diagnostic-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Diagnostic presets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-requirements-by-routine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Requirements by routine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="concepts-laws--diagnostics">Concepts, Laws &amp; Diagnostics<a class="headerlink" href="#concepts-laws--diagnostics" title="Permanent link">&para;</a></h1>
+<p>Concepts express two kinds of requirement. <strong>Structure</strong> is decided by the compiler from the
+operations a type provides. <strong>Laws</strong> are properties the compiler cannot decide, so a type
+declares them and a probe samples them.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Structure: the operations settle it.</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="w"> </span><span class="n">num</span><span class="o">::</span><span class="n">vector_space</span><span class="o">&lt;</span><a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="w"> </span><span class="n">num</span><span class="o">::</span><span class="n">vector_space</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><span class="n">num</span><span class="o">::</span><span class="n">vector_space</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">);</span><span class="w">   </span><span class="c1">// int is not a field</span>
+
+<span class="c1">// A law: the caller states it.</span>
+<a href="../reference/num/mat/"><span class="n">num</span><span class="o">::</span><span class="n">mat</span></a><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/identity/"><span class="n">num</span><span class="o">::</span><span class="n">identity</span></a><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">op</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/operators/dense_op/"><span class="n">num</span><span class="o">::</span><span class="n">operators</span><span class="o">::</span><span class="n">dense_op</span></a><span class="p">(</span><span class="n">A</span><span class="p">);</span><span class="w">        </span><span class="c1">// a linear operator, claiming nothing</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">sym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/assume_symmetric/"><span class="n">num</span><span class="o">::</span><span class="n">assume_symmetric</span></a><span class="p">(</span><span class="n">op</span><span class="p">);</span><span class="w">          </span><span class="c1">// now claims law::self_adjoint</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><span class="n">num</span><span class="o">::</span><span class="n">self_adjoint_operator</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">op</span><span class="p">)</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="w"> </span><span class="n">num</span><span class="o">::</span><span class="n">self_adjoint_operator</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span><span class="o">&gt;</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<p>Every concept, grouped by what it describes, is listed under <a href="../reference/concepts/">All concepts</a>.</p>
+<hr />
+<h2 id="1-the-hierarchy">1. The hierarchy<a class="headerlink" href="#1-the-hierarchy" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>field&lt;T&gt;                         floating point, real or complex
+vector_space&lt;V&gt;                  dimension, zero_like, scale, axpy over a field
+ └ inner_product_space&lt;V&gt;        + inner, norm
+linear_operator&lt;Op, X, Y&gt;        apply, rows, cols between vector spaces
+ └ self_adjoint_operator&lt;Op, V&gt;  + claims law::self_adjoint
+    └ psd_operator&lt;Op, V&gt;        + claims law::psd
+       └ spd_operator&lt;Op, V&gt;     + claims law::spd
+</code></pre></div>
+<p>A space is anything the operations <a href="../reference/num/math/dimension/"><code>num::math::dimension</code></a>, <a href="../reference/num/math/zero_like/"><code>zero_like</code></a>, <code>scale</code>, <a href="../reference/num/math/axpy/"><code>axpy</code></a>,
+<a href="../reference/num/math/inner/"><code>inner</code></a> and <a href="../reference/num/math/norm/"><code>norm</code></a> accept. Each operation calls a <code>tag_invoke</code> overload when the type has
+one, and otherwise loops over <code>v[i]</code>. So <code>std::vector&lt;double&gt;</code> is an inner product space
+with no declaration.</p>
+<p>Linearity has no law. It is a precondition of <a href="../reference/num/math/linear_operator/"><code>linear_operator</code></a>, in the way <code>std::regular</code>
+states requirements the compiler cannot check. A law exists only where an algorithm depends
+on it:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">law</th>
+<th style="text-align: left;">implies</th>
+<th style="text-align: left;">required by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/law/self_adjoint/"><code>law::self_adjoint</code></a></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><a href="../reference/num/minres/"><code>minres</code></a>, <a href="../reference/num/lanczos/"><code>lanczos</code></a>, <a href="../reference/num/eig_sym/"><code>eig_sym</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/law/psd/"><code>law::psd</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/self_adjoint/"><code>self_adjoint</code></a></td>
+<td style="text-align: left;">graph Laplacians, before a subspace restriction</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/law/spd/"><code>law::spd</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/psd/"><code>psd</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/cg/"><code>cg</code></a>, <a href="../reference/num/pcg/"><code>pcg</code></a>, <a href="../reference/num/cholesky/"><code>cholesky</code></a>, <a href="../reference/num/sqrt_lanczos/"><code>sqrt_lanczos</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/law/diagonally_dominant/"><code>law::diagonally_dominant</code></a></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><a href="../reference/num/jacobi/"><code>jacobi</code></a>, <a href="../reference/num/gauss_seidel/"><code>gauss_seidel</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/law/spd_on/"><code>law::spd_on&lt;S&gt;</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/psd_on/"><code>psd_on&lt;S&gt;</code></a>, <a href="../reference/num/law/self_adjoint_on/"><code>self_adjoint_on&lt;S&gt;</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/pcg/"><code>pcg</code></a> on the subspace <code>S</code></td>
+</tr>
+</tbody>
+</table>
+<p>A stronger law derives from the weaker ones, so one claim satisfies every weaker concept:</p>
+<div class="highlight"><pre><span></span><code><span class="k">auto</span><span class="w"> </span><a href="../reference/num/law/spd/"><span class="n">spd</span></a><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/assume_spd/"><span class="n">num</span><span class="o">::</span><span class="n">assume_spd</span></a><span class="p">(</span><a href="../reference/num/operators/dense_op/"><span class="n">num</span><span class="o">::</span><span class="n">operators</span><span class="o">::</span><span class="n">dense_op</span></a><span class="p">(</span><span class="n">A</span><span class="p">));</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">spd_operator</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><a href="../reference/num/law/spd/"><span class="n">spd</span></a><span class="p">)</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">psd_operator</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><a href="../reference/num/law/spd/"><span class="n">spd</span></a><span class="p">)</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">self_adjoint_operator</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><a href="../reference/num/law/spd/"><span class="n">spd</span></a><span class="p">)</span><span class="o">&gt;</span><span class="p">);</span>
+</code></pre></div>
+<p>Storage layout is described separately, under <code>num::repr</code>. Bandedness is a statement about
+memory, not about a linear map.</p>
+<div class="highlight"><pre><span></span><code><span class="k">static_assert</span><span class="p">(</span><a href="../reference/num/repr/contiguous/"><span class="n">num</span><span class="o">::</span><span class="n">repr</span><span class="o">::</span><span class="n">contiguous</span></a><span class="o">&lt;</span><a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><a href="../reference/num/repr/dense_row_major/"><span class="n">num</span><span class="o">::</span><span class="n">repr</span><span class="o">::</span><span class="n">dense_row_major</span></a><span class="o">&lt;</span><a href="../reference/num/mat/"><span class="n">num</span><span class="o">::</span><span class="n">mat</span></a><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><a href="../reference/num/repr/csr/"><span class="n">num</span><span class="o">::</span><span class="n">repr</span><span class="o">::</span><span class="n">csr</span></a><span class="o">&lt;</span><a href="../reference/num/spmat/"><span class="n">num</span><span class="o">::</span><span class="n">spmat</span></a><span class="o">&gt;</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h2 id="2-declaring-a-law">2. Declaring a law<a class="headerlink" href="#2-declaring-a-law" title="Permanent link">&para;</a></h2>
+<p>A type declares the laws it satisfies with a member alias:</p>
+<div class="highlight"><pre><span></span><code><span class="k">struct</span><span class="w"> </span><span class="nc">custom_1d_laplacian</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">laws</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/law/list/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">list</span></a><span class="o">&lt;</span><a href="../reference/num/law/spd/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">spd</span></a><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">domain_type</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="p">;</span>
+<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">codomain_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="p">;</span>
+
+<span class="w">    </span><a href="../reference/num/idx/"><span class="n">num</span><span class="o">::</span><span class="n">idx</span></a><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="p">[[</span><span class="na">nodiscard</span><span class="p">]]</span><span class="w"> </span><a href="../reference/num/idx/"><span class="n">num</span><span class="o">::</span><span class="n">idx</span></a><span class="w"> </span><span class="n">rows</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">[[</span><span class="na">nodiscard</span><span class="p">]]</span><span class="w"> </span><a href="../reference/num/idx/"><span class="n">num</span><span class="o">::</span><span class="n">idx</span></a><span class="w"> </span><span class="n">cols</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">apply</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="w"> </span><span class="o">&amp;</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><a href="../reference/num/idx/"><span class="n">num</span><span class="o">::</span><span class="n">idx</span></a><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">spd_operator</span><span class="o">&lt;</span><span class="n">custom_1d_laplacian</span><span class="o">&gt;</span><span class="p">);</span>
+</code></pre></div>
+<p>A type may declare several laws, including incomparable ones such as <a href="../reference/num/law/spd/"><code>spd</code></a> and
+<a href="../reference/num/law/diagonally_dominant/"><code>diagonally_dominant</code></a>. <a href="../reference/num/claims/"><code>num::claims&lt;T, L&gt;</code></a> is true when <code>T</code> declares <code>L</code> or a law that
+implies it.</p>
+<p>A value whose type you do not control gets a law from <a href="../reference/num/assume/"><code>num::assume</code></a> instead; see section 4.</p>
+<h3 id="a-declared-law-must-be-impossible-to-violate">A declared law must be impossible to violate<a class="headerlink" href="#a-declared-law-must-be-impossible-to-violate" title="Permanent link">&para;</a></h3>
+<p>A declaration is a promise about every instance, and nothing checks it. It is sound only
+when no violating instance can be built. Every declaration in the library earns its law in
+one of three ways.</p>
+<p>A constructor can reject the bad inputs:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// SPD because a non-positive diagonal cannot get past the constructor.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">positive_diagonal</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">laws</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/law/list/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">list</span></a><span class="o">&lt;</span><a href="../reference/num/law/spd/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">spd</span></a><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">explicit</span><span class="w"> </span><span class="n">positive_diagonal</span><span class="p">(</span><a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="w"> </span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">d_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">d</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><a href="../reference/num/real/"><span class="n">num</span><span class="o">::</span><span class="n">real</span></a><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">d_</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">invalid_argument</span><span class="p">(</span><span class="s">"diagonal must be positive and finite"</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="k">private</span><span class="o">:</span>
+<span class="w">    </span><a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="w"> </span><span class="n">d_</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>A constraint can reject the bad operands:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// p(A) is positive definite only when A is.</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">Op</span><span class="o">&gt;</span>
+<span class="k">requires</span><span class="w"> </span><span class="n">num</span><span class="o">::</span><span class="n">spd_operator</span><span class="o">&lt;</span><span class="n">Op</span><span class="o">&gt;</span>
+<span class="k">class</span><span class="w"> </span><a href="../reference/num/chebyshev_preconditioner/"><span class="nc">chebyshev_preconditioner</span></a><span class="w"> </span><span class="k">final</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">};</span>
+</code></pre></div>
+<p>The structure of <a href="../reference/num/math/apply/"><code>apply</code></a> can leave nothing to violate. A symmetric stencil is self-adjoint
+whatever its coefficients.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">type</th>
+<th style="text-align: left;">claims</th>
+<th style="text-align: left;">earned by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/jacobi_preconditioner/"><code>jacobi_preconditioner</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/spd/"><code>spd</code></a></td>
+<td style="text-align: left;">constructor: every entry positive and finite</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/chebyshev_preconditioner/"><code>chebyshev_preconditioner&lt;Op&gt;</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/spd/"><code>spd</code></a></td>
+<td style="text-align: left;"><code>requires spd_operator&lt;Op&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/operators/backward_euler_2d/"><code>backward_euler_2d</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/spd/"><code>spd</code></a></td>
+<td style="text-align: left;">constructor: <code>coeff &gt;= 0</code>, so Gershgorin applies</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/pde/backward_euler_operator_2d/"><code>backward_euler_operator_2d</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/spd/"><code>spd</code></a></td>
+<td style="text-align: left;">the same check</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/operators/laplacian_2d/"><code>laplacian_2d</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/self_adjoint/"><code>self_adjoint</code></a></td>
+<td style="text-align: left;">structure: symmetric 5-point stencil</td>
+</tr>
+</tbody>
+</table>
+<p>If a program can construct a violating instance, the law belongs behind <a href="../reference/num/assume/"><code>num::assume</code></a>, where
+the caller takes responsibility and the diagnostics sample it.</p>
+<hr />
+<h2 id="3-laws-that-follow-from-an-operation">3. Laws that follow from an operation<a class="headerlink" href="#3-laws-that-follow-from-an-operation" title="Permanent link">&para;</a></h2>
+<p><span class="arithmatex">\(P_S A\)</span> is not self-adjoint, since <span class="arithmatex">\((P_S A)^* = A P_S \neq P_S A\)</span>. But <span class="arithmatex">\(P_S A x = P_S
+A P_S x\)</span> for <span class="arithmatex">\(x \in S\)</span>, and <span class="arithmatex">\(P_S A P_S\)</span> keeps the law of <span class="arithmatex">\(A\)</span> on <span class="arithmatex">\(S\)</span>.
+<a href="../reference/num/operators/projected/"><code>num::operators::projected</code></a> carries that law over, so a graph Laplacian can be solved on the
+zero-sum subspace without a second assertion.</p>
+<div class="highlight"><pre><span></span><code><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/assume_spd/"><span class="n">num</span><span class="o">::</span><span class="n">assume_spd</span></a><span class="p">(</span><a href="../reference/num/operators/dense_op/"><span class="n">num</span><span class="o">::</span><span class="n">operators</span><span class="o">::</span><span class="n">dense_op</span></a><span class="p">(</span><span class="n">M</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">pa</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/operators/projected/"><span class="n">num</span><span class="o">::</span><span class="n">operators</span><span class="o">::</span><span class="n">projected</span></a><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><a href="../reference/num/space/zero_sum/"><span class="n">num</span><span class="o">::</span><span class="n">space</span><span class="o">::</span><span class="n">zero_sum</span></a><span class="p">{});</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="w"> </span><a href="../reference/num/claims/"><span class="n">num</span><span class="o">::</span><span class="n">claims</span></a><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">pa</span><span class="p">),</span><span class="w"> </span><a href="../reference/num/law/spd_on/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">spd_on</span></a><span class="o">&lt;</span><a href="../reference/num/space/zero_sum/"><span class="n">num</span><span class="o">::</span><span class="n">space</span><span class="o">::</span><span class="n">zero_sum</span></a><span class="o">&gt;&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><a href="../reference/num/claims/"><span class="n">num</span><span class="o">::</span><span class="n">claims</span></a><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">pa</span><span class="p">),</span><span class="w"> </span><a href="../reference/num/law/spd/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">spd</span></a><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><a href="../reference/num/claims/"><span class="n">num</span><span class="o">::</span><span class="n">claims</span></a><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">pa</span><span class="p">),</span><span class="w"> </span><a href="../reference/num/law/self_adjoint/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">self_adjoint</span></a><span class="o">&gt;</span><span class="p">);</span>
+</code></pre></div>
+<p>A weaker operand gives a weaker restriction, and an operand claiming nothing gives nothing.</p>
+<p>Strict diagonal dominance and definiteness are incomparable. <span class="arithmatex">\(\begin{pmatrix} 1 &amp; 0.9 \\
+0.9 &amp; 1\end{pmatrix}\)</span> is SPD and not dominant, and a dominant matrix need not be symmetric.
+A routine that accepts either says so with <code>||</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// gauss_seidel converges for strictly diagonally dominant or SPD A.</span>
+<a href="../reference/num/gauss_seidel/"><span class="n">num</span><span class="o">::</span><span class="n">gauss_seidel</span></a><span class="p">(</span><a href="../reference/num/assume_diagonally_dominant/"><span class="n">num</span><span class="o">::</span><span class="n">assume_diagonally_dominant</span></a><span class="p">(</span><span class="n">A</span><span class="p">),</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<a href="../reference/num/gauss_seidel/"><span class="n">num</span><span class="o">::</span><span class="n">gauss_seidel</span></a><span class="p">(</span><a href="../reference/num/assume_spd/"><span class="n">num</span><span class="o">::</span><span class="n">assume_spd</span></a><span class="p">(</span><span class="n">A</span><span class="p">),</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h2 id="4-attaching-a-law-to-a-value">4. Attaching a law to a value<a class="headerlink" href="#4-attaching-a-law-to-a-value" title="Permanent link">&para;</a></h2>
+<p><a href="../reference/num/with_law/"><code>num::with_law&lt;T, L&gt;</code></a> owns a matrix or operator <code>T</code> and claims <code>L</code>. It forwards the shape, the
+entries and the action. A value with a stronger law converts to one with a weaker law, so an
+SPD matrix is accepted where a symmetric one is required.</p>
+<div class="highlight"><pre><span></span><code><a href="../reference/num/mat/"><span class="n">num</span><span class="o">::</span><span class="n">mat</span></a><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/identity/"><span class="n">num</span><span class="o">::</span><span class="n">identity</span></a><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">claimed</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/assume_spd/"><span class="n">num</span><span class="o">::</span><span class="n">assume_spd</span></a><span class="p">(</span><span class="n">A</span><span class="p">);</span><span class="w">              </span><span class="c1">// sampled under the active preset</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">by_law</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/assume/"><span class="n">num</span><span class="o">::</span><span class="n">assume</span></a><span class="o">&lt;</span><a href="../reference/num/law/spd/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">spd</span></a><span class="o">&gt;</span><span class="p">(</span><span class="n">A</span><span class="p">);</span><span class="w">   </span><span class="c1">// the same, naming the law</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">verified</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">num</span><span class="o">::</span><span class="n">make_spd</span><span class="p">(</span><span class="n">A</span><span class="p">);</span><span class="w">                </span><span class="c1">// Cholesky, O(n^3); throws on failure</span>
+
+<a href="../reference/num/eig_sym/"><span class="n">num</span><span class="o">::</span><span class="n">eig_sym</span></a><span class="p">(</span><span class="n">verified</span><span class="p">);</span><span class="w">                          </span><span class="c1">// spd converts to self_adjoint</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">attach</th>
+<th style="text-align: left;">law</th>
+<th style="text-align: left;">checked by</th>
+<th style="text-align: left;">cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>assume_symmetric(A)</code></td>
+<td style="text-align: left;"><a href="../reference/num/law/self_adjoint/"><code>self_adjoint</code></a></td>
+<td style="text-align: left;">sampled <span class="arithmatex">\(\langle x, Ay\rangle = \overline{\langle y, Ax\rangle}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\mathcal{O}(n^2)\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assume_psd(A)</code></td>
+<td style="text-align: left;"><a href="../reference/num/law/psd/"><code>psd</code></a></td>
+<td style="text-align: left;">sampled <span class="arithmatex">\(\langle x, Ax\rangle \ge 0\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\mathcal{O}(n^2)\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assume_spd(A)</code></td>
+<td style="text-align: left;"><a href="../reference/num/law/spd/"><code>spd</code></a></td>
+<td style="text-align: left;">sampled, plus a power-iteration bound on <span class="arithmatex">\(\lambda_{\min}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\mathcal{O}(n^2)\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assume_diagonally_dominant(A)</code></td>
+<td style="text-align: left;"><a href="../reference/num/law/diagonally_dominant/"><code>diagonally_dominant</code></a></td>
+<td style="text-align: left;">every row, exactly</td>
+<td style="text-align: left;"><span class="arithmatex">\(\mathcal{O}(n^2)\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>make_symmetric(A)</code></td>
+<td style="text-align: left;"><a href="../reference/num/law/self_adjoint/"><code>self_adjoint</code></a></td>
+<td style="text-align: left;">every entry, exactly</td>
+<td style="text-align: left;"><span class="arithmatex">\(\mathcal{O}(n^2)\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>make_spd(A)</code></td>
+<td style="text-align: left;"><a href="../reference/num/law/spd/"><code>spd</code></a></td>
+<td style="text-align: left;">Cholesky, exactly</td>
+<td style="text-align: left;"><span class="arithmatex">\(\mathcal{O}(n^3)\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Every <a href="../reference/num/assume/"><code>assume</code></a> samples linearity and checks squareness as well. Squareness is checked in
+every build, since it costs nothing.</p>
+<p>Constructing <code>with_law&lt;T, L&gt;(value)</code> directly attaches the law with no check. That is for
+code that has established the law by other means.</p>
+<hr />
+<h2 id="5-what-the-compiler-says">5. What the compiler says<a class="headerlink" href="#5-what-the-compiler-says" title="Permanent link">&para;</a></h2>
+<p>The output below is from real compiler runs, trimmed to the lines that identify the cause.</p>
+<h3 id="no-law-claimed">No law claimed<a class="headerlink" href="#no-law-claimed" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// DOES NOT COMPILE</span>
+<a href="../reference/num/cg/"><span class="n">num</span><span class="o">::</span><span class="n">cg</span></a><span class="p">(</span><a href="../reference/num/operators/dense_op/"><span class="n">num</span><span class="o">::</span><span class="n">operators</span><span class="o">::</span><span class="n">dense_op</span></a><span class="p">(</span><span class="n">A</span><span class="p">),</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>error: no matching function for call to 'cg'
+note: because 'math::spd_operator&lt;num::operators::dense_op, vec&gt;' evaluated to false
+note: because 'psd_operator&lt;num::operators::dense_op, num::basic_vec&lt;double&gt;&gt;' evaluated to false
+note: because 'self_adjoint_operator&lt;num::operators::dense_op, num::basic_vec&lt;double&gt;&gt;' evaluated to false
+note: because 'claims&lt;num::operators::dense_op, law::self_adjoint&gt;' evaluated to false
+</code></pre></div>
+<h3 id="law-too-weak">Law too weak<a class="headerlink" href="#law-too-weak" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// DOES NOT COMPILE</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">sym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/assume_symmetric/"><span class="n">num</span><span class="o">::</span><span class="n">assume_symmetric</span></a><span class="p">(</span><a href="../reference/num/operators/dense_op/"><span class="n">num</span><span class="o">::</span><span class="n">operators</span><span class="o">::</span><span class="n">dense_op</span></a><span class="p">(</span><span class="n">A</span><span class="p">));</span>
+<a href="../reference/num/cg/"><span class="n">num</span><span class="o">::</span><span class="n">cg</span></a><span class="p">(</span><span class="n">sym</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-10</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">max_iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">});</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>error: no matching function for call to 'cg'
+note: because 'claims&lt;num::with_law&lt;num::operators::dense_op, num::law::self_adjoint&gt;, law::psd&gt;'
+      evaluated to false
+</code></pre></div>
+<p>The claimed law is in the type, so the message shows it beside the one required. <a href="../reference/num/minres/"><code>num::minres</code></a>
+accepts this operator.</p>
+<h3 id="type-outside-the-hierarchy">Type outside the hierarchy<a class="headerlink" href="#type-outside-the-hierarchy" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// DOES NOT COMPILE</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">vector_space</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>error: static assertion failed
+note: because 'std::vector&lt;int&gt;' does not satisfy 'vector_space'
+note: because 'scalar_t&lt;std::vector&lt;int&gt;&gt;' (aka 'int') does not satisfy 'field'
+</code></pre></div>
+<h3 id="spaces-not-declared">Spaces not declared<a class="headerlink" href="#spaces-not-declared" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// DOES NOT COMPILE</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">my_op</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">laws</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/law/list/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">list</span></a><span class="o">&lt;</span><a href="../reference/num/law/spd/"><span class="n">num</span><span class="o">::</span><span class="n">law</span><span class="o">::</span><span class="n">spd</span></a><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// no domain_type or codomain_type</span>
+<span class="w">    </span><span class="cm">/* rows, cols, apply */</span>
+<span class="p">};</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">spd_operator</span><span class="o">&lt;</span><span class="n">my_op</span><span class="o">&gt;</span><span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>note: because 'linear_operator&lt;my_op, void, void&gt;' evaluated to false
+note: because 'void' does not satisfy 'vector_space'
+</code></pre></div>
+<p><code>void, void</code> means the spaces were never named.</p>
+<h3 id="a-claim-that-is-false">A claim that is false<a class="headerlink" href="#a-claim-that-is-false" title="Permanent link">&para;</a></h3>
+<p>The compiler checks that a law was claimed. Two runtime layers check that it is true.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Compiles; throws at run time.</span>
+<a href="../reference/num/mat/"><span class="n">num</span><span class="o">::</span><span class="n">mat</span></a><span class="w"> </span><span class="nf">A</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
+<span class="n">A</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">A</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">A</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">A</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5.0</span><span class="p">;</span><span class="w"> </span><span class="n">A</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-5.0</span><span class="p">;</span><span class="w">   </span><span class="c1">// not symmetric</span>
+<span class="k">auto</span><span class="w"> </span><a href="../reference/num/law/spd/"><span class="n">spd</span></a><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/assume_spd/"><span class="n">num</span><span class="o">::</span><span class="n">assume_spd</span></a><span class="p">(</span><a href="../reference/num/operators/dense_op/"><span class="n">num</span><span class="o">::</span><span class="n">operators</span><span class="o">::</span><span class="n">dense_op</span></a><span class="p">(</span><span class="n">A</span><span class="p">));</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>[PropertyError] Error at example.cpp:7 in int main():
+  assume_symmetric() assertion failed: relative |&lt;x,Ay&gt; - conj(&lt;y,Ax&gt;)| = 1.649990
+  on probe 0 exceeds tolerance 0.000000, so the operator is NOT self-adjoint.
+</code></pre></div>
+<p><a href="../reference/num/assume_spd/"><code>assume_spd</code></a> checks the weaker laws first, so the self-adjointness probe fires before
+definiteness is considered. Sampling can miss a violation. The algorithm then catches it:</p>
+<div class="highlight"><pre><span></span><code>caught: cg: positive-definite curvature invariant was violated
+</code></pre></div>
+<p>That check costs <span class="arithmatex">\(\mathcal{O}(1)\)</span> per iteration and stays in <code>NDEBUG</code> builds.</p>
+<hr />
+<h2 id="6-bypassing-enforcement">6. Bypassing enforcement<a class="headerlink" href="#6-bypassing-enforcement" title="Permanent link">&para;</a></h2>
+<p>Each law-gated routine has a counterpart under <code>num::unsafe</code> that takes a plain matrix and
+reports failure through its return value.</p>
+<div class="highlight"><pre><span></span><code><a href="../reference/num/mat/"><span class="n">num</span><span class="o">::</span><span class="n">mat</span></a><span class="w"> </span><span class="nf">indefinite</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
+<span class="n">indefinite</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="n">indefinite</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><a href="../reference/num/unsafe/cholesky/"><span class="n">num</span><span class="o">::</span><span class="n">unsafe</span><span class="o">::</span><span class="n">cholesky</span></a><span class="p">(</span><span class="n">indefinite</span><span class="p">);</span><span class="w">   </span><span class="c1">// factor.success == false, no throw</span>
+</code></pre></div>
+<p>Available: <a href="../reference/num/unsafe/cholesky/"><code>num::unsafe::cholesky</code></a>, <a href="../reference/num/unsafe/eig_sym/"><code>num::unsafe::eig_sym</code></a>, <a href="../reference/num/unsafe/cg/"><code>num::unsafe::cg</code></a>,
+<a href="../reference/num/unsafe/lanczos/"><code>num::unsafe::lanczos</code></a>.</p>
+<hr />
+<h2 id="7-diagnostic-presets">7. Diagnostic presets<a class="headerlink" href="#7-diagnostic-presets" title="Permanent link">&para;</a></h2>
+<p><code>NUMERICS_DIAGNOSTICS</code> decides at compile time what checking code exists. The runtime preset
+decides whether it runs.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><code>NUMERICS_DIAGNOSTICS</code></th>
+<th style="text-align: left;">Contains</th>
+<th style="text-align: left;">Default in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>0</code></td>
+<td style="text-align: left;">nothing</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1</code></td>
+<td style="text-align: left;">shape checks: dimensions, emptiness, finiteness</td>
+<td style="text-align: left;">builds with <code>NDEBUG</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>2</code></td>
+<td style="text-align: left;">property sampling as well</td>
+<td style="text-align: left;">builds without <code>NDEBUG</code></td>
+</tr>
+</tbody>
+</table>
+<p>Sampling costs <span class="arithmatex">\(\mathcal{O}(n^2)\)</span>, so it is not a Release default:</p>
+<div class="highlight"><pre><span></span><code>ceiling=1   assume_spd =  0.00 ms   cg = 3.38 ms
+ceiling=2   assume_spd = 31.19 ms   cg = 3.39 ms
+</code></pre></div>
+<p>Build with <code>-DNUMERICS_DIAGNOSTICS=2</code> to keep sampling in an optimized build. This library's
+own test suite does.</p>
+<div class="highlight"><pre><span></span><code><span class="n">num</span><span class="o">::</span><span class="n">set_preset</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">preset</span><span class="o">::</span><span class="n">strict</span><span class="p">);</span><span class="w">      </span><span class="c1">// sample every property</span>
+<span class="n">num</span><span class="o">::</span><span class="n">set_preset</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">preset</span><span class="o">::</span><span class="n">balanced</span><span class="p">);</span><span class="w">    </span><span class="c1">// shape and dimension checks only</span>
+<span class="n">num</span><span class="o">::</span><span class="n">set_preset</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">preset</span><span class="o">::</span><span class="n">production</span><span class="p">);</span><span class="w">  </span><span class="c1">// everything off</span>
+
+<span class="c1">// A request above the ceiling is clamped, and reports it.</span>
+<span class="n">num</span><span class="o">::</span><span class="n">set_preset</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">preset</span><span class="o">::</span><span class="n">strict</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">num</span><span class="o">::</span><span class="n">preset_fully_applied</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// built below the requested level; rebuild with -DNUMERICS_DIAGNOSTICS=2</span>
+<span class="p">}</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="n">num</span><span class="o">::</span><span class="n">scoped_preset</span><span class="w"> </span><span class="nf">guard</span><span class="p">(</span><span class="n">num</span><span class="o">::</span><span class="n">preset</span><span class="o">::</span><span class="n">production</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// probing skipped in here; the previous preset returns at the closing brace</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="8-requirements-by-routine">8. Requirements by routine<a class="headerlink" href="#8-requirements-by-routine" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Routine</th>
+<th style="text-align: left;">Requires</th>
+<th style="text-align: left;">Alternative for weaker input</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/cholesky/"><code>num::cholesky</code></a></td>
+<td style="text-align: left;">a dense matrix claiming <a href="../reference/num/law/spd/"><code>law::spd</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/lu/"><code>num::lu</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/cg/"><code>num::cg</code></a></td>
+<td style="text-align: left;"><code>num::spd_operator</code></td>
+<td style="text-align: left;"><a href="../reference/num/minres/"><code>num::minres</code></a>, <a href="../reference/num/gmres/"><code>num::gmres</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/pcg/"><code>num::pcg</code></a></td>
+<td style="text-align: left;"><code>num::spd_operator</code> for operator and preconditioner</td>
+<td style="text-align: left;"><a href="../reference/num/gmres/"><code>num::gmres</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/minres/"><code>num::minres</code></a></td>
+<td style="text-align: left;"><code>num::self_adjoint_operator</code></td>
+<td style="text-align: left;"><a href="../reference/num/gmres/"><code>num::gmres</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/gmres/"><code>num::gmres</code></a></td>
+<td style="text-align: left;"><code>num::linear_operator</code></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/lu/"><code>num::lu</code></a></td>
+<td style="text-align: left;">a square matrix, checked at run time</td>
+<td style="text-align: left;"><a href="../reference/num/qr/"><code>num::qr</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/eig_sym/"><code>num::eig_sym</code></a></td>
+<td style="text-align: left;">a dense matrix claiming <a href="../reference/num/law/self_adjoint/"><code>law::self_adjoint</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/power_iteration/"><code>num::power_iteration</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/lanczos/"><code>num::lanczos</code></a></td>
+<td style="text-align: left;"><code>num::self_adjoint_operator</code></td>
+<td style="text-align: left;"><a href="../reference/num/power_iteration/"><code>num::power_iteration</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/jacobi/"><code>num::jacobi</code></a></td>
+<td style="text-align: left;">a matrix claiming <a href="../reference/num/law/diagonally_dominant/"><code>law::diagonally_dominant</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/gauss_seidel/"><code>num::gauss_seidel</code></a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../reference/num/gauss_seidel/"><code>num::gauss_seidel</code></a></td>
+<td style="text-align: left;"><a href="../reference/num/law/diagonally_dominant/"><code>law::diagonally_dominant</code></a> or <a href="../reference/num/law/spd/"><code>law::spd</code></a></td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
+<p>See the example program <a href="../reference/examples/14_concepts_and_property_invariants/">14_concepts_and_property_invariants.cpp</a>.</p>
+<hr />
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../reference/kernel/">num::kernel</a>, the computational half of the library</li>
+</ul>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../assets/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

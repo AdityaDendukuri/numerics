@@ -1,0 +1,1314 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A C++20 library for scientific computing">
+      
+      
+      
+      
+        <link rel="prev" href="../performance/">
+      
+      
+        <link rel="next" href="../reference/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Algorithm notes - numerics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/numerics.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#algorithm-notes" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="numerics" class="md-header__button md-logo" aria-label="numerics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            numerics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Algorithm notes
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/AdityaDendukuri/numerics" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="numerics" class="md-nav__button md-logo" aria-label="numerics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    numerics
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/AdityaDendukuri/numerics" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts, laws and diagnostics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../backends/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backends
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kernel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    num::kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Algorithm notes
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Algorithm notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#container-vocabulary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Container vocabulary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Container vocabulary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-between-numvec-and-numarray" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing between num::vec and num::array
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#over-aligned-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Over-aligned storage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spanning-tree-clique-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spanning-tree clique sampling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spanning-tree clique sampling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-symmetric-clique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The symmetric clique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-directed-biclique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The directed biclique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#measured-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measured behaviour
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chebyshev-polynomial-preconditioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chebyshev polynomial preconditioning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#probed-inverse-diagonal-of-an-m-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Probed inverse diagonal of an M-matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/containers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All containers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/kernel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All kernels
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../report/REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#container-vocabulary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Container vocabulary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Container vocabulary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-between-numvec-and-numarray" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing between num::vec and num::array
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#over-aligned-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Over-aligned storage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spanning-tree-clique-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spanning-tree clique sampling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spanning-tree clique sampling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-symmetric-clique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The symmetric clique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-directed-biclique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The directed biclique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#measured-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measured behaviour
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chebyshev-polynomial-preconditioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chebyshev polynomial preconditioning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#probed-inverse-diagonal-of-an-m-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Probed inverse diagonal of an M-matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="algorithm-notes">Algorithm notes<a class="headerlink" href="#algorithm-notes" title="Permanent link">&para;</a></h1>
+<p>Derivations, measurements and design reasons behind specific routines. The reference pages link here where a header comment is too short to hold them.</p>
+<h2 id="container-vocabulary">Container vocabulary<a class="headerlink" href="#container-vocabulary" title="Permanent link">&para;</a></h2>
+<p>Every type below is an alias, so it is the underlying type exactly — nothing is wrapped,
+nothing converts, and a function expecting the standard type accepts the alias unchanged.</p>
+<p><strong>Scalars.</strong> These exist so precision and index width are decided in one place rather
+than spelled out at every site.</p>
+<table>
+<thead>
+<tr>
+<th>alias</th>
+<th>is</th>
+<th>use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../reference/num/real/"><code>num::real</code></a></td>
+<td><code>double</code></td>
+<td>every floating-point quantity</td>
+</tr>
+<tr>
+<td><a href="../reference/num/idx/"><code>num::idx</code></a></td>
+<td><code>std::size_t</code></td>
+<td>sizes, offsets, and subscripts</td>
+</tr>
+<tr>
+<td><a href="../reference/num/cplx/"><code>num::cplx</code></a></td>
+<td><code>std::complex&lt;num::real&gt;</code></td>
+<td>complex amplitudes</td>
+</tr>
+</tbody>
+</table>
+<p>Note the spelling: <a href="../reference/num/cplx/"><code>cplx</code></a>, not <code>cmplx</code>.</p>
+<p><strong>Containers.</strong> Every standard container is used through a <code>num::</code> alias, so a
+declaration never mixes <code>std::</code> and <code>num::</code>.
+Two sequence containers are named after what they hold, because their C++ names are words
+this library has already spent on mathematics.</p>
+<table>
+<thead>
+<tr>
+<th>alias</th>
+<th>is</th>
+<th>the word it frees</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../reference/num/array/"><code>num::array&lt;T&gt;</code></a></td>
+<td><code>std::vector&lt;T&gt;</code></td>
+<td><a href="../reference/num/vec/"><code>num::vec</code></a>, an element of a vector space</td>
+</tr>
+<tr>
+<td><a href="../reference/num/static_array/"><code>num::static_array&lt;T, N&gt;</code></a></td>
+<td><code>std::array&lt;T, N&gt;</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../reference/num/view/"><code>num::view&lt;T&gt;</code></a></td>
+<td><code>std::span&lt;T&gt;</code></td>
+<td>the span of a set of vectors</td>
+</tr>
+</tbody>
+</table>
+<p>The associative containers keep their C++ names.
+A plain name keeps its keys sorted, and an <code>unordered_</code> name hashes them.</p>
+<table>
+<thead>
+<tr>
+<th>alias</th>
+<th>order</th>
+<th>C++</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../reference/num/unordered_map/"><code>num::unordered_map&lt;K, V&gt;</code></a></td>
+<td>none</td>
+<td><code>std::unordered_map&lt;K, V&gt;</code></td>
+<td><code>std::collections::HashMap&lt;K, V&gt;</code></td>
+</tr>
+<tr>
+<td><a href="../reference/num/map/"><code>num::map&lt;K, V&gt;</code></a></td>
+<td>sorted</td>
+<td><code>std::map&lt;K, V&gt;</code></td>
+<td><code>std::collections::BTreeMap&lt;K, V&gt;</code></td>
+</tr>
+<tr>
+<td><a href="../reference/num/unordered_set/"><code>num::unordered_set&lt;K&gt;</code></a></td>
+<td>none</td>
+<td><code>std::unordered_set&lt;K&gt;</code></td>
+<td><code>std::collections::HashSet&lt;K&gt;</code></td>
+</tr>
+<tr>
+<td><a href="../reference/num/set/"><code>num::set&lt;K&gt;</code></a></td>
+<td>sorted</td>
+<td><code>std::set&lt;K&gt;</code></td>
+<td><code>std::collections::BTreeSet&lt;K&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p>A declaration then says which half of the library it belongs to:</p>
+<div class="highlight"><pre><span></span><code><a href="../reference/num/array/"><span class="n">num</span><span class="o">::</span><span class="n">array</span></a><span class="o">&lt;</span><a href="../reference/num/idx/"><span class="n">num</span><span class="o">::</span><span class="n">idx</span></a><span class="o">&gt;</span><span class="w"> </span><span class="n">row_offsets</span><span class="p">;</span><span class="w">   </span><span class="c1">// storage</span>
+<a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="w">             </span><span class="nf">x</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span><span class="w">          </span><span class="c1">// mathematics</span>
+</code></pre></div>
+<p>One member function has an alias as well.
+<code>num::append(values, x)</code> is <code>values.emplace_back(x)</code>, named for what the caller does rather than for how the element is stored, and it takes either a value or the arguments of the element's constructor.
+An alias cannot be a member of a type alias, so it is a free function; <code>push_back</code> remains available and means the same thing.</p>
+<p>Because these are aliases and not wrappers, standard code keeps working verbatim:</p>
+<div class="highlight"><pre><span></span><code><a href="../reference/num/array/"><span class="n">num</span><span class="o">::</span><span class="n">array</span></a><span class="o">&lt;</span><a href="../reference/num/real/"><span class="n">num</span><span class="o">::</span><span class="n">real</span></a><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><a href="../reference/num/real/"><span class="n">num</span><span class="o">::</span><span class="n">real</span></a><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">same</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w">      </span><span class="c1">// the same object; no conversion happens</span>
+<span class="n">std</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">end</span><span class="p">());</span><span class="w">         </span><span class="c1">// ordinary standard algorithms</span>
+</code></pre></div>
+<p>Compiler diagnostics still name the underlying standard type. Containers whose names
+carry no mathematical meaning — <code>std::pair</code>, <code>std::tuple</code>, <code>std::optional</code>,
+<code>std::string</code> — are deliberately left alone, so the library does not end up maintaining a
+parallel vocabulary for the whole standard library.</p>
+<h3 id="choosing-between-numvec-and-numarray">Choosing between num::vec and num::array<num::real><a class="headerlink" href="#choosing-between-numvec-and-numarray" title="Permanent link">&para;</a></h3>
+<p>Both hold <code>double</code>s contiguously, and they are different types with different jobs.</p>
+<div class="highlight"><pre><span></span><code><a href="../reference/num/array/"><span class="n">num</span><span class="o">::</span><span class="n">array</span></a><span class="o">&lt;</span><a href="../reference/num/real/"><span class="n">num</span><span class="o">::</span><span class="n">real</span></a><span class="o">&gt;</span><span class="w"> </span><span class="n">raw</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w">   </span><span class="c1">// storage: grows, zero-initialises, 16-byte aligned</span>
+<a href="../reference/num/vec/"><span class="n">num</span><span class="o">::</span><span class="n">vec</span></a><span class="w">              </span><span class="nf">x</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w">     </span><span class="c1">// mathematics: fixed extent, 64-byte aligned</span>
+</code></pre></div>
+<p><a href="../reference/num/vec/"><code>num::vec</code></a> owns over-aligned storage, skips the zero-initialising pass when the contents
+are about to be overwritten, and satisfies <a href="../reference/num/math/vector_space/"><code>num::math::vector_space</code></a>, so solvers and
+operators take it directly. It has no <code>push_back</code>: its extent is fixed at construction.
+Use <a href="../reference/num/array/"><code>num::array</code></a> when the length is not known until the values are, and <a href="../reference/num/vec/"><code>num::vec</code></a> once
+the data is mathematics.</p>
+<h2 id="over-aligned-storage">Over-aligned storage<a class="headerlink" href="#over-aligned-storage" title="Permanent link">&para;</a></h2>
+<p>The dense containers allocate through <a href="../reference/num/make_aligned/"><code>num::make_aligned</code></a>, which places the first element on
+a <a href="../reference/num/storage_alignment/"><code>num::storage_alignment</code></a> boundary (64 bytes by default). Plain <code>new T[n]</code> guarantees only
+16.</p>
+<p>On AArch64/NEON and x86-64/AVX-512, clang emits identical code for the level-1 kernels with
+and without the guarantee. It already prefers the unaligned move forms, which cost nothing on
+an aligned address. The <code>std::assume_aligned</code> in <code>data()</code> is there for kernels that will need
+it, not for speed today.</p>
+<p>The alignment buys three structural properties.</p>
+<ul>
+<li>A vector load never straddles a cache line.</li>
+<li>Two containers never share a line at their boundaries, so a threaded reduction over
+  adjacent buffers has no false sharing.</li>
+<li>Aligned SIMD loads, non-temporal stores and pinned host memory registration require it.</li>
+</ul>
+<p>It also costs something. The aligned <code>operator new</code> bypasses the small-size fast path of
+libc++, which on macOS measured about 4x the latency of plain <code>new</code> below a kilobyte. Only
+code that allocates inside a loop sees this.</p>
+<p>The guarantee covers the base pointer. <code>A.data() + j</code> is aligned only when <code>j * sizeof(T)</code>
+is a multiple of <a href="../reference/num/storage_alignment/"><code>storage_alignment</code></a>, so a matrix row starts on a boundary only when its
+stride does. The stride is not padded.</p>
+<h2 id="spanning-tree-clique-sampling">Spanning-tree clique sampling<a class="headerlink" href="#spanning-tree-clique-sampling" title="Permanent link">&para;</a></h2>
+<p><code>structures/graph/clique.hpp</code> replaces the fill of one elimination by a random spanning tree
+of it, reweighted so the elimination stays unbiased in expectation.</p>
+<h3 id="the-symmetric-clique">The symmetric clique<a class="headerlink" href="#the-symmetric-clique" title="Permanent link">&para;</a></h3>
+<p>Eliminating <code>v</code> adds a clique on its neighbours with Schur-complement weights
+<span class="arithmatex">\(w_{ij} = c_i c_j / C\)</span>, where <span class="arithmatex">\(c_i\)</span> is the conductance from <code>v</code> to neighbour <code>i</code>
+and <span class="arithmatex">\(C = \sum_i c_i\)</span>. For a weighted uniform spanning tree, Kirchhoff gives the inclusion
+probability <span class="arithmatex">\(p_e = w_e R_{\mathrm{eff}}(e)\)</span>. Effective resistances usually need
+Laplacian solves, but this clique Laplacian is <span class="arithmatex">\(\operatorname{diag}(c) - cc^{T}/C\)</span>, and
+solving it gives the series path through <code>v</code>:
+$$
+  R_{\mathrm{eff}}(i,j) = \frac{1}{c_i} + \frac{1}{c_j}, \qquad
+  p_{ij} = \frac{c_i + c_j}{C}, \qquad
+  \sum_{i&lt;j} p_{ij} = d - 1.
+$$
+The sum is the edge count of a spanning tree. The reweighting
+<span class="arithmatex">\(\widehat c_{ij} = w_{ij}/p_{ij} = c_i c_j / (c_i + c_j)\)</span> is the harmonic mean, the same
+series conductance the independent sampler assigns, so
+<span class="arithmatex">\(\mathbb{E}[\widetilde L^{(v)}] = \mathrm{Sc}(L)\)</span>.</p>
+<p>Aldous--Broder degenerates on this clique. Its transition kernel
+<span class="arithmatex">\(P(i \to j) = c_j / (C - c_i)\)</span> does not depend on the current vertex, so the walk is a
+coupon collector: draw i.i.d. from <span class="arithmatex">\(c/C\)</span> and record the entering edge at each first visit.</p>
+<h3 id="the-directed-biclique">The directed biclique<a class="headerlink" href="#the-directed-biclique" title="Permanent link">&para;</a></h3>
+<p>A nonsymmetric pivot leaves the rank-one update <span class="arithmatex">\(xy^{T}/a\)</span>, with <span class="arithmatex">\(x_i = -A_{iv}\)</span>,
+<span class="arithmatex">\(y_j = -A_{vj}\)</span> and <span class="arithmatex">\(a = A_{vv}\)</span>. Lifting to a bipartite graph with vertices
+<span class="arithmatex">\(i_L\)</span> for in-neighbours, <span class="arithmatex">\(j_R\)</span> for out-neighbours, and conductances <span class="arithmatex">\(x_iy_j/a\)</span>
+keeps the two directions of an edge distinct. With <span class="arithmatex">\(X = \sum_i x_i\)</span> and
+<span class="arithmatex">\(Y = \sum_j y_j\)</span>,
+$$
+  R_{\mathrm{eff}}(i_L, j_R) = a\Big[\tfrac{1}{x_iY} + \tfrac{1}{y_jX} - \tfrac{1}{XY}\Big],
+  \qquad
+  p_{ij} = 1 - (1-\alpha_i)(1-\beta_j),
+$$
+where <span class="arithmatex">\(\alpha_i = x_i/X\)</span> and <span class="arithmatex">\(\beta_j = y_j/Y\)</span>. The probabilities sum to <span class="arithmatex">\(m + n - 1\)</span>,
+the edge count of a spanning tree on the duplicated vertices. The walk alternates the fixed
+distributions <span class="arithmatex">\(y/Y\)</span> and <span class="arithmatex">\(x/X\)</span>. The conductance reading needs <span class="arithmatex">\(x_i, y_j, a &gt; 0\)</span>.
+Matrix Chernoff bounds for strongly Rayleigh measures are Hermitian results, so they say
+nothing about concentration for this nonsymmetric update.</p>
+<h3 id="measured-behaviour">Measured behaviour<a class="headerlink" href="#measured-behaviour" title="Permanent link">&para;</a></h3>
+<p>On 2D grid Laplacians with n up to 40k, one tree per elimination is worse than the
+independent sampler: 44 PCG iterations against 41 for <a href="../reference/num/randommat/ac1/"><code>ac1</code></a> and 29 for <code>ac2</code>. On
+higher-degree graphs with skewed weights the coupon collector also makes setup several
+times more expensive.</p>
+<p>Averaging k trees per elimination concentrates, as the strongly Rayleigh Chernoff theory
+predicts. On a 14400-vertex grid it takes 44, 27, 20 and 15 iterations at k = 1, 2, 4 and 8,
+against 29 for <code>ac2</code>. Setup grows faster than k, because each tree raises the degree of later
+eliminations: 11 ms, 82 ms, 616 ms and 2.7 s. It pays only when one factorization serves many
+solves, about 50 to break even at k = 2 and 600 at k = 8.</p>
+<h2 id="chebyshev-polynomial-preconditioning">Chebyshev polynomial preconditioning<a class="headerlink" href="#chebyshev-polynomial-preconditioning" title="Permanent link">&para;</a></h2>
+<p><a href="../reference/num/chebyshev_preconditioner/"><code>num::chebyshev_preconditioner</code></a> approximates <span class="arithmatex">\(A^{-1}\)</span> by the degree-m polynomial that
+minimizes <span class="arithmatex">\(\max_{\lambda \in [\ell, h]} |1 - \lambda p(\lambda)|\)</span>. It needs only the
+operator's action, so it is the one preconditioner here that works on a matrix-free operator
+built with <a href="../reference/num/operators/make_op/"><code>num::operators::make_op</code></a>. It also uses no global reductions.</p>
+<p>A degree-m polynomial improves the condition number by about a factor of m. That is not
+competitive on a second-order elliptic operator, whose condition number grows with the mesh;
+use ApproxChol for SDD systems, or algebraic multigrid. It fits three cases:</p>
+<ul>
+<li>matrix-free operators, which have no entries to factor;</li>
+<li>moderately conditioned systems, such as mass matrices, shifted or damped operators, and
+  regularized least squares;</li>
+<li>smoothing the upper spectrum inside a multigrid cycle.</li>
+</ul>
+<p>The polynomial is positive definite only when <span class="arithmatex">\(0 &lt; \ell \le \lambda_{\min}\)</span> and
+<span class="arithmatex">\(\lambda_{\max} \le h\)</span>. Bounds that miss part of the spectrum make it indefinite, and PCG
+then loses its monotone error. <a href="../reference/num/estimate_largest_eigenvalue/"><code>num::estimate_largest_eigenvalue</code></a> finds <span class="arithmatex">\(h\)</span> by power
+iteration. There is no equally cheap estimate of <span class="arithmatex">\(\ell\)</span>. Take it from the problem's
+physics, from a shift or regularization parameter, or from <a href="../reference/num/lanczos/"><code>num::lanczos</code></a>, not from an assumed
+condition number.</p>
+<h2 id="probed-inverse-diagonal-of-an-m-matrix">Probed inverse diagonal of an M-matrix<a class="headerlink" href="#probed-inverse-diagonal-of-an-m-matrix" title="Permanent link">&para;</a></h2>
+<p><code>num::inverse_diagonal(factor, A, symmetrizer, options)</code> estimates <span class="arithmatex">\(\operatorname{diag}(A^{-1})\)</span>
+for a sparse nonsingular M-matrix from one block of Gaussian probes, instead of one solve per
+entry.</p>
+<p>Two solves give <span class="arithmatex">\(q = A^{-1}\mathbf{1}\)</span> and <span class="arithmatex">\(r = A^{-T}\mathbf{1}\)</span>, both positive. With
+<span class="arithmatex">\(D = \operatorname{Diag}(\sqrt{r_j/q_j})\)</span>, the symmetric part <span class="arithmatex">\(S\)</span> of
+<span class="arithmatex">\(\tilde{A} = DAD^{-1}\)</span> is positive definite. A diagonal similarity leaves the inverse
+diagonal unchanged, so <span class="arithmatex">\(\operatorname{diag}(\tilde{A}^{-1}S\tilde{A}^{-T}) = \operatorname{diag}(A^{-1})\)</span>.
+An approximate Cholesky factorization <span class="arithmatex">\(S = \tilde{K}\tilde{S}\tilde{K}^{T}\)</span> makes this a Gram
+matrix. Entry j is then <span class="arithmatex">\(\|\delta_j^{T}\tilde{A}^{-1}\tilde{K}\tilde{S}^{1/2}\|_2^2\)</span>, and the
+row-wise mean square over Gaussian probes estimates it without bias.</p>
+<p>Each row of the probed block is chi-square with <code>probes</code> degrees of freedom. The estimate
+therefore concentrates multiplicatively and stays positive.</p>
+<p>When A is similar to a symmetric matrix through <span class="arithmatex">\(\operatorname{Diag}(\sqrt{\pi})\)</span>, passing
+<span class="arithmatex">\(\sqrt{\pi}\)</span> as <code>symmetrizer</code> replaces the scaling above. That needs no solves, and the
+square root is applied in inverse form.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../assets/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

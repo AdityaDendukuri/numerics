@@ -1,0 +1,3664 @@
+{
+"names": {
+"num::accel_fn": {
+"kind": "type",
+"page": "reference/num/accel_fn.md"
+},
+"num::accu": {
+"kind": "function",
+"page": "reference/num/accu.md"
+},
+"num::adaptive_simpson": {
+"kind": "function",
+"page": "reference/num/adaptive_simpson.md"
+},
+"num::add": {
+"kind": "function",
+"page": "reference/num/add.md"
+},
+"num::aligned_array": {
+"kind": "type",
+"page": "reference/num/aligned_array.md"
+},
+"num::append": {
+"kind": "function",
+"page": "reference/num/append.md"
+},
+"num::apply_github_dark_style": {
+"kind": "function",
+"page": "reference/num/apply_github_dark_style.md"
+},
+"num::apply_github_light_style": {
+"kind": "function",
+"page": "reference/num/apply_github_light_style.md"
+},
+"num::apply_siam_style": {
+"kind": "function",
+"page": "reference/num/apply_siam_style.md"
+},
+"num::approx_chol_preconditioner": {
+"kind": "type",
+"page": "reference/num/approx_chol_preconditioner.md"
+},
+"num::argmax": {
+"kind": "function",
+"page": "reference/num/argmax.md"
+},
+"num::argsort": {
+"kind": "function",
+"page": "reference/num/argsort.md"
+},
+"num::array": {
+"kind": "type",
+"page": "reference/num/array.md"
+},
+"num::assemblable_grid_operator": {
+"kind": "type",
+"page": "reference/num/assemblable_grid_operator.md"
+},
+"num::assoc_laguerre": {
+"kind": "function",
+"page": "reference/num/assoc_laguerre.md"
+},
+"num::assoc_legendre": {
+"kind": "function",
+"page": "reference/num/assoc_legendre.md"
+},
+"num::assume": {
+"kind": "function",
+"page": "reference/num/assume.md"
+},
+"num::assume_diagonally_dominant": {
+"kind": "function",
+"page": "reference/num/assume_diagonally_dominant.md"
+},
+"num::assume_psd": {
+"kind": "function",
+"page": "reference/num/assume_psd.md"
+},
+"num::assume_spd": {
+"kind": "function",
+"page": "reference/num/assume_spd.md"
+},
+"num::assume_storage_aligned": {
+"kind": "function",
+"page": "reference/num/assume_storage_aligned.md"
+},
+"num::assume_symmetric": {
+"kind": "function",
+"page": "reference/num/assume_symmetric.md"
+},
+"num::auto_linear_options": {
+"kind": "type",
+"page": "reference/num/auto_linear_options.md"
+},
+"num::auto_linear_solver": {
+"kind": "type",
+"page": "reference/num/auto_linear_solver.md"
+},
+"num::auto_resolvent_options": {
+"kind": "type",
+"page": "reference/num/auto_resolvent_options.md"
+},
+"num::auto_resolvent_solver": {
+"kind": "type",
+"page": "reference/num/auto_resolvent_solver.md"
+},
+"num::autocorr_time": {
+"kind": "function",
+"page": "reference/num/autocorr_time.md"
+},
+"num::axpby": {
+"kind": "function",
+"page": "reference/num/axpby.md"
+},
+"num::axpbyz": {
+"kind": "function",
+"page": "reference/num/axpbyz.md"
+},
+"num::axpy": {
+"kind": "function",
+"page": "reference/num/axpy.md"
+},
+"num::band_mat": {
+"kind": "type",
+"page": "reference/num/band_mat.md"
+},
+"num::banded_gemv": {
+"kind": "function",
+"page": "reference/num/banded_gemv.md"
+},
+"num::banded_lu": {
+"kind": "function",
+"page": "reference/num/banded_lu.md"
+},
+"num::banded_lu_solve": {
+"kind": "function",
+"page": "reference/num/banded_lu_solve.md"
+},
+"num::banded_lu_solve_multi": {
+"kind": "function",
+"page": "reference/num/banded_lu_solve_multi.md"
+},
+"num::banded_matvec": {
+"kind": "function",
+"page": "reference/num/banded_matvec.md"
+},
+"num::banded_norm1": {
+"kind": "function",
+"page": "reference/num/banded_norm1.md"
+},
+"num::banded_rcond": {
+"kind": "function",
+"page": "reference/num/banded_rcond.md"
+},
+"num::banded_solve": {
+"kind": "function",
+"page": "reference/num/banded_solve.md"
+},
+"num::banded_solver_result": {
+"kind": "type",
+"page": "reference/num/banded_solver_result.md"
+},
+"num::basic_disjoint_set": {
+"kind": "type",
+"page": "reference/num/basic_disjoint_set.md"
+},
+"num::basic_euler_steps": {
+"kind": "type",
+"page": "reference/num/basic_euler_steps.md"
+},
+"num::basic_graph": {
+"kind": "type",
+"page": "reference/num/basic_graph.md"
+},
+"num::basic_histogram": {
+"kind": "type",
+"page": "reference/num/basic_histogram.md"
+},
+"num::basic_mat": {
+"kind": "type",
+"page": "reference/num/basic_mat.md"
+},
+"num::basic_rk45_steps": {
+"kind": "type",
+"page": "reference/num/basic_rk45_steps.md"
+},
+"num::basic_rk4_2nd_steps": {
+"kind": "type",
+"page": "reference/num/basic_rk4_2nd_steps.md"
+},
+"num::basic_rk4_steps": {
+"kind": "type",
+"page": "reference/num/basic_rk4_steps.md"
+},
+"num::basic_root_result": {
+"kind": "type",
+"page": "reference/num/basic_root_result.md"
+},
+"num::basic_running_stats": {
+"kind": "type",
+"page": "reference/num/basic_running_stats.md"
+},
+"num::basic_vec": {
+"kind": "type",
+"page": "reference/num/basic_vec.md"
+},
+"num::basic_verlet_steps": {
+"kind": "type",
+"page": "reference/num/basic_verlet_steps.md"
+},
+"num::basic_yoshida4_steps": {
+"kind": "type",
+"page": "reference/num/basic_yoshida4_steps.md"
+},
+"num::bessel_i": {
+"kind": "function",
+"page": "reference/num/bessel_i.md"
+},
+"num::bessel_j": {
+"kind": "function",
+"page": "reference/num/bessel_j.md"
+},
+"num::bessel_y": {
+"kind": "function",
+"page": "reference/num/bessel_y.md"
+},
+"num::beta": {
+"kind": "function",
+"page": "reference/num/beta.md"
+},
+"num::bisection": {
+"kind": "function",
+"page": "reference/num/bisection.md"
+},
+"num::blas::add": {
+"kind": "function",
+"page": "reference/num/blas/add.md"
+},
+"num::blas::axpy": {
+"kind": "function",
+"page": "reference/num/blas/axpy.md"
+},
+"num::blas::dot": {
+"kind": "function",
+"page": "reference/num/blas/dot.md"
+},
+"num::blas::gemm": {
+"kind": "function",
+"page": "reference/num/blas/gemm.md"
+},
+"num::blas::matadd": {
+"kind": "function",
+"page": "reference/num/blas/matadd.md"
+},
+"num::blas::matmul": {
+"kind": "function",
+"page": "reference/num/blas/matmul.md"
+},
+"num::blas::matvec": {
+"kind": "function",
+"page": "reference/num/blas/matvec.md"
+},
+"num::blas::norm": {
+"kind": "function",
+"page": "reference/num/blas/norm.md"
+},
+"num::blas::scale": {
+"kind": "function",
+"page": "reference/num/blas/scale.md"
+},
+"num::blas::warn_unavailable": {
+"kind": "function",
+"page": "reference/num/blas/warn_unavailable.md"
+},
+"num::block_cholesky_factor": {
+"kind": "type",
+"page": "reference/num/block_cholesky_factor.md"
+},
+"num::block_lu_factor": {
+"kind": "type",
+"page": "reference/num/block_lu_factor.md"
+},
+"num::block_structure": {
+"kind": "type",
+"page": "reference/num/block_structure.md"
+},
+"num::blocks": {
+"kind": "function",
+"page": "reference/num/blocks.md"
+},
+"num::bracketable_function": {
+"kind": "type",
+"page": "reference/num/bracketable_function.md"
+},
+"num::brent": {
+"kind": "function",
+"page": "reference/num/brent.md"
+},
+"num::call_site": {
+"kind": "type",
+"page": "reference/num/call_site.md"
+},
+"num::cartesian_index_space_2d": {
+"kind": "type",
+"page": "reference/num/cartesian_index_space_2d.md"
+},
+"num::categorical_sampler": {
+"kind": "type",
+"page": "reference/num/categorical_sampler.md"
+},
+"num::categorical_sampling": {
+"kind": "type",
+"page": "reference/num/categorical_sampling.md"
+},
+"num::cell_list_2d": {
+"kind": "type",
+"page": "reference/num/cell_list_2d.md"
+},
+"num::cell_list_3d": {
+"kind": "type",
+"page": "reference/num/cell_list_3d.md"
+},
+"num::cg": {
+"kind": "function",
+"page": "reference/num/cg.md"
+},
+"num::cg_options": {
+"kind": "type",
+"page": "reference/num/cg_options.md"
+},
+"num::chebyshev_preconditioner": {
+"kind": "type",
+"page": "reference/num/chebyshev_preconditioner.md"
+},
+"num::chebyshev_preconditioner_from_below": {
+"kind": "function",
+"page": "reference/num/chebyshev_preconditioner_from_below.md"
+},
+"num::cholesky": {
+"kind": "function",
+"page": "reference/num/cholesky.md"
+},
+"num::cholesky_downdate": {
+"kind": "function",
+"page": "reference/num/cholesky_downdate.md"
+},
+"num::cholesky_result": {
+"kind": "type",
+"page": "reference/num/cholesky_result.md"
+},
+"num::cholesky_solve": {
+"kind": "function",
+"page": "reference/num/cholesky_solve.md"
+},
+"num::cholesky_update": {
+"kind": "function",
+"page": "reference/num/cholesky_update.md"
+},
+"num::claims": {
+"kind": "type",
+"page": "reference/num/claims.md"
+},
+"num::clip_and_normalize_nonnegative": {
+"kind": "function",
+"page": "reference/num/clip_and_normalize_nonnegative.md"
+},
+"num::cluster_result": {
+"kind": "type",
+"page": "reference/num/cluster_result.md"
+},
+"num::col_fiber_sweep": {
+"kind": "function",
+"page": "reference/num/col_fiber_sweep.md"
+},
+"num::col_slice": {
+"kind": "function",
+"page": "reference/num/col_slice.md"
+},
+"num::complex_tri_diag": {
+"kind": "type",
+"page": "reference/num/complex_tri_diag.md"
+},
+"num::concepts::addressable_priority_queue": {
+"kind": "type",
+"page": "reference/num/concepts/addressable_priority_queue.md"
+},
+"num::concepts::equivalence_relation": {
+"kind": "type",
+"page": "reference/num/concepts/equivalence_relation.md"
+},
+"num::concepts::incidence_structure": {
+"kind": "type",
+"page": "reference/num/concepts/incidence_structure.md"
+},
+"num::concepts::weighted_incidence": {
+"kind": "type",
+"page": "reference/num/concepts/weighted_incidence.md"
+},
+"num::connected_components": {
+"kind": "function",
+"page": "reference/num/connected_components.md"
+},
+"num::contour_node": {
+"kind": "type",
+"page": "reference/num/contour_node.md"
+},
+"num::contour_rule": {
+"kind": "type",
+"page": "reference/num/contour_rule.md"
+},
+"num::copy_to": {
+"kind": "function",
+"page": "reference/num/copy_to.md"
+},
+"num::corrected_lu": {
+"kind": "type",
+"page": "reference/num/corrected_lu.md"
+},
+"num::cplx": {
+"kind": "type",
+"page": "reference/num/cplx.md"
+},
+"num::crank_nicolson_adi": {
+"kind": "type",
+"page": "reference/num/crank_nicolson_adi.md"
+},
+"num::cuda::add": {
+"kind": "function",
+"page": "reference/num/cuda/add.md"
+},
+"num::cuda::alloc": {
+"kind": "function",
+"page": "reference/num/cuda/alloc.md"
+},
+"num::cuda::axpy": {
+"kind": "function",
+"page": "reference/num/cuda/axpy.md"
+},
+"num::cuda::dot": {
+"kind": "function",
+"page": "reference/num/cuda/dot.md"
+},
+"num::cuda::free": {
+"kind": "function",
+"page": "reference/num/cuda/free.md"
+},
+"num::cuda::matmul": {
+"kind": "function",
+"page": "reference/num/cuda/matmul.md"
+},
+"num::cuda::matvec": {
+"kind": "function",
+"page": "reference/num/cuda/matvec.md"
+},
+"num::cuda::no_cuda": {
+"kind": "function",
+"page": "reference/num/cuda/no_cuda.md"
+},
+"num::cuda::scale": {
+"kind": "function",
+"page": "reference/num/cuda/scale.md"
+},
+"num::cuda::thomas_batched": {
+"kind": "function",
+"page": "reference/num/cuda/thomas_batched.md"
+},
+"num::cuda::to_device": {
+"kind": "function",
+"page": "reference/num/cuda/to_device.md"
+},
+"num::cuda::to_host": {
+"kind": "function",
+"page": "reference/num/cuda/to_host.md"
+},
+"num::curl_3d": {
+"kind": "function",
+"page": "reference/num/curl_3d.md"
+},
+"num::cvec": {
+"kind": "type",
+"page": "reference/num/cvec.md"
+},
+"num::debug::check_dim": {
+"kind": "function",
+"page": "reference/num/debug/check_dim.md"
+},
+"num::debug::check_finite": {
+"kind": "function",
+"page": "reference/num/debug/check_finite.md"
+},
+"num::debug::check_non_empty": {
+"kind": "function",
+"page": "reference/num/debug/check_non_empty.md"
+},
+"num::debug::checks_compiled_in": {
+"kind": "variable",
+"page": "reference/num/debug/checks_compiled_in.md"
+},
+"num::debug::compiled_level": {
+"kind": "variable",
+"page": "reference/num/debug/compiled_level.md"
+},
+"num::debug::estimate_spectrum_bounds": {
+"kind": "function",
+"page": "reference/num/debug/estimate_spectrum_bounds.md"
+},
+"num::debug::fill_basis": {
+"kind": "function",
+"page": "reference/num/debug/fill_basis.md"
+},
+"num::debug::fill_probe": {
+"kind": "function",
+"page": "reference/num/debug/fill_probe.md"
+},
+"num::debug::g_probe_count": {
+"kind": "variable",
+"page": "reference/num/debug/g_probe_count.md"
+},
+"num::debug::g_property_tol": {
+"kind": "variable",
+"page": "reference/num/debug/g_property_tol.md"
+},
+"num::debug::get_level": {
+"kind": "function",
+"page": "reference/num/debug/get_level.md"
+},
+"num::debug::get_preset": {
+"kind": "function",
+"page": "reference/num/debug/get_preset.md"
+},
+"num::debug::panic": {
+"kind": "function",
+"page": "reference/num/debug/panic.md"
+},
+"num::debug::preset::balanced": {
+"kind": "variable",
+"page": "reference/num/debug/preset/balanced.md"
+},
+"num::debug::preset::production": {
+"kind": "variable",
+"page": "reference/num/debug/preset/production.md"
+},
+"num::debug::preset::prototype": {
+"kind": "variable",
+"page": "reference/num/debug/preset/prototype.md"
+},
+"num::debug::preset::strict": {
+"kind": "variable",
+"page": "reference/num/debug/preset/strict.md"
+},
+"num::debug::preset::unsafe": {
+"kind": "variable",
+"page": "reference/num/debug/preset/unsafe.md"
+},
+"num::debug::preset_fully_applied": {
+"kind": "function",
+"page": "reference/num/debug/preset_fully_applied.md"
+},
+"num::debug::probe_inner": {
+"kind": "function",
+"page": "reference/num/debug/probe_inner.md"
+},
+"num::debug::probe_norm": {
+"kind": "function",
+"page": "reference/num/debug/probe_norm.md"
+},
+"num::debug::probe_rng": {
+"kind": "type",
+"page": "reference/num/debug/probe_rng.md"
+},
+"num::debug::probe_stride": {
+"kind": "function",
+"page": "reference/num/debug/probe_stride.md"
+},
+"num::debug::property_tol": {
+"kind": "function",
+"page": "reference/num/debug/property_tol.md"
+},
+"num::debug::sampling_compiled_in": {
+"kind": "variable",
+"page": "reference/num/debug/sampling_compiled_in.md"
+},
+"num::debug::scoped_preset": {
+"kind": "type",
+"page": "reference/num/debug/scoped_preset.md"
+},
+"num::debug::set_level": {
+"kind": "function",
+"page": "reference/num/debug/set_level.md"
+},
+"num::debug::set_preset": {
+"kind": "function",
+"page": "reference/num/debug/set_preset.md"
+},
+"num::debug::verify_diagonal_dominance": {
+"kind": "function",
+"page": "reference/num/debug/verify_diagonal_dominance.md"
+},
+"num::debug::verify_linearity_sample": {
+"kind": "function",
+"page": "reference/num/debug/verify_linearity_sample.md"
+},
+"num::debug::verify_psd_sample": {
+"kind": "function",
+"page": "reference/num/debug/verify_psd_sample.md"
+},
+"num::debug::verify_spd_sample": {
+"kind": "function",
+"page": "reference/num/debug/verify_spd_sample.md"
+},
+"num::debug::verify_symmetry_sample": {
+"kind": "function",
+"page": "reference/num/debug/verify_symmetry_sample.md"
+},
+"num::dense": {
+"kind": "function",
+"page": "reference/num/dense.md"
+},
+"num::dense_resolvent_solver": {
+"kind": "type",
+"page": "reference/num/dense_resolvent_solver.md"
+},
+"num::diagonal": {
+"kind": "function",
+"page": "reference/num/diagonal.md"
+},
+"num::diagonal_matrix": {
+"kind": "function",
+"page": "reference/num/diagonal_matrix.md"
+},
+"num::diagonal_similarity": {
+"kind": "function",
+"page": "reference/num/diagonal_similarity.md"
+},
+"num::differentiable_function": {
+"kind": "type",
+"page": "reference/num/differentiable_function.md"
+},
+"num::disjoint_set": {
+"kind": "type",
+"page": "reference/num/disjoint_set.md"
+},
+"num::disjoint_set_32": {
+"kind": "type",
+"page": "reference/num/disjoint_set_32.md"
+},
+"num::dispatch::subspace::arnoldi_step": {
+"kind": "function",
+"page": "reference/num/dispatch/subspace/arnoldi_step.md"
+},
+"num::dispatch::subspace::mgs_orthogonalize": {
+"kind": "function",
+"page": "reference/num/dispatch/subspace/mgs_orthogonalize.md"
+},
+"num::divergence_3d": {
+"kind": "function",
+"page": "reference/num/divergence_3d.md"
+},
+"num::divide_elements": {
+"kind": "function",
+"page": "reference/num/divide_elements.md"
+},
+"num::divide_rows": {
+"kind": "function",
+"page": "reference/num/divide_rows.md"
+},
+"num::dot": {
+"kind": "function",
+"page": "reference/num/dot.md"
+},
+"num::e": {
+"kind": "variable",
+"page": "reference/num/e.md"
+},
+"num::eig_sym": {
+"kind": "function",
+"page": "reference/num/eig_sym.md"
+},
+"num::eigen_result": {
+"kind": "type",
+"page": "reference/num/eigen_result.md"
+},
+"num::energy_difference": {
+"kind": "type",
+"page": "reference/num/energy_difference.md"
+},
+"num::entry_t": {
+"kind": "type",
+"page": "reference/num/entry_t.md"
+},
+"num::estimate_largest_eigenvalue": {
+"kind": "function",
+"page": "reference/num/estimate_largest_eigenvalue.md"
+},
+"num::euler": {
+"kind": "function",
+"page": "reference/num/euler.md"
+},
+"num::euler_steps": {
+"kind": "type",
+"page": "reference/num/euler_steps.md"
+},
+"num::expv": {
+"kind": "function",
+"page": "reference/num/expv.md"
+},
+"num::eye": {
+"kind": "function",
+"page": "reference/num/eye.md"
+},
+"num::factor": {
+"kind": "function",
+"page": "reference/num/factor.md"
+},
+"num::factor_block_cholesky": {
+"kind": "function",
+"page": "reference/num/factor_block_cholesky.md"
+},
+"num::factor_block_lu": {
+"kind": "function",
+"page": "reference/num/factor_block_lu.md"
+},
+"num::factor_no_pivot": {
+"kind": "function",
+"page": "reference/num/factor_no_pivot.md"
+},
+"num::field_solver": {
+"kind": "type",
+"page": "reference/num/field_solver.md"
+},
+"num::field_stepper": {
+"kind": "type",
+"page": "reference/num/field_stepper.md"
+},
+"num::fill_grid": {
+"kind": "function",
+"page": "reference/num/fill_grid.md"
+},
+"num::filter": {
+"kind": "function",
+"page": "reference/num/filter.md"
+},
+"num::float_graph": {
+"kind": "type",
+"page": "reference/num/float_graph.md"
+},
+"num::gather": {
+"kind": "function",
+"page": "reference/num/gather.md"
+},
+"num::gauss_legendre": {
+"kind": "function",
+"page": "reference/num/gauss_legendre.md"
+},
+"num::gauss_seidel": {
+"kind": "function",
+"page": "reference/num/gauss_seidel.md"
+},
+"num::gaussian2d": {
+"kind": "function",
+"page": "reference/num/gaussian2d.md"
+},
+"num::gaussian_probe": {
+"kind": "function",
+"page": "reference/num/gaussian_probe.md"
+},
+"num::ger": {
+"kind": "function",
+"page": "reference/num/ger.md"
+},
+"num::givens_rotation": {
+"kind": "type",
+"page": "reference/num/givens_rotation.md"
+},
+"num::gmres": {
+"kind": "function",
+"page": "reference/num/gmres.md"
+},
+"num::gmres_options": {
+"kind": "type",
+"page": "reference/num/gmres_options.md"
+},
+"num::gnuplot": {
+"kind": "type",
+"page": "reference/num/gnuplot.md"
+},
+"num::gradient_3d": {
+"kind": "function",
+"page": "reference/num/gradient_3d.md"
+},
+"num::graph": {
+"kind": "type",
+"page": "reference/num/graph.md"
+},
+"num::graph_distance_levels": {
+"kind": "function",
+"page": "reference/num/graph_distance_levels.md"
+},
+"num::grid2d": {
+"kind": "type",
+"page": "reference/num/grid2d.md"
+},
+"num::grid_3d": {
+"kind": "type",
+"page": "reference/num/grid_3d.md"
+},
+"num::grid_stencil": {
+"kind": "type",
+"page": "reference/num/grid_stencil.md"
+},
+"num::grounded_approx_chol_factor": {
+"kind": "type",
+"page": "reference/num/grounded_approx_chol_factor.md"
+},
+"num::group_by": {
+"kind": "function",
+"page": "reference/num/group_by.md"
+},
+"num::half_pi": {
+"kind": "variable",
+"page": "reference/num/half_pi.md"
+},
+"num::has_blas": {
+"kind": "variable",
+"page": "reference/num/has_blas.md"
+},
+"num::has_cuda": {
+"kind": "variable",
+"page": "reference/num/has_cuda.md"
+},
+"num::has_lapack": {
+"kind": "variable",
+"page": "reference/num/has_lapack.md"
+},
+"num::has_omp": {
+"kind": "variable",
+"page": "reference/num/has_omp.md"
+},
+"num::has_simd": {
+"kind": "variable",
+"page": "reference/num/has_simd.md"
+},
+"num::hermite": {
+"kind": "function",
+"page": "reference/num/hermite.md"
+},
+"num::hessenberg": {
+"kind": "function",
+"page": "reference/num/hessenberg.md"
+},
+"num::hessenberg_back_project": {
+"kind": "function",
+"page": "reference/num/hessenberg_back_project.md"
+},
+"num::hessenberg_decomposition": {
+"kind": "type",
+"page": "reference/num/hessenberg_decomposition.md"
+},
+"num::hessenberg_project": {
+"kind": "function",
+"page": "reference/num/hessenberg_project.md"
+},
+"num::hessenberg_resolvent_solver": {
+"kind": "type",
+"page": "reference/num/hessenberg_resolvent_solver.md"
+},
+"num::hessenberg_shifted_solve": {
+"kind": "function",
+"page": "reference/num/hessenberg_shifted_solve.md"
+},
+"num::histogram": {
+"kind": "type",
+"page": "reference/num/histogram.md"
+},
+"num::hutchinson_row_mean_square": {
+"kind": "function",
+"page": "reference/num/hutchinson_row_mean_square.md"
+},
+"num::identity": {
+"kind": "function",
+"page": "reference/num/identity.md"
+},
+"num::identity_columns": {
+"kind": "function",
+"page": "reference/num/identity_columns.md"
+},
+"num::idx": {
+"kind": "type",
+"page": "reference/num/idx.md"
+},
+"num::ilu0_preconditioner": {
+"kind": "type",
+"page": "reference/num/ilu0_preconditioner.md"
+},
+"num::index_move": {
+"kind": "type",
+"page": "reference/num/index_move.md"
+},
+"num::indexed_priority_queue": {
+"kind": "type",
+"page": "reference/num/indexed_priority_queue.md"
+},
+"num::int_range": {
+"kind": "function",
+"page": "reference/num/int_range.md"
+},
+"num::integer_range": {
+"kind": "type",
+"page": "reference/num/integer_range.md"
+},
+"num::inv_pi": {
+"kind": "variable",
+"page": "reference/num/inv_pi.md"
+},
+"num::inverse_diagonal": {
+"kind": "function",
+"page": "reference/num/inverse_diagonal.md"
+},
+"num::inverse_diagonal_options": {
+"kind": "type",
+"page": "reference/num/inverse_diagonal_options.md"
+},
+"num::inverse_diagonal_workspace": {
+"kind": "type",
+"page": "reference/num/inverse_diagonal_workspace.md"
+},
+"num::inverse_iteration": {
+"kind": "function",
+"page": "reference/num/inverse_iteration.md"
+},
+"num::inverse_principal_block": {
+"kind": "function",
+"page": "reference/num/inverse_principal_block.md"
+},
+"num::inverse_rows_workspace": {
+"kind": "type",
+"page": "reference/num/inverse_rows_workspace.md"
+},
+"num::inverse_sqrt_lanczos": {
+"kind": "function",
+"page": "reference/num/inverse_sqrt_lanczos.md"
+},
+"num::io::json": {
+"kind": "type",
+"page": "reference/num/io/json.md"
+},
+"num::io::json_matrix": {
+"kind": "function",
+"page": "reference/num/io/json_matrix.md"
+},
+"num::io::json_vector": {
+"kind": "function",
+"page": "reference/num/io/json_vector.md"
+},
+"num::io::read_json": {
+"kind": "function",
+"page": "reference/num/io/read_json.md"
+},
+"num::io::sparse_matrix": {
+"kind": "function",
+"page": "reference/num/io/sparse_matrix.md"
+},
+"num::io::sparse_matrix_json": {
+"kind": "function",
+"page": "reference/num/io/sparse_matrix_json.md"
+},
+"num::io::write_json": {
+"kind": "function",
+"page": "reference/num/io/write_json.md"
+},
+"num::ipow": {
+"kind": "function",
+"page": "reference/num/ipow.md"
+},
+"num::is_ode_stepper": {
+"kind": "type",
+"page": "reference/num/is_ode_stepper.md"
+},
+"num::is_storage_aligned": {
+"kind": "function",
+"page": "reference/num/is_storage_aligned.md"
+},
+"num::jacobi": {
+"kind": "function",
+"page": "reference/num/jacobi.md"
+},
+"num::jacobi_preconditioner": {
+"kind": "type",
+"page": "reference/num/jacobi_preconditioner.md"
+},
+"num::kernel::add": {
+"kind": "function",
+"page": "reference/num/kernel/add.md"
+},
+"num::kernel::argmax_abs": {
+"kind": "function",
+"page": "reference/num/kernel/argmax_abs.md"
+},
+"num::kernel::axpby": {
+"kind": "function",
+"page": "reference/num/kernel/axpby.md"
+},
+"num::kernel::axpbyz": {
+"kind": "function",
+"page": "reference/num/kernel/axpbyz.md"
+},
+"num::kernel::axpy": {
+"kind": "function",
+"page": "reference/num/kernel/axpy.md"
+},
+"num::kernel::axpy_norm_sq": {
+"kind": "function",
+"page": "reference/num/kernel/axpy_norm_sq.md"
+},
+"num::kernel::axpy_strided": {
+"kind": "function",
+"page": "reference/num/kernel/axpy_strided.md"
+},
+"num::kernel::banded_factor": {
+"kind": "function",
+"page": "reference/num/kernel/banded_factor.md"
+},
+"num::kernel::banded_solve": {
+"kind": "function",
+"page": "reference/num/kernel/banded_solve.md"
+},
+"num::kernel::cg": {
+"kind": "function",
+"page": "reference/num/kernel/cg.md"
+},
+"num::kernel::cholesky": {
+"kind": "function",
+"page": "reference/num/kernel/cholesky.md"
+},
+"num::kernel::cholesky_batched": {
+"kind": "function",
+"page": "reference/num/kernel/cholesky_batched.md"
+},
+"num::kernel::cholesky_blocked": {
+"kind": "function",
+"page": "reference/num/kernel/cholesky_blocked.md"
+},
+"num::kernel::cholesky_invert": {
+"kind": "function",
+"page": "reference/num/kernel/cholesky_invert.md"
+},
+"num::kernel::cholesky_solve": {
+"kind": "function",
+"page": "reference/num/kernel/cholesky_solve.md"
+},
+"num::kernel::cholesky_solve_batched": {
+"kind": "function",
+"page": "reference/num/kernel/cholesky_solve_batched.md"
+},
+"num::kernel::clamp": {
+"kind": "function",
+"page": "reference/num/kernel/clamp.md"
+},
+"num::kernel::column_dot": {
+"kind": "function",
+"page": "reference/num/kernel/column_dot.md"
+},
+"num::kernel::combine_columns": {
+"kind": "function",
+"page": "reference/num/kernel/combine_columns.md"
+},
+"num::kernel::contract::alias_safe": {
+"kind": "variable",
+"page": "reference/num/kernel/contract/alias_safe.md"
+},
+"num::kernel::contract::ordered": {
+"kind": "variable",
+"page": "reference/num/kernel/contract/ordered.md"
+},
+"num::kernel::contract::throughput": {
+"kind": "variable",
+"page": "reference/num/kernel/contract/throughput.md"
+},
+"num::kernel::copy": {
+"kind": "function",
+"page": "reference/num/kernel/copy.md"
+},
+"num::kernel::copy_strided": {
+"kind": "function",
+"page": "reference/num/kernel/copy_strided.md"
+},
+"num::kernel::csr_diagonal_positions": {
+"kind": "function",
+"page": "reference/num/kernel/csr_diagonal_positions.md"
+},
+"num::kernel::csr_lu_solve": {
+"kind": "function",
+"page": "reference/num/kernel/csr_lu_solve.md"
+},
+"num::kernel::dot": {
+"kind": "function",
+"page": "reference/num/kernel/dot.md"
+},
+"num::kernel::dot2": {
+"kind": "function",
+"page": "reference/num/kernel/dot2.md"
+},
+"num::kernel::dot2_result": {
+"kind": "type",
+"page": "reference/num/kernel/dot2_result.md"
+},
+"num::kernel::dot_norm_result": {
+"kind": "type",
+"page": "reference/num/kernel/dot_norm_result.md"
+},
+"num::kernel::dot_norm_sq": {
+"kind": "function",
+"page": "reference/num/kernel/dot_norm_sq.md"
+},
+"num::kernel::fill": {
+"kind": "function",
+"page": "reference/num/kernel/fill.md"
+},
+"num::kernel::gbmv": {
+"kind": "function",
+"page": "reference/num/kernel/gbmv.md"
+},
+"num::kernel::gemm": {
+"kind": "function",
+"page": "reference/num/kernel/gemm.md"
+},
+"num::kernel::gemm_config": {
+"kind": "type",
+"page": "reference/num/kernel/gemm_config.md"
+},
+"num::kernel::gemm_transpose_left": {
+"kind": "function",
+"page": "reference/num/kernel/gemm_transpose_left.md"
+},
+"num::kernel::gemm_workspace": {
+"kind": "function",
+"page": "reference/num/kernel/gemm_workspace.md"
+},
+"num::kernel::ger": {
+"kind": "function",
+"page": "reference/num/kernel/ger.md"
+},
+"num::kernel::hadamard_div": {
+"kind": "function",
+"page": "reference/num/kernel/hadamard_div.md"
+},
+"num::kernel::hadamard_mul": {
+"kind": "function",
+"page": "reference/num/kernel/hadamard_mul.md"
+},
+"num::kernel::hessenberg_shifted_factor": {
+"kind": "function",
+"page": "reference/num/kernel/hessenberg_shifted_factor.md"
+},
+"num::kernel::hessenberg_shifted_solve": {
+"kind": "function",
+"page": "reference/num/kernel/hessenberg_shifted_solve.md"
+},
+"num::kernel::hessenberg_shifted_substitute": {
+"kind": "function",
+"page": "reference/num/kernel/hessenberg_shifted_substitute.md"
+},
+"num::kernel::householder_left": {
+"kind": "function",
+"page": "reference/num/kernel/householder_left.md"
+},
+"num::kernel::householder_right": {
+"kind": "function",
+"page": "reference/num/kernel/householder_right.md"
+},
+"num::kernel::householder_vector": {
+"kind": "function",
+"page": "reference/num/kernel/householder_vector.md"
+},
+"num::kernel::householder_vector_strided": {
+"kind": "function",
+"page": "reference/num/kernel/householder_vector_strided.md"
+},
+"num::kernel::ilu0_factor": {
+"kind": "function",
+"page": "reference/num/kernel/ilu0_factor.md"
+},
+"num::kernel::inv": {
+"kind": "function",
+"page": "reference/num/kernel/inv.md"
+},
+"num::kernel::jacobi_rotation": {
+"kind": "function",
+"page": "reference/num/kernel/jacobi_rotation.md"
+},
+"num::kernel::krylov_result": {
+"kind": "type",
+"page": "reference/num/kernel/krylov_result.md"
+},
+"num::kernel::l1_norm": {
+"kind": "function",
+"page": "reference/num/kernel/l1_norm.md"
+},
+"num::kernel::linear_combination_norm_sq": {
+"kind": "function",
+"page": "reference/num/kernel/linear_combination_norm_sq.md"
+},
+"num::kernel::linf_norm": {
+"kind": "function",
+"page": "reference/num/kernel/linf_norm.md"
+},
+"num::kernel::lu_factor": {
+"kind": "function",
+"page": "reference/num/kernel/lu_factor.md"
+},
+"num::kernel::lu_factor_blocked": {
+"kind": "function",
+"page": "reference/num/kernel/lu_factor_blocked.md"
+},
+"num::kernel::lu_invert": {
+"kind": "function",
+"page": "reference/num/kernel/lu_invert.md"
+},
+"num::kernel::lu_no_pivot": {
+"kind": "function",
+"page": "reference/num/kernel/lu_no_pivot.md"
+},
+"num::kernel::lu_no_pivot_solve_multiple": {
+"kind": "function",
+"page": "reference/num/kernel/lu_no_pivot_solve_multiple.md"
+},
+"num::kernel::lu_no_pivot_solve_transpose_multiple": {
+"kind": "function",
+"page": "reference/num/kernel/lu_no_pivot_solve_transpose_multiple.md"
+},
+"num::kernel::lu_solve": {
+"kind": "function",
+"page": "reference/num/kernel/lu_solve.md"
+},
+"num::kernel::matvec": {
+"kind": "function",
+"page": "reference/num/kernel/matvec.md"
+},
+"num::kernel::matvec_real_complex": {
+"kind": "function",
+"page": "reference/num/kernel/matvec_real_complex.md"
+},
+"num::kernel::matvec_transpose": {
+"kind": "function",
+"page": "reference/num/kernel/matvec_transpose.md"
+},
+"num::kernel::matvec_transpose_into_complex": {
+"kind": "function",
+"page": "reference/num/kernel/matvec_transpose_into_complex.md"
+},
+"num::kernel::mgs_columns": {
+"kind": "function",
+"page": "reference/num/kernel/mgs_columns.md"
+},
+"num::kernel::norm": {
+"kind": "function",
+"page": "reference/num/kernel/norm.md"
+},
+"num::kernel::norm_sq": {
+"kind": "function",
+"page": "reference/num/kernel/norm_sq.md"
+},
+"num::kernel::norm_sq_strided": {
+"kind": "function",
+"page": "reference/num/kernel/norm_sq_strided.md"
+},
+"num::kernel::pcg": {
+"kind": "function",
+"page": "reference/num/kernel/pcg.md"
+},
+"num::kernel::project_columns": {
+"kind": "function",
+"page": "reference/num/kernel/project_columns.md"
+},
+"num::kernel::qr_apply_block_left": {
+"kind": "function",
+"page": "reference/num/kernel/qr_apply_block_left.md"
+},
+"num::kernel::qr_block": {
+"kind": "variable",
+"page": "reference/num/kernel/qr_block.md"
+},
+"num::kernel::qr_factor_blocked": {
+"kind": "function",
+"page": "reference/num/kernel/qr_factor_blocked.md"
+},
+"num::kernel::qr_form_block": {
+"kind": "function",
+"page": "reference/num/kernel/qr_form_block.md"
+},
+"num::kernel::qr_workspace": {
+"kind": "function",
+"page": "reference/num/kernel/qr_workspace.md"
+},
+"num::kernel::rot": {
+"kind": "function",
+"page": "reference/num/kernel/rot.md"
+},
+"num::kernel::rotate_columns": {
+"kind": "function",
+"page": "reference/num/kernel/rotate_columns.md"
+},
+"num::kernel::rotg": {
+"kind": "function",
+"page": "reference/num/kernel/rotg.md"
+},
+"num::kernel::scale": {
+"kind": "function",
+"page": "reference/num/kernel/scale.md"
+},
+"num::kernel::scale_copy_strided": {
+"kind": "function",
+"page": "reference/num/kernel/scale_copy_strided.md"
+},
+"num::kernel::spmm": {
+"kind": "function",
+"page": "reference/num/kernel/spmm.md"
+},
+"num::kernel::spmv": {
+"kind": "function",
+"page": "reference/num/kernel/spmv.md"
+},
+"num::kernel::spmv_axpy": {
+"kind": "function",
+"page": "reference/num/kernel/spmv_axpy.md"
+},
+"num::kernel::sum": {
+"kind": "function",
+"page": "reference/num/kernel/sum.md"
+},
+"num::kernel::swap": {
+"kind": "function",
+"page": "reference/num/kernel/swap.md"
+},
+"num::kernel::swap_rows": {
+"kind": "function",
+"page": "reference/num/kernel/swap_rows.md"
+},
+"num::kernel::swap_strided": {
+"kind": "function",
+"page": "reference/num/kernel/swap_strided.md"
+},
+"num::kernel::syrk_lower": {
+"kind": "function",
+"page": "reference/num/kernel/syrk_lower.md"
+},
+"num::kernel::transpose": {
+"kind": "function",
+"page": "reference/num/kernel/transpose.md"
+},
+"num::kernel::trsm_lower_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsm_lower_inplace.md"
+},
+"num::kernel::trsm_lower_transpose_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsm_lower_transpose_inplace.md"
+},
+"num::kernel::trsm_lower_transpose_right_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsm_lower_transpose_right_inplace.md"
+},
+"num::kernel::trsm_unit_lower_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsm_unit_lower_inplace.md"
+},
+"num::kernel::trsm_unit_lower_transpose_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsm_unit_lower_transpose_inplace.md"
+},
+"num::kernel::trsm_upper_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsm_upper_inplace.md"
+},
+"num::kernel::trsm_upper_transpose_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsm_upper_transpose_inplace.md"
+},
+"num::kernel::trsv_lower": {
+"kind": "function",
+"page": "reference/num/kernel/trsv_lower.md"
+},
+"num::kernel::trsv_lower_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsv_lower_inplace.md"
+},
+"num::kernel::trsv_transpose_lower": {
+"kind": "function",
+"page": "reference/num/kernel/trsv_transpose_lower.md"
+},
+"num::kernel::trsv_transpose_upper": {
+"kind": "function",
+"page": "reference/num/kernel/trsv_transpose_upper.md"
+},
+"num::kernel::trsv_upper": {
+"kind": "function",
+"page": "reference/num/kernel/trsv_upper.md"
+},
+"num::kernel::trsv_upper_inplace": {
+"kind": "function",
+"page": "reference/num/kernel/trsv_upper_inplace.md"
+},
+"num::klu_available": {
+"kind": "function",
+"page": "reference/num/klu_available.md"
+},
+"num::klu_factorization": {
+"kind": "type",
+"page": "reference/num/klu_factorization.md"
+},
+"num::l1_norm": {
+"kind": "function",
+"page": "reference/num/l1_norm.md"
+},
+"num::laguerre": {
+"kind": "function",
+"page": "reference/num/laguerre.md"
+},
+"num::lanczos": {
+"kind": "function",
+"page": "reference/num/lanczos.md"
+},
+"num::lanczos_inverse_sqrt_result": {
+"kind": "type",
+"page": "reference/num/lanczos_inverse_sqrt_result.md"
+},
+"num::lanczos_result": {
+"kind": "type",
+"page": "reference/num/lanczos_result.md"
+},
+"num::lanczos_sqrt_result": {
+"kind": "type",
+"page": "reference/num/lanczos_sqrt_result.md"
+},
+"num::lapack::cholesky": {
+"kind": "function",
+"page": "reference/num/lapack/cholesky.md"
+},
+"num::lapack::eig_sym": {
+"kind": "function",
+"page": "reference/num/lapack/eig_sym.md"
+},
+"num::lapack::hessenberg": {
+"kind": "function",
+"page": "reference/num/lapack/hessenberg.md"
+},
+"num::lapack::lu": {
+"kind": "function",
+"page": "reference/num/lapack/lu.md"
+},
+"num::lapack::qr": {
+"kind": "function",
+"page": "reference/num/lapack/qr.md"
+},
+"num::lapack::svd": {
+"kind": "function",
+"page": "reference/num/lapack/svd.md"
+},
+"num::lapack::thomas": {
+"kind": "function",
+"page": "reference/num/lapack/thomas.md"
+},
+"num::lapack_default": {
+"kind": "variable",
+"page": "reference/num/lapack_default.md"
+},
+"num::lapack_factor_threshold": {
+"kind": "variable",
+"page": "reference/num/lapack_factor_threshold.md"
+},
+"num::laplacian_stencil_2d": {
+"kind": "function",
+"page": "reference/num/laplacian_stencil_2d.md"
+},
+"num::laplacian_stencil_2d_4th": {
+"kind": "function",
+"page": "reference/num/laplacian_stencil_2d_4th.md"
+},
+"num::laplacian_stencil_2d_periodic": {
+"kind": "function",
+"page": "reference/num/laplacian_stencil_2d_periodic.md"
+},
+"num::law::declared_t": {
+"kind": "type",
+"page": "reference/num/law/declared_t.md"
+},
+"num::law::diagonally_dominant": {
+"kind": "type",
+"page": "reference/num/law/diagonally_dominant.md"
+},
+"num::law::list": {
+"kind": "type",
+"page": "reference/num/law/list.md"
+},
+"num::law::psd": {
+"kind": "type",
+"page": "reference/num/law/psd.md"
+},
+"num::law::psd_on": {
+"kind": "type",
+"page": "reference/num/law/psd_on.md"
+},
+"num::law::self_adjoint": {
+"kind": "type",
+"page": "reference/num/law/self_adjoint.md"
+},
+"num::law::self_adjoint_on": {
+"kind": "type",
+"page": "reference/num/law/self_adjoint_on.md"
+},
+"num::law::spd": {
+"kind": "type",
+"page": "reference/num/law/spd.md"
+},
+"num::law::spd_on": {
+"kind": "type",
+"page": "reference/num/law/spd_on.md"
+},
+"num::legendre": {
+"kind": "function",
+"page": "reference/num/legendre.md"
+},
+"num::linear::debug::verify_sparse_structure": {
+"kind": "function",
+"page": "reference/num/linear/debug/verify_sparse_structure.md"
+},
+"num::linear::dense_laplacian": {
+"kind": "function",
+"page": "reference/num/linear/dense_laplacian.md"
+},
+"num::linear::dense_markov_generator": {
+"kind": "function",
+"page": "reference/num/linear/dense_markov_generator.md"
+},
+"num::linear::is_spd": {
+"kind": "function",
+"page": "reference/num/linear/is_spd.md"
+},
+"num::linear::is_symmetric": {
+"kind": "function",
+"page": "reference/num/linear/is_symmetric.md"
+},
+"num::linear::laplacian": {
+"kind": "function",
+"page": "reference/num/linear/laplacian.md"
+},
+"num::linear::laplacian_graph": {
+"kind": "type",
+"page": "reference/num/linear/laplacian_graph.md"
+},
+"num::linear::make_spd": {
+"kind": "function",
+"page": "reference/num/linear/make_spd.md"
+},
+"num::linear::make_symmetric": {
+"kind": "function",
+"page": "reference/num/linear/make_symmetric.md"
+},
+"num::linear::markov_generator": {
+"kind": "function",
+"page": "reference/num/linear/markov_generator.md"
+},
+"num::linear::relative_symmetry_error": {
+"kind": "function",
+"page": "reference/num/linear/relative_symmetry_error.md"
+},
+"num::linear::symmetry_error": {
+"kind": "function",
+"page": "reference/num/linear/symmetry_error.md"
+},
+"num::linear::to_dense_adjacency": {
+"kind": "function",
+"page": "reference/num/linear/to_dense_adjacency.md"
+},
+"num::linear::to_multigraph": {
+"kind": "function",
+"page": "reference/num/linear/to_multigraph.md"
+},
+"num::linear::to_sparse_adjacency": {
+"kind": "function",
+"page": "reference/num/linear/to_sparse_adjacency.md"
+},
+"num::linear_solver": {
+"kind": "type",
+"page": "reference/num/linear_solver.md"
+},
+"num::linf_norm": {
+"kind": "function",
+"page": "reference/num/linf_norm.md"
+},
+"num::linspace": {
+"kind": "function",
+"page": "reference/num/linspace.md"
+},
+"num::ln2": {
+"kind": "variable",
+"page": "reference/num/ln2.md"
+},
+"num::logspace": {
+"kind": "function",
+"page": "reference/num/logspace.md"
+},
+"num::low_rank_difference": {
+"kind": "function",
+"page": "reference/num/low_rank_difference.md"
+},
+"num::low_rank_update": {
+"kind": "type",
+"page": "reference/num/low_rank_update.md"
+},
+"num::lu": {
+"kind": "function",
+"page": "reference/num/lu.md"
+},
+"num::lu_det": {
+"kind": "function",
+"page": "reference/num/lu_det.md"
+},
+"num::lu_inv": {
+"kind": "function",
+"page": "reference/num/lu_inv.md"
+},
+"num::lu_result": {
+"kind": "type",
+"page": "reference/num/lu_result.md"
+},
+"num::lu_solve": {
+"kind": "function",
+"page": "reference/num/lu_solve.md"
+},
+"num::lu_solve_transpose": {
+"kind": "function",
+"page": "reference/num/lu_solve_transpose.md"
+},
+"num::magnetic_solver": {
+"kind": "type",
+"page": "reference/num/magnetic_solver.md"
+},
+"num::make_aligned": {
+"kind": "function",
+"page": "reference/num/make_aligned.md"
+},
+"num::make_aligned_for_overwrite": {
+"kind": "function",
+"page": "reference/num/make_aligned_for_overwrite.md"
+},
+"num::make_chebyshev_preconditioner": {
+"kind": "function",
+"page": "reference/num/make_chebyshev_preconditioner.md"
+},
+"num::make_ilu0_preconditioner": {
+"kind": "function",
+"page": "reference/num/make_ilu0_preconditioner.md"
+},
+"num::make_jacobi_preconditioner": {
+"kind": "function",
+"page": "reference/num/make_jacobi_preconditioner.md"
+},
+"num::map": {
+"kind": "type",
+"page": "reference/num/map.md"
+},
+"num::markov::boltzmann_accept": {
+"kind": "function",
+"page": "reference/num/markov/boltzmann_accept.md"
+},
+"num::markov::make_boltzmann_table": {
+"kind": "function",
+"page": "reference/num/markov/make_boltzmann_table.md"
+},
+"num::markov::make_rng": {
+"kind": "function",
+"page": "reference/num/markov/make_rng.md"
+},
+"num::markov::make_seeded_rng": {
+"kind": "function",
+"page": "reference/num/markov/make_seeded_rng.md"
+},
+"num::markov::metropolis_stats": {
+"kind": "type",
+"page": "reference/num/markov/metropolis_stats.md"
+},
+"num::markov::metropolis_sweep": {
+"kind": "function",
+"page": "reference/num/markov/metropolis_sweep.md"
+},
+"num::markov::metropolis_sweep_prob": {
+"kind": "function",
+"page": "reference/num/markov/metropolis_sweep_prob.md"
+},
+"num::markov::umbrella_stats": {
+"kind": "type",
+"page": "reference/num/markov/umbrella_stats.md"
+},
+"num::markov::umbrella_sweep": {
+"kind": "function",
+"page": "reference/num/markov/umbrella_sweep.md"
+},
+"num::markov::umbrella_sweep_prob": {
+"kind": "function",
+"page": "reference/num/markov/umbrella_sweep_prob.md"
+},
+"num::markov::umbrella_window": {
+"kind": "type",
+"page": "reference/num/markov/umbrella_window.md"
+},
+"num::mat": {
+"kind": "type",
+"page": "reference/num/mat.md"
+},
+"num::matadd": {
+"kind": "function",
+"page": "reference/num/matadd.md"
+},
+"num::math::apply": {
+"kind": "variable",
+"page": "reference/num/math/apply.md"
+},
+"num::math::axpy": {
+"kind": "variable",
+"page": "reference/num/math/axpy.md"
+},
+"num::math::axpy_norm_sq": {
+"kind": "variable",
+"page": "reference/num/math/axpy_norm_sq.md"
+},
+"num::math::codomain_t": {
+"kind": "type",
+"page": "reference/num/math/codomain_t.md"
+},
+"num::math::contains": {
+"kind": "variable",
+"page": "reference/num/math/contains.md"
+},
+"num::math::dimension": {
+"kind": "variable",
+"page": "reference/num/math/dimension.md"
+},
+"num::math::domain_t": {
+"kind": "type",
+"page": "reference/num/math/domain_t.md"
+},
+"num::math::field": {
+"kind": "type",
+"page": "reference/num/math/field.md"
+},
+"num::math::inner": {
+"kind": "variable",
+"page": "reference/num/math/inner.md"
+},
+"num::math::inner_product_space": {
+"kind": "type",
+"page": "reference/num/math/inner_product_space.md"
+},
+"num::math::linear_combination": {
+"kind": "variable",
+"page": "reference/num/math/linear_combination.md"
+},
+"num::math::linear_operator": {
+"kind": "type",
+"page": "reference/num/math/linear_operator.md"
+},
+"num::math::linear_subspace_of": {
+"kind": "type",
+"page": "reference/num/math/linear_subspace_of.md"
+},
+"num::math::norm": {
+"kind": "variable",
+"page": "reference/num/math/norm.md"
+},
+"num::math::project": {
+"kind": "variable",
+"page": "reference/num/math/project.md"
+},
+"num::math::psd_operator": {
+"kind": "type",
+"page": "reference/num/math/psd_operator.md"
+},
+"num::math::scalar_t": {
+"kind": "type",
+"page": "reference/num/math/scalar_t.md"
+},
+"num::math::scale": {
+"kind": "variable",
+"page": "reference/num/math/scale.md"
+},
+"num::math::self_adjoint_operator": {
+"kind": "type",
+"page": "reference/num/math/self_adjoint_operator.md"
+},
+"num::math::spd_operator": {
+"kind": "type",
+"page": "reference/num/math/spd_operator.md"
+},
+"num::math::vector_space": {
+"kind": "type",
+"page": "reference/num/math/vector_space.md"
+},
+"num::math::zero_like": {
+"kind": "variable",
+"page": "reference/num/math/zero_like.md"
+},
+"num::matmul": {
+"kind": "function",
+"page": "reference/num/matmul.md"
+},
+"num::matrix_space": {
+"kind": "type",
+"page": "reference/num/matrix_space.md"
+},
+"num::matvec": {
+"kind": "function",
+"page": "reference/num/matvec.md"
+},
+"num::max_indexed_pq": {
+"kind": "type",
+"page": "reference/num/max_indexed_pq.md"
+},
+"num::min_indexed_pq": {
+"kind": "type",
+"page": "reference/num/min_indexed_pq.md"
+},
+"num::minres": {
+"kind": "function",
+"page": "reference/num/minres.md"
+},
+"num::minres_options": {
+"kind": "type",
+"page": "reference/num/minres_options.md"
+},
+"num::moment_accumulator": {
+"kind": "type",
+"page": "reference/num/moment_accumulator.md"
+},
+"num::mpi::allreduce_sum": {
+"kind": "function",
+"page": "reference/num/mpi/allreduce_sum.md"
+},
+"num::mpi::broadcast": {
+"kind": "function",
+"page": "reference/num/mpi/broadcast.md"
+},
+"num::mpi::dot": {
+"kind": "function",
+"page": "reference/num/mpi/dot.md"
+},
+"num::mpi::finalize": {
+"kind": "function",
+"page": "reference/num/mpi/finalize.md"
+},
+"num::mpi::init": {
+"kind": "function",
+"page": "reference/num/mpi/init.md"
+},
+"num::mpi::norm": {
+"kind": "function",
+"page": "reference/num/mpi/norm.md"
+},
+"num::mpi::rank": {
+"kind": "function",
+"page": "reference/num/mpi/rank.md"
+},
+"num::mpi::size": {
+"kind": "function",
+"page": "reference/num/mpi/size.md"
+},
+"num::multi_index": {
+"kind": "type",
+"page": "reference/num/multi_index.md"
+},
+"num::neg_laplacian_3d": {
+"kind": "function",
+"page": "reference/num/neg_laplacian_3d.md"
+},
+"num::neighbor_query_2d": {
+"kind": "type",
+"page": "reference/num/neighbor_query_2d.md"
+},
+"num::newton": {
+"kind": "function",
+"page": "reference/num/newton.md"
+},
+"num::no_pivot": {
+"kind": "variable",
+"page": "reference/num/no_pivot.md"
+},
+"num::no_pivot_lu": {
+"kind": "type",
+"page": "reference/num/no_pivot_lu.md"
+},
+"num::no_pivot_structure": {
+"kind": "type",
+"page": "reference/num/no_pivot_structure.md"
+},
+"num::no_reusable_block": {
+"kind": "variable",
+"page": "reference/num/no_reusable_block.md"
+},
+"num::norm": {
+"kind": "function",
+"page": "reference/num/norm.md"
+},
+"num::observer_fn": {
+"kind": "type",
+"page": "reference/num/observer_fn.md"
+},
+"num::ode::advance": {
+"kind": "function",
+"page": "reference/num/ode/advance.md"
+},
+"num::ode::debug::verify_order_of_accuracy": {
+"kind": "function",
+"page": "reference/num/ode/debug/verify_order_of_accuracy.md"
+},
+"num::ode::debug::verify_symplectic_2form": {
+"kind": "function",
+"page": "reference/num/ode/debug/verify_symplectic_2form.md"
+},
+"num::ode::implicit_params": {
+"kind": "type",
+"page": "reference/num/ode/implicit_params.md"
+},
+"num::ode_euler": {
+"kind": "function",
+"page": "reference/num/ode_euler.md"
+},
+"num::ode_params": {
+"kind": "type",
+"page": "reference/num/ode_params.md"
+},
+"num::ode_result": {
+"kind": "type",
+"page": "reference/num/ode_result.md"
+},
+"num::ode_rhs_fn": {
+"kind": "type",
+"page": "reference/num/ode_rhs_fn.md"
+},
+"num::ode_rk4": {
+"kind": "function",
+"page": "reference/num/ode_rk4.md"
+},
+"num::ode_rk45": {
+"kind": "function",
+"page": "reference/num/ode_rk45.md"
+},
+"num::ode_rk4_2nd": {
+"kind": "function",
+"page": "reference/num/ode_rk4_2nd.md"
+},
+"num::ode_step": {
+"kind": "type",
+"page": "reference/num/ode_step.md"
+},
+"num::ode_verlet": {
+"kind": "function",
+"page": "reference/num/ode_verlet.md"
+},
+"num::ode_yoshida4": {
+"kind": "function",
+"page": "reference/num/ode_yoshida4.md"
+},
+"num::omp::add": {
+"kind": "function",
+"page": "reference/num/omp/add.md"
+},
+"num::omp::axpby": {
+"kind": "function",
+"page": "reference/num/omp/axpby.md"
+},
+"num::omp::axpbyz": {
+"kind": "function",
+"page": "reference/num/omp/axpbyz.md"
+},
+"num::omp::axpy": {
+"kind": "function",
+"page": "reference/num/omp/axpy.md"
+},
+"num::omp::block_count_for": {
+"kind": "function",
+"page": "reference/num/omp/block_count_for.md"
+},
+"num::omp::block_size_for": {
+"kind": "function",
+"page": "reference/num/omp/block_size_for.md"
+},
+"num::omp::dot": {
+"kind": "function",
+"page": "reference/num/omp/dot.md"
+},
+"num::omp::eig_sym": {
+"kind": "function",
+"page": "reference/num/omp/eig_sym.md"
+},
+"num::omp::ger": {
+"kind": "function",
+"page": "reference/num/omp/ger.md"
+},
+"num::omp::l1_norm": {
+"kind": "function",
+"page": "reference/num/omp/l1_norm.md"
+},
+"num::omp::linf_norm": {
+"kind": "function",
+"page": "reference/num/omp/linf_norm.md"
+},
+"num::omp::matadd": {
+"kind": "function",
+"page": "reference/num/omp/matadd.md"
+},
+"num::omp::matmul": {
+"kind": "function",
+"page": "reference/num/omp/matmul.md"
+},
+"num::omp::matvec": {
+"kind": "function",
+"page": "reference/num/omp/matvec.md"
+},
+"num::omp::max_parallel_blocks": {
+"kind": "variable",
+"page": "reference/num/omp/max_parallel_blocks.md"
+},
+"num::omp::norm": {
+"kind": "function",
+"page": "reference/num/omp/norm.md"
+},
+"num::omp::parallel_apply": {
+"kind": "function",
+"page": "reference/num/omp/parallel_apply.md"
+},
+"num::omp::parallel_block": {
+"kind": "variable",
+"page": "reference/num/omp/parallel_block.md"
+},
+"num::omp::parallel_reduce": {
+"kind": "function",
+"page": "reference/num/omp/parallel_reduce.md"
+},
+"num::omp::parallel_threshold": {
+"kind": "variable",
+"page": "reference/num/omp/parallel_threshold.md"
+},
+"num::omp::scale": {
+"kind": "function",
+"page": "reference/num/omp/scale.md"
+},
+"num::omp::sum": {
+"kind": "function",
+"page": "reference/num/omp/sum.md"
+},
+"num::ones": {
+"kind": "function",
+"page": "reference/num/ones.md"
+},
+"num::operators::backward_euler_2d": {
+"kind": "type",
+"page": "reference/num/operators/backward_euler_2d.md"
+},
+"num::operators::callable_op": {
+"kind": "type",
+"page": "reference/num/operators/callable_op.md"
+},
+"num::operators::dense_op": {
+"kind": "type",
+"page": "reference/num/operators/dense_op.md"
+},
+"num::operators::laplacian_2d": {
+"kind": "type",
+"page": "reference/num/operators/laplacian_2d.md"
+},
+"num::operators::make_op": {
+"kind": "function",
+"page": "reference/num/operators/make_op.md"
+},
+"num::operators::projected": {
+"kind": "function",
+"page": "reference/num/operators/projected.md"
+},
+"num::operators::projected_op": {
+"kind": "type",
+"page": "reference/num/operators/projected_op.md"
+},
+"num::operators::restricted_laws": {
+"kind": "type",
+"page": "reference/num/operators/restricted_laws.md"
+},
+"num::operators::sparse_op": {
+"kind": "type",
+"page": "reference/num/operators/sparse_op.md"
+},
+"num::operators::to_sparse_matrix": {
+"kind": "function",
+"page": "reference/num/operators/to_sparse_matrix.md"
+},
+"num::pbc_lattice_2d": {
+"kind": "type",
+"page": "reference/num/pbc_lattice_2d.md"
+},
+"num::pcg": {
+"kind": "function",
+"page": "reference/num/pcg.md"
+},
+"num::pcg_options": {
+"kind": "type",
+"page": "reference/num/pcg_options.md"
+},
+"num::pde::backward_euler_matrix": {
+"kind": "function",
+"page": "reference/num/pde/backward_euler_matrix.md"
+},
+"num::pde::backward_euler_operator": {
+"kind": "function",
+"page": "reference/num/pde/backward_euler_operator.md"
+},
+"num::pde::backward_euler_operator_2d": {
+"kind": "type",
+"page": "reference/num/pde/backward_euler_operator_2d.md"
+},
+"num::pde::diffusion_step_2d": {
+"kind": "function",
+"page": "reference/num/pde/diffusion_step_2d.md"
+},
+"num::pde::diffusion_step_2d_4th_dirichlet": {
+"kind": "function",
+"page": "reference/num/pde/diffusion_step_2d_4th_dirichlet.md"
+},
+"num::pde::diffusion_step_2d_dirichlet": {
+"kind": "function",
+"page": "reference/num/pde/diffusion_step_2d_dirichlet.md"
+},
+"num::pde::laplacian_sparse_2d": {
+"kind": "function",
+"page": "reference/num/pde/laplacian_sparse_2d.md"
+},
+"num::pde::make_cg_solver": {
+"kind": "function",
+"page": "reference/num/pde/make_cg_solver.md"
+},
+"num::pde::matrix_free_backward_euler_2d": {
+"kind": "type",
+"page": "reference/num/pde/matrix_free_backward_euler_2d.md"
+},
+"num::pde::matrix_free_laplacian_2d": {
+"kind": "type",
+"page": "reference/num/pde/matrix_free_laplacian_2d.md"
+},
+"num::pde::poisson2d": {
+"kind": "function",
+"page": "reference/num/pde/poisson2d.md"
+},
+"num::pde::poisson2d_fd": {
+"kind": "function",
+"page": "reference/num/pde/poisson2d_fd.md"
+},
+"num::periodic_neighbourhood_2d": {
+"kind": "type",
+"page": "reference/num/periodic_neighbourhood_2d.md"
+},
+"num::phi": {
+"kind": "variable",
+"page": "reference/num/phi.md"
+},
+"num::pi": {
+"kind": "variable",
+"page": "reference/num/pi.md"
+},
+"num::plot_point": {
+"kind": "type",
+"page": "reference/num/plot_point.md"
+},
+"num::plt::clf": {
+"kind": "function",
+"page": "reference/num/plt/clf.md"
+},
+"num::plt::colormap": {
+"kind": "function",
+"page": "reference/num/plt/colormap.md"
+},
+"num::plt::heatmap": {
+"kind": "function",
+"page": "reference/num/plt/heatmap.md"
+},
+"num::plt::legend": {
+"kind": "function",
+"page": "reference/num/plt/legend.md"
+},
+"num::plt::loglog": {
+"kind": "function",
+"page": "reference/num/plt/loglog.md"
+},
+"num::plt::next": {
+"kind": "function",
+"page": "reference/num/plt/next.md"
+},
+"num::plt::plot": {
+"kind": "function",
+"page": "reference/num/plt/plot.md"
+},
+"num::plt::plot_paths": {
+"kind": "function",
+"page": "reference/num/plt/plot_paths.md"
+},
+"num::plt::savefig": {
+"kind": "function",
+"page": "reference/num/plt/savefig.md"
+},
+"num::plt::semilogx": {
+"kind": "function",
+"page": "reference/num/plt/semilogx.md"
+},
+"num::plt::semilogy": {
+"kind": "function",
+"page": "reference/num/plt/semilogy.md"
+},
+"num::plt::show": {
+"kind": "function",
+"page": "reference/num/plt/show.md"
+},
+"num::plt::show_dumb": {
+"kind": "function",
+"page": "reference/num/plt/show_dumb.md"
+},
+"num::plt::subplot": {
+"kind": "function",
+"page": "reference/num/plt/subplot.md"
+},
+"num::plt::terminal_dumb": {
+"kind": "function",
+"page": "reference/num/plt/terminal_dumb.md"
+},
+"num::plt::title": {
+"kind": "function",
+"page": "reference/num/plt/title.md"
+},
+"num::plt::xlabel": {
+"kind": "function",
+"page": "reference/num/plt/xlabel.md"
+},
+"num::plt::xlim": {
+"kind": "function",
+"page": "reference/num/plt/xlim.md"
+},
+"num::plt::ylabel": {
+"kind": "function",
+"page": "reference/num/plt/ylabel.md"
+},
+"num::plt::ylim": {
+"kind": "function",
+"page": "reference/num/plt/ylim.md"
+},
+"num::position_accessor_2d": {
+"kind": "type",
+"page": "reference/num/position_accessor_2d.md"
+},
+"num::power_iteration": {
+"kind": "function",
+"page": "reference/num/power_iteration.md"
+},
+"num::power_result": {
+"kind": "type",
+"page": "reference/num/power_result.md"
+},
+"num::qr": {
+"kind": "function",
+"page": "reference/num/qr.md"
+},
+"num::qr_result": {
+"kind": "type",
+"page": "reference/num/qr_result.md"
+},
+"num::qr_solve": {
+"kind": "function",
+"page": "reference/num/qr_solve.md"
+},
+"num::quadrature_rule": {
+"kind": "type",
+"page": "reference/num/quadrature_rule.md"
+},
+"num::rademacher_probe": {
+"kind": "function",
+"page": "reference/num/rademacher_probe.md"
+},
+"num::randommat::ac1": {
+"kind": "function",
+"page": "reference/num/randommat/ac1.md"
+},
+"num::randommat::ac2": {
+"kind": "function",
+"page": "reference/num/randommat/ac2.md"
+},
+"num::randommat::act": {
+"kind": "function",
+"page": "reference/num/randommat/act.md"
+},
+"num::randommat::approx_chol_preconditioner": {
+"kind": "type",
+"page": "reference/num/randommat/approx_chol_preconditioner.md"
+},
+"num::randommat::approxchol_preconditioner": {
+"kind": "function",
+"page": "reference/num/randommat/approxchol_preconditioner.md"
+},
+"num::randommat::cholesky_factor": {
+"kind": "type",
+"page": "reference/num/randommat/cholesky_factor.md"
+},
+"num::randommat::exact": {
+"kind": "function",
+"page": "reference/num/randommat/exact.md"
+},
+"num::randommat::factor_column": {
+"kind": "type",
+"page": "reference/num/randommat/factor_column.md"
+},
+"num::randommat::factor_entry": {
+"kind": "type",
+"page": "reference/num/randommat/factor_entry.md"
+},
+"num::randommat::factorize": {
+"kind": "function",
+"page": "reference/num/randommat/factorize.md"
+},
+"num::randommat::gao_kyng_spielman_2023::ac": {
+"kind": "variable",
+"page": "reference/num/randommat/gao_kyng_spielman_2023/ac.md"
+},
+"num::randommat::gao_kyng_spielman_2023::ac2": {
+"kind": "variable",
+"page": "reference/num/randommat/gao_kyng_spielman_2023/ac2.md"
+},
+"num::randommat::get_entry": {
+"kind": "function",
+"page": "reference/num/randommat/get_entry.md"
+},
+"num::randommat::graph": {
+"kind": "type",
+"page": "reference/num/randommat/graph.md"
+},
+"num::randommat::graph_edge": {
+"kind": "type",
+"page": "reference/num/randommat/graph_edge.md"
+},
+"num::randommat::grounded_approx_chol_factor": {
+"kind": "type",
+"page": "reference/num/randommat/grounded_approx_chol_factor.md"
+},
+"num::randommat::grounded_approxchol_factor": {
+"kind": "function",
+"page": "reference/num/randommat/grounded_approxchol_factor.md"
+},
+"num::randommat::neighbor": {
+"kind": "type",
+"page": "reference/num/randommat/neighbor.md"
+},
+"num::randommat::solve": {
+"kind": "function",
+"page": "reference/num/randommat/solve.md"
+},
+"num::randommat::to_approxchol_graph": {
+"kind": "function",
+"page": "reference/num/randommat/to_approxchol_graph.md"
+},
+"num::rayleigh_iteration": {
+"kind": "function",
+"page": "reference/num/rayleigh_iteration.md"
+},
+"num::real": {
+"kind": "type",
+"page": "reference/num/real.md"
+},
+"num::refactor_block_cholesky_suffix": {
+"kind": "function",
+"page": "reference/num/refactor_block_cholesky_suffix.md"
+},
+"num::refactor_block_lu_suffix": {
+"kind": "function",
+"page": "reference/num/refactor_block_lu_suffix.md"
+},
+"num::refactor_suffix": {
+"kind": "function",
+"page": "reference/num/refactor_suffix.md"
+},
+"num::remove_indices": {
+"kind": "function",
+"page": "reference/num/remove_indices.md"
+},
+"num::removed_index": {
+"kind": "variable",
+"page": "reference/num/removed_index.md"
+},
+"num::repr::banded": {
+"kind": "type",
+"page": "reference/num/repr/banded.md"
+},
+"num::repr::contiguous": {
+"kind": "type",
+"page": "reference/num/repr/contiguous.md"
+},
+"num::repr::csr": {
+"kind": "type",
+"page": "reference/num/repr/csr.md"
+},
+"num::repr::dense_row_major": {
+"kind": "type",
+"page": "reference/num/repr/dense_row_major.md"
+},
+"num::repr::lower_bandwidth_of": {
+"kind": "function",
+"page": "reference/num/repr/lower_bandwidth_of.md"
+},
+"num::repr::tridiagonal": {
+"kind": "type",
+"page": "reference/num/repr/tridiagonal.md"
+},
+"num::repr::upper_bandwidth_of": {
+"kind": "function",
+"page": "reference/num/repr/upper_bandwidth_of.md"
+},
+"num::resolvent_factor": {
+"kind": "type",
+"page": "reference/num/resolvent_factor.md"
+},
+"num::resolvent_solve": {
+"kind": "function",
+"page": "reference/num/resolvent_solve.md"
+},
+"num::resolvent_solve_batch": {
+"kind": "function",
+"page": "reference/num/resolvent_solve_batch.md"
+},
+"num::resolvent_solve_rhs_batch": {
+"kind": "function",
+"page": "reference/num/resolvent_solve_rhs_batch.md"
+},
+"num::retained_factorization": {
+"kind": "type",
+"page": "reference/num/retained_factorization.md"
+},
+"num::rk4": {
+"kind": "function",
+"page": "reference/num/rk4.md"
+},
+"num::rk45": {
+"kind": "function",
+"page": "reference/num/rk45.md"
+},
+"num::rk45_steps": {
+"kind": "type",
+"page": "reference/num/rk45_steps.md"
+},
+"num::rk4_2nd": {
+"kind": "function",
+"page": "reference/num/rk4_2nd.md"
+},
+"num::rk4_2nd_steps": {
+"kind": "type",
+"page": "reference/num/rk4_2nd_steps.md"
+},
+"num::rk4_steps": {
+"kind": "type",
+"page": "reference/num/rk4_steps.md"
+},
+"num::rng": {
+"kind": "type",
+"page": "reference/num/rng.md"
+},
+"num::rng64": {
+"kind": "type",
+"page": "reference/num/rng64.md"
+},
+"num::rng_int": {
+"kind": "function",
+"page": "reference/num/rng_int.md"
+},
+"num::rng_normal": {
+"kind": "function",
+"page": "reference/num/rng_normal.md"
+},
+"num::rng_state": {
+"kind": "type",
+"page": "reference/num/rng_state.md"
+},
+"num::rng_uniform": {
+"kind": "function",
+"page": "reference/num/rng_uniform.md"
+},
+"num::romberg": {
+"kind": "function",
+"page": "reference/num/romberg.md"
+},
+"num::root_result": {
+"kind": "type",
+"page": "reference/num/root_result.md"
+},
+"num::roots::debug::verify_bracket": {
+"kind": "function",
+"page": "reference/num/roots/debug/verify_bracket.md"
+},
+"num::roots::debug::verify_derivative": {
+"kind": "function",
+"page": "reference/num/roots/debug/verify_derivative.md"
+},
+"num::row_fiber_sweep": {
+"kind": "function",
+"page": "reference/num/row_fiber_sweep.md"
+},
+"num::row_slice": {
+"kind": "function",
+"page": "reference/num/row_slice.md"
+},
+"num::running_stats": {
+"kind": "type",
+"page": "reference/num/running_stats.md"
+},
+"num::safe_add": {
+"kind": "function",
+"page": "reference/num/safe_add.md"
+},
+"num::sample_2d_periodic": {
+"kind": "function",
+"page": "reference/num/sample_2d_periodic.md"
+},
+"num::sample_categorical": {
+"kind": "function",
+"page": "reference/num/sample_categorical.md"
+},
+"num::save_png": {
+"kind": "function",
+"page": "reference/num/save_png.md"
+},
+"num::scalar_field_2d": {
+"kind": "type",
+"page": "reference/num/scalar_field_2d.md"
+},
+"num::scalar_field_3d": {
+"kind": "type",
+"page": "reference/num/scalar_field_3d.md"
+},
+"num::scalar_field_like": {
+"kind": "type",
+"page": "reference/num/scalar_field_like.md"
+},
+"num::scalar_fn": {
+"kind": "type",
+"page": "reference/num/scalar_fn.md"
+},
+"num::scalar_function": {
+"kind": "type",
+"page": "reference/num/scalar_function.md"
+},
+"num::scalars::conj": {
+"kind": "function",
+"page": "reference/num/scalars/conj.md"
+},
+"num::scalars::eps": {
+"kind": "function",
+"page": "reference/num/scalars/eps.md"
+},
+"num::scalars::is_complex": {
+"kind": "type",
+"page": "reference/num/scalars/is_complex.md"
+},
+"num::scalars::mag": {
+"kind": "function",
+"page": "reference/num/scalars/mag.md"
+},
+"num::scalars::re": {
+"kind": "function",
+"page": "reference/num/scalars/re.md"
+},
+"num::scalars::real_of": {
+"kind": "type",
+"page": "reference/num/scalars/real_of.md"
+},
+"num::scalars::real_t": {
+"kind": "type",
+"page": "reference/num/scalars/real_t.md"
+},
+"num::scalars::sampling_tol": {
+"kind": "function",
+"page": "reference/num/scalars/sampling_tol.md"
+},
+"num::scale": {
+"kind": "function",
+"page": "reference/num/scale.md"
+},
+"num::scale_elements": {
+"kind": "function",
+"page": "reference/num/scale_elements.md"
+},
+"num::scale_rows": {
+"kind": "function",
+"page": "reference/num/scale_rows.md"
+},
+"num::scaled": {
+"kind": "function",
+"page": "reference/num/scaled.md"
+},
+"num::scatter": {
+"kind": "function",
+"page": "reference/num/scatter.md"
+},
+"num::secant": {
+"kind": "function",
+"page": "reference/num/secant.md"
+},
+"num::selected_inverse": {
+"kind": "function",
+"page": "reference/num/selected_inverse.md"
+},
+"num::seq::add": {
+"kind": "function",
+"page": "reference/num/seq/add.md"
+},
+"num::seq::axpby": {
+"kind": "function",
+"page": "reference/num/seq/axpby.md"
+},
+"num::seq::axpbyz": {
+"kind": "function",
+"page": "reference/num/seq/axpbyz.md"
+},
+"num::seq::axpy": {
+"kind": "function",
+"page": "reference/num/seq/axpy.md"
+},
+"num::seq::dot": {
+"kind": "function",
+"page": "reference/num/seq/dot.md"
+},
+"num::seq::eig_sym": {
+"kind": "function",
+"page": "reference/num/seq/eig_sym.md"
+},
+"num::seq::ger": {
+"kind": "function",
+"page": "reference/num/seq/ger.md"
+},
+"num::seq::hessenberg": {
+"kind": "function",
+"page": "reference/num/seq/hessenberg.md"
+},
+"num::seq::l1_norm": {
+"kind": "function",
+"page": "reference/num/seq/l1_norm.md"
+},
+"num::seq::linf_norm": {
+"kind": "function",
+"page": "reference/num/seq/linf_norm.md"
+},
+"num::seq::lu": {
+"kind": "function",
+"page": "reference/num/seq/lu.md"
+},
+"num::seq::matadd": {
+"kind": "function",
+"page": "reference/num/seq/matadd.md"
+},
+"num::seq::matmul": {
+"kind": "function",
+"page": "reference/num/seq/matmul.md"
+},
+"num::seq::matvec": {
+"kind": "function",
+"page": "reference/num/seq/matvec.md"
+},
+"num::seq::norm": {
+"kind": "function",
+"page": "reference/num/seq/norm.md"
+},
+"num::seq::qr": {
+"kind": "function",
+"page": "reference/num/seq/qr.md"
+},
+"num::seq::scale": {
+"kind": "function",
+"page": "reference/num/seq/scale.md"
+},
+"num::seq::sum": {
+"kind": "function",
+"page": "reference/num/seq/sum.md"
+},
+"num::seq::svd": {
+"kind": "function",
+"page": "reference/num/seq/svd.md"
+},
+"num::seq::thomas": {
+"kind": "function",
+"page": "reference/num/seq/thomas.md"
+},
+"num::series": {
+"kind": "type",
+"page": "reference/num/series.md"
+},
+"num::set": {
+"kind": "type",
+"page": "reference/num/set.md"
+},
+"num::set_diagonal": {
+"kind": "function",
+"page": "reference/num/set_diagonal.md"
+},
+"num::set_loglog": {
+"kind": "function",
+"page": "reference/num/set_loglog.md"
+},
+"num::set_logx": {
+"kind": "function",
+"page": "reference/num/set_logx.md"
+},
+"num::similar_factor": {
+"kind": "type",
+"page": "reference/num/similar_factor.md"
+},
+"num::simpson": {
+"kind": "function",
+"page": "reference/num/simpson.md"
+},
+"num::small_matrix": {
+"kind": "type",
+"page": "reference/num/small_matrix.md"
+},
+"num::small_vec": {
+"kind": "type",
+"page": "reference/num/small_vec.md"
+},
+"num::smallest_indices": {
+"kind": "function",
+"page": "reference/num/smallest_indices.md"
+},
+"num::smoothing_kernel": {
+"kind": "type",
+"page": "reference/num/smoothing_kernel.md"
+},
+"num::solvable_field": {
+"kind": "type",
+"page": "reference/num/solvable_field.md"
+},
+"num::solve": {
+"kind": "function",
+"page": "reference/num/solve.md"
+},
+"num::solve_in_place": {
+"kind": "function",
+"page": "reference/num/solve_in_place.md"
+},
+"num::solve_transpose": {
+"kind": "function",
+"page": "reference/num/solve_transpose.md"
+},
+"num::solve_transpose_in_place": {
+"kind": "function",
+"page": "reference/num/solve_transpose_in_place.md"
+},
+"num::solver_result": {
+"kind": "type",
+"page": "reference/num/solver_result.md"
+},
+"num::space::zero_sum": {
+"kind": "type",
+"page": "reference/num/space/zero_sum.md"
+},
+"num::sparse": {
+"kind": "variable",
+"page": "reference/num/sparse.md"
+},
+"num::sparse_congruence": {
+"kind": "function",
+"page": "reference/num/sparse_congruence.md"
+},
+"num::sparse_convertible": {
+"kind": "type",
+"page": "reference/num/sparse_convertible.md"
+},
+"num::sparse_diagonal_similarity": {
+"kind": "function",
+"page": "reference/num/sparse_diagonal_similarity.md"
+},
+"num::sparse_matvec": {
+"kind": "function",
+"page": "reference/num/sparse_matvec.md"
+},
+"num::sparse_resolvent_available": {
+"kind": "function",
+"page": "reference/num/sparse_resolvent_available.md"
+},
+"num::sparse_resolvent_options": {
+"kind": "type",
+"page": "reference/num/sparse_resolvent_options.md"
+},
+"num::sparse_resolvent_solver": {
+"kind": "type",
+"page": "reference/num/sparse_resolvent_solver.md"
+},
+"num::sparse_structure": {
+"kind": "type",
+"page": "reference/num/sparse_structure.md"
+},
+"num::spatial::debug::verify_kernel_normalization": {
+"kind": "function",
+"page": "reference/num/spatial/debug/verify_kernel_normalization.md"
+},
+"num::spatial::debug::verify_kernel_support": {
+"kind": "function",
+"page": "reference/num/spatial/debug/verify_kernel_support.md"
+},
+"num::spatial::debug::verify_lattice_symmetry": {
+"kind": "function",
+"page": "reference/num/spatial/debug/verify_lattice_symmetry.md"
+},
+"num::spectral::debug::verify_parseval": {
+"kind": "function",
+"page": "reference/num/spectral/debug/verify_parseval.md"
+},
+"num::spectral::default_fft_backend": {
+"kind": "variable",
+"page": "reference/num/spectral/default_fft_backend.md"
+},
+"num::spectral::dst1": {
+"kind": "function",
+"page": "reference/num/spectral/dst1.md"
+},
+"num::spectral::dst2d": {
+"kind": "function",
+"page": "reference/num/spectral/dst2d.md"
+},
+"num::spectral::dst_check_size": {
+"kind": "function",
+"page": "reference/num/spectral/dst_check_size.md"
+},
+"num::spectral::dst_cols": {
+"kind": "function",
+"page": "reference/num/spectral/dst_cols.md"
+},
+"num::spectral::dst_rows": {
+"kind": "function",
+"page": "reference/num/spectral/dst_rows.md"
+},
+"num::spectral::fft": {
+"kind": "function",
+"page": "reference/num/spectral/fft.md"
+},
+"num::spectral::fft_plan": {
+"kind": "type",
+"page": "reference/num/spectral/fft_plan.md"
+},
+"num::spectral::fft_plan_impl": {
+"kind": "type",
+"page": "reference/num/spectral/fft_plan_impl.md"
+},
+"num::spectral::fft_simd": {
+"kind": "variable",
+"page": "reference/num/spectral/fft_simd.md"
+},
+"num::spectral::fft_stdsimd": {
+"kind": "variable",
+"page": "reference/num/spectral/fft_stdsimd.md"
+},
+"num::spectral::fftw": {
+"kind": "variable",
+"page": "reference/num/spectral/fftw.md"
+},
+"num::spectral::has_fft_simd": {
+"kind": "variable",
+"page": "reference/num/spectral/has_fft_simd.md"
+},
+"num::spectral::has_fft_stdsimd": {
+"kind": "variable",
+"page": "reference/num/spectral/has_fft_stdsimd.md"
+},
+"num::spectral::has_fftw": {
+"kind": "variable",
+"page": "reference/num/spectral/has_fftw.md"
+},
+"num::spectral::ifft": {
+"kind": "function",
+"page": "reference/num/spectral/ifft.md"
+},
+"num::spectral::irfft": {
+"kind": "function",
+"page": "reference/num/spectral/irfft.md"
+},
+"num::spectral::rfft": {
+"kind": "function",
+"page": "reference/num/spectral/rfft.md"
+},
+"num::spectral::seq": {
+"kind": "variable",
+"page": "reference/num/spectral/seq.md"
+},
+"num::sph_bessel_j": {
+"kind": "function",
+"page": "reference/num/sph_bessel_j.md"
+},
+"num::sph_bessel_y": {
+"kind": "function",
+"page": "reference/num/sph_bessel_y.md"
+},
+"num::sph_kernel": {
+"kind": "type",
+"page": "reference/num/sph_kernel.md"
+},
+"num::spmat": {
+"kind": "type",
+"page": "reference/num/spmat.md"
+},
+"num::sqrt2": {
+"kind": "variable",
+"page": "reference/num/sqrt2.md"
+},
+"num::sqrt3": {
+"kind": "variable",
+"page": "reference/num/sqrt3.md"
+},
+"num::sqrt_lanczos": {
+"kind": "function",
+"page": "reference/num/sqrt_lanczos.md"
+},
+"num::square_extent_2d": {
+"kind": "type",
+"page": "reference/num/square_extent_2d.md"
+},
+"num::static_array": {
+"kind": "type",
+"page": "reference/num/static_array.md"
+},
+"num::step_end": {
+"kind": "type",
+"page": "reference/num/step_end.md"
+},
+"num::storage_alignment": {
+"kind": "variable",
+"page": "reference/num/storage_alignment.md"
+},
+"num::streaming_accumulator": {
+"kind": "type",
+"page": "reference/num/streaming_accumulator.md"
+},
+"num::structured_grid_graph": {
+"kind": "type",
+"page": "reference/num/structured_grid_graph.md"
+},
+"num::structures::add_exact_clique": {
+"kind": "function",
+"page": "reference/num/structures/add_exact_clique.md"
+},
+"num::structures::basic_degree_queue": {
+"kind": "type",
+"page": "reference/num/structures/basic_degree_queue.md"
+},
+"num::structures::basic_multigraph": {
+"kind": "type",
+"page": "reference/num/structures/basic_multigraph.md"
+},
+"num::structures::bfs": {
+"kind": "function",
+"page": "reference/num/structures/bfs.md"
+},
+"num::structures::collect_neighbors": {
+"kind": "function",
+"page": "reference/num/structures/collect_neighbors.md"
+},
+"num::structures::complete_graph": {
+"kind": "function",
+"page": "reference/num/structures/complete_graph.md"
+},
+"num::structures::connected_components": {
+"kind": "function",
+"page": "reference/num/structures/connected_components.md"
+},
+"num::structures::cycle_graph": {
+"kind": "function",
+"page": "reference/num/structures/cycle_graph.md"
+},
+"num::structures::debug::check_connected": {
+"kind": "function",
+"page": "reference/num/structures/debug/check_connected.md"
+},
+"num::structures::debug::check_contains": {
+"kind": "function",
+"page": "reference/num/structures/debug/check_contains.md"
+},
+"num::structures::debug::check_index_bounds": {
+"kind": "function",
+"page": "reference/num/structures/debug/check_index_bounds.md"
+},
+"num::structures::debug::check_not_contains": {
+"kind": "function",
+"page": "reference/num/structures/debug/check_not_contains.md"
+},
+"num::structures::debug::check_positive_weight": {
+"kind": "function",
+"page": "reference/num/structures/debug/check_positive_weight.md"
+},
+"num::structures::debug::check_vertex_bounds": {
+"kind": "function",
+"page": "reference/num/structures/debug/check_vertex_bounds.md"
+},
+"num::structures::debug::verify_degree_consistency": {
+"kind": "function",
+"page": "reference/num/structures/debug/verify_degree_consistency.md"
+},
+"num::structures::debug::verify_equivalence_relation": {
+"kind": "function",
+"page": "reference/num/structures/debug/verify_equivalence_relation.md"
+},
+"num::structures::debug::verify_handshake_lemma": {
+"kind": "function",
+"page": "reference/num/structures/debug/verify_handshake_lemma.md"
+},
+"num::structures::debug::verify_heap_order": {
+"kind": "function",
+"page": "reference/num/structures/debug/verify_heap_order.md"
+},
+"num::structures::debug::verify_laplacian_structure": {
+"kind": "function",
+"page": "reference/num/structures/debug/verify_laplacian_structure.md"
+},
+"num::structures::degree_queue": {
+"kind": "type",
+"page": "reference/num/structures/degree_queue.md"
+},
+"num::structures::degree_queue_32": {
+"kind": "type",
+"page": "reference/num/structures/degree_queue_32.md"
+},
+"num::structures::dfs": {
+"kind": "function",
+"page": "reference/num/structures/dfs.md"
+},
+"num::structures::dijkstra": {
+"kind": "function",
+"page": "reference/num/structures/dijkstra.md"
+},
+"num::structures::erdos_renyi": {
+"kind": "function",
+"page": "reference/num/structures/erdos_renyi.md"
+},
+"num::structures::float_multigraph": {
+"kind": "type",
+"page": "reference/num/structures/float_multigraph.md"
+},
+"num::structures::grid_2d": {
+"kind": "function",
+"page": "reference/num/structures/grid_2d.md"
+},
+"num::structures::is_connected": {
+"kind": "function",
+"page": "reference/num/structures/is_connected.md"
+},
+"num::structures::minimum_spanning_tree": {
+"kind": "function",
+"page": "reference/num/structures/minimum_spanning_tree.md"
+},
+"num::structures::multi_edge": {
+"kind": "type",
+"page": "reference/num/structures/multi_edge.md"
+},
+"num::structures::multigraph": {
+"kind": "type",
+"page": "reference/num/structures/multigraph.md"
+},
+"num::structures::path_graph": {
+"kind": "function",
+"page": "reference/num/structures/path_graph.md"
+},
+"num::structures::random_spanning_tree": {
+"kind": "function",
+"page": "reference/num/structures/random_spanning_tree.md"
+},
+"num::structures::sample_biclique_tree": {
+"kind": "function",
+"page": "reference/num/structures/sample_biclique_tree.md"
+},
+"num::structures::sample_clique": {
+"kind": "function",
+"page": "reference/num/structures/sample_clique.md"
+},
+"num::structures::sample_clique_tree": {
+"kind": "function",
+"page": "reference/num/structures/sample_clique_tree.md"
+},
+"num::structures::star_graph": {
+"kind": "function",
+"page": "reference/num/structures/star_graph.md"
+},
+"num::structures::to_multigraph": {
+"kind": "function",
+"page": "reference/num/structures/to_multigraph.md"
+},
+"num::sub": {
+"kind": "function",
+"page": "reference/num/sub.md"
+},
+"num::suffix_block_lu": {
+"kind": "type",
+"page": "reference/num/suffix_block_lu.md"
+},
+"num::suffix_reuse_report": {
+"kind": "type",
+"page": "reference/num/suffix_reuse_report.md"
+},
+"num::sum": {
+"kind": "function",
+"page": "reference/num/sum.md"
+},
+"num::svd": {
+"kind": "function",
+"page": "reference/num/svd.md"
+},
+"num::svd_result": {
+"kind": "type",
+"page": "reference/num/svd_result.md"
+},
+"num::svd_truncated": {
+"kind": "function",
+"page": "reference/num/svd_truncated.md"
+},
+"num::swap_remove": {
+"kind": "function",
+"page": "reference/num/swap_remove.md"
+},
+"num::swap_remove_map": {
+"kind": "function",
+"page": "reference/num/swap_remove_map.md"
+},
+"num::swap_remove_plan": {
+"kind": "function",
+"page": "reference/num/swap_remove_plan.md"
+},
+"num::symmetric_part": {
+"kind": "function",
+"page": "reference/num/symmetric_part.md"
+},
+"num::symp_observer_fn": {
+"kind": "type",
+"page": "reference/num/symp_observer_fn.md"
+},
+"num::symplectic_result": {
+"kind": "type",
+"page": "reference/num/symplectic_result.md"
+},
+"num::symplectic_step": {
+"kind": "type",
+"page": "reference/num/symplectic_step.md"
+},
+"num::talbot_contour": {
+"kind": "function",
+"page": "reference/num/talbot_contour.md"
+},
+"num::talbot_quadrature": {
+"kind": "type",
+"page": "reference/num/talbot_quadrature.md"
+},
+"num::thomas": {
+"kind": "function",
+"page": "reference/num/thomas.md"
+},
+"num::to_idx": {
+"kind": "function",
+"page": "reference/num/to_idx.md"
+},
+"num::transform_plan": {
+"kind": "type",
+"page": "reference/num/transform_plan.md"
+},
+"num::transpose": {
+"kind": "function",
+"page": "reference/num/transpose.md"
+},
+"num::trapz": {
+"kind": "function",
+"page": "reference/num/trapz.md"
+},
+"num::trsv_lower": {
+"kind": "function",
+"page": "reference/num/trsv_lower.md"
+},
+"num::trsv_upper": {
+"kind": "function",
+"page": "reference/num/trsv_upper.md"
+},
+"num::two_pi": {
+"kind": "variable",
+"page": "reference/num/two_pi.md"
+},
+"num::umfpack_available": {
+"kind": "function",
+"page": "reference/num/umfpack_available.md"
+},
+"num::umfpack_factor": {
+"kind": "type",
+"page": "reference/num/umfpack_factor.md"
+},
+"num::unit_vector": {
+"kind": "function",
+"page": "reference/num/unit_vector.md"
+},
+"num::unordered_map": {
+"kind": "type",
+"page": "reference/num/unordered_map.md"
+},
+"num::unordered_set": {
+"kind": "type",
+"page": "reference/num/unordered_set.md"
+},
+"num::unsafe::cg": {
+"kind": "function",
+"page": "reference/num/unsafe/cg.md"
+},
+"num::unsafe::cholesky": {
+"kind": "function",
+"page": "reference/num/unsafe/cholesky.md"
+},
+"num::unsafe::eig_sym": {
+"kind": "function",
+"page": "reference/num/unsafe/eig_sym.md"
+},
+"num::unsafe::lanczos": {
+"kind": "function",
+"page": "reference/num/unsafe/lanczos.md"
+},
+"num::update_inverse_rows": {
+"kind": "function",
+"page": "reference/num/update_inverse_rows.md"
+},
+"num::vec": {
+"kind": "type",
+"page": "reference/num/vec.md"
+},
+"num::vec2_view": {
+"kind": "type",
+"page": "reference/num/vec2_view.md"
+},
+"num::vec_field": {
+"kind": "type",
+"page": "reference/num/vec_field.md"
+},
+"num::vector_field_3d": {
+"kind": "type",
+"page": "reference/num/vector_field_3d.md"
+},
+"num::vector_fn": {
+"kind": "type",
+"page": "reference/num/vector_fn.md"
+},
+"num::verify": {
+"kind": "function",
+"page": "reference/num/verify.md"
+},
+"num::verlet": {
+"kind": "function",
+"page": "reference/num/verlet.md"
+},
+"num::verlet_list_2d": {
+"kind": "type",
+"page": "reference/num/verlet_list_2d.md"
+},
+"num::verlet_steps": {
+"kind": "type",
+"page": "reference/num/verlet_steps.md"
+},
+"num::view": {
+"kind": "type",
+"page": "reference/num/view.md"
+},
+"num::weighted_sum": {
+"kind": "function",
+"page": "reference/num/weighted_sum.md"
+},
+"num::with_law": {
+"kind": "type",
+"page": "reference/num/with_law.md"
+},
+"num::woodbury_solver": {
+"kind": "type",
+"page": "reference/num/woodbury_solver.md"
+},
+"num::yoshida4": {
+"kind": "function",
+"page": "reference/num/yoshida4.md"
+},
+"num::yoshida4_steps": {
+"kind": "type",
+"page": "reference/num/yoshida4_steps.md"
+},
+"num::zeros": {
+"kind": "function",
+"page": "reference/num/zeros.md"
+}
+},
+"parameters": [
+"A",
+"A_in",
+"Accel",
+"Advance",
+"Algorithm",
+"Alloc",
+"Apply",
+"Args",
+"B",
+"Block",
+"C",
+"Colors",
+"Compare",
+"Container",
+"ContainerX",
+"ContainerY",
+"D",
+"DFunc",
+"DS",
+"DeltaE",
+"Dim",
+"E",
+"Emit",
+"Eq",
+"Extent",
+"F",
+"Field",
+"Float",
+"Func",
+"G",
+"H",
+"Hash",
+"In",
+"InCluster",
+"Index",
+"K",
+"Key",
+"L",
+"LU",
+"Labels",
+"Laws",
+"M",
+"M_buf",
+"Mat",
+"MatVec",
+"Measure",
+"N",
+"Neighbors",
+"Observer",
+"Op",
+"P",
+"PQ",
+"Parallel",
+"Paths",
+"Plan",
+"Precond",
+"Predicate",
+"ProbFn",
+"Projection",
+"Q",
+"Queue",
+"R",
+"RHS",
+"RNG",
+"Restore",
+"Rhs",
+"Rng",
+"S",
+"Save",
+"Scalar",
+"Score",
+"Source",
+"SparseType",
+"State",
+"Step",
+"Stepper",
+"Subspace",
+"T",
+"Tm",
+"U",
+"V",
+"Values",
+"Vec",
+"VectorType",
+"W",
+"Weight",
+"X",
+"Y",
+"Z",
+"a",
+"a_cols",
+"ab",
+"acc",
+"accel",
+"acceptance_prob",
+"actual",
+"add",
+"advance",
+"algorithm",
+"alpha",
+"anorm",
+"app",
+"apply_flip",
+"apq",
+"aqq",
+"argc",
+"args",
+"argv",
+"ax",
+"ay",
+"az",
+"b",
+"b_cols",
+"b_tilde",
+"base",
+"basis",
+"batch_count",
+"batch_size",
+"beta",
+"block",
+"block_size",
+"breakdown_tol",
+"bx",
+"by",
+"bz",
+"c",
+"cap",
+"capacity",
+"category",
+"changed",
+"claimed_order",
+"coeff",
+"coefficients",
+"col",
+"col_idx",
+"colors",
+"cols",
+"column",
+"column_oriented",
+"columns",
+"comm",
+"correction",
+"count",
+"current",
+"cx",
+"cy",
+"d",
+"dE",
+"dEs",
+"data",
+"degree",
+"delta_energy",
+"destination",
+"df",
+"diagonal",
+"divisors",
+"done",
+"ds",
+"dst",
+"dydt",
+"emit",
+"ensure_connected",
+"err",
+"exact_mode",
+"exists",
+"expected",
+"f",
+"factor",
+"field",
+"filename",
+"first",
+"first_changed_block",
+"fx",
+"fy",
+"fz",
+"g",
+"generator",
+"gp",
+"grid",
+"gx",
+"gy",
+"gz",
+"h",
+"height",
+"hi",
+"i",
+"in",
+"in_cluster",
+"incx",
+"incy",
+"index",
+"indices",
+"input",
+"input_G",
+"inv_dx2",
+"inverse",
+"ipiv",
+"iterations",
+"k",
+"k0",
+"kb",
+"keep",
+"key",
+"kl",
+"ku",
+"l",
+"label",
+"labels",
+"lambda_min",
+"lattice",
+"lda",
+"ldab",
+"ldb",
+"ldc",
+"ldl",
+"ldu",
+"ldv",
+"ldx",
+"ldy",
+"levels",
+"lo",
+"loc",
+"lvl",
+"m",
+"m_max",
+"matrix",
+"matrix_stride",
+"max_depth",
+"max_iter",
+"max_levels",
+"max_steps",
+"max_sweeps",
+"max_weight",
+"mean",
+"measure_order",
+"message",
+"mg",
+"min_weight",
+"modes",
+"n",
+"n_components",
+"n_sites",
+"n_vertices",
+"nbr",
+"nbr_out",
+"neighbors",
+"nrhs",
+"nu",
+"nx",
+"ny",
+"nz",
+"obs",
+"observer",
+"offset",
+"op",
+"options",
+"out",
+"output",
+"oversampling",
+"ox",
+"oy",
+"p",
+"p0",
+"palette",
+"path",
+"paths",
+"phi",
+"pinned_vertex",
+"piv",
+"pivot",
+"pivots",
+"plan",
+"plot_title",
+"pointer",
+"pos",
+"pq",
+"preconditioner",
+"previous",
+"probed",
+"probes",
+"ptr",
+"px",
+"py",
+"q",
+"q0",
+"r",
+"r1",
+"r2",
+"removed",
+"report",
+"restore_state",
+"result",
+"rhs",
+"right_hand_side",
+"right_hand_sides",
+"rng",
+"root",
+"row",
+"row_ptr",
+"rows",
+"s",
+"safety",
+"sample_limit",
+"sampler",
+"samples",
+"save_state",
+"scalar",
+"scale",
+"score",
+"scratch",
+"second",
+"seed",
+"seeds",
+"shift",
+"shifts",
+"sigma",
+"site",
+"size",
+"slack",
+"solution",
+"solver",
+"source",
+"source_in",
+"src",
+"star_buf",
+"start",
+"stddev",
+"step",
+"stop",
+"structure",
+"style",
+"subspace",
+"success",
+"symmetrizer",
+"t",
+"t0",
+"t1",
+"tau",
+"tol",
+"tolerance",
+"total_weight",
+"transA",
+"transB",
+"transpose",
+"trees",
+"u",
+"unit",
+"update",
+"v",
+"v0",
+"val",
+"value",
+"values",
+"vector",
+"vector_stride",
+"vmax",
+"vmin",
+"w",
+"weight",
+"weights",
+"width",
+"window",
+"work",
+"workspace",
+"x",
+"x0",
+"x1",
+"y",
+"y0",
+"z"
+]
+}

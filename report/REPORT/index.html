@@ -1,0 +1,3584 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A C++20 library for scientific computing">
+      
+      
+      
+      
+        <link rel="prev" href="../../reference/examples/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Benchmark report - numerics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/numerics.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#numerics-library--status-report" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="numerics" class="md-header__button md-logo" aria-label="numerics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            numerics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Benchmark report
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/AdityaDendukuri/numerics" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="numerics" class="md-nav__button md-logo" aria-label="numerics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    numerics
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/AdityaDendukuri/numerics" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts, laws and diagnostics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backends/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backends
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kernel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    num::kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Algorithm notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/containers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All containers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kernel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All kernels
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark report
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build Environment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build Environment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core--vec-and-mat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core — vec and mat
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core — vec and mat">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--mat-multiply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — mat Multiply
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--mat-vec-multiply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — mat-vec Multiply
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--dot-product" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — Dot Product
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--axpy-y--ax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — Axpy (y += a·x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#factorizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Factorizations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Factorizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lu-factorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LU Factorization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qr-factorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QR Factorization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thomas-tridiagonal-solver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thomas tridiagonal Solver
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iterative-solvers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iterative Solvers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Iterative Solvers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conjugate-gradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conjugate Gradient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#convergence-dynamics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Convergence Dynamics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minres-vs-conjugate-gradient-error--residual-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MINRES vs Conjugate Gradient (Error &amp; Residual Comparison)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolvent--mat-exponential" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolvent &amp; mat Exponential
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resolvent &amp; mat Exponential">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#talbot-spectral-quadrature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Talbot Spectral Quadrature
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#banded-matrices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        banded Matrices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="banded Matrices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eigensolvers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Eigensolvers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Eigensolvers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-symmetric-eigensolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Symmetric Eigensolver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lanczos-mat-free" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lanczos (mat-Free)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#singular-value-decomposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Singular Value Decomposition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Singular Value Decomposition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-svd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full SVD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#randomized-truncated-svd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Randomized Truncated SVD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamical-systems--symplectic-odes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamical Systems &amp; Symplectic ODEs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dynamical Systems &amp; Symplectic ODEs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hamiltonian-energy-conservation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hamiltonian Energy Conservation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spectral--fft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectral — FFT
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spectral — FFT">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--forward-fft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — Forward FFT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--fft-plan-amortised" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — FFT Plan (amortised)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--real-to-complex-fft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — Real-to-Complex FFT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build Environment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build Environment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core--vec-and-mat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core — vec and mat
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core — vec and mat">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--mat-multiply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — mat Multiply
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--mat-vec-multiply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — mat-vec Multiply
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--dot-product" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — Dot Product
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--axpy-y--ax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — Axpy (y += a·x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#factorizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Factorizations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Factorizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lu-factorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LU Factorization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qr-factorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QR Factorization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thomas-tridiagonal-solver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thomas tridiagonal Solver
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iterative-solvers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iterative Solvers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Iterative Solvers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conjugate-gradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conjugate Gradient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#convergence-dynamics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Convergence Dynamics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minres-vs-conjugate-gradient-error--residual-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MINRES vs Conjugate Gradient (Error &amp; Residual Comparison)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolvent--mat-exponential" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolvent &amp; mat Exponential
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resolvent &amp; mat Exponential">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#talbot-spectral-quadrature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Talbot Spectral Quadrature
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#banded-matrices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        banded Matrices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="banded Matrices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eigensolvers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Eigensolvers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Eigensolvers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-symmetric-eigensolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Symmetric Eigensolver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lanczos-mat-free" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lanczos (mat-Free)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#singular-value-decomposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Singular Value Decomposition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Singular Value Decomposition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-svd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full SVD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#randomized-truncated-svd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Randomized Truncated SVD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamical-systems--symplectic-odes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamical Systems &amp; Symplectic ODEs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dynamical Systems &amp; Symplectic ODEs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hamiltonian-energy-conservation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hamiltonian Energy Conservation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spectral--fft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectral — FFT
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spectral — FFT">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--forward-fft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — Forward FFT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--fft-plan-amortised" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — FFT Plan (amortised)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmarks--real-to-complex-fft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarks — Real-to-Complex FFT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="numerics-library--status-report">Numerics Library — Status Report<a class="headerlink" href="#numerics-library--status-report" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>2026-08-30 17:28 UTC · AppleClang 17.0.0.17000013 · Release</p>
+</blockquote>
+<p>Auto-generated by <code>make report</code>. Each section compares our implementation against the
+industry-standard LAPACK/BLAS reference. Sections without data show <code>[not available]</code>.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="#build-environment">Build Environment</a></li>
+<li><a href="#test-summary">Test Summary</a></li>
+<li><a href="#core--vec-and-mat">Core — vec and mat</a></li>
+<li><a href="#benchmarks--mat-multiply">Benchmarks — mat Multiply</a></li>
+<li><a href="#benchmarks--mat-vec-multiply">Benchmarks — mat-vec Multiply</a></li>
+<li><a href="#benchmarks--dot-product">Benchmarks — Dot Product</a></li>
+<li><a href="#benchmarks--axpy-y--ax">Benchmarks — Axpy</a></li>
+<li><a href="#factorizations">Factorizations</a></li>
+<li><a href="#lu-factorization">LU Factorization</a></li>
+<li><a href="#qr-factorization">QR Factorization</a></li>
+<li><a href="#thomas-tridiagonal-solver">Thomas tridiagonal Solver</a></li>
+<li><a href="#iterative-solvers">Iterative Solvers</a></li>
+<li><a href="#conjugate-gradient">Conjugate Gradient</a></li>
+<li><a href="#convergence-dynamics">Convergence Dynamics</a></li>
+<li><a href="#resolvent--mat-exponential">Resolvent &amp; mat Exponential</a></li>
+<li><a href="#talbot-spectral-quadrature">Talbot Spectral Quadrature</a></li>
+<li><a href="#banded-matrices">banded Matrices</a></li>
+<li><a href="#eigensolvers">Eigensolvers</a></li>
+<li><a href="#full-symmetric-eigensolver">Full Symmetric Eigensolver</a></li>
+<li><a href="#lanczos-mat-free">Lanczos (mat-Free)</a></li>
+<li><a href="#singular-value-decomposition">Singular Value Decomposition</a></li>
+<li><a href="#full-svd">Full SVD</a></li>
+<li><a href="#randomized-truncated-svd">Randomized Truncated SVD</a></li>
+<li><a href="#dynamical-systems--symplectic-odes">Dynamical Systems &amp; Symplectic ODEs</a></li>
+<li><a href="#hamiltonian-energy-conservation">Hamiltonian Energy Conservation</a></li>
+<li><a href="#analysis">Analysis</a></li>
+<li><a href="#spectral--fft">Spectral — FFT</a></li>
+</ul>
+<hr />
+<h2 id="build-environment">Build Environment<a class="headerlink" href="#build-environment" title="Permanent link">&para;</a></h2>
+<h3 id="system">System<a class="headerlink" href="#system" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OS</td>
+<td>macOS</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td>8 core Apple M1 Pro</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td>16384 MB (16.0 GB)</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td>n/a</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backends">Backends<a class="headerlink" href="#backends" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Backend</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BLAS / cblas</td>
+<td><strong>found</strong></td>
+<td>Backend::blas   -- cblas_dgemm, cblas_ddot, cblas_dgemv</td>
+</tr>
+<tr>
+<td>LAPACKE</td>
+<td><strong>found</strong></td>
+<td>Backend::lapack -- dgetrf, dgeqrf, dgesdd, dsyevd, dgtsv</td>
+</tr>
+<tr>
+<td>OpenMP</td>
+<td><strong>found</strong></td>
+<td>Backend::omp    -- parallel blocked loops</td>
+</tr>
+<tr>
+<td>FFTW3</td>
+<td><strong>found</strong></td>
+<td>fft_backend::fftw -- AVX2/NEON optimised DFT</td>
+</tr>
+<tr>
+<td>CUDA</td>
+<td>not found</td>
+<td>Backend::gpu    -- custom kernels / cuBLAS</td>
+</tr>
+<tr>
+<td>MPI</td>
+<td><strong>found</strong></td>
+<td>distributed ops (experimental)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="test-summary">Test Summary<a class="headerlink" href="#test-summary" title="Permanent link">&para;</a></h2>
+<p>All test suites. A failed suite must be investigated before using the library in production.</p>
+<table>
+<thead>
+<tr>
+<th>Suite</th>
+<th style="text-align: right;">Tests</th>
+<th style="text-align: right;">Passed</th>
+<th style="text-align: right;">Failed</th>
+<th style="text-align: right;">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vec</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>RawKernel</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>mat</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>MatmulPolicy</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>MatvecPolicy</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>MatrixExpr</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Resolvent</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>CG</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>MatrixProperties</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>SolveDispatch</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Operators</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>PCG</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>MINRES</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3.0 ms</td>
+</tr>
+<tr>
+<td>PDEOperators</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Thomas</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>GaussSeidel</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.0 ms</td>
+</tr>
+<tr>
+<td>Jacobi</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>GMRES</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>spmat</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Probability</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Selection</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Sequence</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Json</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Talbot</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>AutoResolvent</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>SparseResolvent</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+<tr>
+<td>DenseResolvent</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Hessenberg</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>KernelRaw</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>HessenbergResolvent</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+<tr>
+<td>band_mat</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>BandedSolver</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>BandedMatvec</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>BandedNorm</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>KLU</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Cholesky</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>AutoLinear</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>InversePrincipalBlock</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>UMFPACK</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>LU</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>QR</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Roots</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Quadrature</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.0 ms</td>
+</tr>
+<tr>
+<td>FFT</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.0 ms</td>
+</tr>
+<tr>
+<td>fft_plan</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+<tr>
+<td>ODE_Euler</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>ODE_RK4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>ODE_RK45</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>ODE_Stepper</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>ODE_Verlet</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+<tr>
+<td>ODE_Yoshida4</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>EigSym_Jacobi</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>EigSym_LAPACK</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+<tr>
+<td>PowerIteration</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Lanczos</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+<tr>
+<td>SVD_Jacobi</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>SVD_LAPACK</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+<tr>
+<td>SVD_Randomized</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>scalar_field_3d</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>vector_field_3d</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>field_solver</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Solve</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Sample</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Umbrella</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>DebugCheck</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>disjoint_set</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>indexed_priority_queue</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>graph</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>degree_queue</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>multigraph</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>MathSpine</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>RandomMat</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="core--vec-and-mat">Core — vec and mat<a class="headerlink" href="#core--vec-and-mat" title="Permanent link">&para;</a></h2>
+<p><a href="../../reference/num/vec/"><code>vec</code></a> and <a href="../../reference/num/mat/"><code>mat</code></a> dispatch to the backend selected via the <code>Backend</code> enum
+(<code>seq → blocked → simd → blas → omp → gpu</code>). With BLAS available, <code>default_backend</code>
+resolves to <code>Backend::blas</code>.</p>
+<h3 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Suite</th>
+<th style="text-align: right;">Tests</th>
+<th style="text-align: right;">Passed</th>
+<th style="text-align: right;">Failed</th>
+<th style="text-align: right;">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vec</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>mat</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+</tbody>
+</table>
+<h3 id="benchmarks--mat-multiply">Benchmarks — mat Multiply<a class="headerlink" href="#benchmarks--mat-multiply" title="Permanent link">&para;</a></h3>
+<p>Throughput: <code>2 n³ / time</code> (GFLOP/s, higher is better). Sizes n = 64…512.</p>
+<p><img alt="mat multiply: GFLOP/s vs n" src="../plots/matmul.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=64 us</th>
+<th>n=128 us</th>
+<th>n=256 us</th>
+<th>n=512 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>naive</td>
+<td>163.2</td>
+<td>1889.9</td>
+<td>18639.9</td>
+<td>163206.8</td>
+</tr>
+<tr>
+<td>blocked (auto-vec)</td>
+<td>32.9</td>
+<td>268.2</td>
+<td>2824.0</td>
+<td>25344.4</td>
+</tr>
+<tr>
+<td>reg-blocked</td>
+<td>141.3</td>
+<td>1141.4</td>
+<td>9593.2</td>
+<td>79511.0</td>
+</tr>
+<tr>
+<td>Matmul<backend::blocked></td>
+<td>33.0</td>
+<td>268.5</td>
+<td>2825.5</td>
+<td>25343.6</td>
+</tr>
+<tr>
+<td>Matmul<backend::simd></td>
+<td>19.8</td>
+<td>156.9</td>
+<td>1375.5</td>
+<td>11707.8</td>
+</tr>
+<tr>
+<td>Matmul<backend::blas></td>
+<td>2.1</td>
+<td>13.5</td>
+<td>99.4</td>
+<td>443.7</td>
+</tr>
+<tr>
+<td>Matmul<backend::omp></td>
+<td>54.1</td>
+<td>120.3</td>
+<td>607.3</td>
+<td>5064.6</td>
+</tr>
+<tr>
+<td>Matmul_Scalar</td>
+<td>140.1</td>
+<td>1582.0</td>
+<td>15636.4</td>
+<td>150019.2</td>
+</tr>
+<tr>
+<td>Matmul_Scalar_Blocked</td>
+<td>113.9</td>
+<td>941.1</td>
+<td>7417.0</td>
+<td>59757.8</td>
+</tr>
+</tbody>
+</table>
+<p><em>Time in us. Lower is better.</em></p>
+<h3 id="benchmarks--mat-vec-multiply">Benchmarks — mat-vec Multiply<a class="headerlink" href="#benchmarks--mat-vec-multiply" title="Permanent link">&para;</a></h3>
+<p>Memory-bound. GB/s = <code>(n² + 2n) × 8 / time</code>.</p>
+<p><img alt="mat-vector multiply: GB/s vs n" src="../plots/matvec.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=64 GB/s</th>
+<th>n=128 GB/s</th>
+<th>n=256 GB/s</th>
+<th>n=512 GB/s</th>
+<th>n=1024 GB/s</th>
+<th>n=2048 GB/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Matvec<backend::seq></td>
+<td>22.68</td>
+<td>16.30</td>
+<td>15.42</td>
+<td>11.11</td>
+<td>9.41</td>
+<td>8.84</td>
+</tr>
+<tr>
+<td>Matvec<backend::blocked></td>
+<td>22.62</td>
+<td>15.79</td>
+<td>15.01</td>
+<td>10.80</td>
+<td>9.41</td>
+<td>8.84</td>
+</tr>
+<tr>
+<td>Matvec<backend::simd></td>
+<td>39.98</td>
+<td>27.95</td>
+<td>21.50</td>
+<td>17.92</td>
+<td>14.57</td>
+<td>13.51</td>
+</tr>
+<tr>
+<td>Matvec<backend::blas></td>
+<td>96.38</td>
+<td>139.25</td>
+<td>155.66</td>
+<td>163.72</td>
+<td>116.49</td>
+<td>35.98</td>
+</tr>
+<tr>
+<td>Matvec<backend::omp></td>
+<td>2.48</td>
+<td>8.84</td>
+<td>29.59</td>
+<td>53.31</td>
+<td>64.57</td>
+<td>66.11</td>
+</tr>
+</tbody>
+</table>
+<p><em>Throughput in GB/s. Higher is better.</em></p>
+<h3 id="benchmarks--dot-product">Benchmarks — Dot Product<a class="headerlink" href="#benchmarks--dot-product" title="Permanent link">&para;</a></h3>
+<p><img alt="Dot product: GB/s vs n" src="../plots/dot.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=1024 GB/s</th>
+<th>n=4096 GB/s</th>
+<th>n=16384 GB/s</th>
+<th>n=65536 GB/s</th>
+<th>n=262144 GB/s</th>
+<th>n=1048576 GB/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dot<backend::seq></td>
+<td>18.95</td>
+<td>17.21</td>
+<td>16.85</td>
+<td>16.85</td>
+<td>16.72</td>
+<td>16.83</td>
+</tr>
+<tr>
+<td>Dot<backend::blas></td>
+<td>113.99</td>
+<td>103.39</td>
+<td>81.71</td>
+<td>81.93</td>
+<td>81.13</td>
+<td>63.79</td>
+</tr>
+<tr>
+<td>Dot<backend::omp></td>
+<td>0.61</td>
+<td>2.35</td>
+<td>8.75</td>
+<td>29.01</td>
+<td>68.52</td>
+<td>106.44</td>
+</tr>
+</tbody>
+</table>
+<p><em>Throughput in GB/s. Higher is better.</em></p>
+<h3 id="benchmarks--axpy-y--ax">Benchmarks — Axpy (y += a·x)<a class="headerlink" href="#benchmarks--axpy-y--ax" title="Permanent link">&para;</a></h3>
+<p><img alt="Axpy: GB/s vs n" src="../plots/axpy.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=1024 GB/s</th>
+<th>n=4096 GB/s</th>
+<th>n=16384 GB/s</th>
+<th>n=65536 GB/s</th>
+<th>n=262144 GB/s</th>
+<th>n=1048576 GB/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Axpy<backend::seq></td>
+<td>191.62</td>
+<td>196.28</td>
+<td>105.20</td>
+<td>104.55</td>
+<td>96.22</td>
+<td>92.30</td>
+</tr>
+<tr>
+<td>Axpy<backend::blas></td>
+<td>194.28</td>
+<td>223.01</td>
+<td>229.48</td>
+<td>233.34</td>
+<td>233.51</td>
+<td>98.38</td>
+</tr>
+<tr>
+<td>Axpy<backend::omp></td>
+<td>1.84</td>
+<td>7.19</td>
+<td>26.91</td>
+<td>98.32</td>
+<td>268.52</td>
+<td>235.98</td>
+</tr>
+</tbody>
+</table>
+<p><em>Throughput in GB/s. Higher is better.</em></p>
+<hr />
+<h2 id="factorizations">Factorizations<a class="headerlink" href="#factorizations" title="Permanent link">&para;</a></h2>
+<p>Three variants benchmarked side-by-side: <strong>our seq</strong>, <strong>our omp</strong>, <strong>LAPACK</strong>
+(<code>LAPACKE_dgetrf</code> / <code>LAPACKE_dgeqrf</code>). With LAPACK available, <a href="../../reference/num/lu/"><code>lu()</code></a> and <a href="../../reference/num/qr/"><code>qr()</code></a>
+default to <code>Backend::lapack</code>.</p>
+<h3 id="tests_1">Tests<a class="headerlink" href="#tests_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Suite</th>
+<th style="text-align: right;">Tests</th>
+<th style="text-align: right;">Passed</th>
+<th style="text-align: right;">Failed</th>
+<th style="text-align: right;">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Thomas</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>LU</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>QR</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+</tbody>
+</table>
+<h3 id="lu-factorization">LU Factorization<a class="headerlink" href="#lu-factorization" title="Permanent link">&para;</a></h3>
+<p>LAPACK uses a blocked algorithm (BLAS-3 trailing-matrix updates via <code>dgemm</code>) that is
+significantly faster than our unblocked Doolittle for large n.</p>
+<p><img alt="LU factorization: GFLOP/s vs n" src="../plots/lu.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=64 us</th>
+<th>n=128 us</th>
+<th>n=256 us</th>
+<th>n=512 us</th>
+<th>n=1024 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LU<backend::seq></td>
+<td>18.3</td>
+<td>147.4</td>
+<td>1417.1</td>
+<td>11656.3</td>
+<td>84814.6</td>
+</tr>
+<tr>
+<td>LU<backend::omp></td>
+<td>18.2</td>
+<td>149.0</td>
+<td>1413.1</td>
+<td>11590.8</td>
+<td>85244.9</td>
+</tr>
+<tr>
+<td>LU<backend::lapack></td>
+<td>47.5</td>
+<td>351.7</td>
+<td>2466.2</td>
+<td>18172.5</td>
+<td>134542.6</td>
+</tr>
+</tbody>
+</table>
+<p><em>GFLOP/s: 2/3 n^3 / time. Higher is better.</em></p>
+<h3 id="qr-factorization">QR Factorization<a class="headerlink" href="#qr-factorization" title="Permanent link">&para;</a></h3>
+<p>LAPACK (<code>dgeqrf</code> + <code>dorgqr</code>) uses blocked Householder with <code>dgemm</code> for panel updates.</p>
+<p><img alt="QR factorization: GFLOP/s vs n" src="../plots/qr.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=64 us</th>
+<th>n=128 us</th>
+<th>n=256 us</th>
+<th>n=512 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QR<backend::seq></td>
+<td>72.5</td>
+<td>500.6</td>
+<td>4889.9</td>
+<td>38524.3</td>
+</tr>
+<tr>
+<td>QR<backend::omp></td>
+<td>71.8</td>
+<td>519.6</td>
+<td>4983.5</td>
+<td>38218.1</td>
+</tr>
+<tr>
+<td>QR<backend::lapack></td>
+<td>177.1</td>
+<td>1760.0</td>
+<td>14957.7</td>
+<td>132007.0</td>
+</tr>
+</tbody>
+</table>
+<p><em>GFLOP/s: 4/3 n^3 / time. Higher is better.</em></p>
+<h3 id="thomas-tridiagonal-solver">Thomas tridiagonal Solver<a class="headerlink" href="#thomas-tridiagonal-solver" title="Permanent link">&para;</a></h3>
+<p>O(n) direct solver. <code>LAPACKE_dgtsv</code> uses the same algorithm with additional
+pivoting for stability.</p>
+<p><img alt="Thomas algorithm: time vs n" src="../plots/thomas.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=64 us</th>
+<th>n=256 us</th>
+<th>n=1024 us</th>
+<th>n=4096 us</th>
+<th>n=16384 us</th>
+<th>n=65536 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Thomas</td>
+<td>1.3</td>
+<td>4.3</td>
+<td>16.5</td>
+<td>66.4</td>
+<td>279.8</td>
+<td>1119.9</td>
+</tr>
+</tbody>
+</table>
+<p><em>Time in us. Linear O(n) scaling expected.</em></p>
+<hr />
+<h2 id="iterative-solvers">Iterative Solvers<a class="headerlink" href="#iterative-solvers" title="Permanent link">&para;</a></h2>
+<h3 id="tests_2">Tests<a class="headerlink" href="#tests_2" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Suite</th>
+<th style="text-align: right;">Tests</th>
+<th style="text-align: right;">Passed</th>
+<th style="text-align: right;">Failed</th>
+<th style="text-align: right;">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CG</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>GaussSeidel</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.0 ms</td>
+</tr>
+<tr>
+<td>Jacobi</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+</tbody>
+</table>
+<h3 id="conjugate-gradient">Conjugate Gradient<a class="headerlink" href="#conjugate-gradient" title="Permanent link">&para;</a></h3>
+<p>CG inner-product and axpy calls dispatch to <code>best_backend</code> (BLAS when available).</p>
+<p><img alt="Conjugate gradient: time vs n" src="../plots/cg.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=32 us</th>
+<th>n=64 us</th>
+<th>n=128 us</th>
+<th>n=256 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CG</td>
+<td>57.6</td>
+<td>292.6</td>
+<td>1554.4</td>
+<td>6460.9</td>
+</tr>
+</tbody>
+</table>
+<p><em>Time in us. Lower is better.</em></p>
+<h3 id="convergence-dynamics">Convergence Dynamics<a class="headerlink" href="#convergence-dynamics" title="Permanent link">&para;</a></h3>
+<p>Relative residual reduction <span class="arithmatex">\(\frac{\|r_k\|}{\|b\|}\)</span> across iterations on anisotropic 2D Poisson (<span class="arithmatex">\(N = 1024\)</span> nodes):</p>
+<p><img alt="Iterative Solvers Convergence" src="../plots/iterative_convergence.png" /></p>
+<h3 id="minres-vs-conjugate-gradient-error--residual-comparison">MINRES vs Conjugate Gradient (Error &amp; Residual Comparison)<a class="headerlink" href="#minres-vs-conjugate-gradient-error--residual-comparison" title="Permanent link">&para;</a></h3>
+<p>Comparison of monotonicity in residual 2-norm versus <span class="arithmatex">\(A\)</span>-norm energy minimization between MINRES and CG:</p>
+<p><img alt="MINRES vs CG" src="../plots/cg_vs_minres.png" /></p>
+<hr />
+<h2 id="resolvent--mat-exponential">Resolvent &amp; mat Exponential<a class="headerlink" href="#resolvent--mat-exponential" title="Permanent link">&para;</a></h2>
+<h3 id="talbot-spectral-quadrature">Talbot Spectral Quadrature<a class="headerlink" href="#talbot-spectral-quadrature" title="Permanent link">&para;</a></h3>
+<p>Evaluation of matrix exponential action <span class="arithmatex">\(e^{t Q} p_0\)</span> via Weideman-Talbot shifted resolvent contour solves <span class="arithmatex">\((s_k I - Q)^{-1} p_0\)</span> accelerated by Upper Hessenberg reduction (<span class="arithmatex">\(O(N^3 + k N^2)\)</span>):</p>
+<p><img alt="Talbot Quadrature Convergence" src="../plots/talbot_convergence.png" /></p>
+<hr />
+<h2 id="banded-matrices">banded Matrices<a class="headerlink" href="#banded-matrices" title="Permanent link">&para;</a></h2>
+<h3 id="tests_3">Tests<a class="headerlink" href="#tests_3" title="Permanent link">&para;</a></h3>
+<p><em>No test data -- run <code>make report</code> to generate.</em></p>
+<h3 id="benchmarks">Benchmarks<a class="headerlink" href="#benchmarks" title="Permanent link">&para;</a></h3>
+<p><img alt="banded solver: time vs n" src="../plots/banded.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=3 us</th>
+<th>n=5 us</th>
+<th>n=7 us</th>
+<th>n=11 us</th>
+<th>n=15 us</th>
+<th>n=21 us</th>
+<th>n=64 us</th>
+<th>n=256 us</th>
+<th>n=1024 us</th>
+<th>n=4096 us</th>
+<th>n=16384 us</th>
+<th>n=65536 us</th>
+<th>n=262144 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BandedSolve_Tridiagonal</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>2.1</td>
+<td>6.4</td>
+<td>23.5</td>
+<td>93.5</td>
+<td>382.5</td>
+<td>1585.7</td>
+<td>6646.5</td>
+</tr>
+<tr>
+<td>BandedSolve_Pentadiagonal</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>2.4</td>
+<td>7.6</td>
+<td>28.7</td>
+<td>112.9</td>
+<td>459.2</td>
+<td>1928.8</td>
+<td>--</td>
+</tr>
+<tr>
+<td>BandedSolve_General_KL2_KU4</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>2.5</td>
+<td>7.9</td>
+<td>30.0</td>
+<td>116.3</td>
+<td>463.8</td>
+<td>2074.2</td>
+<td>--</td>
+</tr>
+<tr>
+<td>BandedSolve_General_KL5_KU5</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>3.1</td>
+<td>10.6</td>
+<td>41.2</td>
+<td>157.8</td>
+<td>705.3</td>
+<td>--</td>
+<td>--</td>
+</tr>
+<tr>
+<td>BandedLU_Factorization</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>1.4</td>
+<td>3.4</td>
+<td>12.2</td>
+<td>46.9</td>
+<td>197.4</td>
+<td>814.3</td>
+<td>--</td>
+</tr>
+<tr>
+<td>BandedLU_Solve</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>1.6</td>
+<td>4.3</td>
+<td>15.4</td>
+<td>59.7</td>
+<td>239.0</td>
+<td>955.7</td>
+<td>--</td>
+</tr>
+<tr>
+<td>BandedSolve_MultiRHS</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>15.7</td>
+<td>60.8</td>
+<td>239.7</td>
+<td>939.8</td>
+<td>3761.5</td>
+<td>--</td>
+<td>--</td>
+</tr>
+<tr>
+<td>BandedMatvec_Tridiagonal</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>0.2</td>
+<td>0.9</td>
+<td>3.6</td>
+<td>14.8</td>
+<td>58.9</td>
+<td>246.3</td>
+<td>993.7</td>
+</tr>
+<tr>
+<td>BandedMatvec_Pentadiagonal</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>0.4</td>
+<td>1.4</td>
+<td>5.7</td>
+<td>22.8</td>
+<td>90.7</td>
+<td>367.5</td>
+<td>1462.2</td>
+</tr>
+<tr>
+<td>BandedSolve_Bandwidth_Scaling</td>
+<td>95.6</td>
+<td>114.6</td>
+<td>124.9</td>
+<td>170.8</td>
+<td>232.7</td>
+<td>363.9</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+</tr>
+</tbody>
+</table>
+<p><em>Time in us. Lower is better.</em></p>
+<hr />
+<h2 id="eigensolvers">Eigensolvers<a class="headerlink" href="#eigensolvers" title="Permanent link">&para;</a></h2>
+<p>Three variants: <strong>our cyclic Jacobi (seq)</strong>, <strong>our Jacobi (omp)</strong>, <strong>LAPACK <code>dsyevd</code></strong>
+(divide-and-conquer, asymptotically fastest for dense matrices).
+Lanczos is matrix-free and targets only k eigenvalues — it lives on a separate plot.</p>
+<h3 id="tests_4">Tests<a class="headerlink" href="#tests_4" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Suite</th>
+<th style="text-align: right;">Tests</th>
+<th style="text-align: right;">Passed</th>
+<th style="text-align: right;">Failed</th>
+<th style="text-align: right;">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PowerIteration</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Lanczos</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+</tbody>
+</table>
+<h3 id="full-symmetric-eigensolver">Full Symmetric Eigensolver<a class="headerlink" href="#full-symmetric-eigensolver" title="Permanent link">&para;</a></h3>
+<p><img alt="Symmetric eigensolver: time vs n" src="../plots/eigen.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=32 us</th>
+<th>n=64 us</th>
+<th>n=128 us</th>
+<th>n=256 us</th>
+<th>n=512 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EigSym<backend::seq></td>
+<td>176.3</td>
+<td>1046.5</td>
+<td>16204.0</td>
+<td>265312.2</td>
+<td>4955629.6</td>
+</tr>
+<tr>
+<td>EigSym<backend::lapack></td>
+<td>43.6</td>
+<td>314.8</td>
+<td>2362.2</td>
+<td>17092.3</td>
+<td>143584.0</td>
+</tr>
+</tbody>
+</table>
+<p><em>Time in us. Lower is better.</em></p>
+<h3 id="lanczos-mat-free">Lanczos (mat-Free)<a class="headerlink" href="#lanczos-mat-free" title="Permanent link">&para;</a></h3>
+<p>k = 10 eigenvalues requested. Each step costs one matvec O(n²) plus reorthogonalisation.</p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=64 us</th>
+<th>n=128 us</th>
+<th>n=256 us</th>
+<th>n=512 us</th>
+<th>n=1024 us</th>
+<th>n=2048 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lanczos</td>
+<td>34.0</td>
+<td>94.7</td>
+<td>249.2</td>
+<td>799.7</td>
+<td>3588.6</td>
+<td>40677.0</td>
+</tr>
+</tbody>
+</table>
+<p><em>Time in us (k=10 eigenvalues). Lower is better.</em></p>
+<hr />
+<h2 id="singular-value-decomposition">Singular Value Decomposition<a class="headerlink" href="#singular-value-decomposition" title="Permanent link">&para;</a></h2>
+<p>Three variants: <strong>our one-sided Jacobi</strong>, <strong>randomized truncated SVD</strong> (top k = n/8),
+<strong>LAPACK <code>dgesdd</code></strong> (divide-and-conquer, fastest full SVD).</p>
+<h3 id="tests_5">Tests<a class="headerlink" href="#tests_5" title="Permanent link">&para;</a></h3>
+<p><em>No test data -- run <code>make report</code> to generate.</em></p>
+<h3 id="full-svd">Full SVD<a class="headerlink" href="#full-svd" title="Permanent link">&para;</a></h3>
+<p><img alt="SVD: time vs n" src="../plots/svd.png" /></p>
+<p><em>No benchmark data -- run <code>make report</code> to generate.</em></p>
+<h3 id="randomized-truncated-svd">Randomized Truncated SVD<a class="headerlink" href="#randomized-truncated-svd" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=64 us</th>
+<th>n=128 us</th>
+<th>n=256 us</th>
+<th>n=512 us</th>
+<th>n=1024 us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SVD_Randomized</td>
+<td>257.0</td>
+<td>1522.4</td>
+<td>23289.4</td>
+<td>207871.4</td>
+<td>1652464.9</td>
+</tr>
+</tbody>
+</table>
+<p><em>Time in us (k=n/8 singular values). Lower is better.</em></p>
+<hr />
+<h2 id="dynamical-systems--symplectic-odes">Dynamical Systems &amp; Symplectic ODEs<a class="headerlink" href="#dynamical-systems--symplectic-odes" title="Permanent link">&para;</a></h2>
+<h3 id="hamiltonian-energy-conservation">Hamiltonian Energy Conservation<a class="headerlink" href="#hamiltonian-energy-conservation" title="Permanent link">&para;</a></h3>
+<p>Long-term energy error <span class="arithmatex">\(|E(t) - E(0)|\)</span> over <span class="arithmatex">\(2 \times 10^3\)</span> steps (<span class="arithmatex">\(h = 0.05\)</span>):</p>
+<p><img alt="Symplectic Energy Preservation" src="../plots/symplectic_energy.png" /></p>
+<hr />
+<h2 id="analysis">Analysis<a class="headerlink" href="#analysis" title="Permanent link">&para;</a></h2>
+<p>Root finding (bisection, Newton, secant) and numerical quadrature
+(Gauss-Legendre, adaptive Simpson).</p>
+<h3 id="tests_6">Tests<a class="headerlink" href="#tests_6" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Suite</th>
+<th style="text-align: right;">Tests</th>
+<th style="text-align: right;">Passed</th>
+<th style="text-align: right;">Failed</th>
+<th style="text-align: right;">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Roots</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0 ms</td>
+</tr>
+<tr>
+<td>Quadrature</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.0 ms</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="spectral--fft">Spectral — FFT<a class="headerlink" href="#spectral--fft" title="Permanent link">&para;</a></h2>
+<p>Backends: <code>seq</code> (Cooley-Tukey), <code>simd</code> (AVX2/NEON), <a href="../../reference/num/spectral/fftw/"><code>fftw</code></a> (FFTW3).</p>
+<h3 id="tests_7">Tests<a class="headerlink" href="#tests_7" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Suite</th>
+<th style="text-align: right;">Tests</th>
+<th style="text-align: right;">Passed</th>
+<th style="text-align: right;">Failed</th>
+<th style="text-align: right;">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FFT</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.0 ms</td>
+</tr>
+<tr>
+<td>fft_plan</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.0 ms</td>
+</tr>
+</tbody>
+</table>
+<h3 id="benchmarks--forward-fft">Benchmarks — Forward FFT<a class="headerlink" href="#benchmarks--forward-fft" title="Permanent link">&para;</a></h3>
+<p><img alt="FFT throughput: GB/s vs n" src="../plots/fft.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=256 GB/s</th>
+<th>n=1024 GB/s</th>
+<th>n=4096 GB/s</th>
+<th>n=16384 GB/s</th>
+<th>n=65536 GB/s</th>
+<th>n=262144 GB/s</th>
+<th>n=1048576 GB/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>seq (Cooley-Tukey)</td>
+<td>3.99</td>
+<td>3.39</td>
+<td>2.86</td>
+<td>2.26</td>
+<td>1.98</td>
+<td>1.61</td>
+<td>--</td>
+</tr>
+<tr>
+<td>simd (AVX2/NEON)</td>
+<td>4.90</td>
+<td>4.08</td>
+<td>3.49</td>
+<td>2.87</td>
+<td>2.46</td>
+<td>2.10</td>
+<td>--</td>
+</tr>
+<tr>
+<td>fftw (FFTW3)</td>
+<td>15.98</td>
+<td>12.66</td>
+<td>10.16</td>
+<td>3.86</td>
+<td>3.89</td>
+<td>3.35</td>
+<td>1.67</td>
+</tr>
+</tbody>
+</table>
+<p><em>Throughput in GB/s. Higher is better.</em></p>
+<h3 id="benchmarks--fft-plan-amortised">Benchmarks — FFT Plan (amortised)<a class="headerlink" href="#benchmarks--fft-plan-amortised" title="Permanent link">&para;</a></h3>
+<p><img alt="FFT plan throughput: GB/s vs n" src="../plots/fft_plan.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=256 GB/s</th>
+<th>n=1024 GB/s</th>
+<th>n=4096 GB/s</th>
+<th>n=16384 GB/s</th>
+<th>n=65536 GB/s</th>
+<th>n=262144 GB/s</th>
+<th>n=1048576 GB/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>seq (Cooley-Tukey)</td>
+<td>3.99</td>
+<td>3.39</td>
+<td>2.86</td>
+<td>2.26</td>
+<td>1.98</td>
+<td>1.61</td>
+<td>--</td>
+</tr>
+<tr>
+<td>simd (AVX2/NEON)</td>
+<td>4.90</td>
+<td>4.08</td>
+<td>3.49</td>
+<td>2.87</td>
+<td>2.46</td>
+<td>2.10</td>
+<td>--</td>
+</tr>
+<tr>
+<td>fftw (FFTW3)</td>
+<td>15.98</td>
+<td>12.66</td>
+<td>10.16</td>
+<td>3.86</td>
+<td>3.89</td>
+<td>3.35</td>
+<td>1.67</td>
+</tr>
+</tbody>
+</table>
+<p><em>Throughput in GB/s. Plan creation excluded. Higher is better.</em></p>
+<h3 id="benchmarks--real-to-complex-fft">Benchmarks — Real-to-Complex FFT<a class="headerlink" href="#benchmarks--real-to-complex-fft" title="Permanent link">&para;</a></h3>
+<p><img alt="rFFT throughput: GB/s vs n" src="../plots/rfft.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>n=256 GB/s</th>
+<th>n=1024 GB/s</th>
+<th>n=4096 GB/s</th>
+<th>n=16384 GB/s</th>
+<th>n=65536 GB/s</th>
+<th>n=262144 GB/s</th>
+<th>n=1048576 GB/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>seq (Cooley-Tukey)</td>
+<td>1.15</td>
+<td>0.93</td>
+<td>0.77</td>
+<td>0.63</td>
+<td>0.54</td>
+<td>0.45</td>
+<td>--</td>
+</tr>
+<tr>
+<td>simd (AVX2/NEON)</td>
+<td>1.43</td>
+<td>1.33</td>
+<td>1.22</td>
+<td>0.92</td>
+<td>0.87</td>
+<td>0.75</td>
+<td>--</td>
+</tr>
+<tr>
+<td>fftw (FFTW3)</td>
+<td>0.44</td>
+<td>1.13</td>
+<td>1.79</td>
+<td>1.80</td>
+<td>1.49</td>
+<td>1.38</td>
+<td>1.41</td>
+</tr>
+</tbody>
+</table>
+<p><em>Throughput in GB/s. Higher is better.</em></p>
+<hr />
+<p><em>Generated by <code>make report</code>.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../assets/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
