@@ -69,12 +69,12 @@ inline std::vector<Float> solve(const cholesky_factor<Float, Index> &factor,
     return x;
 }
 
-/// Convenience num::vec solve overload.
+/// Convenience num::vec<real> solve overload.
 template <typename Float = double, std::integral Index = num::idx>
 inline void solve(const cholesky_factor<Float, Index> &factor,
-                  const basic_vec<Float> &b, basic_vec<Float> &x) {
+                  const vec<Float> &b, vec<Float> &x) {
     const Index n = static_cast<Index>(factor.order.size());
-    if (x.size() != n) x = basic_vec<Float>(n, Float{0});
+    if (x.size() != n) x = vec<Float>(n, Float{0});
     std::vector<Float> scratch(n, Float{0});
     solve(factor, b.data(), x.data(), scratch);
 }

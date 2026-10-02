@@ -66,7 +66,7 @@ inline solver_result field_solver::solve_poisson(scalar_field_3d &phi, const sca
     const idx N = phi.size();
 
     // RHS = -source on the interior; Dirichlet boundary rows stay 0.
-    vec b(N, 0.0);
+    vec<real> b(N, 0.0);
     for (int k = 1; k < nz - 1; ++k) {
         for (int j = 1; j < ny - 1; ++j) {
             for (int i = 1; i < nx - 1; ++i) {
@@ -78,7 +78,7 @@ inline solver_result field_solver::solve_poisson(scalar_field_3d &phi, const sca
     // A = -Laplacian (SPD). phi's own storage is the solution vector, so CG
     // solves in place -- no copy in or out.
     auto A = num::assume_spd(operators::make_op(
-        [&](const vec &v, vec &Av) { neg_laplacian_3d(v, Av, nx, ny, nz, inv_dx2); }, N));
+        [&](const vec<real> &v, vec<real> &Av) { neg_laplacian_3d(v, Av, nx, ny, nz, inv_dx2); }, N));
     return num::cg(A, b, phi.as_vec(),
                    {.tolerance = tol, .max_iterations = static_cast<idx>(max_iter)});
 }
@@ -107,7 +107,7 @@ inline solver_result field_solver::solve_var_poisson(scalar_field_3d &phi, const
 
     // Symmetric penalty elimination: fold each Dirichlet value into the RHS of
     // its free neighbours so the operator stays SPD.
-    vec b(N, 0.0);
+    vec<real> b(N, 0.0);
     for (const auto &e : bcs) {
         b[e.flat_idx] = penalty * e.value;
         const int ei = e.flat_idx % nx;
@@ -127,7 +127,7 @@ inline solver_result field_solver::solve_var_poisson(scalar_field_3d &phi, const
         }
     }
 
-    auto matvec = [&](const vec &v, vec &Av) {
+    auto matvec = [&](const vec<real> &v, vec<real> &Av) {
         for (int k = 0; k < nz; ++k) {
             for (int j = 0; j < ny; ++j) {
                 for (int i = 0; i < nx; ++i) {

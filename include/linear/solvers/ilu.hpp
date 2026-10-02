@@ -25,8 +25,8 @@ namespace num {
 /// outlive it. Allocates nothing after construction.
 class ilu0_preconditioner final {
   public:
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
     // Deliberately no property claims. An incomplete LU is not self-adjoint even
     // for a symmetric A, so PCG and MINRES will not accept it -- which is the
     // correct outcome, enforced by the type system rather than by documentation.
@@ -63,12 +63,12 @@ class ilu0_preconditioner final {
     [[nodiscard]] idx nnz() const noexcept { return values_.size(); }
 
     /// @brief Apply \f$z \leftarrow (LU)^{-1} r\f$.
-    void apply(const vec &r, vec &z) const {
+    void apply(const vec<real> &r, vec<real> &z) const {
         if (r.size() != n_) {
             throw std::invalid_argument("ilu0: dimension mismatch");
         }
         if (z.size() != n_) {
-            z = vec(n_, 0.0);
+            z = vec<real>(n_, 0.0);
         }
         kernel::csr_lu_solve(z.data(), values_.data(), row_ptr_.data(), col_idx_.data(),
                                   diagonal_.data(), r.data(), n_);

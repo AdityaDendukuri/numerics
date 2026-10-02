@@ -104,19 +104,19 @@ struct banded_solver_result {
 banded_solver_result banded_lu(band_mat &A, idx *ipiv);
 
 /// @brief Solve \f$Ax=b\f$ using a precomputed banded LU factorization.
-void banded_lu_solve(const band_mat &A, const idx *ipiv, vec &b);
+void banded_lu_solve(const band_mat &A, const idx *ipiv, vec<real> &b);
 
 /// @brief Solve \f$AX=B\f$ using a precomputed banded LU factorization.
 void banded_lu_solve_multi(const band_mat &A, const idx *ipiv, real *B, idx nrhs);
 
 /// @brief Factor and solve \f$Ax=b\f$.
-banded_solver_result banded_solve(const band_mat &A, const vec &b, vec &x);
+banded_solver_result banded_solve(const band_mat &A, const vec<real> &b, vec<real> &x);
 
 /// @brief Compute \f$y=Ax\f$.
-void banded_matvec(const band_mat &A, const vec &x, vec &y);
+void banded_matvec(const band_mat &A, const vec<real> &x, vec<real> &y);
 
 /// @brief Compute \f$y=\alpha Ax+\beta y\f$.
-void banded_gemv(real alpha, const band_mat &A, const vec &x, real beta, vec &y);
+void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y);
 
 /// @brief Estimate \f$1/\kappa_1(A)\f$.
 real banded_rcond(const band_mat &A, const idx *ipiv, real anorm);
@@ -244,7 +244,7 @@ inline banded_solver_result banded_lu(band_mat &A, idx *ipiv) {
 
 // Solve Using LU Factorization
 
-inline void banded_lu_solve(const band_mat &A, const idx *ipiv, vec &b) {
+inline void banded_lu_solve(const band_mat &A, const idx *ipiv, vec<real> &b) {
     const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
     const real *ab = A.data();
     real *x = b.data();
@@ -293,7 +293,7 @@ inline void banded_lu_solve_multi(const band_mat &A, const idx *ipiv, real *B, i
     }
 }
 
-inline banded_solver_result banded_solve(const band_mat &A, const vec &b, vec &x) {
+inline banded_solver_result banded_solve(const band_mat &A, const vec<real> &b, vec<real> &x) {
     const idx n = A.size();
     if (b.size() != n || x.size() != n) {
         throw std::invalid_argument("banded_solve: dimension mismatch");
@@ -315,11 +315,11 @@ inline banded_solver_result banded_solve(const band_mat &A, const vec &b, vec &x
 
 // mat-vec Products
 
-inline void banded_matvec(const band_mat &A, const vec &x, vec &y) {
+inline void banded_matvec(const band_mat &A, const vec<real> &x, vec<real> &y) {
     banded_gemv(1.0, A, x, 0.0, y);
 }
 
-inline void banded_gemv(real alpha, const band_mat &A, const vec &x, real beta, vec &y) {
+inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y) {
     const idx n = A.size(), kl = A.kl(), ku = A.ku();
     if (x.size() != n || y.size() != n) {
         throw std::invalid_argument("banded_gemv: dimension mismatch");
@@ -357,7 +357,7 @@ inline real banded_rcond(const band_mat &A, const idx *ipiv, real anorm) {
     if (n == 0 || anorm == 0.0) {
         return 0.0;
     }
-    vec y(n, 1.0 / static_cast<real>(n));
+    vec<real> y(n, 1.0 / static_cast<real>(n));
     const band_mat &a_copy = A;
     banded_lu_solve(a_copy, ipiv, y);
     real ainv_norm = 0.0;

@@ -28,8 +28,8 @@ concept scalar_field_like = field<T> && requires(F &f, const F &cf, int i, int j
 /// This is what lets an implicit time stepper solve on a field directly. It is exactly
 /// `num::vec_field` restricted to fields sampled on a grid, so it refines that rather than
 /// restating the requirement — and, like it, takes the space as a parameter instead of
-/// naming `vec`.
-template <class F, class T = real, class V = vec>
+/// naming `vec<real>`.
+template <class F, class T = real, class V = vec<real>>
 concept solvable_field = scalar_field_like<F, T> && vec_field<F, V>;
 
 } // namespace num

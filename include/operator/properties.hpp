@@ -29,7 +29,7 @@ struct law_space {
 template <class T>
 requires std::is_void_v<math::domain_t<T>> && field<entry_t<T>>
 struct law_space<T> {
-    using type = basic_vec<entry_t<T>>;
+    using type = vec<entry_t<T>>;
 };
 
 } // namespace detail

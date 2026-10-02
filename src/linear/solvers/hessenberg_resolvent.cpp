@@ -10,7 +10,7 @@
 
 namespace num {
 
-hessenberg_resolvent_solver::hessenberg_resolvent_solver(const mat &A) : decomp_(A) {
+hessenberg_resolvent_solver::hessenberg_resolvent_solver(const mat<real> &A) : decomp_(A) {
     debug::check_dim(A.rows(), A.cols(), "hessenberg_resolvent_solver matrix must be square");
     debug::check_non_empty(A.rows(), "hessenberg_resolvent_solver matrix");
 }
@@ -18,7 +18,7 @@ hessenberg_resolvent_solver::hessenberg_resolvent_solver(const mat &A) : decomp_
 hessenberg_resolvent_solver::hessenberg_resolvent_solver(hessenberg_decomposition decomp)
     : decomp_(std::move(decomp)) {}
 
-array<cplx> hessenberg_resolvent_solver::solve(cplx shift, const vec &b) const {
+array<cplx> hessenberg_resolvent_solver::solve(cplx shift, const vec<real> &b) const {
     debug::check_dim(decomp_.size(), b.size(), "hessenberg_resolvent_solver RHS");
     const idx n = decomp_.size();
     const auto b_tilde = hessenberg_project(decomp_.Q(), b);
@@ -50,7 +50,7 @@ array<cplx> hessenberg_resolvent_solver::solve(cplx shift,
 }
 
 array<array<cplx>>
-hessenberg_resolvent_solver::solve_batch(const array<cplx> &shifts, const vec &b) const {
+hessenberg_resolvent_solver::solve_batch(const array<cplx> &shifts, const vec<real> &b) const {
     debug::check_dim(decomp_.size(), b.size(), "hessenberg_resolvent_solver RHS");
     const idx n = decomp_.size();
     const auto b_tilde = hessenberg_project(decomp_.Q(), b);
@@ -79,7 +79,7 @@ hessenberg_resolvent_solver::solve_batch(const array<cplx> &shifts, const vec &b
 
 array<array<array<cplx>>>
 hessenberg_resolvent_solver::solve_batch(const array<cplx> &shifts,
-                                      const array<vec> &rhs_list) const {
+                                      const array<vec<real>> &rhs_list) const {
     const idx n = decomp_.size();
     const std::size_t num_rhs = rhs_list.size();
     array<array<cplx>> b_tilde_list(num_rhs);

@@ -22,7 +22,7 @@ namespace num {
 
 /// @brief \f$y = h^2 \Delta_h x\f$ by the 5-point stencil, with zero Dirichlet boundaries.
 template <typename T>
-void laplacian_stencil_2d(const basic_vec<T> &x, basic_vec<T> &y, int N) {
+void laplacian_stencil_2d(const vec<T> &x, vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             int k = (i * N) + j;
@@ -46,7 +46,7 @@ void laplacian_stencil_2d(const basic_vec<T> &x, basic_vec<T> &y, int N) {
 
 /// @brief Periodic second-order 2D Laplacian stencil.
 template <typename T>
-void laplacian_stencil_2d_periodic(const basic_vec<T> &x, basic_vec<T> &y, int N) {
+void laplacian_stencil_2d_periodic(const vec<T> &x, vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
         int ip = (i + 1) % N, im = (i + N - 1) % N;
         const T *row = x.data() + (i * N);
@@ -71,7 +71,7 @@ void laplacian_stencil_2d_periodic(const basic_vec<T> &x, basic_vec<T> &y, int N
 ///   \bigr)
 /// \f]
 template <typename T>
-void laplacian_stencil_2d_4th(const basic_vec<T> &x, basic_vec<T> &y, int N) {
+void laplacian_stencil_2d_4th(const vec<T> &x, vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             int k = (i * N) + j;
@@ -121,7 +121,7 @@ void laplacian_stencil_2d_4th(const basic_vec<T> &x, basic_vec<T> &y, int N) {
 /// @param py Physical y coordinate.
 /// @param ox x offset in physical units.
 /// @param oy y offset in physical units.
-inline real sample_2d_periodic(const vec &field, idx N, real h, real px, real py, real ox,
+inline real sample_2d_periodic(const vec<real> &field, idx N, real h, real px, real py, real ox,
                                real oy) {
     real fx = std::fmod((px - ox) / h, static_cast<real>(N));
     real fy = std::fmod((py - oy) / h, static_cast<real>(N));
@@ -143,7 +143,7 @@ inline real sample_2d_periodic(const vec &field, idx N, real h, real px, real py
 
 /// @brief Apply a mutable 1D operation to each column fiber.
 template <typename T, typename F>
-void col_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
+void col_fiber_sweep(vec<T> &data, int N, F &&f) {
     array<T> fiber(N);
     for (int j = 0; j < N; ++j) {
         for (int i = 0; i < N; ++i) {
@@ -158,7 +158,7 @@ void col_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
 
 /// @brief Apply a mutable 1D operation to each row fiber.
 template <typename T, typename F>
-void row_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
+void row_fiber_sweep(vec<T> &data, int N, F &&f) {
     array<T> fiber(N);
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
@@ -173,7 +173,7 @@ void row_fiber_sweep(basic_vec<T> &data, int N, F &&f) {
 
 /// @brief Fill grid values at \f$x_i=(i+1)h,\ y_j=(j+1)h\f$.
 template <typename F>
-void fill_grid(vec &u, int N, double h, F &&f) {
+void fill_grid(vec<real> &u, int N, double h, F &&f) {
     for (int i = 0; i < N; ++i) {
         double xi = (i + 1) * h;
         for (int j = 0; j < N; ++j) {
@@ -201,7 +201,7 @@ inline real sample_2d_periodic(const scalar_field_2d &g, real px, real py, real 
 }
 
 /// @brief Compute \f$-\Delta_h x\f$ on a 3D grid.
-inline void neg_laplacian_3d(const vec &x, vec &y, int nx, int ny, int nz, double inv_dx2) {
+inline void neg_laplacian_3d(const vec<real> &x, vec<real> &y, int nx, int ny, int nz, double inv_dx2) {
     auto flat = [&](int i, int j, int k) -> idx {
         return static_cast<idx>((k * ny * nx) + (j * nx) + i);
     };

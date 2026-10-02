@@ -17,7 +17,7 @@ namespace num {
 /// @brief Packed factorization \f$A = LU\f$ with an implicit unit-diagonal \f$L\f$
 /// and no row pivoting.
 struct no_pivot_lu {
-    mat packed;
+    mat<real> packed;
     bool singular = false;
 
     [[nodiscard]] idx size() const { return packed.rows(); }
@@ -25,7 +25,7 @@ struct no_pivot_lu {
 
 /// @throws std::invalid_argument If `matrix` is not square.
 /// @brief Factor \f$A = LU\f$ without row pivoting.
-[[nodiscard]] inline no_pivot_lu factor_no_pivot(const mat &matrix) {
+[[nodiscard]] inline no_pivot_lu factor_no_pivot(const mat<real> &matrix) {
     if (matrix.rows() != matrix.cols()) {
         throw std::invalid_argument("factor_no_pivot: matrix must be square");
     }
@@ -34,7 +34,7 @@ struct no_pivot_lu {
     return factor;
 }
 
-inline void solve(const no_pivot_lu &factor, const vec &rhs, vec &solution) {
+inline void solve(const no_pivot_lu &factor, const vec<real> &rhs, vec<real> &solution) {
     if (rhs.size() != factor.size())
         throw std::invalid_argument("no-pivot LU right-hand side size mismatch");
     solution = rhs;
@@ -42,7 +42,7 @@ inline void solve(const no_pivot_lu &factor, const vec &rhs, vec &solution) {
                                             1);
 }
 
-inline void solve(const no_pivot_lu &factor, const mat &rhs, mat &solution) {
+inline void solve(const no_pivot_lu &factor, const mat<real> &rhs, mat<real> &solution) {
     if (rhs.rows() != factor.size())
         throw std::invalid_argument("no-pivot LU right-hand side size mismatch");
     solution = rhs;
@@ -50,7 +50,7 @@ inline void solve(const no_pivot_lu &factor, const mat &rhs, mat &solution) {
                                             solution.cols());
 }
 
-inline void solve_transpose(const no_pivot_lu &factor, const vec &rhs, vec &solution) {
+inline void solve_transpose(const no_pivot_lu &factor, const vec<real> &rhs, vec<real> &solution) {
     if (rhs.size() != factor.size())
         throw std::invalid_argument("no-pivot LU right-hand side size mismatch");
     solution = rhs;
@@ -58,7 +58,7 @@ inline void solve_transpose(const no_pivot_lu &factor, const vec &rhs, vec &solu
                                                       factor.size(), 1);
 }
 
-inline void solve_transpose(const no_pivot_lu &factor, const mat &rhs, mat &solution) {
+inline void solve_transpose(const no_pivot_lu &factor, const mat<real> &rhs, mat<real> &solution) {
     if (rhs.rows() != factor.size())
         throw std::invalid_argument("no-pivot LU right-hand side size mismatch");
     solution = rhs;

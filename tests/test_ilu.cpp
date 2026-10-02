@@ -72,14 +72,14 @@ TEST(ILUKernel, FactorizationIsExactWhenNoFillInIsDiscarded) {
     const auto A = tridiagonal(n);
     const num::ilu0_preconditioner M(A);
 
-    num::vec x_exact(n);
+    num::vec<num::real> x_exact(n);
     for (num::idx i = 0; i < n; ++i) {
         x_exact[i] = std::sin(0.4 * static_cast<double>(i)) + 1.5;
     }
-    num::vec b(n, 0.0);
+    num::vec<num::real> b(n, 0.0);
     num::sparse_matvec(A, x_exact, b);
 
-    num::vec x(n, 0.0);
+    num::vec<num::real> x(n, 0.0);
     M.apply(b, x);
     for (num::idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], x_exact[i], 1e-10) << "element " << i;
@@ -122,9 +122,9 @@ TEST(ILU0, PreservesTheSparsityPatternExactly) {
 TEST(ILU0, ApplicationIsRepeatable) {
     const auto A = tridiagonal(50);
     const num::ilu0_preconditioner M(A);
-    num::vec r(50, 1.25);
-    num::vec first(50, 0.0);
-    num::vec second(50, 0.0);
+    num::vec<num::real> r(50, 1.25);
+    num::vec<num::real> first(50, 0.0);
+    num::vec<num::real> second(50, 0.0);
     M.apply(r, first);
     M.apply(r, second);
     for (num::idx i = 0; i < 50; ++i) {
@@ -140,8 +140,8 @@ TEST(PreconditionedGMRES, ConvergesInOneStepWhenTheFactorizationIsExact) {
     const num::operators::sparse_op op(A);
     const num::ilu0_preconditioner M(A);
 
-    num::vec b(n, 1.0);
-    num::vec x(n, 0.0);
+    num::vec<num::real> b(n, 1.0);
+    num::vec<num::real> x(n, 0.0);
     const auto result =
         num::gmres(op, M, b, x, num::gmres_options{.tolerance = 1e-10, .max_iterations = 100});
 
@@ -157,13 +157,13 @@ TEST(PreconditionedGMRES, ReportsTheTrueResidualNotThePreconditionedOne) {
     const num::operators::sparse_op op(A);
     const num::ilu0_preconditioner M(A);
 
-    num::vec b(n, 2.0);
-    num::vec x(n, 0.0);
+    num::vec<num::real> b(n, 2.0);
+    num::vec<num::real> x(n, 0.0);
     const auto result =
         num::gmres(op, M, b, x, num::gmres_options{.tolerance = 1e-9, .max_iterations = 200});
     ASSERT_TRUE(result.converged);
 
-    num::vec residual(n, 0.0);
+    num::vec<num::real> residual(n, 0.0);
     num::sparse_matvec(A, x, residual);
     num::math::linear_combination(num::real(1), b, num::real(-1), residual);
     EXPECT_NEAR(result.residual, num::math::norm(residual), 1e-8 * std::max(1.0, result.residual));
@@ -204,14 +204,14 @@ TEST(PreconditionedGMRES, CutsIterationsOnANonsymmetricSystem) {
     const auto A = num::spmat::from_triplets(n, n, rows, cols, values);
     const num::operators::sparse_op op(A);
 
-    num::vec b(n, 1.0);
-    num::vec x_plain(n, 0.0);
+    num::vec<num::real> b(n, 1.0);
+    num::vec<num::real> x_plain(n, 0.0);
     const auto plain = num::gmres(
         op, b, x_plain, num::gmres_options{.tolerance = 1e-8, .max_iterations = 5000, .restart = 50});
     ASSERT_TRUE(plain.converged);
 
     const num::ilu0_preconditioner M(A);
-    num::vec x_prec(n, 0.0);
+    num::vec<num::real> x_prec(n, 0.0);
     const auto preconditioned =
         num::gmres(op, M, b, x_prec,
                    num::gmres_options{.tolerance = 1e-8, .max_iterations = 5000, .restart = 50});

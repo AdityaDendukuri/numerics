@@ -15,7 +15,7 @@ namespace num {
 class resolvent_factor {
   public:
     /// Factor sI-A for repeated right-hand sides.
-    resolvent_factor(cplx s, const mat &A);
+    resolvent_factor(cplx s, const mat<real> &A);
 
     /// Solve one complex right-hand side.
     [[nodiscard]] array<cplx> solve(const array<cplx> &rhs) const;
@@ -29,22 +29,22 @@ class resolvent_factor {
 };
 
 /// Solve one dense shifted system with a real right-hand side.
-[[nodiscard]] array<cplx> resolvent_solve(cplx shift, const mat &matrix,
-                                                const vec &right_hand_side);
+[[nodiscard]] array<cplx> resolvent_solve(cplx shift, const mat<real> &matrix,
+                                                const vec<real> &right_hand_side);
 
 /// Solve one dense shift for several real right-hand sides.
 [[nodiscard]] array<array<cplx>>
-resolvent_solve_rhs_batch(cplx shift, const mat &matrix,
-                          const array<vec> &right_hand_sides);
+resolvent_solve_rhs_batch(cplx shift, const mat<real> &matrix,
+                          const array<vec<real>> &right_hand_sides);
 
 /// Solve several dense shifts for one real right-hand side.
 [[nodiscard]] array<array<cplx>> resolvent_solve_batch(const array<cplx> &shifts,
-                                                                   const mat &matrix,
-                                                                   const vec &right_hand_side);
+                                                                   const mat<real> &matrix,
+                                                                   const vec<real> &right_hand_side);
 
 /// Solve several dense shifts for several real right-hand sides.
 [[nodiscard]] array<array<array<cplx>>>
-resolvent_solve_batch(const array<cplx> &shifts, const mat &matrix,
-                      const array<vec> &right_hand_sides);
+resolvent_solve_batch(const array<cplx> &shifts, const mat<real> &matrix,
+                      const array<vec<real>> &right_hand_sides);
 
 } // namespace num

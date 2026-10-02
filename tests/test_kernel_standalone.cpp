@@ -6,7 +6,7 @@
 /// algebra, on a backend symbol reachable from a constructor -- this stops
 /// building, which is the only reliable way to keep the tier copyable.
 ///
-/// Everything below uses the consumer's own storage, never num::vec.
+/// Everything below uses the consumer's own storage, never num::vec<real>.
 
 #include "kernel/factor.hpp"
 #include "kernel/krylov.hpp"

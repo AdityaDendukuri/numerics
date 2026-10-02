@@ -52,29 +52,29 @@ struct ForeignDiagonal {
 namespace {
 
 template <class Op>
-concept CgCallable = requires(const Op &op, const num::vec &b, num::vec &x) {
+concept CgCallable = requires(const Op &op, const num::vec<num::real> &b, num::vec<num::real> &x) {
     num::cg(op, b, x);
 };
 
 template <class Op>
-concept MinresCallable = requires(const Op &op, const num::vec &b, num::vec &x) {
+concept MinresCallable = requires(const Op &op, const num::vec<num::real> &b, num::vec<num::real> &x) {
     num::minres(op, b, x);
 };
 
 template <class Op, class M>
 concept PcgCallable =
-    requires(const Op &op, const M &preconditioner, const num::vec &b, num::vec &x) {
+    requires(const Op &op, const M &preconditioner, const num::vec<num::real> &b, num::vec<num::real> &x) {
     num::pcg(op, preconditioner, b, x);
 };
 
 template <class Op, class M>
-concept ZeroSumPcgCallable = requires(const Op &op, const M &preconditioner, const num::vec &b,
-                                      num::vec &x, const num::space::zero_sum &subspace) {
+concept ZeroSumPcgCallable = requires(const Op &op, const M &preconditioner, const num::vec<num::real> &b,
+                                      num::vec<num::real> &x, const num::space::zero_sum &subspace) {
     num::pcg(op, preconditioner, b, x, subspace);
 };
 
-using spd_mat = num::with_law<num::mat, num::law::spd>;
-using symmetric_mat = num::with_law<num::mat, num::law::self_adjoint>;
+using spd_mat = num::with_law<num::mat<num::real>, num::law::spd>;
+using symmetric_mat = num::with_law<num::mat<num::real>, num::law::self_adjoint>;
 
 // Fields are the floating-point types and their complex counterparts, nothing else.
 static_assert(num::field<double>);
@@ -83,15 +83,15 @@ static_assert(!num::field<int>);
 static_assert(!num::field<std::complex<int>>);
 
 // Spaces are decided by their operations, so standard containers need no declaration.
-static_assert(num::inner_product_space<num::vec>);
-static_assert(num::inner_product_space<num::cvec>);
+static_assert(num::inner_product_space<num::vec<num::real>>);
+static_assert(num::inner_product_space<num::vec<num::cplx>>);
 static_assert(num::inner_product_space<std::vector<double>>);
 static_assert(!num::vector_space<std::vector<int>>);
 static_assert(!num::vector_space<std::string>);
-static_assert(!num::vector_space<num::mat>);
+static_assert(!num::vector_space<num::mat<num::real>>);
 
 // Operators: shape and action are structural, laws are declared.
-static_assert(num::linear_operator<num::mat>);
+static_assert(num::linear_operator<num::mat<num::real>>);
 static_assert(num::linear_operator<num::operators::dense_op>);
 static_assert(!num::self_adjoint_operator<num::operators::dense_op>);
 static_assert(num::spd_operator<spine_test::ForeignDiagonal>);
@@ -103,7 +103,7 @@ static_assert(!num::psd_operator<symmetric_mat>);
 
 // The solvers take exactly the operators whose law they need.
 static_assert(!CgCallable<num::operators::dense_op>);
-static_assert(!CgCallable<num::mat>);
+static_assert(!CgCallable<num::mat<num::real>>);
 static_assert(!CgCallable<symmetric_mat>);
 static_assert(CgCallable<spd_mat>);
 static_assert(!MinresCallable<num::operators::dense_op>);
@@ -115,14 +115,14 @@ static_assert(PcgCallable<num::operators::backward_euler_2d, num::jacobi_precond
 // A value carrying a stronger law converts to one carrying a weaker law, never back.
 static_assert(std::convertible_to<spd_mat, symmetric_mat>);
 static_assert(!std::convertible_to<symmetric_mat, spd_mat>);
-static_assert(!std::convertible_to<num::mat, spd_mat>);
+static_assert(!std::convertible_to<num::mat<num::real>, spd_mat>);
 
-static_assert(num::math::cpo_detail::tag_invocable<num::math::scale_t, double, num::vec &>);
+static_assert(num::math::cpo_detail::tag_invocable<num::math::scale_t, double, num::vec<num::real> &>);
 static_assert(
-    num::math::cpo_detail::tag_invocable<num::math::inner_t, const num::vec &, const num::vec &>);
+    num::math::cpo_detail::tag_invocable<num::math::inner_t, const num::vec<num::real> &, const num::vec<num::real> &>);
 
-num::mat diagonal(std::initializer_list<double> values) {
-    num::mat A(values.size(), values.size(), 0.0);
+num::mat<num::real> diagonal(std::initializer_list<double> values) {
+    num::mat<num::real> A(values.size(), values.size(), 0.0);
     num::idx i = 0;
     for (double value : values) {
         A(i, i) = value;
@@ -132,7 +132,7 @@ num::mat diagonal(std::initializer_list<double> values) {
 }
 
 TEST(MathSpine, AssumeRejectsANonSquareMatrix) {
-    num::mat rectangular(2, 3, 0.0);
+    num::mat<num::real> rectangular(2, 3, 0.0);
     EXPECT_THROW((void)num::assume<num::law::spd>(rectangular), std::invalid_argument);
 }
 
@@ -143,8 +143,8 @@ TEST(MathSpine, AssumeSamplesTheClaim) {
 
 TEST(MathSpine, VerifiedDenseMatrixUsesCg) {
     const auto A = num::make_spd(diagonal({2.0, 4.0}));
-    num::vec b{2.0, 8.0};
-    num::vec x(2, 0.0);
+    num::vec<num::real> b{2.0, 8.0};
+    num::vec<num::real> x(2, 0.0);
 
     const auto result = num::cg(A, b, x);
 
@@ -162,15 +162,15 @@ TEST(MathSpine, AnSpdMatrixIsAcceptedWhereSymmetryIsRequired) {
 
 TEST(MathSpine, CgReportsAContradictedClaim) {
     const spd_mat claimed(diagonal({-1.0, -1.0}));
-    num::vec b{1.0, 1.0};
-    num::vec x(2, 0.0);
+    num::vec<num::real> b{1.0, 1.0};
+    num::vec<num::real> x(2, 0.0);
 
     EXPECT_THROW((void)num::cg(claimed, b, x), std::runtime_error);
 }
 
 TEST(MathSpine, NativeKernelAdapterChecksDimensionsBeforeLowering) {
-    const num::vec x(2, 1.0);
-    num::vec y(3, 0.0);
+    const num::vec<num::real> x(2, 1.0);
+    num::vec<num::real> y(3, 0.0);
 
     EXPECT_THROW(num::math::axpy(1.0, x, y), std::invalid_argument);
 }
@@ -218,28 +218,28 @@ TEST(MathSpine, GenericKrylovFamilySupportsForeignTypes) {
 TEST(MathSpine, PcgReportsAContradictedPreconditionerClaim) {
     const spd_mat claimed(diagonal({-1.0, -1.0}));
     const auto A = num::make_spd(diagonal({2.0, 4.0}));
-    num::vec b{1.0, 1.0};
-    num::vec x(2, 0.0);
+    num::vec<num::real> b{1.0, 1.0};
+    num::vec<num::real> x(2, 0.0);
     EXPECT_THROW((void)num::pcg(A, claimed, b, x), std::runtime_error);
 }
 
 using zero_sum_spd = num::law::spd_on<num::space::zero_sum>;
 
 TEST(MathSpine, RestrictedPcgSolvesOnTheSubspace) {
-    num::mat laplacian(2, 2, 0.0);
+    num::mat<num::real> laplacian(2, 2, 0.0);
     laplacian(0, 0) = 1.0;
     laplacian(0, 1) = -1.0;
     laplacian(1, 0) = -1.0;
     laplacian(1, 1) = 1.0;
 
-    const num::with_law<num::mat, zero_sum_spd> restricted_A(laplacian);
-    const num::with_law<num::mat, zero_sum_spd> restricted_M(diagonal({1.0, 1.0}));
+    const num::with_law<num::mat<num::real>, zero_sum_spd> restricted_A(laplacian);
+    const num::with_law<num::mat<num::real>, zero_sum_spd> restricted_M(diagonal({1.0, 1.0}));
     static_assert(num::claims<decltype(restricted_A), zero_sum_spd>);
     static_assert(!num::claims<decltype(restricted_A), num::law::spd>);
     static_assert(ZeroSumPcgCallable<decltype(restricted_A), decltype(restricted_M)>);
 
-    num::vec b{1.0, -1.0};
-    num::vec x(2, 0.0);
+    num::vec<num::real> b{1.0, -1.0};
+    num::vec<num::real> x(2, 0.0);
     const auto result = num::pcg(restricted_A, restricted_M, b, x, num::space::zero_sum{},
                                  {.tolerance = 1e-12, .max_iterations = 10});
 
@@ -250,9 +250,9 @@ TEST(MathSpine, RestrictedPcgSolvesOnTheSubspace) {
 }
 
 TEST(MathSpine, RestrictedPcgRejectsInputOutsideSubspace) {
-    const num::with_law<num::mat, zero_sum_spd> restricted(diagonal({1.0, 1.0}));
-    num::vec incompatible_rhs{1.0, 0.0};
-    num::vec x(2, 0.0);
+    const num::with_law<num::mat<num::real>, zero_sum_spd> restricted(diagonal({1.0, 1.0}));
+    num::vec<num::real> incompatible_rhs{1.0, 0.0};
+    num::vec<num::real> x(2, 0.0);
 
     EXPECT_THROW(
         (void)num::pcg(restricted, restricted, incompatible_rhs, x, num::space::zero_sum{}),
@@ -260,10 +260,10 @@ TEST(MathSpine, RestrictedPcgRejectsInputOutsideSubspace) {
 }
 
 TEST(MathSpine, RestrictedPcgChecksSubspacePreservation) {
-    const num::with_law<num::mat, zero_sum_spd> restricted_A(diagonal({1.0, 1.0}));
-    const num::with_law<num::mat, zero_sum_spd> contradicted_M(diagonal({1.0, 2.0}));
-    num::vec b{1.0, -1.0};
-    num::vec x(2, 0.0);
+    const num::with_law<num::mat<num::real>, zero_sum_spd> restricted_A(diagonal({1.0, 1.0}));
+    const num::with_law<num::mat<num::real>, zero_sum_spd> contradicted_M(diagonal({1.0, 2.0}));
+    num::vec<num::real> b{1.0, -1.0};
+    num::vec<num::real> x(2, 0.0);
 
     EXPECT_THROW((void)num::pcg(restricted_A, contradicted_M, b, x, num::space::zero_sum{}),
                  std::runtime_error);
@@ -271,8 +271,8 @@ TEST(MathSpine, RestrictedPcgChecksSubspacePreservation) {
 
 TEST(MathSpine, PdeConstructionCarriesSpdIntoCg) {
     num::operators::backward_euler_2d A(4, 0.1);
-    num::vec b(A.rows(), 1.0);
-    num::vec x(A.rows(), 0.0);
+    num::vec<num::real> b(A.rows(), 1.0);
+    num::vec<num::real> x(A.rows(), 0.0);
 
     const auto result = num::cg(A, b, x, {.tolerance = 1e-11, .max_iterations = 100});
 

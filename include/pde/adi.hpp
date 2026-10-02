@@ -36,7 +36,7 @@ struct crank_nicolson_adi {
         td_full_ = factor(dt);
     }
 
-    void sweep(cvec &psi, bool x_axis, double tau) const {
+    void sweep(vec<cplx> &psi, bool x_axis, double tau) const {
         using cplx = std::complex<double>;
         const complex_tri_diag &td = (tau < dt * 0.75) ? td_half_ : td_full_;
         const cplx ia(0.0, tau / (4.0 * h * h));

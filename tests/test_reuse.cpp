@@ -21,9 +21,9 @@ real rate(idx from, idx to) {
     return 0.5 + (0.1 * static_cast<real>(((from * 7) + (to * 3)) % 5) / 5.0);
 }
 
-mat path(const array<idx> &label) {
+mat<real> path(const array<idx> &label) {
     const idx n = label.size();
-    mat R(n, n, 0.0);
+    mat<real> R(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         R(i, i) = 3.0 + (0.1 * static_cast<real>(label[i] % 5));
         if (i > 0) {
@@ -36,7 +36,7 @@ mat path(const array<idx> &label) {
     return R;
 }
 
-spmat sparse_of(const mat &A) {
+spmat sparse_of(const mat<real> &A) {
     array<idx> rows, columns;
     array<real> values;
     for (idx i = 0; i < A.rows(); ++i) {
@@ -52,19 +52,19 @@ spmat sparse_of(const mat &A) {
 }
 
 template <class Factor>
-void expect_solves(const Factor &Z, const mat &R) {
+void expect_solves(const Factor &Z, const mat<real> &R) {
     const idx n = R.rows();
-    vec b(n, 0.0);
+    vec<real> b(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         b[i] = 1.0 + static_cast<real>(i % 4);
     }
-    mat transposed = transpose(R);
-    vec expected, expected_transpose;
+    mat<real> transposed = transpose(R);
+    vec<real> expected, expected_transpose;
     lu_solve(lu(R), b, expected);
     lu_solve(lu(transposed), b, expected_transpose);
 
-    const vec x = num::solve(Z, b);
-    const vec y = num::solve(transpose(Z), b);
+    const vec<real> x = num::solve(Z, b);
+    const vec<real> y = num::solve(transpose(Z), b);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], expected[i], tolerance);
         EXPECT_NEAR(y[i], expected_transpose[i], tolerance);

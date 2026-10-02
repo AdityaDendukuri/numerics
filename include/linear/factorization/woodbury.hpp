@@ -21,8 +21,8 @@ namespace num {
 
 /// An additive change \f$A_{new} = A_{base} + PQ^{T}\f$ of rank at most p.
 struct low_rank_update {
-    mat left;  ///< P, of shape n by p.
-    mat right; ///< Q, of shape n by p.
+    mat<real> left;  ///< P, of shape n by p.
+    mat<real> right; ///< Q, of shape n by p.
 };
 
 /// @brief A reusable factorization that applies \f$A^{-1}\f$ and \f$A^{-T}\f$.
@@ -30,7 +30,7 @@ struct low_rank_update {
 /// Woodbury needs the transpose, which `direct_factorization` does not promise,
 /// and it needs out-of-place solves so a corrected result can be formed without
 /// destroying the right-hand side. The out-parameter forms may alias their input.
-template <class F, class Vec = vec, class Mat = mat>
+template <class F, class Vec = vec<real>, class Mat = mat<real>>
 concept retained_factorization =
     vector_space<Vec> &&
     (requires(const F &factor, const Vec &v, const Mat &m, Vec &vout, Mat &mout) {
@@ -89,8 +89,8 @@ void apply_solve_transpose(const F &factor, const RHS &rhs, RHS &out) {
         }
         column_of[changed[k]] = k;
     }
-    mat left(n, 2 * count, 0.0);
-    mat right(n, 2 * count, 0.0);
+    mat<real> left(n, 2 * count, 0.0);
+    mat<real> right(n, 2 * count, 0.0);
     for (idx k = 0; k < count; ++k) {
         left(changed[k], k) = 1.0;
         right(changed[k], count + k) = 1.0;
@@ -130,7 +130,7 @@ class woodbury_solver {
         : base_(&base), left_(std::move(update.left)), right_(std::move(update.right)) {
         using namespace ops;
         detail::apply_solve_transpose(*base_, right_, transpose_right_);
-        mat reduced_transpose = identity(rank()) + transpose(left_) * transpose_right_;
+        mat<real> reduced_transpose = identity(rank()) + transpose(left_) * transpose_right_;
         reduced_transpose_ = lu(reduced_transpose);
         reduced_ = lu(transpose(reduced_transpose));
         if (reduced_transpose_.singular || reduced_.singular) {
@@ -144,12 +144,12 @@ class woodbury_solver {
     [[nodiscard]] idx size() const { return left_.rows(); }
 
     /// P.
-    [[nodiscard]] const mat &left() const { return left_; }
+    [[nodiscard]] const mat<real> &left() const { return left_; }
     /// \f$W = A_{base}^{-T}Q\f$.
-    [[nodiscard]] const mat &transpose_right() const { return transpose_right_; }
+    [[nodiscard]] const mat<real> &transpose_right() const { return transpose_right_; }
 
     /// \f$A_{base}^{-1}P\f$, formed on first use.
-    [[nodiscard]] const mat &inverse_left() const {
+    [[nodiscard]] const mat<real> &inverse_left() const {
         if (!inverse_left_) {
             inverse_left_.emplace();
             detail::apply_solve(*base_, left_, *inverse_left_);
@@ -158,7 +158,7 @@ class woodbury_solver {
     }
 
     /// \f$A_{base}^{-T}W\f$, formed on first use.
-    [[nodiscard]] const mat &transpose_right_squared() const {
+    [[nodiscard]] const mat<real> &transpose_right_squared() const {
         if (!transpose_right_squared_) {
             transpose_right_squared_.emplace();
             detail::apply_solve_transpose(*base_, transpose_right_, *transpose_right_squared_);
@@ -167,10 +167,10 @@ class woodbury_solver {
     }
 
     /// @brief Replace y by \f$yG^{-1}\f$, solving \f$G^{T}y_i^{T} = y_i^{T}\f$ per row.
-    void right_solve(mat &y, vec &scratch) const {
+    void right_solve(mat<real> &y, vec<real> &scratch) const {
         const idx p = rank();
         if (scratch.size() != p) {
-            scratch = vec(p, 0.0);
+            scratch = vec<real>(p, 0.0);
         }
         for (idx i = 0; i < y.rows(); ++i) {
             real *row = y.data() + (i * p);
@@ -209,14 +209,14 @@ class woodbury_solver {
     /// \f$diag(A_{new}^{-1}) = diag(A_{base}^{-1})
     /// - diag(A_{base}^{-1}PG^{-1}Q^{T}A_{base}^{-1})\f$, which costs no solve
     /// beyond the two rank-p blocks already held.
-    [[nodiscard]] vec inverse_diagonal(view<const real> base_diagonal) const {
+    [[nodiscard]] vec<real> inverse_diagonal(view<const real> base_diagonal) const {
         if (base_diagonal.size() != size()) {
             throw std::invalid_argument("the base diagonal has the wrong size");
         }
-        mat coefficients;
+        mat<real> coefficients;
         lu_solve(reduced_, transpose(transpose_right_), coefficients);
-        const mat &left_columns = inverse_left();
-        vec diagonal(size(), 0.0);
+        const mat<real> &left_columns = inverse_left();
+        vec<real> diagonal(size(), 0.0);
         for (idx i = 0; i < size(); ++i) {
             real correction = 0.0;
             for (idx column = 0; column < rank(); ++column) {
@@ -229,9 +229,9 @@ class woodbury_solver {
 
   private:
     const F *base_;
-    mat left_, right_, transpose_right_;
+    mat<real> left_, right_, transpose_right_;
     lu_result reduced_, reduced_transpose_;
-    mutable std::optional<mat> inverse_left_, transpose_right_squared_;
+    mutable std::optional<mat<real>> inverse_left_, transpose_right_squared_;
 };
 
 template <retained_factorization F>
@@ -239,8 +239,8 @@ woodbury_solver(const F &, low_rank_update) -> woodbury_solver<F>;
 
 /// Reusable blocks for `update_inverse_rows`, resized on demand.
 struct inverse_rows_workspace {
-    mat first, second;
-    vec scratch;
+    mat<real> first, second;
+    vec<real> scratch;
 };
 
 /// @brief Carry selected rows of \f$A^{-1}\f$ and \f$A^{-2}\f$ across a low-rank change.
@@ -250,12 +250,12 @@ struct inverse_rows_workspace {
 /// `first` and `second`. Both updates are rank-p, so the cost does not grow with
 /// the number of rows carried.
 template <retained_factorization F>
-void update_inverse_rows(const woodbury_solver<F> &correction, mat &first, mat &second,
+void update_inverse_rows(const woodbury_solver<F> &correction, mat<real> &first, mat<real> &second,
                          inverse_rows_workspace &work) {
     const idx rows = first.rows(), p = correction.rank();
     if (work.first.rows() != rows || work.first.cols() != p) {
-        work.first = mat(rows, p, 0.0);
-        work.second = mat(rows, p, 0.0);
+        work.first = mat<real>(rows, p, 0.0);
+        work.second = mat<real>(rows, p, 0.0);
     }
     blas::gemm(1.0, first, false, correction.left(), false, 0.0, work.first);
     correction.right_solve(work.first, work.scratch);

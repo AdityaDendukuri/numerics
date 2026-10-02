@@ -12,7 +12,7 @@ namespace spectral {
 
 // -- One-shot dispatch --------------------------------------------------------
 
-void fft(const cvec &in, cvec &out, fft_backend b) {
+void fft(const vec<cplx> &in, vec<cplx> &out, fft_backend b) {
     if (out.size() != in.size()) {
         throw std::invalid_argument("fft: in and out must have the same size");
     }
@@ -38,7 +38,7 @@ void fft(const cvec &in, cvec &out, fft_backend b) {
     num::backends::seq::fft(in, out);
 }
 
-void ifft(const cvec &in, cvec &out, fft_backend b) {
+void ifft(const vec<cplx> &in, vec<cplx> &out, fft_backend b) {
     if (out.size() != in.size()) {
         throw std::invalid_argument("ifft: in and out must have the same size");
     }
@@ -63,7 +63,7 @@ void ifft(const cvec &in, cvec &out, fft_backend b) {
     num::backends::seq::ifft(in, out);
 }
 
-void rfft(const vec &in, cvec &out, fft_backend b) {
+void rfft(const vec<real> &in, vec<cplx> &out, fft_backend b) {
     if (static_cast<int>(out.size()) != (static_cast<int>(in.size()) / 2) + 1) {
         throw std::invalid_argument("rfft: out must have size n/2+1");
     }
@@ -88,7 +88,7 @@ void rfft(const vec &in, cvec &out, fft_backend b) {
     num::backends::seq::rfft(in, out);
 }
 
-void irfft(const cvec &in, int n, vec &out, fft_backend b) {
+void irfft(const vec<cplx> &in, int n, vec<real> &out, fft_backend b) {
     if (static_cast<int>(in.size()) != (n / 2) + 1) {
         throw std::invalid_argument("irfft: in must have size n/2+1");
     }
@@ -144,7 +144,7 @@ fft_plan::~fft_plan() = default;
 fft_plan::fft_plan(fft_plan &&) noexcept = default;
 fft_plan &fft_plan::operator=(fft_plan &&) noexcept = default;
 
-void fft_plan::execute(const cvec &in, cvec &out) const {
+void fft_plan::execute(const vec<cplx> &in, vec<cplx> &out) const {
     if (static_cast<int>(in.size()) != n_ || static_cast<int>(out.size()) != n_) {
         throw std::invalid_argument("fft_plan::execute: size mismatch");
     }

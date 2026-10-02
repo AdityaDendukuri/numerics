@@ -2,6 +2,6 @@
 #include <gtest/gtest.h>
 
 TEST(Umbrella, IncludeHeader) {
-    num::vec v(5, 1.0);
+    num::vec<num::real> v(5, 1.0);
     EXPECT_EQ(v.size(), 5u);
 }

@@ -33,20 +33,20 @@ namespace num::seq {
 
 /// @brief Thin vec-aware wrappers over `num::kernel`, used when no
 /// accelerator (BLAS/OMP/CUDA) was configured. `num::kernel` itself cannot
-/// serve this role: it only knows raw pointers, never `vec`.
-inline void scale(vec &v, real alpha) noexcept { kernel::scale(v.data(), alpha, v.size()); }
+/// serve this role: it only knows raw pointers, never `vec<real>`.
+inline void scale(vec<real> &v, real alpha) noexcept { kernel::scale(v.data(), alpha, v.size()); }
 
-inline void axpy(real alpha, const vec &x, vec &y) noexcept {
+inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept {
     kernel::axpy(y.data(), x.data(), alpha, x.size());
 }
 
-[[nodiscard]] inline real dot(const vec &x, const vec &y) noexcept {
+[[nodiscard]] inline real dot(const vec<real> &x, const vec<real> &y) noexcept {
     return kernel::dot(x.data(), y.data(), x.size());
 }
 
-[[nodiscard]] inline real norm(const vec &x) noexcept { return kernel::norm(x.data(), x.size()); }
+[[nodiscard]] inline real norm(const vec<real> &x) noexcept { return kernel::norm(x.data(), x.size()); }
 
-inline void add(const vec &x, const vec &y, vec &z) noexcept {
+inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept {
     const idx n = x.size();
     for (idx i = 0; i < n; ++i) {
         z[i] = x[i] + y[i];
@@ -54,12 +54,12 @@ inline void add(const vec &x, const vec &y, vec &z) noexcept {
 }
 
 /// @brief Computes scaled vector update \f$y_i \leftarrow a x_i + b y_i\f$.
-inline void axpby(real a, const vec &x, real b, vec &y) noexcept {
+inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
     kernel::axpby(y.data(), x.data(), a, b, x.size());
 }
 
 /// @brief Computes linear combination \f$z_i \leftarrow a x_i + b y_i\f$.
-inline void axpbyz(real a, const vec &x, real b, const vec &y, vec &z) noexcept {
+inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<real> &z) noexcept {
     kernel::axpbyz(z.data(), x.data(), y.data(), a, b, x.size());
 }
 
@@ -68,12 +68,12 @@ inline void axpbyz(real a, const vec &x, real b, const vec &y, vec &z) noexcept 
 namespace num {
 
 /// @brief \f$v \leftarrow \alpha v\f$, through the build's default backend.
-inline void scale(vec &v, real alpha) noexcept { accel::scale(v, alpha); }
+inline void scale(vec<real> &v, real alpha) noexcept { accel::scale(v, alpha); }
 
 /// @brief \f$y \leftarrow y + \alpha x\f$, through the build's default backend.
-inline void axpy(real alpha, const vec &x, vec &y) noexcept { accel::axpy(alpha, x, y); }
+inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept { accel::axpy(alpha, x, y); }
 
-[[nodiscard]] inline real dot(const vec &x, const vec &y) noexcept { return accel::dot(x, y); }
+[[nodiscard]] inline real dot(const vec<real> &x, const vec<real> &y) noexcept { return accel::dot(x, y); }
 
 /// @brief Sequential dot product over non-owning spans.
 [[nodiscard]] inline real dot(view<const real> x, view<const real> y) {
@@ -84,12 +84,12 @@ inline void axpy(real alpha, const vec &x, vec &y) noexcept { accel::axpy(alpha,
 }
 
 /// @brief The Euclidean norm \f$\|x\|_2\f$, through the build's default backend.
-[[nodiscard]] inline real norm(const vec &x) noexcept { return accel::norm(x); }
+[[nodiscard]] inline real norm(const vec<real> &x) noexcept { return accel::norm(x); }
 
-inline void add(const vec &x, const vec &y, vec &z) noexcept { accel::add(x, y, z); }
+inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept { accel::add(x, y, z); }
 
 /// @brief Computes scaled vector update \f$y_i \leftarrow a x_i + b y_i\f$.
-inline void axpby(real a, const vec &x, real b, vec &y) noexcept {
+inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
 #if defined(NUMERICS_HAS_OMP)
     omp::axpby(a, x, b, y);
 #else
@@ -98,7 +98,7 @@ inline void axpby(real a, const vec &x, real b, vec &y) noexcept {
 }
 
 /// @brief Computes linear combination \f$z_i \leftarrow a x_i + b y_i\f$.
-inline void axpbyz(real a, const vec &x, real b, const vec &y, vec &z) noexcept {
+inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<real> &z) noexcept {
 #if defined(NUMERICS_HAS_OMP)
     omp::axpbyz(a, x, b, y, z);
 #else
@@ -108,21 +108,21 @@ inline void axpbyz(real a, const vec &x, real b, const vec &y, vec &z) noexcept 
 
 // -- complex level-1 -----------------------------------------------------------
 
-inline void scale(cvec &v, cplx alpha) noexcept {
+inline void scale(vec<cplx> &v, cplx alpha) noexcept {
     const idx n = v.size();
     for (idx i = 0; i < n; ++i) {
         v[i] *= alpha;
     }
 }
 
-inline void axpy(cplx alpha, const cvec &x, cvec &y) noexcept {
+inline void axpy(cplx alpha, const vec<cplx> &x, vec<cplx> &y) noexcept {
     const idx n = x.size();
     for (idx i = 0; i < n; ++i) {
         y[i] += alpha * x[i];
     }
 }
 
-[[nodiscard]] inline cplx dot(const cvec &x, const cvec &y) noexcept {
+[[nodiscard]] inline cplx dot(const vec<cplx> &x, const vec<cplx> &y) noexcept {
     cplx sum{};
     const idx n = x.size();
     for (idx i = 0; i < n; ++i) {
@@ -131,7 +131,7 @@ inline void axpy(cplx alpha, const cvec &x, cvec &y) noexcept {
     return sum;
 }
 
-[[nodiscard]] inline real norm(const cvec &x) noexcept {
+[[nodiscard]] inline real norm(const vec<cplx> &x) noexcept {
     real sum = 0.0;
     const idx n = x.size();
     for (idx i = 0; i < n; ++i) {

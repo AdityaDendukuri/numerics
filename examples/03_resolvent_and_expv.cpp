@@ -7,12 +7,12 @@
 int main() {
     using namespace num;
 
-    mat A(2, 2, 0.0);
+    mat<real> A(2, 2, 0.0);
     A(0, 0) = -2.0;
     A(0, 1) = 1.0;
     A(1, 0) = 1.0;
     A(1, 1) = -2.0;
-    vec b{1.0, 0.0};
+    vec<real> b{1.0, 0.0};
 
     // 1. Single-shift Complex Resolvent Solve
     cplx s(1.0, 2.0);
@@ -21,11 +21,11 @@ int main() {
 
     // 2. Time evolution via expv e^{t A} v
     operators::dense_op Aop(A);
-    vec v{1.0, 0.0};
+    vec<real> v{1.0, 0.0};
     std::vector<double> t_vec, u0_vec, u1_vec;
     for (int step = 0; step <= 20; ++step) {
         double t = step * 0.1;
-        vec exp_tv = expv(t, Aop, v, 20, 1e-8);
+        vec<real> exp_tv = expv(t, Aop, v, 20, 1e-8);
         t_vec.push_back(t);
         u0_vec.push_back(exp_tv[0]);
         u1_vec.push_back(exp_tv[1]);

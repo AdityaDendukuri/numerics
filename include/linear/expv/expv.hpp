@@ -28,12 +28,12 @@
 namespace num {
 
 namespace detail {
-mat dense_expm_pade6(const mat &A);
+mat<real> dense_expm_pade6(const mat<real> &A);
 }
 
 /// @brief Compute \f$\exp(tA)v\f$ for any \f$y=A x\f$ adapter.
 template <class Op>
-requires linear_operator<Op, vec, vec> vec expv(real t, const Op &A, const vec &v,
+requires linear_operator<Op, vec<real>, vec<real>> vec<real> expv(real t, const Op &A, const vec<real> &v,
                                                         int m_max = 30, real tol = 1e-8) {
     const idx n = A.rows();
     if (A.cols() != n || v.size() != n) {
@@ -42,24 +42,24 @@ requires linear_operator<Op, vec, vec> vec expv(real t, const Op &A, const vec &
 
     real beta = norm(v);
     if (beta < 1e-300) {
-        return vec(n, 0.0);
+        return vec<real>(n, 0.0);
     }
 
-    array<vec> V;
+    array<vec<real>> V;
     V.reserve(m_max + 1);
 
-    vec v0(n);
+    vec<real> v0(n);
     for (idx i = 0; i < n; i++) {
         v0[i] = v[i] / beta;
     }
     V.push_back(std::move(v0));
 
-    mat H(m_max + 1, m_max, 0.0);
+    mat<real> H(m_max + 1, m_max, 0.0);
     int m_actual = m_max;
     array<real> h_col(m_max + 1, 0.0);
 
     for (int j = 0; j < m_max; j++) {
-        vec w(n, 0.0);
+        vec<real> w(n, 0.0);
         A.apply(V[j], w);
 
         const real h_next = dispatch::subspace::mgs_orthogonalize(V, w, h_col, j + 1);
@@ -77,16 +77,16 @@ requires linear_operator<Op, vec, vec> vec expv(real t, const Op &A, const vec &
         V.push_back(std::move(w));
     }
 
-    mat projected(m_actual, m_actual, 0.0);
+    mat<real> projected(m_actual, m_actual, 0.0);
     for (int i = 0; i < m_actual; i++) {
         for (int j = 0; j < m_actual; j++) {
             projected(i, j) = t * H(i, j);
         }
     }
 
-    mat E = detail::dense_expm_pade6(projected);
+    mat<real> E = detail::dense_expm_pade6(projected);
 
-    vec result(n, 0.0);
+    vec<real> result(n, 0.0);
     for (int j = 0; j < m_actual; j++) {
         axpy(beta * E(j, 0), V[j], result);
     }
@@ -94,11 +94,11 @@ requires linear_operator<Op, vec, vec> vec expv(real t, const Op &A, const vec &
     return result;
 }
 
-vec expv(real t, const spmat &A, const vec &v, int m_max = 30, real tol = 1e-8);
+vec<real> expv(real t, const spmat &A, const vec<real> &v, int m_max = 30, real tol = 1e-8);
 
 namespace detail {
 
-inline mat dense_expm_pade6(const mat &A) {
+inline mat<real> dense_expm_pade6(const mat<real> &A) {
     const idx m = A.rows();
 
     static constexpr double c[7] = {1.0,         0.5,           5.0 / 44.0,    1.0 / 66.0,
@@ -119,20 +119,20 @@ inline mat dense_expm_pade6(const mat &A) {
     }
 
     double scale = std::ldexp(1.0, -s);
-    mat as(m, m, 0.0);
+    mat<real> as(m, m, 0.0);
     // A_s <- 2^{-s} A.
     kernel::scale_copy_strided(as.data(), 1, A.data(), 1, scale, m * m);
 
-    mat B(m, m, 0.0);
+    mat<real> B(m, m, 0.0);
     matmul(as, as, B);
 
-    mat B2(m, m, 0.0);
+    mat<real> B2(m, m, 0.0);
     matmul(B, B, B2);
 
-    mat B3(m, m, 0.0);
+    mat<real> B3(m, m, 0.0);
     matmul(B2, B, B3);
 
-    mat v_mat(m, m, 0.0);
+    mat<real> v_mat(m, m, 0.0);
     for (idx i = 0; i < m; i++) {
         for (idx j = 0; j < m; j++) {
             v_mat(i, j) = (c[6] * B3(i, j)) + (c[4] * B2(i, j)) + (c[2] * B(i, j));
@@ -140,7 +140,7 @@ inline mat dense_expm_pade6(const mat &A) {
         v_mat(i, i) += c[0];
     }
 
-    mat W(m, m, 0.0);
+    mat<real> W(m, m, 0.0);
     for (idx i = 0; i < m; i++) {
         for (idx j = 0; j < m; j++) {
             W(i, j) = (c[5] * B2(i, j)) + (c[3] * B(i, j));
@@ -148,22 +148,22 @@ inline mat dense_expm_pade6(const mat &A) {
         W(i, i) += c[1];
     }
 
-    mat U(m, m, 0.0);
+    mat<real> U(m, m, 0.0);
     matmul(as, W, U);
 
-    mat vp_u(m, m, 0.0);
-    mat vm_u(m, m, 0.0);
+    mat<real> vp_u(m, m, 0.0);
+    mat<real> vm_u(m, m, 0.0);
     // V_plus <- V + U, V_minus <- V - U.
     kernel::axpbyz(vp_u.data(), v_mat.data(), U.data(), real(1), real(1), m * m);
     kernel::axpbyz(vm_u.data(), v_mat.data(), U.data(), real(1), real(-1), m * m);
 
     // vm_u is constructed m-by-m.
     lu_result fac = lu(vm_u);
-    mat E(m, m, 0.0);
+    mat<real> E(m, m, 0.0);
     lu_solve(fac, vp_u, E);
 
     for (int i = 0; i < s; i++) {
-        mat E2(m, m, 0.0);
+        mat<real> E2(m, m, 0.0);
         matmul(E, E, E2);
         E = std::move(E2);
     }
@@ -173,7 +173,7 @@ inline mat dense_expm_pade6(const mat &A) {
 
 } // namespace detail
 
-inline vec expv(real t, const spmat &A, const vec &v, int m_max, real tol) {
+inline vec<real> expv(real t, const spmat &A, const vec<real> &v, int m_max, real tol) {
     operators::sparse_op op(A);
     return expv(t, op, v, m_max, tol);
 }

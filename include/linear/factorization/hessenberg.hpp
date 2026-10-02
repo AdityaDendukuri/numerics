@@ -25,39 +25,39 @@ class hessenberg_decomposition {
     /// LAPACK (`dgehrd`/`dorghr`) when configured, else the in-tree vectorized
     /// Householder elimination. To force one explicitly, call
     /// `num::lapack::hessenberg`/`num::seq::hessenberg`.
-    explicit hessenberg_decomposition(const mat &A) : hessenberg_decomposition(A, has_lapack) {}
+    explicit hessenberg_decomposition(const mat<real> &A) : hessenberg_decomposition(A, has_lapack) {}
 
     /// Selects LAPACK vs. the sequential path explicitly. Prefer the free
     /// functions `num::hessenberg`/`num::lapack::hessenberg`/`num::seq::hessenberg`.
-    hessenberg_decomposition(const mat &A, bool use_lapack);
+    hessenberg_decomposition(const mat<real> &A, bool use_lapack);
 
     [[nodiscard]] idx size() const noexcept { return H_.rows(); }
-    [[nodiscard]] const mat &H() const noexcept { return H_; }
-    [[nodiscard]] const mat &Q() const noexcept { return Q_; }
+    [[nodiscard]] const mat<real> &H() const noexcept { return H_; }
+    [[nodiscard]] const mat<real> &Q() const noexcept { return Q_; }
 
   private:
-    mat H_;
-    mat Q_;
+    mat<real> H_;
+    mat<real> Q_;
 };
 
 /// Compute the upper Hessenberg decomposition of a square matrix.
-[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat &A) {
+[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat<real> &A) {
     return hessenberg_decomposition(A);
 }
 
 namespace lapack {
-[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat &A) {
+[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat<real> &A) {
     return hessenberg_decomposition(A, true);
 }
 } // namespace lapack
 
 namespace seq {
-[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat &A) {
+[[nodiscard]] inline hessenberg_decomposition hessenberg(const mat<real> &A) {
     return hessenberg_decomposition(A, false);
 }
 } // namespace seq
 
-inline hessenberg_decomposition::hessenberg_decomposition(const mat &A, bool use_lapack)
+inline hessenberg_decomposition::hessenberg_decomposition(const mat<real> &A, bool use_lapack)
     : H_(A), Q_(A.rows(), A.cols(), 0.0) {
     debug::check_dim(A.rows(), A.cols(), "hessenberg_decomposition matrix must be square");
     debug::check_non_empty(A.rows(), "hessenberg_decomposition matrix");
@@ -167,7 +167,7 @@ inline hessenberg_decomposition::hessenberg_decomposition(const mat &A, bool use
 /// @param y Output, resized to n.
 /// @param M_buf Scratch, grown to n*n and reusable across calls.
 /// @param pivots Scratch, grown to n and reusable across calls.
-inline void hessenberg_shifted_solve(const mat &H, cplx shift, const array<cplx> &b_tilde,
+inline void hessenberg_shifted_solve(const mat<real> &H, cplx shift, const array<cplx> &b_tilde,
                                      array<cplx> &y, array<cplx> &M_buf,
                                      array<idx> &pivots) {
     const idx n = H.rows();
@@ -192,7 +192,7 @@ inline void hessenberg_shifted_solve(const mat &H, cplx shift, const array<cplx>
 /// Accepts a real or complex right-hand side. The result is complex either way,
 /// since the shift generally is.
 template <class Rhs>
-inline array<cplx> hessenberg_project(const mat &Q, const Rhs &b) {
+inline array<cplx> hessenberg_project(const mat<real> &Q, const Rhs &b) {
     const idx n = Q.rows();
     array<cplx> b_tilde(n);
     kernel::matvec_transpose_into_complex(b_tilde.data(), Q.data(), b.data(), n, n);
@@ -200,7 +200,7 @@ inline array<cplx> hessenberg_project(const mat &Q, const Rhs &b) {
 }
 
 /// @brief Carry a solution back to the original basis: \f$x = Q y\f$.
-inline void hessenberg_back_project(const mat &Q, const array<cplx> &y,
+inline void hessenberg_back_project(const mat<real> &Q, const array<cplx> &y,
                                     array<cplx> &x) {
     const idx n = Q.rows();
     if (x.size() != n) {

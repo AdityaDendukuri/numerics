@@ -32,19 +32,19 @@ inline void dst_check_size(int N) {
 /// X[k] = sum_{j=1}^{N} x[j] * sin(j*k*pi/(N+1)),  k = 1..N (stored 0-indexed).
 /// Odd-extension y = [0, x, 0, -rev(x)] has length M = 2(N+1).
 /// FFT(y)[k] = -2i * sum sin(...)  =>  DST(x)[k-1] = -Im(FFT(y)[k]) / 2.
-inline vec dst1(const vec &x) {
+inline vec<real> dst1(const vec<real> &x) {
     const int N = static_cast<int>(x.size());
     dst_check_size(N);
     const int M = 2 * (N + 1);
-    cvec y(static_cast<std::size_t>(M), cplx{0.0, 0.0});
+    vec<cplx> y(static_cast<std::size_t>(M), cplx{0.0, 0.0});
     for (int j = 0; j < N; ++j) {
         const auto sj = static_cast<std::size_t>(j);
         y[sj + 1] = cplx{x[sj], 0.0};
         y[static_cast<std::size_t>(M - 1 - j)] = cplx{-x[sj], 0.0};
     }
-    cvec Y(static_cast<std::size_t>(M));
+    vec<cplx> Y(static_cast<std::size_t>(M));
     spectral::fft(y, Y);
-    vec out(static_cast<std::size_t>(N));
+    vec<real> out(static_cast<std::size_t>(N));
     for (int k = 0; k < N; ++k) {
         out[static_cast<std::size_t>(k)] = -Y[static_cast<std::size_t>(k) + 1].imag() / 2.0;
     }
@@ -53,7 +53,7 @@ inline vec dst1(const vec &x) {
 
 /// @brief Apply the DST-I to each row of an \f$N \times N\f$ row-major array, in place.
 inline void dst_rows(array<double> &A, int N) {
-    vec row(static_cast<std::size_t>(N));
+    vec<real> row(static_cast<std::size_t>(N));
     for (int i = 0; i < N; ++i) {
         const std::size_t base = static_cast<std::size_t>(i) * static_cast<std::size_t>(N);
         for (int j = 0; j < N; ++j) {
@@ -68,7 +68,7 @@ inline void dst_rows(array<double> &A, int N) {
 
 /// @brief Apply the DST-I to each column, in place.
 inline void dst_cols(array<double> &A, int N) {
-    vec col(static_cast<std::size_t>(N));
+    vec<real> col(static_cast<std::size_t>(N));
     for (int j = 0; j < N; ++j) {
         const std::size_t sj = static_cast<std::size_t>(j);
         for (int i = 0; i < N; ++i) {

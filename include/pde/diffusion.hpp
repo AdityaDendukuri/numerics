@@ -40,13 +40,13 @@ inline spmat backward_euler_matrix(const grid2d &grid, double coeff) {
 /// @brief Pre-assembled spmat wrapper for 2D Backward Euler diffusion.
 class backward_euler_operator_2d final {
   public:
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
     using laws = law::list<law::spd>;
 
     backward_euler_operator_2d(int N, double coeff) : A_(validated_matrix(N, coeff)) {}
 
-    void apply(const vec &x, vec &y) const { sparse_matvec(A_, x, y); }
+    void apply(const vec<real> &x, vec<real> &y) const { sparse_matvec(A_, x, y); }
     [[nodiscard]] idx rows() const noexcept { return A_.n_rows(); }
     [[nodiscard]] idx cols() const noexcept { return A_.n_cols(); }
     [[nodiscard]] const spmat &matrix() const noexcept { return A_; }
@@ -64,23 +64,23 @@ class backward_euler_operator_2d final {
 };
 
 /// @brief One explicit diffusion step \f$u \leftarrow u + c\,\Delta_h u\f$, periodic.
-inline void diffusion_step_2d(vec &u, int N, double coeff) {
-    vec lap(u.size());
+inline void diffusion_step_2d(vec<real> &u, int N, double coeff) {
+    vec<real> lap(u.size());
     laplacian_stencil_2d_periodic(u, lap, N);
     axpy(coeff, lap, u);
 }
 
 /// @brief One explicit diffusion step with zero Dirichlet boundaries.
-inline void diffusion_step_2d_dirichlet(vec &u, int N, double coeff) {
-    vec lap(u.size());
+inline void diffusion_step_2d_dirichlet(vec<real> &u, int N, double coeff) {
+    vec<real> lap(u.size());
     laplacian_stencil_2d(u, lap, N);
     axpy(coeff, lap, u);
 }
 
 /// @brief One explicit diffusion step with the fourth-order stencil and zero Dirichlet
 /// boundaries.
-inline void diffusion_step_2d_4th_dirichlet(vec &u, int N, double coeff) {
-    vec lap(u.size());
+inline void diffusion_step_2d_4th_dirichlet(vec<real> &u, int N, double coeff) {
+    vec<real> lap(u.size());
     laplacian_stencil_2d_4th(u, lap, N);
     axpy(coeff, lap, u);
 }
@@ -104,7 +104,7 @@ inline backward_euler_operator_2d backward_euler_operator(const grid2d &grid, do
 
 /// @brief A linear solver running CG on `A`, which it holds by reference.
 inline linear_solver make_cg_solver(const spmat &A, real tol = 1e-6) {
-    return [&A, tol](const vec &rhs, vec &x) {
+    return [&A, tol](const vec<real> &rhs, vec<real> &x) {
         operators::sparse_op op(A);
         return cg(num::assume_spd(op), rhs, x, {.tolerance = tol});
     };

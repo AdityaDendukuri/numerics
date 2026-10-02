@@ -17,8 +17,8 @@ namespace num::operators {
 /// @brief mat-free 2D discrete 5-point Laplacian operator with spmat materialization.
 class laplacian_2d final {
   public:
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
     using laws = law::list<law::self_adjoint>;
 
     explicit laplacian_2d(int N) : N_(N) {
@@ -27,13 +27,13 @@ class laplacian_2d final {
         }
     }
 
-    void apply(const vec &x, vec &y) const {
+    void apply(const vec<real> &x, vec<real> &y) const {
         const idx n = rows();
         if (x.size() != n) {
             throw std::invalid_argument("laplacian_2d: input dimension mismatch");
         }
         if (y.size() != n) {
-            y = vec(n);
+            y = vec<real>(n);
         }
         for (int i = 0; i < N_; ++i) {
             for (int j = 0; j < N_; ++j) {
@@ -106,8 +106,8 @@ class laplacian_2d final {
 /// @brief mat-free 2D Backward Euler operator \f$I - \text{coeff} \cdot \nabla^2\f$ with spmat materialization.
 class backward_euler_2d final {
   public:
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
     using laws = law::list<law::spd>;
 
     backward_euler_2d(int N, double coeff) : N_(N), coeff_(coeff) {
@@ -119,13 +119,13 @@ class backward_euler_2d final {
         }
     }
 
-    void apply(const vec &x, vec &y) const {
+    void apply(const vec<real> &x, vec<real> &y) const {
         const idx n = rows();
         if (x.size() != n) {
             throw std::invalid_argument("backward_euler_2d: input dimension mismatch");
         }
         if (y.size() != n) {
-            y = vec(n);
+            y = vec<real>(n);
         }
         const real diag = 1.0 + (4.0 * coeff_);
         for (int i = 0; i < N_; ++i) {

@@ -18,7 +18,7 @@ namespace {
 
 constexpr real tolerance = 1e-9;
 
-spmat sparse_of(const mat &A) {
+spmat sparse_of(const mat<real> &A) {
     array<idx> rows, columns;
     array<real> values;
     for (idx i = 0; i < A.rows(); ++i) {
@@ -33,8 +33,8 @@ spmat sparse_of(const mat &A) {
     return spmat::from_triplets(A.rows(), A.cols(), rows, columns, values);
 }
 
-mat path_rate_matrix(idx n, real up, real down, real leak) {
-    mat R(n, n, 0.0);
+mat<real> path_rate_matrix(idx n, real up, real down, real leak) {
+    mat<real> R(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         real total = 0.0;
         if (i > 0) {
@@ -50,8 +50,8 @@ mat path_rate_matrix(idx n, real up, real down, real leak) {
     return R;
 }
 
-vec path_symmetrizer(idx n, real up, real down) {
-    vec h(n, 0.0);
+vec<real> path_symmetrizer(idx n, real up, real down) {
+    vec<real> h(n, 0.0);
     real pi = 1.0;
     for (idx i = 0; i < n; ++i) {
         h[i] = std::sqrt(pi);
@@ -60,27 +60,27 @@ vec path_symmetrizer(idx n, real up, real down) {
     return h;
 }
 
-vec reference_solve(const mat &R, const vec &b, bool transposed) {
-    mat A = transposed ? mat(transpose(R)) : R;
-    vec x(b.size(), 0.0);
+vec<real> reference_solve(const mat<real> &R, const vec<real> &b, bool transposed) {
+    mat<real> A = transposed ? mat<real>(transpose(R)) : R;
+    vec<real> x(b.size(), 0.0);
     lu_solve(lu(A), b, x);
     return x;
 }
 
-vec exact_inverse_diagonal(const mat &R) {
+vec<real> exact_inverse_diagonal(const mat<real> &R) {
     const idx n = R.rows();
     const lu_result Z = lu(R);
-    vec diagonal(n, 0.0);
+    vec<real> diagonal(n, 0.0);
     for (idx i = 0; i < n; ++i) {
-        vec column(n, 0.0);
+        vec<real> column(n, 0.0);
         lu_solve(Z, unit_vector(n, i), column);
         diagonal[i] = column[i];
     }
     return diagonal;
 }
 
-vec ramp(idx n, unsigned offset) {
-    vec b(n, 0.0);
+vec<real> ramp(idx n, unsigned offset) {
+    vec<real> b(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         b[i] = 1.0 + std::sin(static_cast<real>(i + offset));
     }
@@ -96,11 +96,11 @@ array<idx> natural_levels(idx n) {
 }
 
 template <class F>
-void expect_solves(const F &Z, const mat &R, const vec &b) {
-    const vec x = solve(Z, b);
-    const vec y = solve(transpose(Z), b);
-    const vec expected_x = reference_solve(R, b, false);
-    const vec expected_y = reference_solve(R, b, true);
+void expect_solves(const F &Z, const mat<real> &R, const vec<real> &b) {
+    const vec<real> x = solve(Z, b);
+    const vec<real> y = solve(transpose(Z), b);
+    const vec<real> expected_x = reference_solve(R, b, false);
+    const vec<real> expected_y = reference_solve(R, b, true);
     for (idx i = 0; i < b.size(); ++i) {
         EXPECT_NEAR(x[i], expected_x[i], tolerance) << "forward entry " << i;
         EXPECT_NEAR(y[i], expected_y[i], tolerance) << "transposed entry " << i;
@@ -111,9 +111,9 @@ void expect_solves(const F &Z, const mat &R, const vec &b) {
 
 TEST(Factor, DenseBlockAndSparseSolveTheSameSystem) {
     constexpr idx n = 12;
-    const mat R = path_rate_matrix(n, 1.3, 0.7, 0.3);
+    const mat<real> R = path_rate_matrix(n, 1.3, 0.7, 0.3);
     const spmat S = sparse_of(R);
-    const vec b = ramp(n, 5);
+    const vec<real> b = ramp(n, 5);
     const array<idx> levels = natural_levels(n);
 
     const auto Z_dense = factor(S);
@@ -127,10 +127,10 @@ TEST(Factor, DenseBlockAndSparseSolveTheSameSystem) {
 TEST(Factor, DiagonalSimilarityUsesCholeskyWithoutChangingTheAnswer) {
     constexpr idx n = 10;
     constexpr real up = 1.0, down = 1.5;
-    const mat R = path_rate_matrix(n, up, down, 0.25);
+    const mat<real> R = path_rate_matrix(n, up, down, 0.25);
     const spmat S = sparse_of(R);
-    const vec h = path_symmetrizer(n, up, down);
-    const vec b = ramp(n, 2);
+    const vec<real> h = path_symmetrizer(n, up, down);
+    const vec<real> b = ramp(n, 2);
     const array<idx> levels = natural_levels(n);
 
     const auto Z_dense = factor(S, h);
@@ -141,24 +141,24 @@ TEST(Factor, DiagonalSimilarityUsesCholeskyWithoutChangingTheAnswer) {
 
 TEST(Factor, SolvesSeveralRightHandSidesAndAcceptsAnOutputBuffer) {
     constexpr idx n = 9;
-    const mat R = path_rate_matrix(n, 1.0, 0.8, 0.5);
+    const mat<real> R = path_rate_matrix(n, 1.0, 0.8, 0.5);
     const auto Z = factor(sparse_of(R));
-    mat B(n, 3, 0.0);
+    mat<real> B(n, 3, 0.0);
     for (idx column = 0; column < B.cols(); ++column) {
-        const vec b = ramp(n, static_cast<unsigned>(column));
+        const vec<real> b = ramp(n, static_cast<unsigned>(column));
         for (idx i = 0; i < n; ++i) {
             B(i, column) = b[i];
         }
     }
 
-    mat X;
+    mat<real> X;
     solve(Z, B, X);
     for (idx column = 0; column < B.cols(); ++column) {
-        vec b(n, 0.0);
+        vec<real> b(n, 0.0);
         for (idx i = 0; i < n; ++i) {
             b[i] = B(i, column);
         }
-        const vec expected = reference_solve(R, b, false);
+        const vec<real> expected = reference_solve(R, b, false);
         for (idx i = 0; i < n; ++i) {
             EXPECT_NEAR(X(i, column), expected[i], tolerance);
         }
@@ -167,14 +167,14 @@ TEST(Factor, SolvesSeveralRightHandSidesAndAcceptsAnOutputBuffer) {
 
 TEST(Factor, ExactInverseDiagonalUsesTheStoredFactor) {
     constexpr idx n = 11;
-    const mat R = path_rate_matrix(n, 1.0, 1.2, 0.35);
+    const mat<real> R = path_rate_matrix(n, 1.0, 1.2, 0.35);
     const spmat S = sparse_of(R);
     const array<idx> levels = natural_levels(n);
-    const vec expected = exact_inverse_diagonal(R);
+    const vec<real> expected = exact_inverse_diagonal(R);
 
     const auto Z_dense = factor(S);
     const auto Z_block = factor(S, blocks(levels));
-    for (const vec diagonal : {inverse_diagonal(Z_dense, n), inverse_diagonal(Z_block, n)}) {
+    for (const vec<real> diagonal : {inverse_diagonal(Z_dense, n), inverse_diagonal(Z_block, n)}) {
         for (idx i = 0; i < n; ++i) {
             EXPECT_NEAR(diagonal[i], expected[i], tolerance) << "entry " << i;
         }
@@ -183,12 +183,12 @@ TEST(Factor, ExactInverseDiagonalUsesTheStoredFactor) {
 
 TEST(Factor, SparseInverseDiagonalIsProbedExplicitly) {
     constexpr idx n = 20;
-    const mat R = path_rate_matrix(n, 1.0, 1.0, 0.3);
+    const mat<real> R = path_rate_matrix(n, 1.0, 1.0, 0.3);
     const spmat S = sparse_of(R);
     const auto Z = factor(S, sparse);
-    const vec diagonal =
+    const vec<real> diagonal =
         inverse_diagonal(Z, S, {}, inverse_diagonal_options{.probes = 800, .seed = 9});
-    const vec expected = exact_inverse_diagonal(R);
+    const vec<real> expected = exact_inverse_diagonal(R);
 
     real worst = 0.0;
     for (idx i = 0; i < n; ++i) {
@@ -200,7 +200,7 @@ TEST(Factor, SparseInverseDiagonalIsProbedExplicitly) {
 
 TEST(Factor, GraphDistanceLevelsFeedTheBlockFactorDirectly) {
     constexpr idx n = 14;
-    const mat R = path_rate_matrix(n, 1.0, 1.0, 0.45);
+    const mat<real> R = path_rate_matrix(n, 1.0, 1.0, 0.45);
     const spmat S = sparse_of(R);
     const array<idx> levels = graph_distance_levels(S, idx{0});
     const auto Z = factor(S, blocks(levels));
@@ -209,11 +209,11 @@ TEST(Factor, GraphDistanceLevelsFeedTheBlockFactorDirectly) {
 
 TEST(Factor, RefactoringASuffixMatchesAFreshFactorization) {
     constexpr idx n = 12;
-    const mat old_R = path_rate_matrix(n, 1.0, 1.0, 0.4);
+    const mat<real> old_R = path_rate_matrix(n, 1.0, 1.0, 0.4);
     const array<idx> levels = natural_levels(n);
     const auto Z = factor(sparse_of(old_R), blocks(levels));
 
-    mat R = old_R;
+    mat<real> R = old_R;
     R(9, 9) += 0.75;
     const array<idx> changed{9};
     suffix_reuse_report report;
@@ -228,8 +228,8 @@ TEST(Factor, RefactoringASuffixMatchesAFreshFactorization) {
 
 TEST(Factor, ConcreteFactorsAreCorrectableByWoodbury) {
     constexpr idx n = 10;
-    const mat old_R = path_rate_matrix(n, 1.0, 1.0, 0.4);
-    mat R = old_R;
+    const mat<real> old_R = path_rate_matrix(n, 1.0, 1.0, 0.4);
+    mat<real> R = old_R;
     R(4, 4) += 0.5;
     R(7, 7) += 0.25;
     const array<idx> changed{4, 7};
@@ -237,15 +237,15 @@ TEST(Factor, ConcreteFactorsAreCorrectableByWoodbury) {
     const woodbury_solver correction(Z,
                                      low_rank_difference(sparse_of(old_R), sparse_of(R), changed));
 
-    const vec b = ramp(n, 3);
-    const vec x = correction.solve(b);
-    const vec expected = reference_solve(R, b, false);
+    const vec<real> b = ramp(n, 3);
+    const vec<real> x = correction.solve(b);
+    const vec<real> expected = reference_solve(R, b, false);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], expected[i], tolerance);
     }
 
-    const vec corrected = correction.inverse_diagonal(inverse_diagonal(Z, n));
-    const vec expected_diagonal = exact_inverse_diagonal(R);
+    const vec<real> corrected = correction.inverse_diagonal(inverse_diagonal(Z, n));
+    const vec<real> expected_diagonal = exact_inverse_diagonal(R);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(corrected[i], expected_diagonal[i], tolerance);
     }
@@ -256,7 +256,7 @@ TEST(Factor, RejectsAnInvalidBlockLabellingAndNonPositiveSimilarityWeights) {
     const array<idx> short_levels{0, 1, 2};
     EXPECT_THROW(factor(R, blocks(short_levels)), std::invalid_argument);
 
-    vec h(6, 1.0);
+    vec<real> h(6, 1.0);
     h[2] = -1.0;
     EXPECT_THROW(factor(R, h), std::invalid_argument);
 }

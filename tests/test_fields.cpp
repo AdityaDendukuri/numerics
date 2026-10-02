@@ -9,7 +9,7 @@
 using namespace num;
 
 // Values written through operator()/fill are visible through as_vec() at the
-// grid's flat index -- i.e. the field's storage really is one num::vec.
+// grid's flat index -- i.e. the field's storage really is one num::vec<real>.
 TEST(scalar_field_3d, StorageRoundTrip) {
     scalar_field_3d f(4, 5, 6, 1.0f);
     EXPECT_EQ(f.size(), static_cast<idx>(4 * 5 * 6));

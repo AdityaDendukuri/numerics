@@ -13,18 +13,18 @@
 namespace num {
 
 /// Construct the selected standard basis vector in R^size.
-[[nodiscard]] inline vec unit_vector(idx size, idx index) {
+[[nodiscard]] inline vec<real> unit_vector(idx size, idx index) {
     if (index >= size) {
         throw std::out_of_range("unit_vector: index out of range");
     }
-    vec result(size, 0.0);
+    vec<real> result(size, 0.0);
     result[index] = 1.0;
     return result;
 }
 
 /// Construct the square identity matrix of the requested size.
-[[nodiscard]] inline mat identity(idx size) {
-    mat result(size, size, 0.0);
+[[nodiscard]] inline mat<real> identity(idx size) {
+    mat<real> result(size, size, 0.0);
     for (idx index = 0; index < size; ++index) {
         result(index, index) = 1.0;
     }
@@ -32,33 +32,33 @@ namespace num {
 }
 
 /// Construct an n x m matrix filled with zeros.
-[[nodiscard]] inline mat zeros(idx rows, idx cols) {
-    return mat(rows, cols, 0.0);
+[[nodiscard]] inline mat<real> zeros(idx rows, idx cols) {
+    return mat<real>(rows, cols, 0.0);
 }
 
 /// Construct a length-n vector filled with zeros.
-[[nodiscard]] inline vec zeros(idx size) {
-    return vec(size, 0.0);
+[[nodiscard]] inline vec<real> zeros(idx size) {
+    return vec<real>(size, 0.0);
 }
 
 /// Construct an n x m matrix filled with ones.
-[[nodiscard]] inline mat ones(idx rows, idx cols) {
-    return mat(rows, cols, 1.0);
+[[nodiscard]] inline mat<real> ones(idx rows, idx cols) {
+    return mat<real>(rows, cols, 1.0);
 }
 
 /// Construct a length-n vector filled with ones.
-[[nodiscard]] inline vec ones(idx size) {
-    return vec(size, 1.0);
+[[nodiscard]] inline vec<real> ones(idx size) {
+    return vec<real>(size, 1.0);
 }
 
 /// Construct an n x n identity matrix.
-[[nodiscard]] inline mat eye(idx size) {
+[[nodiscard]] inline mat<real> eye(idx size) {
     return identity(size);
 }
 
 /// Construct an n x m identity-like matrix.
-[[nodiscard]] inline mat eye(idx rows, idx cols) {
-    mat result(rows, cols, 0.0);
+[[nodiscard]] inline mat<real> eye(idx rows, idx cols) {
+    mat<real> result(rows, cols, 0.0);
     const idx k = std::min(rows, cols);
     for (idx i = 0; i < k; ++i) {
         result(i, i) = 1.0;
@@ -67,25 +67,25 @@ namespace num {
 }
 
 /// Sum of all elements in a matrix.
-[[nodiscard]] inline real accu(const mat &A) {
+[[nodiscard]] inline real accu(const mat<real> &A) {
     real sum = 0.0;
     for (idx i = 0; i < A.size(); ++i) sum += A.data()[i];
     return sum;
 }
 
 /// Sum of all elements in a vector.
-[[nodiscard]] inline real accu(const vec &v) {
+[[nodiscard]] inline real accu(const vec<real> &v) {
     real sum = 0.0;
     for (idx i = 0; i < v.size(); ++i) sum += v[i];
     return sum;
 }
 
 /// Extract a consecutive block of columns from an implicit identity matrix.
-[[nodiscard]] inline mat identity_columns(idx size, idx first, idx count) {
+[[nodiscard]] inline mat<real> identity_columns(idx size, idx first, idx count) {
     if (first > size || count > size - first) {
         throw std::out_of_range("identity_columns: column range out of bounds");
     }
-    mat result(size, count, 0.0);
+    mat<real> result(size, count, 0.0);
     for (idx column = 0; column < count; ++column) {
         result(first + column, column) = 1.0;
     }
@@ -95,9 +95,9 @@ namespace num {
 /// Extract the main diagonal up to the smaller matrix dimension.
 template <class M>
 requires repr::dense_row_major<M>
-[[nodiscard]] inline vec diagonal(const M &matrix) {
+[[nodiscard]] inline vec<real> diagonal(const M &matrix) {
     const idx size = std::min(matrix.rows(), matrix.cols());
-    vec result(size, 0.0);
+    vec<real> result(size, 0.0);
     for (idx index = 0; index < size; ++index) {
         result[index] = matrix(index, index);
     }
@@ -105,8 +105,8 @@ requires repr::dense_row_major<M>
 }
 
 /// Construct a square matrix with the supplied main diagonal.
-[[nodiscard]] inline mat diagonal_matrix(view<const real> values) {
-    mat result(values.size(), values.size(), 0.0);
+[[nodiscard]] inline mat<real> diagonal_matrix(view<const real> values) {
+    mat<real> result(values.size(), values.size(), 0.0);
     for (idx index = 0; index < values.size(); ++index) {
         result(index, index) = values[index];
     }
@@ -116,8 +116,8 @@ requires repr::dense_row_major<M>
 /// Return the transpose of a dense matrix.
 template <class M>
 requires repr::dense_row_major<M>
-[[nodiscard]] inline mat transpose(const M &matrix) {
-    mat result(matrix.cols(), matrix.rows(), 0.0);
+[[nodiscard]] inline mat<real> transpose(const M &matrix) {
+    mat<real> result(matrix.cols(), matrix.rows(), 0.0);
     for (idx row = 0; row < matrix.rows(); ++row) {
         for (idx column = 0; column < matrix.cols(); ++column) {
             result(column, row) = matrix(row, column);
@@ -127,7 +127,7 @@ requires repr::dense_row_major<M>
 }
 
 /// Replace a matrix's full main diagonal.
-inline void set_diagonal(mat &matrix, view<const real> values) {
+inline void set_diagonal(mat<real> &matrix, view<const real> values) {
     if (values.size() != std::min(matrix.rows(), matrix.cols())) {
         throw std::invalid_argument("set_diagonal: diagonal size mismatch");
     }
@@ -137,7 +137,7 @@ inline void set_diagonal(mat &matrix, view<const real> values) {
 }
 
 /// Multiply a vector elementwise by matching weights in place.
-inline void scale_elements(vec &vector, view<const real> weights) {
+inline void scale_elements(vec<real> &vector, view<const real> weights) {
     if (vector.size() != weights.size()) {
         throw std::invalid_argument("scale_elements: vector sizes must match");
     }
@@ -147,7 +147,7 @@ inline void scale_elements(vec &vector, view<const real> weights) {
 }
 
 /// Divide a vector elementwise by matching divisors in place.
-inline void divide_elements(vec &vector, view<const real> divisors) {
+inline void divide_elements(vec<real> &vector, view<const real> divisors) {
     if (vector.size() != divisors.size()) {
         throw std::invalid_argument("divide_elements: vector sizes must match");
     }
@@ -157,7 +157,7 @@ inline void divide_elements(vec &vector, view<const real> divisors) {
 }
 
 /// Multiply each matrix row by its corresponding weight in place.
-inline void scale_rows(mat &matrix, view<const real> weights) {
+inline void scale_rows(mat<real> &matrix, view<const real> weights) {
     if (matrix.rows() != weights.size()) {
         throw std::invalid_argument("scale_rows: weight count must match matrix rows");
     }
@@ -169,7 +169,7 @@ inline void scale_rows(mat &matrix, view<const real> weights) {
 }
 
 /// Divide each matrix row by its corresponding divisor in place.
-inline void divide_rows(mat &matrix, view<const real> divisors) {
+inline void divide_rows(mat<real> &matrix, view<const real> divisors) {
     if (matrix.rows() != divisors.size()) {
         throw std::invalid_argument("divide_rows: divisor count must match matrix rows");
     }

@@ -23,13 +23,13 @@ int size(MPI_Comm comm) {
     return s;
 }
 
-real dot(const vec &x, const vec &y, MPI_Comm comm) {
+real dot(const vec<real> &x, const vec<real> &y, MPI_Comm comm) {
     real local = num::dot(x, y), global;
     MPI_Allreduce(&local, &global, 1, MPI_DOUBLE, MPI_SUM, comm);
     return global;
 }
 
-real norm(const vec &x, MPI_Comm comm) {
+real norm(const vec<real> &x, MPI_Comm comm) {
     real local_sq = num::dot(x, x), global_sq;
     MPI_Allreduce(&local_sq, &global_sq, 1, MPI_DOUBLE, MPI_SUM, comm);
     return std::sqrt(global_sq);

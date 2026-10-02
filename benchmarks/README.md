@@ -81,7 +81,7 @@ BM_Matmul_Scalar_Blocked/128               0.50         24.0 KB        384.6 KB 
 
 - `allocs/iter ≈ 0.5` means roughly half an allocation per iteration.
   Google Benchmark's memory pass runs 16 iterations of the benchmark function.
-  `0.5 × 16 = 8` total allocations — these are the three `mat` objects
+  `0.5 × 16 = 8` total allocations — these are the three `mat<real>` objects
   (`A`, `B`, `C`) constructed *once before the timing loop*, plus a few bytes of
   benchmark-internal overhead.
 - `bytes/iter = 24.0 KB` = 393 KB ÷ 16 iterations.  Three 128×128 `double`
@@ -175,7 +175,7 @@ cmake -B build-san \
 ```
 ==12345==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x...
 READ of size 8 at 0x... thread T0
-    #0 0x... in num::matmul(mat const&, ...) bench_linalg.cpp:52
+    #0 0x... in num::matmul(mat<real> const&, ...) bench_linalg.cpp:52
     #1 0x... in BM_Matmul_Naive ...
 ```
 

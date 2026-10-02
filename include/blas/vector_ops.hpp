@@ -27,7 +27,7 @@ inline void warn_unavailable() {
 #endif
 }
 
-inline void scale(vec &v, real alpha) noexcept {
+inline void scale(vec<real> &v, real alpha) noexcept {
 #if defined(NUMERICS_HAS_BLAS)
     cblas_dscal(static_cast<int>(v.size()), alpha, v.data(), 1);
 #else
@@ -36,7 +36,7 @@ inline void scale(vec &v, real alpha) noexcept {
 #endif
 }
 
-inline void axpy(real alpha, const vec &x, vec &y) noexcept {
+inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept {
 #if defined(NUMERICS_HAS_BLAS)
     cblas_daxpy(static_cast<int>(x.size()), alpha, x.data(), 1, y.data(), 1);
 #else
@@ -45,7 +45,7 @@ inline void axpy(real alpha, const vec &x, vec &y) noexcept {
 #endif
 }
 
-[[nodiscard]] inline real dot(const vec &x, const vec &y) noexcept {
+[[nodiscard]] inline real dot(const vec<real> &x, const vec<real> &y) noexcept {
 #if defined(NUMERICS_HAS_BLAS)
     return cblas_ddot(static_cast<int>(x.size()), x.data(), 1, y.data(), 1);
 #else
@@ -54,7 +54,7 @@ inline void axpy(real alpha, const vec &x, vec &y) noexcept {
 #endif
 }
 
-[[nodiscard]] inline real norm(const vec &x) noexcept {
+[[nodiscard]] inline real norm(const vec<real> &x) noexcept {
 #if defined(NUMERICS_HAS_BLAS)
     return cblas_dnrm2(static_cast<int>(x.size()), x.data(), 1);
 #else
@@ -65,7 +65,7 @@ inline void axpy(real alpha, const vec &x, vec &y) noexcept {
 
 /// @brief `z <- x + y`. No single BLAS call does an out-of-place add; a plain
 /// loop is exactly as fast as `dcopy`+`daxpy` and skips the extra pass.
-inline void add(const vec &x, const vec &y, vec &z) noexcept {
+inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept {
     const idx n = x.size();
     const real *xd = x.data();
     const real *yd = y.data();

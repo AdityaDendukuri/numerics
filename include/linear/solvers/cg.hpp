@@ -114,7 +114,7 @@ namespace unsafe {
 /// On an indefinite or non-symmetric matrix the iteration breaks down silently. Runs through
 /// `num::accel`; `num::unsafe::cuda::cg` works on device buffers.
 /// @return `solver_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
-inline solver_result cg(const mat &A, const vec &b, vec &x, cg_options options = {}) {
+inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg_options options = {}) {
     const idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {
         throw std::invalid_argument("cg: incompatible matrix and vector dimensions");
@@ -123,9 +123,9 @@ inline solver_result cg(const mat &A, const vec &b, vec &x, cg_options options =
     // The shared iteration, with the matrix supplied as a matvec. `num::accel`
     // selects how that product is formed; the level-1 work is memory bound and
     // inlines from the kernel.
-    vec work(3 * n);
-    vec in(n);
-    vec out(n);
+    vec<real> work(3 * n);
+    vec<real> in(n);
+    vec<real> out(n);
     const auto apply = [&A, &in, &out, n](const real *src, real *dst) {
         std::copy_n(src, n, in.data());
         matvec(A, in, out);
@@ -147,17 +147,17 @@ namespace cuda {
 /// host memory. It therefore keeps the iteration written out, mirroring
 /// `num::unsafe::cg`'s structure with `num::cuda::*` in place of `num::accel::*`.
 /// @return `solver_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
-inline solver_result cg(const mat &A, const vec &b, vec &x, cg_options options = {}) {
+inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg_options options = {}) {
     const idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {
         throw std::invalid_argument("cg: incompatible matrix and vector dimensions");
     }
 
-    const_cast<mat &>(A).to_gpu();
-    const_cast<vec &>(b).to_gpu();
+    const_cast<mat<real> &>(A).to_gpu();
+    const_cast<vec<real> &>(b).to_gpu();
     x.to_gpu();
 
-    vec r(n), p(n), Ap(n);
+    vec<real> r(n), p(n), Ap(n);
     r.to_gpu();
     p.to_gpu();
     Ap.to_gpu();

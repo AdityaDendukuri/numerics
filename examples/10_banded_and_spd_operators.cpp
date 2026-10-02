@@ -21,8 +21,8 @@ int main() {
         }
     }
 
-    vec b(n, 1.0);
-    vec x_sol(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x_sol(n, 0.0);
     banded_solve(B, b, x_sol);
 
     std::cout << "banded mat (n=" << n << ", kl=" << kl << ", ku=" << ku

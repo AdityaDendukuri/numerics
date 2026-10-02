@@ -29,15 +29,15 @@ namespace detail {
 /// applied without forming either the product or its square root.
 class preconditioned_symmetric_operator final {
   public:
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
 
     preconditioned_symmetric_operator(const spmat &matrix, const grounded_approx_chol_factor &c)
         : matrix_(matrix), factor_(c) {}
 
-    void apply(const vec &input, vec &output) const {
-        const vec upper = factor_.solve_upper(input);
-        vec product(rows(), 0.0);
+    void apply(const vec<real> &input, vec<real> &output) const {
+        const vec<real> upper = factor_.solve_upper(input);
+        vec<real> product(rows(), 0.0);
         sparse_matvec(matrix_, upper, product);
         output = factor_.solve_lower(product);
     }
@@ -68,7 +68,7 @@ class preconditioned_symmetric_operator final {
 /// @throws std::invalid_argument If no probes are requested.
 /// @throws std::runtime_error If `matrix` is not a nonsingular M-matrix.
 template <retained_factorization F>
-[[nodiscard]] vec inverse_diagonal(const F &factor, const spmat &matrix,
+[[nodiscard]] vec<real> inverse_diagonal(const F &factor, const spmat &matrix,
                                    view<const real> symmetrizer = {},
                                    inverse_diagonal_options options = {}) {
     const idx n = matrix.n_rows();
@@ -85,15 +85,15 @@ template <retained_factorization F>
 
     // `row_scale` is H with the transformed matrix H A H^-1; `congruence` is W
     // with the grounded Laplacian W S W. Reversibly both are sqrt(pi).
-    vec row_scale(n, 0.0), congruence(n, 0.0);
+    vec<real> row_scale(n, 0.0), congruence(n, 0.0);
     if (reversible) {
         for (idx j = 0; j < n; ++j) {
             row_scale[j] = symmetrizer[j];
             congruence[j] = symmetrizer[j];
         }
     } else {
-        const vec ones(n, 1.0);
-        vec q(n, 0.0), r(n, 0.0);
+        const vec<real> ones(n, 1.0);
+        vec<real> q(n, 0.0), r(n, 0.0);
         detail::apply_solve(factor, ones, q);
         detail::apply_solve_transpose(factor, ones, r);
         for (idx j = 0; j < n; ++j) {
@@ -107,7 +107,7 @@ template <retained_factorization F>
 
     // `sparse_diagonal_similarity` forms D^-1 A D, so the weight it takes is the
     // reciprocal of the row scaling H above.
-    vec column_scale(n, 0.0);
+    vec<real> column_scale(n, 0.0);
     for (idx j = 0; j < n; ++j) {
         column_scale[j] = 1.0 / row_scale[j];
     }
@@ -127,26 +127,26 @@ template <retained_factorization F>
         scaled_factor.emplace(scaled);
     }
 
-    const mat probe = gaussian_probe(n, options.probes, options.seed);
-    mat probed(n, options.probes, 0.0);
+    const mat<real> probe = gaussian_probe(n, options.probes, options.seed);
+    mat<real> probed(n, options.probes, 0.0);
     for (idx column = 0; column < options.probes; ++column) {
-        vec direction(n, 0.0);
+        vec<real> direction(n, 0.0);
         for (idx j = 0; j < n; ++j) {
             direction[j] = probe(j, column);
         }
-        vec value(n, 0.0);
+        vec<real> value(n, 0.0);
         if (reversible) {
             const auto action = inverse_sqrt_lanczos(preconditioned, direction, options.tolerance,
                                                      options.lanczos_steps);
-            const vec unscaled = approximate.solve_upper(action.value);
+            const vec<real> unscaled = approximate.solve_upper(action.value);
             for (idx j = 0; j < n; ++j) {
                 value[j] = row_scale[j] * unscaled[j];
             }
         } else {
             const auto action =
                 sqrt_lanczos(preconditioned, direction, options.tolerance, options.lanczos_steps);
-            const vec factored = approximate.apply_lower(action.value);
-            vec rhs(n, 0.0);
+            const vec<real> factored = approximate.apply_lower(action.value);
+            vec<real> rhs(n, 0.0);
             for (idx j = 0; j < n; ++j) {
                 rhs[j] = factored[j] / congruence[j];
             }

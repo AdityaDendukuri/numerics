@@ -13,7 +13,7 @@ namespace seq {
 
 static constexpr double TWO_PI = 6.283185307179586476925286766559;
 
-inline void bit_reverse(num::cvec &a) {
+inline void bit_reverse(num::vec<cplx> &a) {
     num::idx n = a.size();
     for (num::idx i = 1, j = 0; i < n; ++i) {
         num::idx bit = n >> 1;
@@ -27,7 +27,7 @@ inline void bit_reverse(num::cvec &a) {
     }
 }
 
-inline void cooley_tukey(num::cvec &a, bool invert) {
+inline void cooley_tukey(num::vec<cplx> &a, bool invert) {
     num::idx n = a.size();
     if (n == 0 || (n & (n - 1))) {
         throw std::invalid_argument("FFT: length must be a power of two");
@@ -49,23 +49,23 @@ inline void cooley_tukey(num::cvec &a, bool invert) {
     }
 }
 
-inline void fft(const num::cvec &in, num::cvec &out) {
+inline void fft(const num::vec<cplx> &in, num::vec<cplx> &out) {
     for (num::idx i = 0; i < in.size(); ++i) {
         out[i] = in[i];
     }
     cooley_tukey(out, false);
 }
 
-inline void ifft(const num::cvec &in, num::cvec &out) {
+inline void ifft(const num::vec<cplx> &in, num::vec<cplx> &out) {
     for (num::idx i = 0; i < in.size(); ++i) {
         out[i] = in[i];
     }
     cooley_tukey(out, true);
 }
 
-inline void rfft(const num::vec &in, num::cvec &out) {
+inline void rfft(const num::vec<real> &in, num::vec<cplx> &out) {
     num::idx n = in.size();
-    num::cvec tmp(n, num::cplx{0, 0});
+    num::vec<cplx> tmp(n, num::cplx{0, 0});
     for (num::idx i = 0; i < n; ++i) {
         tmp[i] = {in[i], 0.0};
     }
@@ -75,8 +75,8 @@ inline void rfft(const num::vec &in, num::cvec &out) {
     }
 }
 
-inline void irfft(const num::cvec &in, int n, num::vec &out) {
-    num::cvec tmp(static_cast<num::idx>(n), num::cplx{0, 0});
+inline void irfft(const num::vec<cplx> &in, int n, num::vec<real> &out) {
+    num::vec<cplx> tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (num::idx k = 0; k < static_cast<num::idx>((n / 2) + 1); ++k) {
         tmp[k] = in[k];
     }
@@ -112,7 +112,7 @@ struct fft_plan_impl : public num::spectral::fft_plan_impl {
         }
     }
 
-    void execute(const num::cvec &in, num::cvec &out) const override {
+    void execute(const num::vec<cplx> &in, num::vec<cplx> &out) const override {
         for (num::idx i = 0; i < static_cast<num::idx>(n); ++i) {
             out[i] = in[i];
         }

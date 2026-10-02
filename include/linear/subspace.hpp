@@ -15,20 +15,20 @@ namespace num::dispatch::subspace {
 
 /// @brief Modified Gram–Schmidt orthogonalization against basis vectors \f$\mathbf{v}_0, \dots,
 /// \mathbf{v}_{k-1}\f$.
-[[nodiscard]] real mgs_orthogonalize(const array<vec> &basis, vec &v,
+[[nodiscard]] real mgs_orthogonalize(const array<vec<real>> &basis, vec<real> &v,
                                      array<real> &h, idx k);
 
 /// @brief Modified Gram–Schmidt orthogonalization against columns \f$0, \dots, k-1\f$ of a
 /// row-major matrix.
-[[nodiscard]] real mgs_orthogonalize(const mat &basis, idx k, vec &v);
+[[nodiscard]] real mgs_orthogonalize(const mat<real> &basis, idx k, vec<real> &v);
 
 /// @brief One Arnoldi iteration step: expands orthonormal Krylov basis \f$V_k \to V_{k+1}\f$.
 template <class Op>
-requires requires(const Op &A, const vec &x, vec &y) {
+requires requires(const Op &A, const vec<real> &x, vec<real> &y) {
     A.apply(x, y);
 }
-[[nodiscard]] real arnoldi_step(const Op &A, array<vec> &basis, array<real> &h,
-                                idx k, vec &scratch, real breakdown_tol = real(1e-14)) {
+[[nodiscard]] real arnoldi_step(const Op &A, array<vec<real>> &basis, array<real> &h,
+                                idx k, vec<real> &scratch, real breakdown_tol = real(1e-14)) {
     // w <- A*v_k
     A.apply(basis[k], scratch);
 
@@ -45,7 +45,7 @@ requires requires(const Op &A, const vec &x, vec &y) {
     return beta;
 }
 
-inline real mgs_orthogonalize(const array<vec> &basis, vec &v, array<real> &h,
+inline real mgs_orthogonalize(const array<vec<real>> &basis, vec<real> &v, array<real> &h,
                               idx k) {
     for (idx i = 0; i < k; ++i) {
         // h_i <- v_i^T*v
@@ -56,7 +56,7 @@ inline real mgs_orthogonalize(const array<vec> &basis, vec &v, array<real> &h,
     return norm(v);
 }
 
-inline real mgs_orthogonalize(const mat &basis, idx k, vec &v) {
+inline real mgs_orthogonalize(const mat<real> &basis, idx k, vec<real> &v) {
     const idx n = basis.rows();
     // v <- (I - V_k*V_k^T)v, in modified Gram--Schmidt order
     kernel::mgs_columns(v.data(), basis.data(), basis.cols(), n, k);

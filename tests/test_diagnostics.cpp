@@ -76,7 +76,7 @@ TEST(Diagnostics, SamplingRunsWhenCompiledInAndThePresetAsksForIt) {
         preset_restorer restore;
         set_preset(preset::strict);
 
-        mat indefinite(2, 2, 0.0);
+        mat<real> indefinite(2, 2, 0.0);
         indefinite(0, 0) = -5.0;
         indefinite(1, 1) = 1.0;
         operators::dense_op op(indefinite);

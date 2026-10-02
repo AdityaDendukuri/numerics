@@ -13,35 +13,35 @@ namespace backends {
 namespace fftw {
 
 // std::complex<double> is layout-compatible with fftw_complex (double[2])
-inline fftw_complex *fc(num::cvec &v) {
+inline fftw_complex *fc(num::vec<cplx> &v) {
     return reinterpret_cast<fftw_complex *>(v.data());
 }
-inline const fftw_complex *fc(const num::cvec &v) {
+inline const fftw_complex *fc(const num::vec<cplx> &v) {
     return reinterpret_cast<const fftw_complex *>(v.data());
 }
 
-inline void fft(const num::cvec &in, num::cvec &out) {
+inline void fft(const num::vec<cplx> &in, num::vec<cplx> &out) {
     fftw_plan p = fftw_plan_dft_1d(static_cast<int>(in.size()), const_cast<fftw_complex *>(fc(in)),
                                    fc(out), FFTW_FORWARD, FFTW_ESTIMATE);
     fftw_execute(p);
     fftw_destroy_plan(p);
 }
 
-inline void ifft(const num::cvec &in, num::cvec &out) {
+inline void ifft(const num::vec<cplx> &in, num::vec<cplx> &out) {
     fftw_plan p = fftw_plan_dft_1d(static_cast<int>(in.size()), const_cast<fftw_complex *>(fc(in)),
                                    fc(out), FFTW_BACKWARD, FFTW_ESTIMATE);
     fftw_execute(p);
     fftw_destroy_plan(p);
 }
 
-inline void rfft(const num::vec &in, num::cvec &out) {
+inline void rfft(const num::vec<real> &in, num::vec<cplx> &out) {
     fftw_plan p = fftw_plan_dft_r2c_1d(static_cast<int>(in.size()), const_cast<double *>(in.data()),
                                        fc(out), FFTW_ESTIMATE);
     fftw_execute(p);
     fftw_destroy_plan(p);
 }
 
-inline void irfft(const num::cvec &in, int n, num::vec &out) {
+inline void irfft(const num::vec<cplx> &in, int n, num::vec<real> &out) {
     fftw_plan p =
         fftw_plan_dft_c2r_1d(n, const_cast<fftw_complex *>(fc(in)), out.data(), FFTW_ESTIMATE);
     fftw_execute(p);
@@ -54,14 +54,14 @@ struct fft_plan_impl : public num::spectral::fft_plan_impl {
 
     fft_plan_impl(int n_, bool forward) : n(n_) {
         // Allocate dummy arrays -- FFTW_MEASURE overwrites them during planning
-        num::cvec tmp_in(n_, num::cplx{0, 0}), tmp_out(n_, num::cplx{0, 0});
+        num::vec<cplx> tmp_in(n_, num::cplx{0, 0}), tmp_out(n_, num::cplx{0, 0});
         plan = fftw_plan_dft_1d(n_, fc(tmp_in), fc(tmp_out), forward ? FFTW_FORWARD : FFTW_BACKWARD,
                                 FFTW_MEASURE);
     }
 
     ~fft_plan_impl() override { fftw_destroy_plan(plan); }
 
-    void execute(const num::cvec &in, num::cvec &out) const override {
+    void execute(const num::vec<cplx> &in, num::vec<cplx> &out) const override {
         fftw_execute_dft(plan, const_cast<fftw_complex *>(fc(in)),
                          const_cast<fftw_complex *>(fc(out)));
     }

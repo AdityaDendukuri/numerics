@@ -25,7 +25,7 @@
 using namespace num;
 
 template <class Op>
-concept CgCallable = requires(const Op &A, const vec &b, vec &x) {
+concept CgCallable = requires(const Op &A, const vec<real> &b, vec<real> &x) {
     cg(A, b, x);
 };
 
@@ -34,13 +34,13 @@ static_assert(!CgCallable<operators::dense_op>);
 // Conjugate Gradient
 
 TEST(Resolvent, DenseSolve) {
-    mat A(2, 2, 0.0);
+    mat<real> A(2, 2, 0.0);
     A(0, 0) = 1.0;
     A(0, 1) = 2.0;
     A(1, 0) = 3.0;
     A(1, 1) = 4.0;
 
-    vec b{1.0, 2.0};
+    vec<real> b{1.0, 2.0};
     cplx s(2.0, 1.0);
 
     auto x = resolvent_solve(s, A, b);
@@ -57,7 +57,7 @@ TEST(Resolvent, DenseSolve) {
 
 TEST(CG, Small3x3) {
     // A = [4 1 0; 1 4 1; 0 1 4], b = [1; 2; 3]  =>  x = [5/28, 2/7, 19/28]
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(1, 0) = 1;
@@ -66,8 +66,8 @@ TEST(CG, Small3x3) {
     A(2, 1) = 1;
     A(2, 2) = 4;
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     solver_result r = cg(assume_spd(A), b, x);
 
     EXPECT_TRUE(r.converged);
@@ -79,7 +79,7 @@ TEST(CG, Small3x3) {
 
 TEST(CG, DiagonalDominant5x5) {
     idx n = 5;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 10.0;
         if (i > 0) {
@@ -89,13 +89,13 @@ TEST(CG, DiagonalDominant5x5) {
             A(i, i + 1) = 1.0;
         }
     }
-    vec b(n, 1.0), x(n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0);
     solver_result r = cg(assume_spd(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
 
-    vec Ax(n);
+    vec<real> Ax(n);
     matvec(A, x, Ax);
     real err = 0;
     for (idx i = 0; i < n; ++i) {
@@ -106,12 +106,12 @@ TEST(CG, DiagonalDominant5x5) {
 
 TEST(CG, ConvergesWithinN) {
     idx n = 10;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = static_cast<real>(i + 1);
     }
 
-    vec b(n), x(n, 0.0);
+    vec<real> b(n), x(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         b[i] = static_cast<real>(i + 1);
     }
@@ -125,7 +125,7 @@ TEST(CG, ConvergesWithinN) {
 }
 
 TEST(MatrixProperties, CheckedSymmetricAndSPD) {
-    mat A(2, 2, 0.0);
+    mat<real> A(2, 2, 0.0);
     A(0, 0) = 2.0;
     A(0, 1) = -1.0;
     A(1, 0) = -1.0;
@@ -141,13 +141,13 @@ TEST(MatrixProperties, CheckedSymmetricAndSPD) {
 }
 
 TEST(MatrixProperties, CheckedConstructorsRejectInvalidInput) {
-    mat nonsym(2, 2, 0.0);
+    mat<real> nonsym(2, 2, 0.0);
     nonsym(0, 0) = 1.0;
     nonsym(0, 1) = 2.0;
     nonsym(1, 0) = 0.0;
     nonsym(1, 1) = 1.0;
 
-    mat indefinite(2, 2, 0.0);
+    mat<real> indefinite(2, 2, 0.0);
     indefinite(0, 0) = 1.0;
     indefinite(1, 1) = -1.0;
 
@@ -157,13 +157,13 @@ TEST(MatrixProperties, CheckedConstructorsRejectInvalidInput) {
     EXPECT_THROW((void)linear::make_spd(indefinite), std::invalid_argument);
 }
 
-static_assert(vector_space<vec>);
-static_assert(repr::contiguous<vec>);
-static_assert(matrix_space<mat>);
-static_assert(repr::dense_row_major<mat>);
+static_assert(vector_space<vec<real>>);
+static_assert(repr::contiguous<vec<real>>);
+static_assert(matrix_space<mat<real>>);
+static_assert(repr::dense_row_major<mat<real>>);
 
 TEST(CG, DenseOperator) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(1, 0) = 1;
@@ -177,8 +177,8 @@ TEST(CG, DenseOperator) {
     static_assert(self_adjoint_operator<decltype(num::assume_symmetric(op))>);
     static_assert(spd_operator<decltype(num::assume_spd(op))>);
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     solver_result r = cg(num::assume_spd(op), b, x);
 
     EXPECT_TRUE(r.converged);
@@ -189,7 +189,7 @@ TEST(CG, DenseOperator) {
 }
 
 TEST(CG, CheckedSPDMatrix) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(1, 0) = 1;
@@ -198,8 +198,8 @@ TEST(CG, CheckedSPDMatrix) {
     A(2, 1) = 1;
     A(2, 2) = 4;
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     const solver_result r = cg(linear::make_spd(A), b, x);
 
     EXPECT_TRUE(r.converged);
@@ -209,14 +209,14 @@ TEST(CG, CheckedSPDMatrix) {
 }
 
 TEST(GMRES, NonSymmetric2x2Dense) {
-    mat A(2, 2, 0.0);
+    mat<real> A(2, 2, 0.0);
     A(0, 0) = 3.0;
     A(0, 1) = 1.0;
     A(1, 0) = 0.0;
     A(1, 1) = 2.0;
 
-    vec b{5.0, 4.0};
-    vec x(2, 0.0);
+    vec<real> b{5.0, 4.0};
+    vec<real> x(2, 0.0);
     const solver_result r = gmres(A, b, x, {.tolerance = 1e-12, .max_iterations = 20});
 
     EXPECT_TRUE(r.converged);
@@ -232,8 +232,8 @@ TEST(CG, SparseOperator) {
     static_assert(linear_operator<operators::sparse_op>);
     static_assert(spd_operator<decltype(num::assume_spd(op))>);
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     solver_result r = cg(num::assume_spd(op), b, x, {.tolerance = 1e-10, .max_iterations = 100});
 
     EXPECT_TRUE(r.converged);
@@ -245,15 +245,15 @@ TEST(CG, SparseOperator) {
 
 TEST(Operators, CallableOperator) {
     auto op = operators::make_op(
-        [](const vec &x, vec &y) {
+        [](const vec<real> &x, vec<real> &y) {
             y[0] = 2.0 * x[0];
             y[1] = 3.0 * x[1];
         },
         2);
     static_assert(linear_operator<decltype(op)>);
 
-    vec x{4.0, 5.0};
-    vec y;
+    vec<real> x{4.0, 5.0};
+    vec<real> y;
     op.apply(x, y);
 
     EXPECT_EQ(op.rows(), 2);
@@ -269,13 +269,13 @@ TEST(PCG, jacobi_preconditioner) {
                                          {4.0, 1.0, 1.0, 4.0, 1.0, 1.0, 4.0, 1.0, 1.0, 4.0});
     operators::sparse_op op(A);
     auto M = make_jacobi_preconditioner(A);
-    vec b{1.0, 2.0, 3.0, 4.0};
-    vec x(4, 0.0);
+    vec<real> b{1.0, 2.0, 3.0, 4.0};
+    vec<real> x(4, 0.0);
 
     solver_result r = pcg(num::assume_spd(op), M, b, x, {.tolerance = 1e-10, .max_iterations = 100});
     EXPECT_TRUE(r.converged);
 
-    vec Ax(4);
+    vec<real> Ax(4);
     sparse_matvec(A, x, Ax);
     for (idx i = 0; i < 4; ++i) {
         EXPECT_NEAR(Ax[i], b[i], 1e-9);
@@ -283,19 +283,19 @@ TEST(PCG, jacobi_preconditioner) {
 }
 
 TEST(PCG, JacobiPreconditionerRejectsNonPositiveDiagonal) {
-    EXPECT_THROW((void)jacobi_preconditioner(vec{1.0, -0.5}), std::invalid_argument);
-    EXPECT_THROW((void)jacobi_preconditioner(vec{1.0, 0.0}), std::invalid_argument);
+    EXPECT_THROW((void)jacobi_preconditioner(vec<real>{1.0, -0.5}), std::invalid_argument);
+    EXPECT_THROW((void)jacobi_preconditioner(vec<real>{1.0, 0.0}), std::invalid_argument);
 }
 
 TEST(MINRES, SymmetricIndefiniteOperator) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 2.0;
     A(1, 1) = -1.0;
     A(2, 2) = 3.0;
 
     operators::dense_op op(A);
-    vec b{2.0, -2.0, 6.0};
-    vec x(3, 0.0);
+    vec<real> b{2.0, -2.0, 6.0};
+    vec<real> x(3, 0.0);
 
     solver_result r = minres(num::assume_symmetric(op), b, x, {.tolerance = 1e-10, .max_iterations = 10});
     EXPECT_TRUE(r.converged);
@@ -308,8 +308,8 @@ TEST(PDEOperators, BackwardEulerOperatorIsSPD) {
     auto A = pde::backward_euler_operator(4, 0.1);
     static_assert(spd_operator<decltype(A)>);
 
-    vec b(A.rows(), 1.0);
-    vec x(A.rows(), 0.0);
+    vec<real> b(A.rows(), 1.0);
+    vec<real> x(A.rows(), 0.0);
     solver_result r = cg(A, b, x, {.tolerance = 1e-10, .max_iterations = 100}); // A is already an SPD-tagged operator
 
     EXPECT_TRUE(r.converged);
@@ -319,8 +319,8 @@ TEST(PDEOperators, BackwardEulerOperatorIsSPD) {
 // Thomas algorithm
 
 TEST(Thomas, Small4x4) {
-    vec a{-1.0, -1.0, -1.0}, b{2.0, 2.0, 2.0, 2.0}, c{-1.0, -1.0, -1.0};
-    vec d{1.0, 0.0, 0.0, 1.0}, x(4);
+    vec<real> a{-1.0, -1.0, -1.0}, b{2.0, 2.0, 2.0, 2.0}, c{-1.0, -1.0, -1.0};
+    vec<real> d{1.0, 0.0, 0.0, 1.0}, x(4);
     thomas(a, b, c, d, x);
     for (idx i = 0; i < 4; ++i) {
         EXPECT_NEAR(x[i], 1.0, 1e-10);
@@ -329,7 +329,7 @@ TEST(Thomas, Small4x4) {
 
 TEST(Thomas, Laplacian1D) {
     idx n = 10;
-    vec a(n - 1, -1.0), b(n, 2.0), c(n - 1, -1.0), d(n, 1.0), x(n);
+    vec<real> a(n - 1, -1.0), b(n, 2.0), c(n - 1, -1.0), d(n, 1.0), x(n);
     thomas(a, b, c, d, x);
     for (idx i = 0; i < n; ++i) {
         real Ax = b[i] * x[i];
@@ -344,7 +344,7 @@ TEST(Thomas, Laplacian1D) {
 }
 
 TEST(Thomas, TwoByTwo) {
-    vec a{2.0}, b{3.0, 4.0}, c{1.0}, d{5.0, 6.0}, x(2);
+    vec<real> a{2.0}, b{3.0, 4.0}, c{1.0}, d{5.0, 6.0}, x(2);
     thomas(a, b, c, d, x);
     EXPECT_NEAR(x[0], 1.4, 1e-10);
     EXPECT_NEAR(x[1], 0.8, 1e-10);
@@ -354,7 +354,7 @@ TEST(Thomas, TwoByTwo) {
 
 TEST(GaussSeidel, DiagonalDominant3x3) {
     // [4 1 0; 1 4 1; 0 1 4] x = [1; 2; 3]  =>  same solution as CG test
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(1, 0) = 1;
@@ -363,8 +363,8 @@ TEST(GaussSeidel, DiagonalDominant3x3) {
     A(2, 1) = 1;
     A(2, 2) = 4;
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     solver_result r = gauss_seidel(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
@@ -377,12 +377,12 @@ TEST(GaussSeidel, DiagonalDominant3x3) {
 TEST(GaussSeidel, DiagonalSystem) {
     // Diagonal A: solution is trivially b[i]/A[i][i]
     idx n = 8;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = static_cast<real>(i + 1);
     }
 
-    vec b(n), x(n, 0.0);
+    vec<real> b(n), x(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         b[i] = static_cast<real>((i + 1) * (i + 1));
     }
@@ -396,7 +396,7 @@ TEST(GaussSeidel, DiagonalSystem) {
 
 TEST(GaussSeidel, ResidualVerified) {
     idx n = 6;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 8.0;
         if (i > 0) {
@@ -406,14 +406,14 @@ TEST(GaussSeidel, ResidualVerified) {
             A(i, i + 1) = -1.0;
         }
     }
-    vec b(n, 1.0), x(n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0);
     solver_result r = gauss_seidel(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
 
     // Verify Ax ~= b
-    vec Ax(n);
+    vec<real> Ax(n);
     matvec(A, x, Ax);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(Ax[i], b[i], 1e-8);
@@ -423,7 +423,7 @@ TEST(GaussSeidel, ResidualVerified) {
 // Jacobi
 
 TEST(Jacobi, DiagonalDominant3x3) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(1, 0) = 1;
@@ -432,8 +432,8 @@ TEST(Jacobi, DiagonalDominant3x3) {
     A(2, 1) = 1;
     A(2, 2) = 4;
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
@@ -445,12 +445,12 @@ TEST(Jacobi, DiagonalDominant3x3) {
 
 TEST(Jacobi, DiagonalSystem) {
     idx n = 8;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = static_cast<real>(i + 1);
     }
 
-    vec b(n), x(n, 0.0);
+    vec<real> b(n), x(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         b[i] = static_cast<real>((i + 1) * (i + 1));
     }
@@ -465,7 +465,7 @@ TEST(Jacobi, DiagonalSystem) {
 
 TEST(Jacobi, ResidualVerified) {
     idx n = 6;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 8.0;
         if (i > 0) {
@@ -475,13 +475,13 @@ TEST(Jacobi, ResidualVerified) {
             A(i, i + 1) = -1.0;
         }
     }
-    vec b(n, 1.0), x(n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0);
     solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
 
-    vec Ax(n);
+    vec<real> Ax(n);
     matvec(A, x, Ax);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(Ax[i], b[i], 1e-8);
@@ -492,7 +492,7 @@ TEST(Jacobi, ResidualVerified) {
 
 TEST(GMRES, SPD3x3Dense) {
     // Same SPD system  -- GMRES should also solve it
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(1, 0) = 1;
@@ -501,8 +501,8 @@ TEST(GMRES, SPD3x3Dense) {
     A(2, 1) = 1;
     A(2, 2) = 4;
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     solver_result r = gmres(A, b, x);
 
     EXPECT_TRUE(r.converged);
@@ -513,7 +513,7 @@ TEST(GMRES, SPD3x3Dense) {
 }
 
 TEST(GMRES, DenseOperator) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(1, 0) = 1;
@@ -524,8 +524,8 @@ TEST(GMRES, DenseOperator) {
 
     operators::dense_op op(A);
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     solver_result r = gmres(op, b, x);
 
     EXPECT_TRUE(r.converged);
@@ -537,14 +537,14 @@ TEST(GMRES, DenseOperator) {
 
 TEST(GMRES, NonSymmetricDense) {
     // Non-symmetric system: A = [3 1; 1 2], b = [5; 3]  =>  x = [1, 2]
-    mat A(2, 2, 0.0);
+    mat<real> A(2, 2, 0.0);
     A(0, 0) = 3;
     A(0, 1) = 1;
     A(1, 0) = 1;
     A(1, 1) = 2;
 
-    vec b{5.0, 3.0}; // actually symmetric here but checks general path
-    vec x(2, 0.0);
+    vec<real> b{5.0, 3.0}; // actually symmetric here but checks general path
+    vec<real> x(2, 0.0);
     solver_result r = gmres(A, b, x);
 
     EXPECT_TRUE(r.converged);
@@ -574,14 +574,14 @@ TEST(GMRES, SparseLaplacian1D) {
     }
     spmat A = spmat::from_triplets(n, n, rows, cols, vals);
 
-    vec b(n, 1.0), x(n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0);
     solver_result r = gmres(A, b, x);
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-6);
 
     // Verify Ax ~= b
-    vec Ax(n);
+    vec<real> Ax(n);
     sparse_matvec(A, x, Ax);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(Ax[i], b[i], 1e-5);
@@ -590,21 +590,21 @@ TEST(GMRES, SparseLaplacian1D) {
 
 TEST(GMRES, MatrixFree) {
     idx n = 5;
-    vec diag(n);
+    vec<real> diag(n);
     for (idx i = 0; i < n; ++i) {
         diag[i] = static_cast<real>(i + 1);
     }
 
     auto op = operators::make_op(
-        [&](const vec &in, vec &out) {
-            out = vec(n);
+        [&](const vec<real> &in, vec<real> &out) {
+            out = vec<real>(n);
             for (idx i = 0; i < n; ++i) {
                 out[i] = diag[i] * in[i];
             }
         },
         n);
 
-    vec b(n, 1.0), x(n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0);
     solver_result r = gmres(op, b, x);
 
     EXPECT_TRUE(r.converged);
@@ -646,7 +646,7 @@ TEST(spmat, Matvec) {
     // A = [2 -1; -1 2], x = [1; 1]  =>  y = [1; 1]
     spmat A =
         spmat::from_triplets(2, 2, {0, 0, 1, 1}, {0, 1, 0, 1}, {2.0, -1.0, -1.0, 2.0});
-    vec x{1.0, 1.0}, y(2);
+    vec<real> x{1.0, 1.0}, y(2);
     sparse_matvec(A, x, y);
     EXPECT_NEAR(y[0], 1.0, 1e-14);
     EXPECT_NEAR(y[1], 1.0, 1e-14);
@@ -733,7 +733,7 @@ TEST(Json, VectorAndMatrixConversion) {
 #endif
 
 TEST(Resolvent, ReusableFactorAndBatch) {
-    mat A(2, 2);
+    mat<real> A(2, 2);
     A(0, 0) = 1.0;
     A(0, 1) = 0.0;
     A(1, 0) = 0.0;
@@ -816,7 +816,7 @@ TEST(DenseResolvent, ReusableFactorization) {
 
 TEST(Hessenberg, DecompositionProperties) {
     const idx n = 5;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         for (idx j = 0; j < n; ++j) {
             A(i, j) = std::sin(static_cast<double>(i * 3 + j * 7 + 1));
@@ -849,7 +849,7 @@ TEST(Hessenberg, DecompositionProperties) {
     }
 
     // 3. Verify Q * H * Q^T == A
-    mat QHQ(n, n, 0.0);
+    mat<real> QHQ(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         for (idx j = 0; j < n; ++j) {
             double sum = 0.0;
@@ -867,7 +867,7 @@ TEST(Hessenberg, DecompositionProperties) {
 #if defined(NUMERICS_HAS_LAPACK)
 TEST(Hessenberg, DecompositionPropertiesLAPACK) {
     const idx n = 6;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         for (idx j = 0; j < n; ++j) {
             A(i, j) = std::sin(static_cast<double>(i * 3 + j * 7 + 1));
@@ -900,7 +900,7 @@ TEST(Hessenberg, DecompositionPropertiesLAPACK) {
     }
 
     // 3. Verify Q * H * Q^T == A
-    mat QHQ(n, n, 0.0);
+    mat<real> QHQ(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         for (idx j = 0; j < n; ++j) {
             double sum = 0.0;
@@ -947,18 +947,18 @@ TEST(KernelRaw, HouseholderAndMicroKernels) {
     std::vector<double> vals = {-1.0, 3.5, -9.2, 4.0};
     EXPECT_EQ(kernel::argmax_abs(vals.data(), 4), 2);
 
-    mat mat(3, 3, 0.0);
-    mat(0, 0) = 1.0;
-    mat(1, 1) = 2.0;
-    mat(2, 2) = 3.0;
-    kernel::swap_rows(mat.data(), 3, 0, 2, 3);
-    EXPECT_DOUBLE_EQ(mat(0, 2), 3.0);
-    EXPECT_DOUBLE_EQ(mat(2, 0), 1.0);
+    mat<real> A(3, 3, 0.0);
+    A(0, 0) = 1.0;
+    A(1, 1) = 2.0;
+    A(2, 2) = 3.0;
+    kernel::swap_rows(A.data(), 3, 0, 2, 3);
+    EXPECT_DOUBLE_EQ(A(0, 2), 3.0);
+    EXPECT_DOUBLE_EQ(A(2, 0), 1.0);
 }
 
 TEST(HessenbergResolvent, AccuracyAndBatchEquivalence) {
     const idx n = 4;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     A(0, 0) = 4.0;
     A(0, 1) = 1.0;
     A(0, 2) = 0.5;
@@ -976,7 +976,7 @@ TEST(HessenbergResolvent, AccuracyAndBatchEquivalence) {
     A(3, 2) = 1.0;
     A(3, 3) = 2.0;
 
-    vec b{1.0, 2.0, 3.0, 4.0};
+    vec<real> b{1.0, 2.0, 3.0, 4.0};
 
     std::vector<cplx> shifts = {cplx(10.0, 1.0), cplx(8.0, -2.0), cplx(0.0, 5.0), cplx(-3.0, 4.0),
                                 cplx(12.0, 0.0)};
@@ -1037,12 +1037,12 @@ TEST(PDEOperators, MatrixFreeLaplacianAndBackwardEulerMatchesSparseMatrix) {
     spmat lap_sparse = pde::laplacian_sparse_2d(N);
     spmat be_sparse = pde::backward_euler_matrix(N, coeff);
 
-    vec x(n);
+    vec<real> x(n);
     for (idx i = 0; i < n; ++i) {
         x[i] = std::sin(static_cast<double>(i + 1));
     }
 
-    vec y_lap_free(n), y_lap_sparse(n);
+    vec<real> y_lap_free(n), y_lap_sparse(n);
     lap_op.apply(x, y_lap_free);
     sparse_matvec(lap_sparse, x, y_lap_sparse);
 
@@ -1050,7 +1050,7 @@ TEST(PDEOperators, MatrixFreeLaplacianAndBackwardEulerMatchesSparseMatrix) {
         EXPECT_NEAR(y_lap_free[i], y_lap_sparse[i], 1e-14);
     }
 
-    vec y_be_free(n), y_be_sparse(n);
+    vec<real> y_be_free(n), y_be_sparse(n);
     be_op.apply(x, y_be_free);
     sparse_matvec(be_sparse, x, y_be_sparse);
 
@@ -1059,8 +1059,8 @@ TEST(PDEOperators, MatrixFreeLaplacianAndBackwardEulerMatchesSparseMatrix) {
     }
 
     // Solve (I - coeff * \nabla^2) u = b using matrix-free CG
-    vec b(n, 1.0);
-    vec u_free(n, 0.0), u_sparse(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> u_free(n, 0.0), u_sparse(n, 0.0);
 
     auto res_free = cg(be_op, b, u_free, {.tolerance = 1e-10, .max_iterations = 500});
     pde::backward_euler_operator_2d be_assembled_op(N, coeff);

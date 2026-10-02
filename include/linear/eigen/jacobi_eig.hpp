@@ -19,8 +19,8 @@ namespace num {
 
 /// @brief Symmetric eigendecomposition \f$A=V\Lambda V^T\f$.
 struct eigen_result {
-    vec values;          ///< Eigenvalues in ascending order.
-    mat vectors;         ///< Corresponding eigenvectors stored as columns.
+    vec<real> values;          ///< Eigenvalues in ascending order.
+    mat<real> vectors;         ///< Corresponding eigenvectors stored as columns.
     idx sweeps = 0;         ///< Jacobi sweeps for the fallback implementation.
     bool converged = false; ///< Whether the requested tolerance was met.
 
@@ -44,16 +44,16 @@ struct eigen_result {
 /// @param max_sweeps Maximum Jacobi sweeps (default: 100); LAPACK ignores it.
 /// @return `eigen_result` containing sorted eigenvalues, column eigenvector matrix, sweep count, and convergence status.
 /// @see assume_symmetric, make_symmetric, lanczos, power_iteration
-eigen_result eig_sym(const with_law<mat, law::self_adjoint> &A, real tol = 1e-12, idx max_sweeps = 100);
+eigen_result eig_sym(const with_law<mat<real>, law::self_adjoint> &A, real tol = 1e-12, idx max_sweeps = 100);
 
 namespace seq {
-eigen_result eig_sym(const mat &A, real tol, idx max_sweeps);
+eigen_result eig_sym(const mat<real> &A, real tol, idx max_sweeps);
 } // namespace seq
 namespace omp {
-eigen_result eig_sym(const mat &A, real tol, idx max_sweeps);
+eigen_result eig_sym(const mat<real> &A, real tol, idx max_sweeps);
 } // namespace omp
 namespace lapack {
-eigen_result eig_sym(const mat &A);
+eigen_result eig_sym(const mat<real> &A);
 } // namespace lapack
 
 namespace unsafe {
@@ -62,7 +62,7 @@ namespace unsafe {
 ///
 /// Reads only the lower triangle, so an asymmetric matrix yields the spectrum of
 /// its symmetric part rather than an error.
-eigen_result eig_sym(const mat &A, real tol = 1e-12, idx max_sweeps = 100);
+eigen_result eig_sym(const mat<real> &A, real tol = 1e-12, idx max_sweeps = 100);
 
 } // namespace unsafe
 

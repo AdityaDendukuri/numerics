@@ -9,6 +9,6 @@
 namespace num {
 
 /// @brief Callable that solves \f$Ax=\mathrm{rhs}\f$.
-using linear_solver = std::function<solver_result(const vec &rhs, vec &x)>;
+using linear_solver = std::function<solver_result(const vec<real> &rhs, vec<real> &x)>;
 
 } // namespace num

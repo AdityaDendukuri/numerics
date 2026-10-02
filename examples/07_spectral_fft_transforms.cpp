@@ -9,14 +9,14 @@ int main() {
     using namespace num::spectral;
 
     idx n = 64;
-    vec r_in(n, 0.0);
+    vec<real> r_in(n, 0.0);
     std::vector<double> t_grid(n);
     for (idx i = 0; i < n; ++i) {
         t_grid[i] = (2.0 * M_PI / n) * i;
         r_in[i] = std::sin(3.0 * t_grid[i]) + (0.5 * std::cos(7.0 * t_grid[i]));
     }
 
-    cvec r_out((n / 2) + 1, cplx{0, 0});
+    vec<cplx> r_out((n / 2) + 1, cplx{0, 0});
     rfft(r_in, r_out, fft_backend::seq);
 
     std::vector<double> k_freq((n / 2) + 1), mag_spec((n / 2) + 1);

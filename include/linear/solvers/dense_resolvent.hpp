@@ -14,7 +14,7 @@ namespace num {
 class dense_resolvent_solver {
   public:
     /// Store A densely for repeated shifts.
-    explicit dense_resolvent_solver(const mat &matrix);
+    explicit dense_resolvent_solver(const mat<real> &matrix);
     explicit dense_resolvent_solver(const spmat &matrix);
     ~dense_resolvent_solver();
     dense_resolvent_solver(dense_resolvent_solver &&) noexcept;

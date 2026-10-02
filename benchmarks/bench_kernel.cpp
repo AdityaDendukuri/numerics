@@ -27,8 +27,8 @@ namespace kro = num::omp;
 namespace benchmark_math {
 
 struct DiagonalOperator {
-    using domain_type = num::vec;
-    using codomain_type = num::vec;
+    using domain_type = num::vec<real>;
+    using codomain_type = num::vec<real>;
     using laws = num::law::list<num::law::spd>;
 
     num::idx dimension;
@@ -36,7 +36,7 @@ struct DiagonalOperator {
     [[nodiscard]] num::idx rows() const noexcept { return dimension; }
     [[nodiscard]] num::idx cols() const noexcept { return dimension; }
 
-    void apply(const num::vec &x, num::vec &y) const {
+    void apply(const num::vec<real> &x, num::vec<real> &y) const {
         for (num::idx i = 0; i < dimension; ++i) {
             y[i] = (1.0 + (0.01 * static_cast<double>(i % 32))) * x[i];
         }
@@ -49,7 +49,7 @@ struct DiagonalOperator {
 
 static void BM_Kernel_Axpby_Manual(benchmark::State &state) {
     idx n = state.range(0);
-    vec x(n, 1.0), y(n, 2.0);
+    vec<real> x(n, 1.0), y(n, 2.0);
     const real a = 0.5, b = 1.5;
     for (auto _ : state) {
         const real *xp = x.data();
@@ -65,7 +65,7 @@ BENCHMARK(BM_Kernel_Axpby_Manual)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
 static void BM_Kernel_Axpby_Seq(benchmark::State &state) {
     idx n = state.range(0);
-    vec x(n, 1.0), y(n, 2.0);
+    vec<real> x(n, 1.0), y(n, 2.0);
     for (auto _ : state) {
         ka::axpby(real(0.5), x, real(1.5), y);
         benchmark::DoNotOptimize(y.data());
@@ -76,7 +76,7 @@ BENCHMARK(BM_Kernel_Axpby_Seq)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
 static void BM_Kernel_Axpby_Par(benchmark::State &state) {
     idx n = state.range(0);
-    vec x(n, 1.0), y(n, 2.0);
+    vec<real> x(n, 1.0), y(n, 2.0);
     for (auto _ : state) {
         kao::axpby(real(0.5), x, real(1.5), y);
         benchmark::DoNotOptimize(y.data());
@@ -89,7 +89,7 @@ BENCHMARK(BM_Kernel_Axpby_Par)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
 static void BM_Kernel_L1Norm_Manual(benchmark::State &state) {
     idx n = state.range(0);
-    vec x(n, 1.0);
+    vec<real> x(n, 1.0);
     for (auto _ : state) {
         real s = 0.0;
         const real *xp = x.data();
@@ -104,7 +104,7 @@ BENCHMARK(BM_Kernel_L1Norm_Manual)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
 static void BM_Kernel_L1Norm_Seq(benchmark::State &state) {
     idx n = state.range(0);
-    vec x(n, 1.0);
+    vec<real> x(n, 1.0);
     for (auto _ : state) {
         real s = kr::l1_norm(x);
         benchmark::DoNotOptimize(s);
@@ -115,7 +115,7 @@ BENCHMARK(BM_Kernel_L1Norm_Seq)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
 static void BM_Kernel_L1Norm_Par(benchmark::State &state) {
     idx n = state.range(0);
-    vec x(n, 1.0);
+    vec<real> x(n, 1.0);
     for (auto _ : state) {
         real s = kro::l1_norm(x);
         benchmark::DoNotOptimize(s);
@@ -129,7 +129,7 @@ BENCHMARK(BM_Kernel_L1Norm_Par)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
 static void BM_Raw_Dot2_Separate(benchmark::State &state) {
     const idx n = state.range(0);
-    vec x(n, 1.0), y(n, 2.0), z(n, 3.0);
+    vec<real> x(n, 1.0), y(n, 2.0), z(n, 3.0);
     for (auto _ : state) {
         real xy = kernel::dot(x.data(), y.data(), n);
         real xz = kernel::dot(x.data(), z.data(), n);
@@ -142,7 +142,7 @@ BENCHMARK(BM_Raw_Dot2_Separate)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
 static void BM_Raw_Dot2_Fused(benchmark::State &state) {
     const idx n = state.range(0);
-    vec x(n, 1.0), y(n, 2.0), z(n, 3.0);
+    vec<real> x(n, 1.0), y(n, 2.0), z(n, 3.0);
     for (auto _ : state) {
         auto result = kernel::dot2(x.data(), y.data(), z.data(), n);
         benchmark::DoNotOptimize(result);
@@ -153,7 +153,7 @@ BENCHMARK(BM_Raw_Dot2_Fused)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 
 static void BM_Raw_AxpyNorm_Separate(benchmark::State &state) {
     const idx n = state.range(0);
-    vec x(n, 1.0), y(n, 2.0);
+    vec<real> x(n, 1.0), y(n, 2.0);
     const real alpha = -1e-12;
     for (auto _ : state) {
         kernel::axpy(y.data(), x.data(), alpha, n);
@@ -166,7 +166,7 @@ BENCHMARK(BM_Raw_AxpyNorm_Separate)->RangeMultiplier(4)->Range(1 << 12, 1 << 20)
 
 static void BM_Raw_AxpyNorm_Fused(benchmark::State &state) {
     const idx n = state.range(0);
-    vec x(n, 1.0), y(n, 2.0);
+    vec<real> x(n, 1.0), y(n, 2.0);
     const real alpha = -1e-12;
     for (auto _ : state) {
         real norm_sq = kernel::axpy_norm_sq(y.data(), x.data(), alpha, n);
@@ -179,8 +179,8 @@ BENCHMARK(BM_Raw_AxpyNorm_Fused)->RangeMultiplier(4)->Range(1 << 12, 1 << 20);
 static void BM_Raw_BlockProjection_SeparateColumns(benchmark::State &state) {
     const idx n = state.range(0);
     constexpr idx columns = 30;
-    mat basis(n, columns, 1.0);
-    vec vector(n, 2.0), coefficients(columns, 0.0);
+    mat<real> basis(n, columns, 1.0);
+    vec<real> vector(n, 2.0), coefficients(columns, 0.0);
     for (auto _ : state) {
         for (idx column = 0; column < columns; ++column) {
             real projection = 0.0;
@@ -198,8 +198,8 @@ BENCHMARK(BM_Raw_BlockProjection_SeparateColumns)->RangeMultiplier(4)->Range(1 <
 static void BM_Raw_BlockProjection_RowMajor(benchmark::State &state) {
     const idx n = state.range(0);
     constexpr idx columns = 30;
-    mat basis(n, columns, 1.0);
-    vec vector(n, 2.0), coefficients(columns, 0.0);
+    mat<real> basis(n, columns, 1.0);
+    vec<real> vector(n, 2.0), coefficients(columns, 0.0);
     for (auto _ : state) {
         kernel::project_columns(coefficients.data(), basis.data(), basis.cols(), vector.data(),
                                      n, columns);
@@ -215,13 +215,13 @@ BENCHMARK(BM_Raw_BlockProjection_RowMajor)->RangeMultiplier(4)->Range(1 << 10, 1
 static void BM_Kernel_MgsVec_Manual(benchmark::State &state) {
     idx n = state.range(0);
     idx k = 30; // typical GMRES restart size
-    std::vector<vec> basis;
+    std::vector<vec<real>> basis;
     basis.reserve(k);
     for (idx i = 0; i < k; ++i) {
         basis.emplace_back(n, 0.0);
         basis.back()[i % n] = 1.0;
     }
-    vec v(n, 1.0);
+    vec<real> v(n, 1.0);
     std::vector<real> h(k + 1, 0.0);
 
     for (auto _ : state) {
@@ -248,13 +248,13 @@ BENCHMARK(BM_Kernel_MgsVec_Manual)->RangeMultiplier(4)->Range(1 << 10, 1 << 16);
 static void BM_Kernel_MgsVec_Kernel(benchmark::State &state) {
     idx n = state.range(0);
     idx k = 30;
-    std::vector<vec> basis;
+    std::vector<vec<real>> basis;
     basis.reserve(k);
     for (idx i = 0; i < k; ++i) {
         basis.emplace_back(n, 0.0);
         basis.back()[i % n] = 1.0;
     }
-    vec v(n, 1.0);
+    vec<real> v(n, 1.0);
     std::vector<real> h(k + 1, 0.0);
 
     for (auto _ : state) {
@@ -274,11 +274,11 @@ BENCHMARK(BM_Kernel_MgsVec_Kernel)->RangeMultiplier(4)->Range(1 << 10, 1 << 16);
 static void BM_Kernel_MgsMat_Manual(benchmark::State &state) {
     idx n = state.range(0);
     idx k = 30;
-    mat basis(n, k, 0.0);
+    mat<real> basis(n, k, 0.0);
     for (idx l = 0; l < k; ++l) {
         basis(l % n, l) = 1.0;
     }
-    vec v(n, 1.0);
+    vec<real> v(n, 1.0);
 
     for (auto _ : state) {
         for (idx l = 0; l < k; ++l) {
@@ -301,11 +301,11 @@ BENCHMARK(BM_Kernel_MgsMat_Manual)->RangeMultiplier(4)->Range(1 << 10, 1 << 16);
 static void BM_Kernel_MgsMat_Kernel(benchmark::State &state) {
     idx n = state.range(0);
     idx k = 30;
-    mat basis(n, k, 0.0);
+    mat<real> basis(n, k, 0.0);
     for (idx l = 0; l < k; ++l) {
         basis(l % n, l) = 1.0;
     }
-    vec v(n, 1.0);
+    vec<real> v(n, 1.0);
 
     for (auto _ : state) {
         real beta = ks::mgs_orthogonalize(basis, k, v);
@@ -328,13 +328,13 @@ static void BM_Kernel_Arnoldi_Inline(benchmark::State &state) {
     const real v0 = real(1) / std::sqrt(static_cast<real>(n));
 
     for (auto _ : state) {
-        std::vector<vec> V;
+        std::vector<vec<real>> V;
         V.reserve(restart + 1);
         V.emplace_back(n, v0); // uniform start vector, already normalised
         std::vector<real> h(restart + 1, 0.0);
 
         for (idx j = 0; j < restart; ++j) {
-            vec w(n);
+            vec<real> w(n);
             for (idx i = 0; i < n; ++i) {
                 w[i] = static_cast<real>(i + 1) * V[j][i];
             }
@@ -375,20 +375,20 @@ static void BM_Kernel_Arnoldi_Kernel(benchmark::State &state) {
     const real v0 = real(1) / std::sqrt(static_cast<real>(n));
 
     for (auto _ : state) {
-        std::vector<vec> V;
+        std::vector<vec<real>> V;
         V.reserve(restart + 1);
         V.emplace_back(n, v0);
         std::vector<real> h(restart + 1, 0.0);
 
         auto A_op = operators::make_op(
-            [](const vec &x, vec &y) {
+            [](const vec<real> &x, vec<real> &y) {
                 for (idx i = 0; i < x.size(); ++i) {
                     y[i] = static_cast<real>(i + 1) * x[i];
                 }
             },
             n);
 
-        vec scratch(n);
+        vec<real> scratch(n);
         for (idx j = 0; j < restart; ++j) {
             real beta = ks::arnoldi_step(A_op, V, h, j, scratch, real(1e-15));
             benchmark::DoNotOptimize(beta);
@@ -408,7 +408,7 @@ BENCHMARK(BM_Kernel_Arnoldi_Kernel)->RangeMultiplier(4)->Range(1 << 8, 1 << 14);
 static void BM_MathSpine_CG_Generic(benchmark::State &state) {
     const idx n = state.range(0);
     const benchmark_math::DiagonalOperator A{n};
-    vec b(n, 1.0), x(n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0);
 
     for (auto _ : state) {
         std::fill(x.begin(), x.end(), 0.0);
@@ -421,7 +421,7 @@ BENCHMARK(BM_MathSpine_CG_Generic)->RangeMultiplier(4)->Range(1 << 8, 1 << 14);
 
 static void BM_MathSpine_CG_Raw(benchmark::State &state) {
     const idx n = state.range(0);
-    vec b(n, 1.0), x(n, 0.0), work(3 * n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0), work(3 * n, 0.0);
     const auto apply = [n](const real *input, real *output) {
         for (idx i = 0; i < n; ++i) {
             output[i] = (1.0 + (0.01 * static_cast<double>(i % 32))) * input[i];

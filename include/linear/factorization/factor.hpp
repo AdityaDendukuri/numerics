@@ -44,7 +44,7 @@ inline constexpr no_pivot_structure no_pivot{};
 template <class F>
 struct similar_factor {
     F factor;
-    vec h;
+    vec<real> h;
 };
 
 /// @brief How many blocks a block factorization kept from the previous one, and how many rows
@@ -60,8 +60,8 @@ inline constexpr idx no_reusable_block = static_cast<idx>(-1);
 
 namespace detail {
 
-[[nodiscard]] inline vec checked_weights(view<const real> h) {
-    vec result(h.size(), 0.0);
+[[nodiscard]] inline vec<real> checked_weights(view<const real> h) {
+    vec<real> result(h.size(), 0.0);
     for (idx i = 0; i < h.size(); ++i) {
         if (!(h[i] > 0.0)) {
             throw std::invalid_argument("factor: similarity weights must be positive");
@@ -71,8 +71,8 @@ namespace detail {
     return result;
 }
 
-[[nodiscard]] inline vec reciprocal(view<const real> h) {
-    vec result(h.size(), 0.0);
+[[nodiscard]] inline vec<real> reciprocal(view<const real> h) {
+    vec<real> result(h.size(), 0.0);
     for (idx i = 0; i < h.size(); ++i) {
         result[i] = 1.0 / h[i];
     }
@@ -81,7 +81,7 @@ namespace detail {
 
 template <class RHS>
 inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
-    if constexpr (std::is_same_v<RHS, vec>) {
+    if constexpr (std::is_same_v<RHS, vec<real>>) {
         for (idx i = 0; i < x.size(); ++i) {
             x[i] *= inverse ? 1.0 / h[i] : h[i];
         }
@@ -137,7 +137,7 @@ inline void record_suffix_reuse(suffix_reuse_report *report, const block_layout 
 } // namespace detail
 
 /// Factor a dense unstructured nonsingular M-matrix by no-pivot LU.
-[[nodiscard]] inline no_pivot_lu lu(const mat &R, no_pivot_structure) {
+[[nodiscard]] inline no_pivot_lu lu(const mat<real> &R, no_pivot_structure) {
     no_pivot_lu Z = factor_no_pivot(R);
     if (Z.singular) {
         throw std::runtime_error("lu: matrix is singular");
@@ -166,7 +166,7 @@ inline void record_suffix_reuse(suffix_reuse_report *report, const block_layout 
 
 /// Factor H R H^-1 by Cholesky and retain H for applications of R^-1.
 [[nodiscard]] inline similar_factor<cholesky_result> cholesky(const spmat &R, view<const real> h) {
-    vec weights = detail::checked_weights(h);
+    vec<real> weights = detail::checked_weights(h);
     cholesky_result C =
         cholesky(assume_spd(dense(sparse_diagonal_similarity(R, detail::reciprocal(weights)))));
     if (!C.success) {
@@ -178,7 +178,7 @@ inline void record_suffix_reuse(suffix_reuse_report *report, const block_layout 
 /// Block-Cholesky specialization of the diagonally similar factorization.
 [[nodiscard]] inline similar_factor<block_cholesky_factor>
 cholesky(const spmat &R, block_structure structure, view<const real> h) {
-    vec weights = detail::checked_weights(h);
+    vec<real> weights = detail::checked_weights(h);
     block_cholesky_factor C = factor_block_cholesky(
         sparse_diagonal_similarity(R, detail::reciprocal(weights)), structure.levels);
     return {std::move(C), std::move(weights)};
@@ -237,7 +237,7 @@ refactor_suffix(const similar_factor<block_cholesky_factor> &Z, const spmat &R,
     }
     detail::record_suffix_reuse(report, layout, first);
     try {
-        vec weights = detail::checked_weights(h);
+        vec<real> weights = detail::checked_weights(h);
         auto C = refactor_block_cholesky_suffix(
             sparse_diagonal_similarity(R, detail::reciprocal(weights)), structure.levels, Z.factor,
             first);
@@ -247,23 +247,23 @@ refactor_suffix(const similar_factor<block_cholesky_factor> &Z, const spmat &R,
     }
 }
 
-inline void solve(const cholesky_result &Z, const vec &b, vec &x) {
+inline void solve(const cholesky_result &Z, const vec<real> &b, vec<real> &x) {
     cholesky_solve(Z, b, x);
 }
-inline void solve(const cholesky_result &Z, const mat &B, mat &X) {
+inline void solve(const cholesky_result &Z, const mat<real> &B, mat<real> &X) {
     cholesky_solve(Z, B, X);
 }
-inline void solve_transpose(const cholesky_result &Z, const vec &b, vec &x) {
+inline void solve_transpose(const cholesky_result &Z, const vec<real> &b, vec<real> &x) {
     cholesky_solve(Z, b, x);
 }
-inline void solve_transpose(const cholesky_result &Z, const mat &B, mat &X) {
+inline void solve_transpose(const cholesky_result &Z, const mat<real> &B, mat<real> &X) {
     cholesky_solve(Z, B, X);
 }
 
-inline void solve_transpose(const block_cholesky_factor &Z, const vec &b, vec &x) {
+inline void solve_transpose(const block_cholesky_factor &Z, const vec<real> &b, vec<real> &x) {
     solve(Z, b, x);
 }
-inline void solve_transpose(const block_cholesky_factor &Z, const mat &B, mat &X) {
+inline void solve_transpose(const block_cholesky_factor &Z, const mat<real> &B, mat<real> &X) {
     solve(Z, B, X);
 }
 
@@ -295,7 +295,7 @@ struct transposed_factor {
 /// Write a transposed solve with the same `solve` operation used otherwise.
 /// The view stores only a reference, so this does not transpose or copy the factors.
 template <class F>
-requires requires(const F &Z, const vec &b, vec &x) {
+requires requires(const F &Z, const vec<real> &b, vec<real> &x) {
     solve_transpose(Z, b, x);
 }
 [[nodiscard]] inline detail::transposed_factor<F> transpose(const F &Z) {
@@ -304,7 +304,7 @@ requires requires(const F &Z, const vec &b, vec &x) {
 
 template <class F>
 requires(!std::is_lvalue_reference_v<F> &&
-         requires(const std::remove_reference_t<F> &Z, const vec &b, vec &x) {
+         requires(const std::remove_reference_t<F> &Z, const vec<real> &b, vec<real> &x) {
              solve_transpose(Z, b, x);
          }) detail::transposed_factor<std::remove_reference_t<F>> transpose(F &&) = delete;
 
@@ -329,16 +329,16 @@ template <class F, class RHS>
 }
 
 template <class F>
-[[nodiscard]] vec inverse_diagonal(const F &Z, idx n) {
-    vec diagonal(n, 0.0);
+[[nodiscard]] vec<real> inverse_diagonal(const F &Z, idx n) {
+    vec<real> diagonal(n, 0.0);
     constexpr idx columns_per_solve = 64;
     for (idx first = 0; first < n; first += columns_per_solve) {
         const idx count = std::min(columns_per_solve, n - first);
-        mat E(n, count, 0.0);
+        mat<real> E(n, count, 0.0);
         for (idx column = 0; column < count; ++column) {
             E(first + column, column) = 1.0;
         }
-        const mat ZE = solve(Z, E);
+        const mat<real> ZE = solve(Z, E);
         for (idx column = 0; column < count; ++column) {
             diagonal[first + column] = ZE(first + column, column);
         }

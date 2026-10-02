@@ -53,7 +53,7 @@ The report includes:
 
 ```text
 include/kernel/{vector,dense,sparse,rotations,factor,krylov}.hpp   Zero-allocation, inlined raw-pointer loops
-include/seq/            (in container/{vector,matrix,dense,reduce}_ops.hpp)  vec-aware wrappers over num::kernel
+include/seq/            (in container/{vector,matrix,dense,reduce}_ops.hpp)  vec<real>-aware wrappers over num::kernel
 include/omp/{vector_ops,matrix_ops,parallel_ops}.hpp                OpenMP-parallel loops
 include/blas/{vector_ops,matrix_ops}.hpp                            cblas_* wrappers
 include/cuda/{cuda_ops,container_ops}.hpp                           CUDA device kernels
@@ -62,9 +62,9 @@ include/lapack/lapack_wrapper.hpp                                   LAPACKE wrap
 
 ### Separation of Concerns
 
-* **`num::kernel`** contains pure arithmetic loops over raw pointers and does not call external libraries or know about `vec`/`mat`.
+* **`num::kernel`** contains pure arithmetic loops over raw pointers and does not call external libraries or know about `vec<real>`/`mat<real>`.
 * It carries **no intrinsics and no runtime CPU dispatch.** Vectorization is the compiler's job; the kernel's job is to write loops it can vectorize, and to block them for the register file and the cache. `kernel::gemm` is a packed, three-level-blocked, register-tiled product in the Goto/BLIS structure, with every blocking integer derived from the target's vector width, register count and cache sizes at compile time (`kernel::gemm_config`). It measures 44 GFLOP/s single-threaded on an M1 Pro, 86% of the core's FMA peak. Hand-written AVX2 and NEON products lived here once and were removed: the portable `gemm` beat them (30.0 against 23.7 GFLOP/s even before packing), and the intrinsic versions had a leading-dimension bug that made them silently wrong for any non-square shape. On machines with a matrix coprocessor (Apple AMX, Intel AMX, ARM SME) the vendor BLAS is still several times faster, which is what the BLAS backend is for.
-* Every accelerator is a plain namespace of free functions matching `num::kernel`'s signatures: `num::seq` (the `vec`/`mat`-aware fallback), `num::omp`, `num::blas`, `num::cuda`. There is no tag or enum layer between a caller and these — call a backend by name (`num::omp::dot(x, y)`), or let the untagged `num::dot(x, y)` resolve through `num::accel`, the single compile-time default (CUDA > BLAS > OMP > seq, whichever was configured).
+* Every accelerator is a plain namespace of free functions matching `num::kernel`'s signatures: `num::seq` (the `vec<real>`/`mat<real>`-aware fallback), `num::omp`, `num::blas`, `num::cuda`. There is no tag or enum layer between a caller and these — call a backend by name (`num::omp::dot(x, y)`), or let the untagged `num::dot(x, y)` resolve through `num::accel`, the single compile-time default (CUDA > BLAS > OMP > seq, whichever was configured).
 * This isolation guarantees that custom algorithms can be benchmarked against vendor BLAS/LAPACK cleanly and reproducibly.
 * The untagged dense factorizations resolve to LAPACK only when `NUMERICS_LAPACK_DEFAULT` is defined, which the configuration does after checking that the LAPACK it found sits on an optimized BLAS (`num::lapack_default` reports the outcome). Reference LAPACK on reference BLAS measured 5 GFLOP/s for `dgetrf` at n = 1024 on an M1 Pro against 27 for the kernel's blocked LU and 60 for OpenBLAS's; the check exists so a stray `brew install lapack` cannot silently make the default path the slowest of the three.
 * Even on an optimized BLAS, the untagged LU takes LAPACK only above `num::lapack_factor_threshold` (768). Against OpenBLAS on an M1 Pro, the kernel's blocked LU is faster up to about n = 700. Cholesky never crosses over up to n = 1536. The triangular solves are 2 to 10 times faster in the kernel at every size, because a threaded `dgetrs` spends tens of microseconds waking its pool, so they never take LAPACK by default. SVD and the LU inverse do.

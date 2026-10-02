@@ -29,10 +29,10 @@ int rank(MPI_Comm comm = MPI_COMM_WORLD);
 int size(MPI_Comm comm = MPI_COMM_WORLD);
 
 /// @brief Distributed dot product (each rank holds partial vector)
-real dot(const vec &x, const vec &y, MPI_Comm comm = MPI_COMM_WORLD);
+real dot(const vec<real> &x, const vec<real> &y, MPI_Comm comm = MPI_COMM_WORLD);
 
 /// @brief Distributed norm
-real norm(const vec &x, MPI_Comm comm = MPI_COMM_WORLD);
+real norm(const vec<real> &x, MPI_Comm comm = MPI_COMM_WORLD);
 
 /// @brief Allreduce sum
 void allreduce_sum(real *data, idx n, MPI_Comm comm = MPI_COMM_WORLD);
@@ -59,11 +59,11 @@ inline int size(MPI_Comm) {
     return 1;
 }
 
-inline real dot(const vec &x, const vec &y, MPI_Comm) {
+inline real dot(const vec<real> &x, const vec<real> &y, MPI_Comm) {
     return num::dot(x, y);
 }
 
-inline real norm(const vec &x, MPI_Comm) {
+inline real norm(const vec<real> &x, MPI_Comm) {
     return num::norm(x);
 }
 

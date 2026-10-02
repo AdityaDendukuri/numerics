@@ -17,12 +17,12 @@ Jump right in with [Getting Started](getting-started.md) or browse [Examples](re
 ```cpp
 #include <numerics.hpp>
 
-num::mat A(2, 2, 0.0);
+num::mat<num::real> A(2, 2, 0.0);
 A(0, 0) = 4.0; A(0, 1) = 1.0;
 A(1, 0) = 1.0; A(1, 1) = 3.0;
 
-num::vec b{1.0, 2.0};
-num::vec x(2, 0.0);
+num::vec<num::real> b{1.0, 2.0};
+num::vec<num::real> x(2, 0.0);
 
 auto factor = num::cholesky(num::assume_spd(A));
 num::cholesky_solve(factor, b, x); // Solves A * x = b
@@ -34,12 +34,12 @@ num::cholesky_solve(factor, b, x); // Solves A * x = b
 
 // 5-point discrete Laplacian stencil on an N x N grid
 auto laplacian = num::operators::make_op(
-    [N](const num::vec &u, num::vec &Lu) {
+    [N](const num::vec<num::real> &u, num::vec<num::real> &Lu) {
         apply_fd_laplacian(u, Lu, N);
     }, N * N);
 
 auto spd_L = num::assume_spd(laplacian);
-num::vec u(N * N, 0.0);
+num::vec<num::real> u(N * N, 0.0);
 num::cg(spd_L, rhs, u, {.tolerance = 1e-8});
 ```
 
@@ -49,7 +49,7 @@ num::cg(spd_L, rhs, u, {.tolerance = 1e-8});
 
 1. **Deterministic Allocation:** Raw compute kernels operate on caller-provided output buffers; no hidden allocations in simulation loops.
 2. **Layered Modules:** `kernel` has zero dependencies, `core` and `algebra` define types and concepts, and domain modules build on both (see [Library Structure & Architecture](architecture.md)).
-3. **Storage / Operator Decoupling:** Solvers accept anything implementing the required mathematical protocol (`vector_space`, `linear_operator`), whether stored as `mat` or evaluated on the fly via `make_op`.
+3. **Storage / Operator Decoupling:** Solvers accept anything implementing the required mathematical protocol (`vector_space`, `linear_operator`), whether stored as `mat<real>` or evaluated on the fly via `make_op`.
 4. **Hardware Acceleration:** The library compiles against standard C++20 alone. Each accelerator is a plain namespace, such as `num::omp::dot` or `num::blas::matmul`. Select one by name, or let the build's configuration decide. There is no tag or enum layer between the caller and the backend. See [Backend Namespaces, Parallelism, & Hardware Acceleration](backends.md).
 5. **Enforced Invariants:** Algorithms state required properties (`spd_operator`, `self_adjoint_operator`). Passing a type without the law fails at compile time; runtime claims (`assume_spd`) are validated under diagnostic presets (see [Concepts, Laws & Diagnostics](concepts.md)).
 

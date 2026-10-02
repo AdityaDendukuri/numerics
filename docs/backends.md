@@ -34,7 +34,7 @@ Call a backend by name. The choice resolves at compile time and inlines into the
 caller.
 
 ```cpp
-num::vec x(n, 1.0), y(n, 2.0);
+num::vec<num::real> x(n, 1.0), y(n, 2.0);
 
 num::real a = num::dot(x, y);        // Build default: see num::accel below.
 num::real b = num::seq::dot(x, y);   // Portable loop, forced.
@@ -95,7 +95,7 @@ and level-2 operations, and the reverse also holds, so each factorization choose
 independently.
 
 ```cpp
-inline lu_result lu(const mat &A) {
+inline lu_result lu(const mat<real> &A) {
 #if defined(NUMERICS_HAS_LAPACK)
     return lapack::lu(A);
 #else
@@ -167,7 +167,7 @@ Linux, should set a lower value.
 
 ## 4. CUDA GPU Acceleration
 
-`num::cuda`'s host-container overloads (`num::cuda::scale(vec&, real)`,
+`num::cuda`'s host-container overloads (`num::cuda::scale(vec<real>&, real)`,
 `num::cuda::axpy(...)`, `num::cuda::dot(...)`, `num::cuda::matvec(...)`,
 `num::cuda::matmul(...)`) sit over a raw device-pointer API
 (`num::cuda::scale(real*, idx, real)`, ...) meant for callers who manage device

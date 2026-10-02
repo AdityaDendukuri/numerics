@@ -15,8 +15,8 @@
 
 using namespace num;
 
-static mat make_rect(idx m, idx n) {
-    mat A(m, n, 0.0);
+static mat<real> make_rect(idx m, idx n) {
+    mat<real> A(m, n, 0.0);
     for (idx i = 0; i < m; ++i)
         for (idx j = 0; j < n; ++j)
             A(i, j) = static_cast<real>(1) / static_cast<real>(1 + i + j);
@@ -27,7 +27,7 @@ static mat make_rect(idx m, idx n) {
 
 static void BM_SVD_Seq(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A = make_rect(n, n);
+    mat<real> A = make_rect(n, n);
     for (auto _ : state) {
         auto r = seq::svd(A, 1e-12, 100);
         benchmark::DoNotOptimize(r.S.data());
@@ -43,7 +43,7 @@ BENCHMARK(BM_SVD_Seq)->RangeMultiplier(2)->Range(32, 256)->Complexity();
 #if defined(NUMERICS_HAS_LAPACK)
 static void BM_SVD_Lapack(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A = make_rect(n, n);
+    mat<real> A = make_rect(n, n);
     for (auto _ : state) {
         auto r = lapack::svd(A);
         benchmark::DoNotOptimize(r.S.data());
@@ -64,7 +64,7 @@ BENCHMARK(BM_SVD_Lapack)->RangeMultiplier(2)->Range(32, 512)->Complexity();
 static void BM_SVD_Randomized(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
     idx k = std::max(idx(1), n / 8); // top 12.5% singular values
-    mat A = make_rect(n, n);
+    mat<real> A = make_rect(n, n);
     for (auto _ : state) {
         auto r = svd_truncated(A, k);
         benchmark::DoNotOptimize(r.S.data());

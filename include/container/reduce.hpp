@@ -13,21 +13,21 @@
 namespace num::seq {
 
 /// @brief \f$L_1\f$ norm \f$\|\mathbf{x}\|_1 = \sum_{i=0}^{n-1} |x_i|\f$.
-[[nodiscard]] inline real l1_norm(const vec &x) noexcept { return kernel::l1_norm(x.data(), x.size()); }
+[[nodiscard]] inline real l1_norm(const vec<real> &x) noexcept { return kernel::l1_norm(x.data(), x.size()); }
 
 /// @brief \f$L_\infty\f$ norm \f$\|\mathbf{x}\|_\infty = \max_i |x_i|\f$.
-[[nodiscard]] inline real linf_norm(const vec &x) noexcept {
+[[nodiscard]] inline real linf_norm(const vec<real> &x) noexcept {
     return kernel::linf_norm(x.data(), x.size());
 }
 
 /// @brief Sum \f$\sum_{i=0}^{n-1} x_i\f$.
-[[nodiscard]] inline real sum(const vec &x) noexcept { return kernel::sum(x.data(), x.size()); }
+[[nodiscard]] inline real sum(const vec<real> &x) noexcept { return kernel::sum(x.data(), x.size()); }
 
 } // namespace num::seq
 
 namespace num::omp {
 
-[[nodiscard]] inline real l1_norm(const vec &x) {
+[[nodiscard]] inline real l1_norm(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     const idx n = x.size();
     if (n < parallel_threshold) {
@@ -47,7 +47,7 @@ namespace num::omp {
 #endif
 }
 
-[[nodiscard]] inline real linf_norm(const vec &x) {
+[[nodiscard]] inline real linf_norm(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     const idx n = x.size();
     if (n < parallel_threshold) {
@@ -70,7 +70,7 @@ namespace num::omp {
 #endif
 }
 
-[[nodiscard]] inline real sum(const vec &x) {
+[[nodiscard]] inline real sum(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     const idx n = x.size();
     if (n < parallel_threshold) {
@@ -95,7 +95,7 @@ namespace num::omp {
 namespace num {
 
 /// @brief The 1-norm \f$\sum_i |x_i|\f$.
-[[nodiscard]] inline real l1_norm(const vec &x) {
+[[nodiscard]] inline real l1_norm(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::l1_norm(x);
 #else
@@ -104,7 +104,7 @@ namespace num {
 }
 
 /// @brief The max-norm \f$\max_i |x_i|\f$.
-[[nodiscard]] inline real linf_norm(const vec &x) {
+[[nodiscard]] inline real linf_norm(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::linf_norm(x);
 #else
@@ -113,7 +113,7 @@ namespace num {
 }
 
 /// @brief The sum of the entries, \f$\sum_i x_i\f$.
-[[nodiscard]] inline real sum(const vec &x) {
+[[nodiscard]] inline real sum(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::sum(x);
 #else

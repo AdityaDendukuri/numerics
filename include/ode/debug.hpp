@@ -24,7 +24,7 @@ using num::debug::panic;
 /// Integrates with steps \f$h\f$ and \f$h/2\f$ against a reference at \f$h/16\f$. The error
 /// ratio approaches \f$2^p\f$, so its \f$\log_2\f$ recovers \f$p\f$.
 ///
-/// @param advance Callable `(real t0, real t1, real h, const vec &y0, vec &y1)`.
+/// @param advance Callable `(real t0, real t1, real h, const vec<real> &y0, vec<real> &y1)`.
 /// @param y0 Initial state.
 /// @param t0 Start of the integration interval.
 /// @param t1 End of the integration interval.
@@ -32,7 +32,7 @@ using num::debug::panic;
 /// @param slack Tolerated shortfall in the measured order.
 /// @param loc Call site reported in the diagnostic.
 template <class Advance>
-inline void verify_order_of_accuracy(Advance &&advance, const vec &y0, real t0, real t1,
+inline void verify_order_of_accuracy(Advance &&advance, const vec<real> &y0, real t0, real t1,
                                      real claimed_order, real slack = 0.4,
                                      std::source_location loc = std::source_location::current()) {
     if constexpr (!num::debug::sampling_compiled_in) {
@@ -47,12 +47,12 @@ inline void verify_order_of_accuracy(Advance &&advance, const vec &y0, real t0, 
     }
 
     const real h = span / real(8);
-    vec coarse(y0.size()), fine(y0.size()), reference(y0.size());
+    vec<real> coarse(y0.size()), fine(y0.size()), reference(y0.size());
     advance(t0, t1, h, y0, coarse);
     advance(t0, t1, h / real(2), y0, fine);
     advance(t0, t1, h / real(16), y0, reference);
 
-    auto distance = [](const vec &a, const vec &b) {
+    auto distance = [](const vec<real> &a, const vec<real> &b) {
         real sum = 0.0;
         for (idx i = 0; i < a.size(); ++i) {
             const real d = a[i] - b[i];
@@ -86,14 +86,14 @@ inline void verify_order_of_accuracy(Advance &&advance, const vec &y0, real t0, 
 /// Two tangent vectors are propagated by finite differences, and their pairing
 /// \f$\omega(u,v) = \delta q_u \cdot \delta p_v - \delta q_v \cdot \delta p_u\f$ must be unchanged.
 ///
-/// @param step Callable `(const vec &q, const vec &p, real h, vec &q1, vec &p1)`.
+/// @param step Callable `(const vec<real> &q, const vec<real> &p, real h, vec<real> &q1, vec<real> &p1)`.
 /// @param q0 Position at which to test.
 /// @param p0 Momentum at which to test.
 /// @param h Step size.
 /// @param tol Relative tolerance on the preserved form.
 /// @param loc Call site reported in the diagnostic.
 template <class Step>
-inline void verify_symplectic_2form(Step &&step, const vec &q0, const vec &p0, real h,
+inline void verify_symplectic_2form(Step &&step, const vec<real> &q0, const vec<real> &p0, real h,
                                     real tol = 1e-6,
                                     std::source_location loc = std::source_location::current()) {
     if constexpr (!num::debug::sampling_compiled_in) {
@@ -110,17 +110,17 @@ inline void verify_symplectic_2form(Step &&step, const vec &q0, const vec &p0, r
     const real eps = 1e-6;
 
     // Two independent tangent directions in phase space.
-    auto flow = [&](const vec &q, const vec &p, vec &q1, vec &p1) { step(q, p, h, q1, p1); };
+    auto flow = [&](const vec<real> &q, const vec<real> &p, vec<real> &q1, vec<real> &p1) { step(q, p, h, q1, p1); };
 
-    vec base_q(n), base_p(n);
+    vec<real> base_q(n), base_p(n);
     flow(q0, p0, base_q, base_p);
 
     // Tangent 1: perturb q[0].  Tangent 2: perturb p[0].
-    vec qa = q0, pa = p0, qb = q0, pb = p0;
+    vec<real> qa = q0, pa = p0, qb = q0, pb = p0;
     qa[0] += eps;
     pb[0] += eps;
 
-    vec qa1(n), pa1(n), qb1(n), pb1(n);
+    vec<real> qa1(n), pa1(n), qb1(n), pb1(n);
     flow(qa, pa, qa1, pa1);
     flow(qb, pb, qb1, pb1);
 

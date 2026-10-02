@@ -152,7 +152,7 @@ TEST(graph, LaplacianAndMarkovGeneratorConversion) {
     G.add_edge(0, 1, 1.0);
     G.add_edge(1, 2, 2.0);
 
-    mat L = num::linear::dense_laplacian(G);
+    mat<real> L = num::linear::dense_laplacian(G);
     // L = [[1, -1, 0], [-1, 3, -2], [0, -2, 2]]
     EXPECT_DOUBLE_EQ(L(0, 0), 1.0);
     EXPECT_DOUBLE_EQ(L(0, 1), -1.0);
@@ -160,7 +160,7 @@ TEST(graph, LaplacianAndMarkovGeneratorConversion) {
     EXPECT_DOUBLE_EQ(L(1, 2), -2.0);
     EXPECT_DOUBLE_EQ(L(2, 2), 2.0);
 
-    mat Q = num::linear::dense_markov_generator(G, true);
+    mat<real> Q = num::linear::dense_markov_generator(G, true);
     // Column sums of Q must be exactly 0
     for (idx j = 0; j < 3; ++j) {
         double col_sum = 0.0;
@@ -327,7 +327,7 @@ TEST(multigraph, ParallelEdgesAndLaplacian) {
     EXPECT_EQ(L.n_cols(), 3u);
 
     // Diagonal of L: vertex 0 has weight 1.0, vertex 1 has weight 1.0 + 3.0 = 4.0
-    vec d = diagonal(L);
+    vec<real> d = diagonal(L);
     EXPECT_DOUBLE_EQ(d[0], 1.0);
     EXPECT_DOUBLE_EQ(d[1], 4.0);
     EXPECT_DOUBLE_EQ(d[2], 3.0);

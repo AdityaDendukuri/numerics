@@ -2,7 +2,7 @@
 /// @brief One name per operation, selected by storage layout rather than by concrete type.
 ///
 /// `num::matvec` and friends are constrained on `num::repr::dense_row_major` and
-/// `num::repr::csr` rather than declared over `num::mat` and `num::spmat`. The two
+/// `num::repr::csr` rather than declared over `num::mat<real>` and `num::spmat`. The two
 /// concepts are disjoint, so the overloads never compete, and any type exposing the
 /// accessors participates without an adapter or a trait specialisation.
 ///
@@ -50,13 +50,13 @@ foreign_csr sample_csr() { return {3, 3, {0, 2, 3, 5}, {0, 2, 1, 0, 2}, {2.0, 1.
 } // namespace
 
 TEST(StorageDispatch, ConceptsClassifyEachLayoutAndDoNotOverlap) {
-    static_assert(repr::dense_row_major<mat>);
+    static_assert(repr::dense_row_major<mat<real>>);
     static_assert(repr::dense_row_major<foreign_dense>);
     static_assert(repr::csr<spmat>);
     static_assert(repr::csr<foreign_csr>);
 
     // disjointness is what keeps the overload sets from competing
-    static_assert(!repr::csr<mat>);
+    static_assert(!repr::csr<mat<real>>);
     static_assert(!repr::csr<foreign_dense>);
     static_assert(!repr::dense_row_major<spmat>);
     static_assert(!repr::dense_row_major<foreign_csr>);
@@ -64,39 +64,39 @@ TEST(StorageDispatch, ConceptsClassifyEachLayoutAndDoNotOverlap) {
 }
 
 TEST(StorageDispatch, OneMatvecServesEveryLayout) {
-    const vec ones{1.0, 1.0, 1.0};
+    const vec<real> ones{1.0, 1.0, 1.0};
 
     const foreign_csr f = sample_csr();
-    vec y(3, 0.0);
+    vec<real> y(3, 0.0);
     matvec(f, ones, y); // row sums: 3, 3, 5
     EXPECT_NEAR(y[0], 3.0, 1e-12);
     EXPECT_NEAR(y[1], 3.0, 1e-12);
     EXPECT_NEAR(y[2], 5.0, 1e-12);
 
     foreign_dense d{2, 2, {1.0, 2.0, 3.0, 4.0}};
-    const vec u{1.0, 1.0};
-    vec w(2, 0.0);
+    const vec<real> u{1.0, 1.0};
+    vec<real> w(2, 0.0);
     matvec(d, u, w);
     EXPECT_NEAR(w[0], 3.0, 1e-12);
     EXPECT_NEAR(w[1], 7.0, 1e-12);
 
     // and the library's own types reach the same name
     const spmat s = spmat::from_triplets(2, 2, {0, 1}, {0, 1}, {5.0, 6.0});
-    vec q(2, 0.0);
+    vec<real> q(2, 0.0);
     matvec(s, u, q);
     EXPECT_NEAR(q[0], 5.0, 1e-12);
 
-    const mat m = identity(2);
-    vec t(2, 0.0);
+    const mat<real> m = identity(2);
+    vec<real> t(2, 0.0);
     matvec(m, u, t);
     EXPECT_NEAR(t[0], 1.0, 1e-12);
 }
 
 TEST(StorageDispatch, SparseMatvecStillWorksAsAForwarder) {
     const spmat s = spmat::from_triplets(2, 2, {0, 1}, {0, 1}, {5.0, 6.0});
-    const vec u{1.0, 1.0};
-    vec a(2, 0.0);
-    vec b(2, 0.0);
+    const vec<real> u{1.0, 1.0};
+    vec<real> a(2, 0.0);
+    vec<real> b(2, 0.0);
     matvec(s, u, a);
     sparse_matvec(s, u, b);
     EXPECT_EQ(a[0], b[0]);
@@ -107,12 +107,12 @@ TEST(StorageDispatch, TheOtherOperationsAlsoTakeForeignStorage) {
     const foreign_csr f = sample_csr();
     const foreign_dense d{2, 2, {1.0, 2.0, 3.0, 4.0}};
 
-    const vec dc = diagonal(f);
+    const vec<real> dc = diagonal(f);
     EXPECT_NEAR(dc[0], 2.0, 1e-12);
     EXPECT_NEAR(dc[1], 3.0, 1e-12);
     EXPECT_NEAR(dc[2], 4.0, 1e-12);
 
-    const vec dd = diagonal(d);
+    const vec<real> dd = diagonal(d);
     EXPECT_NEAR(dd[0], 1.0, 1e-12);
     EXPECT_NEAR(dd[1], 4.0, 1e-12);
 

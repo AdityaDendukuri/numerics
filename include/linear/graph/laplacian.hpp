@@ -49,8 +49,8 @@ template <typename Weight = real, typename Index = idx>
 
 /// @brief The weighted adjacency matrix of a graph, dense.
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline mat to_dense_adjacency(const basic_graph<Weight, Index> &g) {
-    mat A(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
+[[nodiscard]] inline mat<real> to_dense_adjacency(const basic_graph<Weight, Index> &g) {
+    mat<real> A(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     for (Index u = 0; u < g.n_vertices(); ++u) {
         for (const auto &e : g.neighbors(u)) {
             A(static_cast<idx>(u), static_cast<idx>(e.to)) += static_cast<double>(e.weight);
@@ -112,8 +112,8 @@ template <std::size_t D, typename Weight, std::integral Index>
 
 /// @brief The graph Laplacian \f$L = D - W\f$, dense.
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline mat dense_laplacian(const basic_graph<Weight, Index> &g) {
-    mat L(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
+[[nodiscard]] inline mat<real> dense_laplacian(const basic_graph<Weight, Index> &g) {
+    mat<real> L(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     for (Index u = 0; u < g.n_vertices(); ++u) {
         double deg = 0.0;
         for (const auto &e : g.neighbors(u)) {
@@ -161,9 +161,9 @@ template <typename Weight = real, typename Index = idx>
 
 /// @brief The rate matrix of the Markov chain on a graph, dense.
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline mat dense_markov_generator(const basic_graph<Weight, Index> &g,
+[[nodiscard]] inline mat<real> dense_markov_generator(const basic_graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
-    mat Q(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
+    mat<real> Q(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     auto L = dense_laplacian(g);
     for (idx i = 0; i < static_cast<idx>(g.n_vertices()); ++i) {
         for (idx j = 0; j < static_cast<idx>(g.n_vertices()); ++j) {

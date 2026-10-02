@@ -15,7 +15,7 @@
 
 namespace num::blas {
 
-inline void matmul(const mat &A, const mat &B, mat &C) {
+inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) {
 #if defined(NUMERICS_HAS_BLAS)
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, static_cast<int>(A.rows()),
                 static_cast<int>(B.cols()), static_cast<int>(A.cols()), 1.0, A.data(),
@@ -47,8 +47,8 @@ inline void gemm(real alpha, const real *A, idx lda, bool transA, const real *B,
 }
 
 /// @brief `C <- alpha op(A) op(B) + beta C` for matrices; C must already be `m x n`.
-inline void gemm(real alpha, const mat &A, bool transA, const mat &B, bool transB, real beta,
-                 mat &C) {
+inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B, bool transB, real beta,
+                 mat<real> &C) {
     const idx m = transA ? A.cols() : A.rows();
     const idx k = transA ? A.rows() : A.cols();
     const idx n = transB ? B.rows() : B.cols();
@@ -59,7 +59,7 @@ inline void gemm(real alpha, const mat &A, bool transA, const mat &B, bool trans
          m, n, k);
 }
 
-inline void matvec(const mat &A, const vec &x, vec &y) {
+inline void matvec(const mat<real> &A, const vec<real> &x, vec<real> &y) {
 #if defined(NUMERICS_HAS_BLAS)
     cblas_dgemv(CblasRowMajor, CblasNoTrans, static_cast<int>(A.rows()), static_cast<int>(A.cols()),
                 1.0, A.data(), static_cast<int>(A.cols()), x.data(), 1, 0.0, y.data(), 1);
@@ -69,7 +69,7 @@ inline void matvec(const mat &A, const vec &x, vec &y) {
 #endif
 }
 
-inline void matadd(real alpha, const mat &A, real beta, const mat &B, mat &C) {
+inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B, mat<real> &C) {
 #if defined(NUMERICS_HAS_BLAS)
     cblas_dcopy(static_cast<int>(A.size()), A.data(), 1, C.data(), 1);
     cblas_dscal(static_cast<int>(C.size()), alpha, C.data(), 1);

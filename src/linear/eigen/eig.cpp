@@ -21,15 +21,15 @@
 namespace num {
 
 namespace seq {
-eigen_result eig_sym(const mat &A_in, real tol, idx max_sweeps) {
+eigen_result eig_sym(const mat<real> &A_in, real tol, idx max_sweeps) {
     if (A_in.rows() != A_in.cols()) {
         throw std::invalid_argument("eig_sym: matrix must be square");
     }
 
     constexpr real rotation_tol = 1e-15;
     idx n = A_in.rows();
-    mat A = A_in;
-    mat V(n, n, 0.0);
+    mat<real> A = A_in;
+    mat<real> V(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         V(i, i) = 1.0;
     }
@@ -84,7 +84,7 @@ eigen_result eig_sym(const mat &A_in, real tol, idx max_sweeps) {
         ++sweeps;
     }
 
-    vec values(n);
+    vec<real> values(n);
     for (idx i = 0; i < n; ++i) {
         values[i] = A(i, i);
     }
@@ -109,15 +109,15 @@ eigen_result eig_sym(const mat &A_in, real tol, idx max_sweeps) {
 } // namespace seq
 
 namespace omp {
-eigen_result eig_sym(const mat &A_in, real tol, idx max_sweeps) {
+eigen_result eig_sym(const mat<real> &A_in, real tol, idx max_sweeps) {
     if (A_in.rows() != A_in.cols()) {
         throw std::invalid_argument("eig_sym: matrix must be square");
     }
 
     constexpr real rotation_tol = 1e-15;
     idx n = A_in.rows();
-    mat A = A_in;
-    mat V(n, n, 0.0);
+    mat<real> A = A_in;
+    mat<real> V(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         V(i, i) = 1.0;
     }
@@ -180,7 +180,7 @@ eigen_result eig_sym(const mat &A_in, real tol, idx max_sweeps) {
         ++sweeps;
     }
 
-    vec values(n);
+    vec<real> values(n);
     for (idx i = 0; i < n; ++i) {
         values[i] = A(i, i);
     }
@@ -205,14 +205,14 @@ eigen_result eig_sym(const mat &A_in, real tol, idx max_sweeps) {
 } // namespace omp
 
 namespace lapack {
-eigen_result eig_sym(const mat &A) {
+eigen_result eig_sym(const mat<real> &A) {
 #if defined(NUMERICS_HAS_LAPACK)
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("eig_sym: matrix must be square");
     }
     idx n = A.rows();
-    mat Aw = A;
-    vec w(n);
+    mat<real> Aw = A;
+    vec<real> w(n);
     int info = LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', static_cast<lapack_int>(n), Aw.data(),
                               static_cast<lapack_int>(n), w.data());
     if (info != 0) {
@@ -225,7 +225,7 @@ eigen_result eig_sym(const mat &A) {
 }
 } // namespace lapack
 
-eigen_result eig_sym(const with_law<mat, law::self_adjoint> &A, real tol, idx max_sweeps) {
+eigen_result eig_sym(const with_law<mat<real>, law::self_adjoint> &A, real tol, idx max_sweeps) {
 #if defined(NUMERICS_HAS_LAPACK)
     return lapack::eig_sym(A.base());
 #elif defined(NUMERICS_HAS_OMP)
@@ -237,8 +237,8 @@ eigen_result eig_sym(const with_law<mat, law::self_adjoint> &A, real tol, idx ma
 
 namespace unsafe {
 
-eigen_result eig_sym(const mat &A, real tol, idx max_sweeps) {
-    return num::eig_sym(with_law<mat, law::self_adjoint>(A), tol, max_sweeps);
+eigen_result eig_sym(const mat<real> &A, real tol, idx max_sweeps) {
+    return num::eig_sym(with_law<mat<real>, law::self_adjoint>(A), tol, max_sweeps);
 }
 
 } // namespace unsafe

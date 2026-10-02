@@ -18,8 +18,8 @@ static_assert(!LanczosCallable<operators::dense_op>);
 
 // Helpers
 
-static mat make_sym(idx n) {
-    mat A(n, n, 0.0);
+static mat<real> make_sym(idx n) {
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         for (idx j = i; j < n; ++j) {
             real v = 1.0 / (1.0 + i + j);
@@ -32,7 +32,7 @@ static mat make_sym(idx n) {
     return A;
 }
 
-static real reconstruction_error(const mat &A, const eigen_result &r) {
+static real reconstruction_error(const mat<real> &A, const eigen_result &r) {
     idx n = A.rows();
     real err = 0.0;
     for (idx i = 0; i < n; ++i) {
@@ -47,7 +47,7 @@ static real reconstruction_error(const mat &A, const eigen_result &r) {
     return err;
 }
 
-static real orthogonality_error(const mat &V) {
+static real orthogonality_error(const mat<real> &V) {
     idx n = V.rows();
     real err = 0.0;
     for (idx i = 0; i < n; ++i) {
@@ -66,7 +66,7 @@ static real orthogonality_error(const mat &V) {
 // Jacobi
 
 TEST(EigSym_Jacobi, Reconstruct3x3) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(0, 2) = 0;
@@ -83,7 +83,7 @@ TEST(EigSym_Jacobi, Reconstruct3x3) {
 }
 
 TEST(EigSym_Jacobi, EigenvaluesAscending) {
-    mat A = make_sym(8);
+    mat<real> A = make_sym(8);
     auto r = seq::eig_sym(A, 1e-12, 100);
     for (idx i = 1; i < r.values.size(); ++i) {
         EXPECT_LE(r.values[i - 1], r.values[i] + 1e-12);
@@ -91,7 +91,7 @@ TEST(EigSym_Jacobi, EigenvaluesAscending) {
 }
 
 TEST(EigSym_Jacobi, ReconstructN32) {
-    mat A = make_sym(32);
+    mat<real> A = make_sym(32);
     auto r = seq::eig_sym(A, 1e-12, 100);
     EXPECT_LT(reconstruction_error(A, r), 1e-8);
     EXPECT_LT(orthogonality_error(r.vectors), 1e-8);
@@ -102,7 +102,7 @@ TEST(EigSym_Jacobi, ReconstructN32) {
 #if defined(NUMERICS_HAS_LAPACK)
 
 TEST(EigSym_LAPACK, Reconstruct3x3) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(0, 2) = 0;
@@ -119,7 +119,7 @@ TEST(EigSym_LAPACK, Reconstruct3x3) {
 }
 
 TEST(EigSym_LAPACK, MatchesJacobi) {
-    mat A = make_sym(20);
+    mat<real> A = make_sym(20);
     auto rj = seq::eig_sym(A, 1e-12, 100);
     auto rl = lapack::eig_sym(A);
     ASSERT_EQ(rj.values.size(), rl.values.size());
@@ -129,7 +129,7 @@ TEST(EigSym_LAPACK, MatchesJacobi) {
 }
 
 TEST(EigSym_LAPACK, ReconstructN64) {
-    mat A = make_sym(64);
+    mat<real> A = make_sym(64);
     auto r = lapack::eig_sym(A);
     EXPECT_LT(reconstruction_error(A, r), 1e-8);
     EXPECT_LT(orthogonality_error(r.vectors), 1e-8);
@@ -142,7 +142,7 @@ TEST(EigSym_LAPACK, ReconstructN64) {
 TEST(PowerIteration, DominantEigenvalue) {
     // Diagonal matrix: dominant eigenvalue = 10
     idx n = 5;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     A(0, 0) = 10;
     A(1, 1) = 5;
     A(2, 2) = 3;
@@ -157,8 +157,8 @@ TEST(PowerIteration, DominantEigenvalue) {
 
 TEST(Lanczos, TopKEigenvalues) {
     idx n = 50;
-    mat A = make_sym(n);
-    auto op = operators::make_op([&](const vec &v, vec &w) { matvec(A, v, w); }, n);
+    mat<real> A = make_sym(n);
+    auto op = operators::make_op([&](const vec<real> &v, vec<real> &w) { matvec(A, v, w); }, n);
     auto r = lanczos(num::assume_symmetric(op), 5, 1e-10);
     EXPECT_TRUE(r.converged);
 
@@ -179,7 +179,7 @@ TEST(Lanczos, TopKEigenvalues) {
 
 TEST(Lanczos, DenseOperator) {
     idx n = 50;
-    mat A = make_sym(n);
+    mat<real> A = make_sym(n);
     operators::dense_op op(A);
     static_assert(self_adjoint_operator<decltype(num::assume_symmetric(op))>);
     auto r = lanczos(num::assume_symmetric(op), 5, 1e-10);
@@ -201,8 +201,8 @@ TEST(Lanczos, DenseOperator) {
 
 TEST(Lanczos, InverseSquareRootAction) {
     constexpr idx n = 12;
-    mat A(n, n, 0.0);
-    vec right_hand_side(n, 0.0);
+    mat<real> A(n, n, 0.0);
+    vec<real> right_hand_side(n, 0.0);
     for (idx j = 0; j < n; ++j) {
         A(j, j) = 1.0 + static_cast<real>(j);
         right_hand_side[j] = static_cast<real>(j + 1);
@@ -217,12 +217,12 @@ TEST(Lanczos, InverseSquareRootAction) {
 }
 
 TEST(Lanczos, InverseSquareRootOfZeroVector) {
-    mat A(4, 4, 0.0);
+    mat<real> A(4, 4, 0.0);
     for (idx j = 0; j < 4; ++j)
         A(j, j) = 2.0;
 
     const auto result =
-        inverse_sqrt_lanczos(num::assume_spd(operators::dense_op(A)), vec(4, 0.0));
+        inverse_sqrt_lanczos(num::assume_spd(operators::dense_op(A)), vec<real>(4, 0.0));
 
     EXPECT_TRUE(result.converged);
     EXPECT_EQ(result.steps, 0u);
@@ -231,8 +231,8 @@ TEST(Lanczos, InverseSquareRootOfZeroVector) {
 
 TEST(Lanczos, SquareRootAction) {
     constexpr idx n = 12;
-    mat A(n, n, 0.0);
-    vec right_hand_side(n, 0.0);
+    mat<real> A(n, n, 0.0);
+    vec<real> right_hand_side(n, 0.0);
     for (idx j = 0; j < n; ++j) {
         A(j, j) = 1.0 + static_cast<real>(j);
         right_hand_side[j] = static_cast<real>(j + 1);
@@ -247,11 +247,11 @@ TEST(Lanczos, SquareRootAction) {
 }
 
 TEST(Lanczos, SquareRootOfZeroVector) {
-    mat A(4, 4, 0.0);
+    mat<real> A(4, 4, 0.0);
     for (idx j = 0; j < 4; ++j)
         A(j, j) = 2.0;
 
-    const auto result = sqrt_lanczos(num::assume_spd(operators::dense_op(A)), vec(4, 0.0));
+    const auto result = sqrt_lanczos(num::assume_spd(operators::dense_op(A)), vec<real>(4, 0.0));
 
     EXPECT_TRUE(result.converged);
     EXPECT_EQ(result.steps, 0u);

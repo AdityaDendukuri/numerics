@@ -5,12 +5,12 @@
 // Compile-time concept checks
 static_assert(num::field<double>);
 static_assert(num::field<float>);
-static_assert(num::vector_space<num::vec>);
-static_assert(num::repr::contiguous<num::vec>);
-static_assert(num::matrix_space<num::mat>);
-static_assert(num::repr::dense_row_major<num::mat>);
+static_assert(num::vector_space<num::vec<num::real>>);
+static_assert(num::repr::contiguous<num::vec<num::real>>);
+static_assert(num::matrix_space<num::mat<num::real>>);
+static_assert(num::repr::dense_row_major<num::mat<num::real>>);
 static_assert(num::repr::csr<num::spmat>);
-static_assert(num::linear_operator<num::jacobi_preconditioner, num::vec, num::vec>);
+static_assert(num::linear_operator<num::jacobi_preconditioner, num::vec<num::real>, num::vec<num::real>>);
 static_assert(num::linear_operator<num::operators::dense_op>);
 static_assert(num::self_adjoint_operator<num::with_law<num::operators::dense_op, num::law::self_adjoint>>);
 static_assert(num::spd_operator<num::with_law<num::operators::dense_op, num::law::spd>>);
@@ -26,7 +26,7 @@ TEST(DebugCheck, NonFiniteValueError) {
 
 TEST(DebugCheck, FalseSPDAssertionCaughtAtRuntime) {
     // Create a 2x2 matrix with negative diagonal entry (indefinite/negative definite)
-    num::mat A(2, 2, 0.0);
+    num::mat<num::real> A(2, 2, 0.0);
     A(0, 0) = -5.0;
     A(1, 1) = 1.0;
 
@@ -55,7 +55,7 @@ TEST(DebugCheck, PresetModesAndScopedGuard) {
     num::set_preset(num::preset::unsafe);
     EXPECT_EQ(num::get_preset(), num::diagnostic_preset::unsafe);
 
-    num::mat A(2, 2, 0.0);
+    num::mat<num::real> A(2, 2, 0.0);
     A(0, 0) = -5.0; // Non-SPD
     A(1, 1) = 1.0;
     num::operators::dense_op Aop(A);

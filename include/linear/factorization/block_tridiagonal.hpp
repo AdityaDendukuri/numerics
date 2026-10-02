@@ -50,8 +50,8 @@ struct block_lu_factor {
     array<idx> offsets;      ///< `nb + 1` block boundaries in reordered indexing.
     array<idx> order;        ///< `order[p]` is the original row at reordered position `p`.
     array<no_pivot_lu> diagonal; ///< No-pivot factors of the diagonal Schur blocks.
-    array<mat> upper;     ///< `upper[k]`: block (k, k+1). Size `nb - 1`.
-    array<mat> lower;     ///< `lower[k]`: block (k+1, k), already scaled. Size `nb - 1`.
+    array<mat<real>> upper;     ///< `upper[k]`: block (k, k+1). Size `nb - 1`.
+    array<mat<real>> lower;     ///< `lower[k]`: block (k+1, k), already scaled. Size `nb - 1`.
 
     /// @brief Number of blocks.
     [[nodiscard]] idx blocks() const noexcept {
@@ -77,7 +77,7 @@ struct block_cholesky_factor {
     array<idx> offsets;
     array<idx> order;
     array<cholesky_result> diagonal;
-    array<mat> lower; ///< `lower[k]`: block (k+1, k). Size `nb - 1`.
+    array<mat<real>> lower; ///< `lower[k]`: block (k+1, k). Size `nb - 1`.
 
     [[nodiscard]] idx blocks() const noexcept {
         return offsets.empty() ? 0 : offsets.size() - 1;
@@ -169,9 +169,9 @@ inline void validate_block_structure(const spmat &A, const block_layout &layout)
 
 /// @brief Dense diagonal, super- and sub-diagonal blocks in reordered indexing.
 struct assembled_blocks {
-    array<mat> diagonal;
-    array<mat> upper;
-    array<mat> lower;
+    array<mat<real>> diagonal;
+    array<mat<real>> upper;
+    array<mat<real>> lower;
 };
 
 /// @brief Scatter the sparse entries into dense blocks, scaling as it goes.
@@ -219,8 +219,8 @@ struct assembled_blocks {
 }
 
 /// @brief Permute a right-hand side into block order.
-[[nodiscard]] inline mat gather_rows(const mat &B, const array<idx> &order) {
-    mat out(B.rows(), B.cols(), 0.0);
+[[nodiscard]] inline mat<real> gather_rows(const mat<real> &B, const array<idx> &order) {
+    mat<real> out(B.rows(), B.cols(), 0.0);
     for (idx p = 0; p < B.rows(); ++p) {
         for (idx c = 0; c < B.cols(); ++c) {
             out(p, c) = B(order[p], c);
@@ -230,7 +230,7 @@ struct assembled_blocks {
 }
 
 /// @brief Undo `gather_rows`.
-inline void scatter_rows(const mat &in, const array<idx> &order, mat &out) {
+inline void scatter_rows(const mat<real> &in, const array<idx> &order, mat<real> &out) {
     for (idx p = 0; p < in.rows(); ++p) {
         for (idx c = 0; c < in.cols(); ++c) {
             out(order[p], c) = in(p, c);
@@ -238,23 +238,23 @@ inline void scatter_rows(const mat &in, const array<idx> &order, mat &out) {
     }
 }
 
-[[nodiscard]] inline vec gather_rows(const vec &b, const array<idx> &order) {
-    vec out(b.size(), 0.0);
+[[nodiscard]] inline vec<real> gather_rows(const vec<real> &b, const array<idx> &order) {
+    vec<real> out(b.size(), 0.0);
     for (idx p = 0; p < b.size(); ++p) {
         out[p] = b[order[p]];
     }
     return out;
 }
 
-inline void scatter_rows(const vec &in, const array<idx> &order, vec &out) {
+inline void scatter_rows(const vec<real> &in, const array<idx> &order, vec<real> &out) {
     for (idx p = 0; p < in.size(); ++p) {
         out[order[p]] = in[p];
     }
 }
 
 /// @brief Rows `[first, first + count)` of `M` as a dense block.
-[[nodiscard]] inline mat block_rows(const mat &M, idx first, idx count) {
-    mat out(count, M.cols(), 0.0);
+[[nodiscard]] inline mat<real> block_rows(const mat<real> &M, idx first, idx count) {
+    mat<real> out(count, M.cols(), 0.0);
     for (idx r = 0; r < count; ++r) {
         for (idx c = 0; c < M.cols(); ++c) {
             out(r, c) = M(first + r, c);
@@ -263,7 +263,7 @@ inline void scatter_rows(const vec &in, const array<idx> &order, vec &out) {
     return out;
 }
 
-inline void set_block_rows(mat &M, idx first, const mat &block) {
+inline void set_block_rows(mat<real> &M, idx first, const mat<real> &block) {
     for (idx r = 0; r < block.rows(); ++r) {
         for (idx c = 0; c < block.cols(); ++c) {
             M(first + r, c) = block(r, c);
@@ -271,40 +271,40 @@ inline void set_block_rows(mat &M, idx first, const mat &block) {
     }
 }
 
-[[nodiscard]] inline vec block_rows(const vec &v, idx first, idx count) {
-    vec out(count, 0.0);
+[[nodiscard]] inline vec<real> block_rows(const vec<real> &v, idx first, idx count) {
+    vec<real> out(count, 0.0);
     for (idx r = 0; r < count; ++r) {
         out[r] = v[first + r];
     }
     return out;
 }
 
-inline void set_block_rows(vec &v, idx first, const vec &block) {
+inline void set_block_rows(vec<real> &v, idx first, const vec<real> &block) {
     for (idx r = 0; r < block.size(); ++r) {
         v[first + r] = block[r];
     }
 }
 
 /// @brief `C <- A B` with `C` sized here.
-[[nodiscard]] inline mat product(const mat &A, const mat &B) {
-    mat out(A.rows(), B.cols(), 0.0);
+[[nodiscard]] inline mat<real> product(const mat<real> &A, const mat<real> &B) {
+    mat<real> out(A.rows(), B.cols(), 0.0);
     matmul(A, B, out);
     return out;
 }
 
 /// @brief `y <- A x`.
-[[nodiscard]] inline vec product(const mat &A, const vec &x) {
-    vec out(A.rows(), 0.0);
+[[nodiscard]] inline vec<real> product(const mat<real> &A, const vec<real> &x) {
+    vec<real> out(A.rows(), 0.0);
     matvec(A, x, out);
     return out;
 }
 
 /// @brief `target <- target - update`.
-inline void subtract_from(mat &target, const mat &update) {
+inline void subtract_from(mat<real> &target, const mat<real> &update) {
     matadd(real(1), target, real(-1), update, target);
 }
 
-inline void subtract_from(vec &target, const vec &update) {
+inline void subtract_from(vec<real> &target, const vec<real> &update) {
     for (idx i = 0; i < target.size(); ++i) {
         target[i] -= update[i];
     }
@@ -356,11 +356,11 @@ inline void validate_reusable_prefix(const block_layout &layout, const Factor &p
 }
 
 /// @brief Solve `L z = rhs` for lower-triangular `L`, column by column.
-[[nodiscard]] inline mat forward_substitute(const mat &L, const mat &rhs) {
+[[nodiscard]] inline mat<real> forward_substitute(const mat<real> &L, const mat<real> &rhs) {
     const idx n = L.rows();
-    mat out(n, rhs.cols(), 0.0);
-    vec column(n, 0.0);
-    vec solution(n, 0.0);
+    mat<real> out(n, rhs.cols(), 0.0);
+    vec<real> column(n, 0.0);
+    vec<real> solution(n, 0.0);
     for (idx c = 0; c < rhs.cols(); ++c) {
         for (idx r = 0; r < n; ++r) {
             column[r] = rhs(r, c);
@@ -374,10 +374,10 @@ inline void validate_reusable_prefix(const block_layout &layout, const Factor &p
 }
 
 /// @brief Solve `L^T z = rhs` for lower-triangular `L`, column by column.
-[[nodiscard]] inline mat backward_substitute(const mat &L, const mat &rhs) {
+[[nodiscard]] inline mat<real> backward_substitute(const mat<real> &L, const mat<real> &rhs) {
     const idx n = L.rows();
-    mat out = rhs; // trsv_transpose_lower works in place
-    vec column(n, 0.0);
+    mat<real> out = rhs; // trsv_transpose_lower works in place
+    vec<real> column(n, 0.0);
     for (idx c = 0; c < rhs.cols(); ++c) {
         for (idx r = 0; r < n; ++r) {
             column[r] = rhs(r, c);
@@ -390,14 +390,14 @@ inline void validate_reusable_prefix(const block_layout &layout, const Factor &p
     return out;
 }
 
-[[nodiscard]] inline vec forward_substitute(const mat &L, const vec &rhs) {
-    vec out(L.rows(), 0.0);
+[[nodiscard]] inline vec<real> forward_substitute(const mat<real> &L, const vec<real> &rhs) {
+    vec<real> out(L.rows(), 0.0);
     kernel::trsv_lower(out.data(), L.data(), rhs.data(), L.rows());
     return out;
 }
 
-[[nodiscard]] inline vec backward_substitute(const mat &L, const vec &rhs) {
-    vec out = rhs;
+[[nodiscard]] inline vec<real> backward_substitute(const mat<real> &L, const vec<real> &rhs) {
+    vec<real> out = rhs;
     kernel::trsv_transpose_lower(out.data(), L.data(), L.rows(), L.rows());
     return out;
 }
@@ -531,8 +531,8 @@ inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, re
         }
         // lower[k] <- lower[k] D_k^{-1}. Right-side solves are not exposed
         // directly, so use Z D = L  <=>  D^T Z^T = L^T.
-        mat transposed = transpose(factor.lower[k]);
-        mat scaled_transposed;
+        mat<real> transposed = transpose(factor.lower[k]);
+        mat<real> scaled_transposed;
         solve_transpose(factor.diagonal[k], transposed, scaled_transposed);
         factor.lower[k] = transpose(scaled_transposed);
 
@@ -579,8 +579,8 @@ refactor_block_lu_suffix(const spmat &A, view<const idx> levels,
 
     if (first_changed_block > 0) {
         const idx coupling = first_changed_block - 1;
-        mat transposed = transpose(factor.lower[coupling]);
-        mat scaled_transposed;
+        mat<real> transposed = transpose(factor.lower[coupling]);
+        mat<real> scaled_transposed;
         solve_transpose(factor.diagonal[coupling], transposed, scaled_transposed);
         factor.lower[coupling] = transpose(scaled_transposed);
         detail::subtract_from(
@@ -597,8 +597,8 @@ refactor_block_lu_suffix(const spmat &A, view<const idx> levels,
         if (k + 1 >= count) {
             break;
         }
-        mat transposed = transpose(factor.lower[k]);
-        mat scaled_transposed;
+        mat<real> transposed = transpose(factor.lower[k]);
+        mat<real> scaled_transposed;
         solve_transpose(factor.diagonal[k], transposed, scaled_transposed);
         factor.lower[k] = transpose(scaled_transposed);
         detail::subtract_from(blocks.diagonal[k + 1],
@@ -608,22 +608,22 @@ refactor_block_lu_suffix(const spmat &A, view<const idx> levels,
 }
 
 /// @brief Solve \f$AX = B\f$ using stored block LU factors.
-inline void solve(const block_lu_factor &factor, const mat &B, mat &X) {
+inline void solve(const block_lu_factor &factor, const mat<real> &B, mat<real> &X) {
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
     }
     X = B;
-    vec work(factor.size * B.cols(), 0.0);
+    vec<real> work(factor.size * B.cols(), 0.0);
     solve_in_place(factor, X.data(), B.cols(), work.data());
 }
 
 /// @brief Solve \f$Ax = b\f$ using stored block LU factors.
-inline void solve(const block_lu_factor &factor, const vec &b, vec &x) {
+inline void solve(const block_lu_factor &factor, const vec<real> &b, vec<real> &x) {
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");
     }
     x = b;
-    vec work(factor.size, 0.0);
+    vec<real> work(factor.size, 0.0);
     solve_in_place(factor, x.data(), 1, work.data());
 }
 
@@ -634,22 +634,22 @@ inline void solve(const block_lu_factor &factor, const vec &b, vec &x) {
 /// \f$\mathcal{U}^{T}\f$ (block lower bidiagonal, `upper[k]^T` below the
 /// diagonal) followed by a backward sweep through \f$\mathcal{L}^{T}\f$ (block
 /// unit upper bidiagonal, `lower[k]^T` above it).
-inline void solve_transpose(const block_lu_factor &factor, const mat &B, mat &X) {
+inline void solve_transpose(const block_lu_factor &factor, const mat<real> &B, mat<real> &X) {
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
     }
     X = B;
-    vec work(factor.size * B.cols(), 0.0);
+    vec<real> work(factor.size * B.cols(), 0.0);
     solve_transpose_in_place(factor, X.data(), B.cols(), work.data());
 }
 
 /// @brief Solve \f$A^{T}x = b\f$ from the same factors, without refactorizing.
-inline void solve_transpose(const block_lu_factor &factor, const vec &b, vec &x) {
+inline void solve_transpose(const block_lu_factor &factor, const vec<real> &b, vec<real> &x) {
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");
     }
     x = b;
-    vec work(factor.size, 0.0);
+    vec<real> work(factor.size, 0.0);
     solve_transpose_in_place(factor, x.data(), 1, work.data());
 }
 
@@ -690,7 +690,7 @@ inline void solve_transpose(const block_lu_factor &factor, const vec &b, vec &x)
             break;
         }
         // C <- C L_k^{-T}, i.e. L_k Z^T = C^T: forward-substitute each row of C.
-        const mat &chol = factor.diagonal[k].L;
+        const mat<real> &chol = factor.diagonal[k].L;
         factor.lower[k] = transpose(detail::forward_substitute(chol, transpose(factor.lower[k])));
 
         // A_{k+1} <- A_{k+1} - C C^T
@@ -730,7 +730,7 @@ refactor_block_cholesky_suffix(const spmat &A, view<const idx> levels,
 
     if (first_changed_block > 0) {
         const idx coupling = first_changed_block - 1;
-        const mat &chol = factor.diagonal[coupling].L;
+        const mat<real> &chol = factor.diagonal[coupling].L;
         factor.lower[coupling] = transpose(
             detail::forward_substitute(chol, transpose(factor.lower[coupling])));
         detail::subtract_from(
@@ -748,7 +748,7 @@ refactor_block_cholesky_suffix(const spmat &A, view<const idx> levels,
         if (k + 1 >= count) {
             break;
         }
-        const mat &chol = factor.diagonal[k].L;
+        const mat<real> &chol = factor.diagonal[k].L;
         factor.lower[k] =
             transpose(detail::forward_substitute(chol, transpose(factor.lower[k])));
         detail::subtract_from(blocks.diagonal[k + 1],
@@ -758,22 +758,22 @@ refactor_block_cholesky_suffix(const spmat &A, view<const idx> levels,
 }
 
 /// @brief Solve \f$AX = B\f$ using stored block Cholesky factors.
-inline void solve(const block_cholesky_factor &factor, const mat &B, mat &X) {
+inline void solve(const block_cholesky_factor &factor, const mat<real> &B, mat<real> &X) {
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
     }
     X = B;
-    vec work(factor.size * B.cols(), 0.0);
+    vec<real> work(factor.size * B.cols(), 0.0);
     solve_in_place(factor, X.data(), B.cols(), work.data());
 }
 
 /// @brief Solve \f$Ax = b\f$ using stored block Cholesky factors.
-inline void solve(const block_cholesky_factor &factor, const vec &b, vec &x) {
+inline void solve(const block_cholesky_factor &factor, const vec<real> &b, vec<real> &x) {
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");
     }
     x = b;
-    vec work(factor.size, 0.0);
+    vec<real> work(factor.size, 0.0);
     solve_in_place(factor, x.data(), 1, work.data());
 }
 

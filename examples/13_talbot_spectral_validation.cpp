@@ -21,7 +21,7 @@ int main() {
     std::uniform_real_distribution<double> prob_dist(0.0, 1.0);
 
     // 1. Construct a connected Markov jump generator Q with row sums = 0
-    mat Q(N, N, 0.0);
+    mat<real> Q(N, N, 0.0);
     for (idx i = 0; i < N; ++i) {
         for (idx j = i + 1; j < N; ++j) {
             if (prob_dist(rng) < 0.10 || j == i + 1) { // ensure connected chain
@@ -40,7 +40,7 @@ int main() {
         Q(j, j) = -col_rate;
     }
 
-    vec p0(N, 0.0);
+    vec<real> p0(N, 0.0);
     p0[0] = 1.0; // Initial state at node 0
 
     // 2. Precompute Hessenberg decomposition of Q once in O(N^3)
@@ -52,7 +52,7 @@ int main() {
     // 3. High-precision Ground Truth via Krylov Arnoldi expv
     operators::dense_op Q_op(Q);
     auto t_krylov_start = std::chrono::high_resolution_clock::now();
-    vec p_exact = expv(t_eval, Q_op, p0, 50, 1e-15);
+    vec<real> p_exact = expv(t_eval, Q_op, p0, 50, 1e-15);
     auto t_krylov_end = std::chrono::high_resolution_clock::now();
     double krylov_ms = std::chrono::duration<double, std::milli>(t_krylov_end - t_krylov_start).count();
 
@@ -79,7 +79,7 @@ int main() {
             }
         }
 
-        vec p_talbot(N, 0.0);
+        vec<real> p_talbot(N, 0.0);
         for (idx i = 0; i < N; ++i) p_talbot[i] = std::max(0.0, density[i].real());
         clip_and_normalize_nonnegative(p_talbot);
 

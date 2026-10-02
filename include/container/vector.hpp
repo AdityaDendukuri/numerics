@@ -19,38 +19,38 @@
 
 namespace num {
 
-/// @brief Dense owning vector.
+/// @brief Dense owning vector. `vec<real>` takes the CPU and GPU backends; other scalars stay on the host.
 template <typename T>
-class basic_vec {
+class vec {
   public:
     using value_type = T;
 
     /// Construct an empty vector.
-    basic_vec() : n_(0), data_(nullptr) {}
+    vec() : n_(0), data_(nullptr) {}
 
     /// Construct n value-initialized elements.
-    explicit basic_vec(idx n) : n_(n), data_(make_aligned<T>(n)) {}
+    explicit vec(idx n) : n_(n), data_(make_aligned<T>(n)) {}
 
     /// Construct n elements initialized to val.
-    basic_vec(idx n, T val) : n_(n), data_(make_aligned_for_overwrite<T>(n)) {
+    vec(idx n, T val) : n_(n), data_(make_aligned_for_overwrite<T>(n)) {
         if (n_ > 0) std::fill_n(data_.get(), n_, val);
     }
 
     /// Copy values from an initializer list.
-    basic_vec(std::initializer_list<T> init)
+    vec(std::initializer_list<T> init)
         : n_(init.size()), data_(make_aligned_for_overwrite<T>(init.size())) {
         if (n_ > 0) std::copy(init.begin(), init.end(), data_.get());
     }
 
     /// Copy values from a non-owning span.
-    explicit basic_vec(view<const T> values)
+    explicit vec(view<const T> values)
         : n_(values.size()), data_(make_aligned_for_overwrite<T>(values.size())) {
         if (n_ > 0) std::copy(values.begin(), values.end(), data_.get());
     }
 
-    explicit basic_vec(const std::vector<T> &values) : basic_vec(std::span<const T>(values)) {}
+    explicit vec(const std::vector<T> &values) : vec(std::span<const T>(values)) {}
 
-    ~basic_vec() {
+    ~vec() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
             if (d_data_) {
@@ -61,20 +61,20 @@ class basic_vec {
 #endif
     }
 
-    basic_vec(const basic_vec &o)
+    vec(const vec &o)
         : n_(o.n_), data_(make_aligned_for_overwrite<T>(o.data_ ? o.n_ : 0)) {
         if (n_ > 0 && o.data_) {
             std::copy_n(o.data_.get(), n_, data_.get());
         }
     }
 
-    basic_vec(basic_vec &&o) noexcept
+    vec(vec &&o) noexcept
         : n_(o.n_), data_(std::move(o.data_)), d_data_(o.d_data_) {
         o.n_ = 0;
         o.d_data_ = nullptr;
     }
 
-    basic_vec &operator=(const basic_vec &o) {
+    vec &operator=(const vec &o) {
         if (this != &o) {
 #if defined(NUMERICS_HAS_CUDA)
             if constexpr (std::is_same_v<T, real>) {
@@ -95,7 +95,7 @@ class basic_vec {
         return *this;
     }
 
-    basic_vec &operator=(basic_vec &&o) noexcept {
+    vec &operator=(vec &&o) noexcept {
         if (this != &o) {
 #if defined(NUMERICS_HAS_CUDA)
             if constexpr (std::is_same_v<T, real>) {
@@ -117,8 +117,8 @@ class basic_vec {
     [[nodiscard]] constexpr idx size() const noexcept { return n_; }
 
     /// Expose the vector itself for field-compatible generic code.
-    basic_vec &as_vec() { return *this; }
-    [[nodiscard]] const basic_vec &as_vec() const { return *this; }
+    vec &as_vec() { return *this; }
+    [[nodiscard]] const vec &as_vec() const { return *this; }
 
     /// Return contiguous host storage, aligned to `num::storage_alignment`.
     ///
@@ -189,7 +189,7 @@ class basic_vec {
 
 template <typename T>
 /// Copy an owning vector into an equally sized span.
-void copy_to(const basic_vec<T> &source, view<T> destination) {
+void copy_to(const vec<T> &source, view<T> destination) {
     if (source.size() != destination.size()) {
         throw std::invalid_argument("copy_to: vector sizes must match");
     }
@@ -198,26 +198,20 @@ void copy_to(const basic_vec<T> &source, view<T> destination) {
 
 template <typename T>
 /// Copy an owning vector into an equally sized std::vector.
-void copy_to(const basic_vec<T> &source, std::vector<T> &destination) {
+void copy_to(const vec<T> &source, std::vector<T> &destination) {
     copy_to(source, view<T>(destination));
 }
-
-/// @brief Real-valued dense vector with full backend dispatch (CPU + GPU)
-using vec = basic_vec<real>;
 
 #if defined(NUMERICS_EXTERN_TEMPLATES)
 // Defined by the numerics build so its own translation units share one
 // instantiation. Left undefined when these headers are copied out on their own,
 // where implicit instantiation is what makes the header usable without linking.
-extern template class basic_vec<double>;
+extern template class vec<double>;
 #endif
-
-/// @brief Complex-valued dense vector (sequential; no GPU)
-using cvec = basic_vec<cplx>;
 
 /// @brief Non-owning view of a flat vector as \f$(x_i,y_i)\f$ pairs.
 struct vec2_view {
-    vec &v;
+    vec<real> &v;
 
     /// Return the number of coordinate pairs.
     [[nodiscard]] idx size() const noexcept { return v.size() / 2; }
@@ -235,7 +229,7 @@ struct vec2_view {
 // algorithm uses. Foreign vectors use the coordinate fallbacks or provide their
 // own tag_invoke overloads without inheriting from a numerics type.
 template <std::floating_point T>
-inline void tag_invoke(math::scale_t, T alpha, basic_vec<T> &vector) noexcept {
+inline void tag_invoke(math::scale_t, T alpha, vec<T> &vector) noexcept {
     T *data = vector.data();
     omp::parallel_apply(vector.size(), [data, alpha](idx offset, idx length) {
         kernel::scale(data + offset, alpha, length);
@@ -243,7 +237,7 @@ inline void tag_invoke(math::scale_t, T alpha, basic_vec<T> &vector) noexcept {
 }
 
 template <std::floating_point T>
-inline void tag_invoke(math::axpy_t, T alpha, const basic_vec<T> &x, basic_vec<T> &y) {
+inline void tag_invoke(math::axpy_t, T alpha, const vec<T> &x, vec<T> &y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("math::axpy: vector dimensions must match");
     }
@@ -255,8 +249,8 @@ inline void tag_invoke(math::axpy_t, T alpha, const basic_vec<T> &x, basic_vec<T
 }
 
 template <std::floating_point T>
-inline void tag_invoke(math::linear_combination_t, T alpha, const basic_vec<T> &x, T beta,
-                       basic_vec<T> &y) {
+inline void tag_invoke(math::linear_combination_t, T alpha, const vec<T> &x, T beta,
+                       vec<T> &y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("math::linear_combination: vector dimensions must match");
     }
@@ -269,7 +263,7 @@ inline void tag_invoke(math::linear_combination_t, T alpha, const basic_vec<T> &
 }
 
 template <std::floating_point T>
-[[nodiscard]] inline T tag_invoke(math::inner_t, const basic_vec<T> &x, const basic_vec<T> &y) {
+[[nodiscard]] inline T tag_invoke(math::inner_t, const vec<T> &x, const vec<T> &y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("math::inner: vector dimensions must match");
     }
@@ -281,8 +275,8 @@ template <std::floating_point T>
 }
 
 template <std::floating_point T>
-[[nodiscard]] inline T tag_invoke(math::axpy_norm_sq_t, T alpha, const basic_vec<T> &x,
-                                  basic_vec<T> &y) {
+[[nodiscard]] inline T tag_invoke(math::axpy_norm_sq_t, T alpha, const vec<T> &x,
+                                  vec<T> &y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("math::axpy_norm_sq: vector dimensions must match");
     }
@@ -296,7 +290,7 @@ template <std::floating_point T>
 }
 
 template <std::floating_point T>
-[[nodiscard]] inline T tag_invoke(math::norm_t, const basic_vec<T> &vector) noexcept {
+[[nodiscard]] inline T tag_invoke(math::norm_t, const vec<T> &vector) noexcept {
     const T *data = vector.data();
     const idx n = vector.size();
     const T squared = omp::parallel_reduce<T>(n, [data](idx offset, idx length) {

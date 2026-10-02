@@ -18,8 +18,8 @@
 
 using namespace num;
 
-static mat make_sym(idx n) {
-    mat A(n, n, 0.0);
+static mat<real> make_sym(idx n) {
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i)
         for (idx j = i; j < n; ++j) {
             real v = static_cast<real>(1) / static_cast<real>(1 + i + j);
@@ -35,7 +35,7 @@ static mat make_sym(idx n) {
 
 static void BM_EigSym_Seq(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A = make_sym(n);
+    mat<real> A = make_sym(n);
     for (auto _ : state) {
         auto r = seq::eig_sym(A, 1e-12, 100);
         benchmark::DoNotOptimize(r.values.data());
@@ -58,7 +58,7 @@ BENCHMARK(BM_EigSym_Seq)->RangeMultiplier(2)->Range(32, 512)->Complexity();
 #if defined(NUMERICS_HAS_LAPACK)
 static void BM_EigSym_Lapack(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A = make_sym(n);
+    mat<real> A = make_sym(n);
     for (auto _ : state) {
         auto r = lapack::eig_sym(A);
         benchmark::DoNotOptimize(r.values.data());
@@ -74,8 +74,8 @@ BENCHMARK(BM_EigSym_Lapack)->RangeMultiplier(2)->Range(32, 512)->Complexity();
 static void BM_Lanczos(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
     constexpr idx k = 10;
-    mat A = make_sym(n);
-    auto op = operators::make_op([&](const vec &v, vec &w) { matvec(A, v, w); }, n);
+    mat<real> A = make_sym(n);
+    auto op = operators::make_op([&](const vec<real> &v, vec<real> &w) { matvec(A, v, w); }, n);
     auto Aop = num::assume_symmetric(op);
     for (auto _ : state) {
         auto r = lanczos(Aop, k, 1e-10, 0);

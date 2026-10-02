@@ -26,14 +26,14 @@ using namespace num::spectral;
 
 static constexpr double TWO_PI = 6.283185307179586476925286766559;
 
-static void fill_signal(cvec &v) {
+static void fill_signal(vec<cplx> &v) {
     const int n = static_cast<int>(v.size());
     for (int j = 0; j < n; ++j)
         v[j] = std::complex<double>{std::sin(TWO_PI * 7 * j / n) + std::cos(TWO_PI * 13 * j / n),
                                     std::cos(TWO_PI * 11 * j / n) - std::sin(TWO_PI * 19 * j / n)};
 }
 
-static void fill_real_signal(vec &v) {
+static void fill_real_signal(vec<real> &v) {
     const int n = static_cast<int>(v.size());
     for (int j = 0; j < n; ++j)
         v[j] = std::sin(TWO_PI * 7 * j / n) + 0.5 * std::cos(TWO_PI * 23 * j / n);
@@ -44,7 +44,7 @@ static void fill_real_signal(vec &v) {
 template <fft_backend B>
 static void BM_FFT(benchmark::State &state) {
     const idx n = static_cast<idx>(state.range(0));
-    cvec in(n), out(n);
+    vec<cplx> in(n), out(n);
     fill_signal(in);
     for (auto _ : state) {
         fft(in, out, B);
@@ -72,7 +72,7 @@ BENCHMARK_TEMPLATE(BM_FFT, fft_backend::fftw)->RangeMultiplier(4)->Range(256, 1 
 template <fft_backend B>
 static void BM_IFFT(benchmark::State &state) {
     const idx n = static_cast<idx>(state.range(0));
-    cvec in(n), out(n);
+    vec<cplx> in(n), out(n);
     fill_signal(in);
     for (auto _ : state) {
         ifft(in, out, B);
@@ -106,8 +106,8 @@ BENCHMARK_TEMPLATE(BM_IFFT, fft_backend::fftw)
 template <fft_backend B>
 static void BM_RFFT(benchmark::State &state) {
     const idx n = static_cast<idx>(state.range(0));
-    vec in(n);
-    cvec out(static_cast<idx>(n / 2 + 1));
+    vec<real> in(n);
+    vec<cplx> out(static_cast<idx>(n / 2 + 1));
     fill_real_signal(in);
     for (auto _ : state) {
         rfft(in, out, B);
@@ -142,7 +142,7 @@ BENCHMARK_TEMPLATE(BM_RFFT, fft_backend::fftw)
 template <fft_backend B>
 static void BM_FFTPlan(benchmark::State &state) {
     const idx n = static_cast<idx>(state.range(0));
-    cvec in(n), out(n);
+    vec<cplx> in(n), out(n);
     fill_signal(in);
     fft_plan plan(static_cast<int>(n), true, B);
 

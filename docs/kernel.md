@@ -5,12 +5,12 @@ scope: num::kernel
 # num::kernel
 
 `num::kernel` is the computational core of the library. Every routine operates on raw
-pointers, lengths and strides. Nothing in it allocates, throws, or refers to `num::vec`,
-`num::mat`, or any type above it.
+pointers, lengths and strides. Nothing in it allocates, throws, or refers to `num::vec<num::real>`,
+`num::mat<num::real>`, or any type above it.
 
 It has no dependencies beyond the C++ standard library, so it can be copied out of this
 project and used on its own. Every other tier of `numerics` reaches this one: a call to
-`num::cg` on a `num::vec` ends in the same loops a direct call to `num::kernel::cg` would
+`num::cg` on a `num::vec<num::real>` ends in the same loops a direct call to `num::kernel::cg` would
 run.
 
 ```cpp

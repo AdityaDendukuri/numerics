@@ -18,7 +18,7 @@ int main() {
     const num::operators::backward_euler_2d system(grid.N, timestep_diffusivity);
     static_assert(num::claims<decltype(system), num::law::spd>);
 
-    num::vec rhs(grid.size(), 0.0);
+    num::vec<num::real> rhs(grid.size(), 0.0);
     for (int i = 0; i < grid.N; ++i) {
         for (int j = 0; j < grid.N; ++j) {
             const double x = grid.x(i);
@@ -27,7 +27,7 @@ int main() {
         }
     }
 
-    num::vec solution(rhs.size(), 0.0);
+    num::vec<num::real> solution(rhs.size(), 0.0);
     const auto result =
         num::cg(system, rhs, solution,
                 num::cg_options{.tolerance = 1e-12, .max_iterations = 4 * solution.size()});

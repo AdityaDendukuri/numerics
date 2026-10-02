@@ -14,13 +14,13 @@ int main() {
     // -------------------------------------------------------------------------
     // 1. Construct a 4x4 Symmetric Positive-Definite (SPD) 1D Laplace mat
     // -------------------------------------------------------------------------
-    mat A(4, 4, 0.0);
+    mat<real> A(4, 4, 0.0);
     A(0, 0) = 2.0; A(0, 1) = -1.0;
     A(1, 0) = -1.0; A(1, 1) = 2.0; A(1, 2) = -1.0;
     A(2, 1) = -1.0; A(2, 2) = 2.0; A(2, 3) = -1.0;
     A(3, 2) = -1.0; A(3, 3) = 2.0;
 
-    vec b{1.0, 2.0, 2.0, 1.0};
+    vec<real> b{1.0, 2.0, 2.0, 1.0};
 
     // -------------------------------------------------------------------------
     // 2. Untagged input does not compile; the escape hatch is explicit
@@ -33,7 +33,7 @@ int main() {
                  "To take the precondition on faith anyway, say so at the call site:\n";
 
     auto chol_untagged = unsafe::cholesky(A); // opt-out, greppable, no verification
-    vec x_untagged(4, 0.0);
+    vec<real> x_untagged(4, 0.0);
     cholesky_solve(chol_untagged, b, x_untagged);
     std::cout << "unsafe:: Solution x = [" << x_untagged[0] << ", " << x_untagged[1] << ", "
               << x_untagged[2] << ", " << x_untagged[3] << "]\n\n";
@@ -51,7 +51,7 @@ int main() {
     static_assert(self_adjoint_operator<decltype(spd_matrix)>, "spd implies self-adjoint");
 
     auto chol_tagged = cholesky(spd_matrix);
-    vec x_tagged(4, 0.0);
+    vec<real> x_tagged(4, 0.0);
     cholesky_solve(chol_tagged, b, x_tagged);
     std::cout << "Tagged Solution x   = [" << x_tagged[0] << ", " << x_tagged[1] << ", "
               << x_tagged[2] << ", " << x_tagged[3] << "]\n\n";
@@ -67,7 +67,7 @@ int main() {
         std::cout << "Validation error: " << e.what() << "\n";
     }
 
-    mat Indefinite(2, 2, 0.0);
+    mat<real> Indefinite(2, 2, 0.0);
     Indefinite(0, 0) = 1.0; Indefinite(0, 1) = 3.0;
     Indefinite(1, 0) = 3.0; Indefinite(1, 1) = 1.0; // det = -8 < 0
     std::cout << "Testing make_spd on Indefinite mat [[1, 3], [3, 1]]...\n";

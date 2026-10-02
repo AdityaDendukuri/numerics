@@ -149,7 +149,7 @@ All test suites. A failed suite must be investigated before using the library in
 
 ## Core — vec and mat
 
-`vec` and `mat` dispatch to the backend selected via the `Backend` enum
+`vec<real>` and `mat<real>` dispatch to the backend selected via the `Backend` enum
 (`seq → blocked → simd → blas → omp → gpu`). With BLAS available, `default_backend`
 resolves to `Backend::blas`.
 

@@ -35,8 +35,8 @@ template <class Op>
         throw std::invalid_argument("estimate_largest_eigenvalue: invalid iteration or safety");
     }
 
-    vec v(n);
-    vec image(n, 0.0);
+    vec<real> v(n);
+    vec<real> image(n, 0.0);
     // A fixed, non-symmetric starting vector: a constant one is an eigenvector
     // of too many operators of interest (any Laplacian) to be a safe default.
     for (idx i = 0; i < n; ++i) {
@@ -66,8 +66,8 @@ template <class Op>
 requires math::spd_operator<Op>
 class chebyshev_preconditioner final {
   public:
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
     /// Valid only for bounds that enclose the spectrum; see the file comment.
     using laws = law::list<law::spd>;
 
@@ -93,12 +93,12 @@ class chebyshev_preconditioner final {
     [[nodiscard]] idx degree() const noexcept { return degree_; }
 
     /// @brief Apply \f$z \leftarrow p_m(A)\, r\f$.
-    void apply(const vec &r, vec &z) const {
+    void apply(const vec<real> &r, vec<real> &z) const {
         if (r.size() != n_) {
             throw std::invalid_argument("chebyshev: dimension mismatch");
         }
         if (z.size() != n_) {
-            z = vec(n_, 0.0);
+            z = vec<real>(n_, 0.0);
         }
 
         const real centre = 0.5 * (hi_ + lo_);
@@ -144,9 +144,9 @@ class chebyshev_preconditioner final {
     real hi_;
     idx degree_;
     idx n_;
-    mutable vec residual_;
-    mutable vec direction_;
-    mutable vec work_;
+    mutable vec<real> residual_;
+    mutable vec<real> direction_;
+    mutable vec<real> work_;
 };
 
 /// @brief Build a Chebyshev preconditioner over an explicit spectral interval.

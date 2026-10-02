@@ -14,7 +14,7 @@
 namespace num::seq {
 
 /// @brief Rank-1 matrix update \f$A \leftarrow A + \alpha \mathbf{x} \mathbf{y}^T\f$.
-inline void ger(real alpha, const vec &x, const vec &y, mat &A) noexcept {
+inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) noexcept {
     kernel::ger(A.data(), x.data(), y.data(), alpha, x.size(), y.size());
 }
 
@@ -28,7 +28,7 @@ namespace num::omp {
 /// Row-tiled rather than routed through `dispatch::parallel_apply`: see
 /// `omp/matrix_ops.hpp` for why row/matrix operations use their own tiling
 /// instead of the vector-element-tuned block helper.
-inline void ger(real alpha, const vec &x, const vec &y, mat &A) {
+inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) {
     constexpr idx block_size = 64;
     const idx m = x.size();
     const idx n = y.size();
@@ -48,7 +48,7 @@ inline void ger(real alpha, const vec &x, const vec &y, mat &A) {
 namespace num {
 
 /// @brief The rank-1 update \f$A \leftarrow A + \alpha x y^T\f$.
-inline void ger(real alpha, const vec &x, const vec &y, mat &A) {
+inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) {
 #if defined(NUMERICS_HAS_OMP)
     omp::ger(alpha, x, y, A);
 #else
@@ -57,25 +57,25 @@ inline void ger(real alpha, const vec &x, const vec &y, mat &A) {
 }
 
 /// @brief Forward substitution solving lower triangular system \f$L \mathbf{x} = \mathbf{b}\f$.
-inline void trsv_lower(const mat &L, const vec &b, vec &x) {
+inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
     const idx n = L.rows();
     if (L.cols() != n || b.size() != n) {
         throw std::invalid_argument("trsv_lower: dimension mismatch");
     }
     if (x.size() != n) {
-        x = vec(n);
+        x = vec<real>(n);
     }
     kernel::trsv_lower(kernel::contract::alias_safe, x.data(), L.data(), b.data(), n);
 }
 
 /// @brief Back substitution solving upper triangular system \f$U \mathbf{x} = \mathbf{b}\f$.
-inline void trsv_upper(const mat &U, const vec &b, vec &x) {
+inline void trsv_upper(const mat<real> &U, const vec<real> &b, vec<real> &x) {
     const idx n = U.rows();
     if (U.cols() != n || b.size() != n) {
         throw std::invalid_argument("trsv_upper: dimension mismatch");
     }
     if (x.size() != n) {
-        x = vec(n);
+        x = vec<real>(n);
     }
     kernel::trsv_upper(kernel::contract::alias_safe, x.data(), U.data(), b.data(), n);
 }

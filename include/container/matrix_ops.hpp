@@ -26,15 +26,15 @@ namespace num::seq {
 
 /// @brief Thin mat-aware wrappers over `num::kernel`, used when no
 /// accelerator (BLAS/OMP/CUDA) was configured.
-inline void matvec(const mat &A, const vec &x, vec &y) {
+inline void matvec(const mat<real> &A, const vec<real> &x, vec<real> &y) {
     kernel::matvec(y.data(), A.data(), x.data(), A.rows(), A.cols());
 }
 
-inline void matadd(real alpha, const mat &A, real beta, const mat &B, mat &C) {
+inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B, mat<real> &C) {
     kernel::axpbyz(C.data(), A.data(), B.data(), alpha, beta, A.size());
 }
 
-inline void matmul(const mat &A, const mat &B, mat &C) {
+inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) {
     kernel::gemm(C.data(), A.data(), B.data(), real(1), real(0), A.rows(), B.cols(), A.cols());
 }
 
@@ -45,11 +45,11 @@ namespace num {
 /// @brief \f$y \leftarrow Ax\f$ for any row-major dense matrix.
 ///
 /// Constrained on @ref num::repr::dense_row_major, so a foreign matrix with `data()`, `rows()`
-/// and `cols()` works. `num::mat` takes the configured backend, anything else the kernel. The
+/// and `cols()` works. `num::mat<real>` takes the configured backend, anything else the kernel. The
 /// CSR overload in `linear/sparse/sparse.hpp` is selected by the disjoint @ref num::repr::csr.
 template <class M>
 requires repr::dense_row_major<M>
-inline void matvec(const M &A, const vec &x, vec &y) {
+inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
     if constexpr (requires { accel::matvec(A, x, y); }) {
         accel::matvec(A, x, y);
     } else {
@@ -57,10 +57,10 @@ inline void matvec(const M &A, const vec &x, vec &y) {
     }
 }
 
-inline void matmul(const mat &A, const mat &B, mat &C) { accel::matmul(A, B, C); }
+inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) { accel::matmul(A, B, C); }
 
 /// @brief \f$C \leftarrow \alpha A + \beta B\f$.
-inline void matadd(real alpha, const mat &A, real beta, const mat &B, mat &C) {
+inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B, mat<real> &C) {
     if constexpr (requires { accel::matadd(alpha, A, beta, B, C); }) {
         accel::matadd(alpha, A, beta, B, C);
     } else {
@@ -72,13 +72,13 @@ inline void matadd(real alpha, const mat &A, real beta, const mat &B, mat &C) {
 
 
 // -----------------------------------------------------------------------------
-// basic_mat::apply implementation
+// mat::apply implementation
 // -----------------------------------------------------------------------------
 
 template <std::floating_point T>
 template <class X, class Y>
-inline void basic_mat<T>::apply(const X &x, Y &y) const {
-    if constexpr (std::is_same_v<T, real> && std::is_same_v<X, vec> && std::is_same_v<Y, vec>) {
+inline void mat<T>::apply(const X &x, Y &y) const {
+    if constexpr (std::is_same_v<T, real> && std::is_same_v<X, vec<real>> && std::is_same_v<Y, vec<real>>) {
         matvec(*this, x, y);
     } else {
         for (idx i = 0; i < rows_; ++i) {

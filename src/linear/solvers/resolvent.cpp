@@ -6,7 +6,7 @@
 namespace num {
 namespace {
 
-[[nodiscard]] array<cplx> complex_copy(const vec &source) {
+[[nodiscard]] array<cplx> complex_copy(const vec<real> &source) {
     array<cplx> result(source.size());
     for (idx index = 0; index < source.size(); ++index) {
         result[index] = source[index];
@@ -14,10 +14,10 @@ namespace {
     return result;
 }
 
-[[nodiscard]] array<array<cplx>> complex_copy(const array<vec> &sources) {
+[[nodiscard]] array<array<cplx>> complex_copy(const array<vec<real>> &sources) {
     array<array<cplx>> result;
     result.reserve(sources.size());
-    for (const vec &source : sources) {
+    for (const vec<real> &source : sources) {
         result.push_back(complex_copy(source));
     }
     return result;
@@ -25,7 +25,7 @@ namespace {
 
 } // namespace
 
-resolvent_factor::resolvent_factor(cplx shift, const mat &matrix) : solver_(matrix) {
+resolvent_factor::resolvent_factor(cplx shift, const mat<real> &matrix) : solver_(matrix) {
     debug::check_dim(matrix.rows(), matrix.cols(), "resolvent_factor matrix must be square");
     debug::check_non_empty(matrix.rows(), "resolvent_factor matrix");
     solver_.factorize(shift);
@@ -41,22 +41,22 @@ resolvent_factor::solve(const array<array<cplx>> &right_hand_sides) const {
     return solver_.solve(right_hand_sides);
 }
 
-array<cplx> resolvent_solve(cplx shift, const mat &matrix, const vec &right_hand_side) {
+array<cplx> resolvent_solve(cplx shift, const mat<real> &matrix, const vec<real> &right_hand_side) {
     debug::check_dim(matrix.rows(), right_hand_side.size(), "resolvent_solve RHS");
     hessenberg_resolvent_solver solver(matrix);
     return solver.solve(shift, right_hand_side);
 }
 
 array<array<cplx>>
-resolvent_solve_rhs_batch(cplx shift, const mat &matrix,
-                          const array<vec> &right_hand_sides) {
+resolvent_solve_rhs_batch(cplx shift, const mat<real> &matrix,
+                          const array<vec<real>> &right_hand_sides) {
     resolvent_factor factor(shift, matrix);
     return factor.solve(complex_copy(right_hand_sides));
 }
 
 array<array<cplx>> resolvent_solve_batch(const array<cplx> &shifts,
-                                                     const mat &matrix,
-                                                     const vec &right_hand_side) {
+                                                     const mat<real> &matrix,
+                                                     const vec<real> &right_hand_side) {
     debug::check_dim(matrix.rows(), matrix.cols(), "resolvent_solve_batch matrix must be square");
     debug::check_dim(matrix.rows(), right_hand_side.size(), "resolvent_solve_batch RHS");
     debug::check_non_empty(matrix.rows(), "resolvent_solve_batch matrix");
@@ -67,8 +67,8 @@ array<array<cplx>> resolvent_solve_batch(const array<cplx> &shifts,
 }
 
 array<array<array<cplx>>>
-resolvent_solve_batch(const array<cplx> &shifts, const mat &matrix,
-                      const array<vec> &right_hand_sides) {
+resolvent_solve_batch(const array<cplx> &shifts, const mat<real> &matrix,
+                      const array<vec<real>> &right_hand_sides) {
     debug::check_dim(matrix.rows(), matrix.cols(), "resolvent_solve_batch matrix must be square");
     debug::check_non_empty(matrix.rows(), "resolvent_solve_batch matrix");
 

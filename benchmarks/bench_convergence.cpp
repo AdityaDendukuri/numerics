@@ -15,9 +15,9 @@ namespace fs = std::filesystem;
 namespace {
 
 /// Generate a variable-coefficient 2D Laplacian matrix with varying diagonal entries: -\div(a(x,y)\grad u).
-num::mat make_variable_laplacian_2d(num::idx n_side) {
+num::mat<num::real> make_variable_laplacian_2d(num::idx n_side) {
     const num::idx n = n_side * n_side;
-    num::mat A(n, n, 0.0);
+    num::mat<num::real> A(n, n, 0.0);
     const auto id = [n_side](num::idx x, num::idx y) { return y * n_side + x; };
 
     for (num::idx y = 0; y < n_side; ++y) {
@@ -45,8 +45,8 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     const idx n_side = 32;
     const idx n = n_side * n_side;
 
-    mat A = make_variable_laplacian_2d(n_side);
-    vec b(n, 0.0);
+    mat<real> A = make_variable_laplacian_2d(n_side);
+    vec<real> b(n, 0.0);
     const auto id = [n_side](idx x, idx y) { return y * n_side + x; };
     for (idx y = 0; y < n_side; ++y) {
         for (idx x = 0; x < n_side; ++x) {
@@ -67,7 +67,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         iters_cg.push_back(0.0);
         res_cg.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            vec x(n, 0.0);
+            vec<real> x(n, 0.0);
             auto res = cg(spd_op, b, x, {.tolerance = 1e-15, .max_iterations = k});
             iters_cg.push_back(static_cast<double>(k));
             res_cg.push_back(std::max(1e-16, res.residual / b_norm));
@@ -81,7 +81,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         iters_pcg.push_back(0.0);
         res_pcg.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            vec x(n, 0.0);
+            vec<real> x(n, 0.0);
             auto res = pcg(spd_op, jacobi, b, x, {.tolerance = 1e-15, .max_iterations = k});
             iters_pcg.push_back(static_cast<double>(k));
             res_pcg.push_back(std::max(1e-16, res.residual / b_norm));
@@ -95,7 +95,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         iters_gmres.push_back(0.0);
         res_gmres.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            vec x(n, 0.0);
+            vec<real> x(n, 0.0);
             auto res = gmres(dense_op, b, x, {.tolerance = 1e-15, .max_iterations = k, .restart = 30});
             iters_gmres.push_back(static_cast<double>(k));
             res_gmres.push_back(std::max(1e-16, res.residual / b_norm));
@@ -109,7 +109,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         iters_minres.push_back(0.0);
         res_minres.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            vec x(n, 0.0);
+            vec<real> x(n, 0.0);
             auto res = minres(spd_op, b, x, {.tolerance = 1e-15, .max_iterations = k});
             iters_minres.push_back(static_cast<double>(k));
             res_minres.push_back(std::max(1e-16, res.residual / b_norm));
@@ -120,7 +120,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     // 5. Trace Gauss-Seidel
     std::vector<double> iters_gs, res_gs;
     {
-        vec x(n, 0.0);
+        vec<real> x(n, 0.0);
         iters_gs.push_back(0.0);
         res_gs.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
@@ -131,7 +131,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
                 }
                 x[i] = (b[i] - sigma) / A(i, i);
             }
-            vec r(n, 0.0);
+            vec<real> r(n, 0.0);
             dense_op.apply(x, r);
             axpy(-1.0, b, r);
             iters_gs.push_back(static_cast<double>(k));
@@ -142,11 +142,11 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
     // 6. Trace Jacobi
     std::vector<double> iters_jac, res_jac;
     {
-        vec x(n, 0.0);
+        vec<real> x(n, 0.0);
         iters_jac.push_back(0.0);
         res_jac.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
-            vec x_new(n, 0.0);
+            vec<real> x_new(n, 0.0);
             for (idx i = 0; i < n; ++i) {
                 double sigma = 0.0;
                 for (idx j = 0; j < n; ++j) {
@@ -155,7 +155,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
                 x_new[i] = (b[i] - sigma) / A(i, i);
             }
             x = x_new;
-            vec r(n, 0.0);
+            vec<real> r(n, 0.0);
             dense_op.apply(x, r);
             axpy(-1.0, b, r);
             iters_jac.push_back(static_cast<double>(k));
@@ -188,7 +188,7 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
     const idx n = 100;
 
     // Generate well-conditioned SPD test matrix with known exact solution
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 2.0 + 0.5 * (i + 1);
         if (i > 0) {
@@ -197,8 +197,8 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
         }
     }
 
-    vec x_star(n, 1.0);
-    vec b(n, 0.0);
+    vec<real> x_star(n, 1.0);
+    vec<real> b(n, 0.0);
     operators::dense_op dense_op{A};
     dense_op.apply(x_star, b);
 
@@ -213,17 +213,17 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
         iters.push_back(static_cast<double>(k));
 
         // MINRES
-        vec x_m(n, 0.0);
+        vec<real> x_m(n, 0.0);
         auto res_m = minres(spd_op, b, x_m, {.tolerance = 1e-15, .max_iterations = k});
-        vec e_m(n, 0.0);
+        vec<real> e_m(n, 0.0);
         for (idx i = 0; i < n; ++i) e_m[i] = x_m[i] - x_star[i];
         err_minres.push_back(std::max(1e-16, norm(e_m)));
         res_minres.push_back(std::max(1e-16, res_m.residual));
 
         // CG
-        vec x_c(n, 0.0);
+        vec<real> x_c(n, 0.0);
         auto res_c = cg(spd_op, b, x_c, {.tolerance = 1e-15, .max_iterations = k});
-        vec e_c(n, 0.0);
+        vec<real> e_c(n, 0.0);
         for (idx i = 0; i < n; ++i) e_c[i] = x_c[i] - x_star[i];
         err_cg.push_back(std::max(1e-16, norm(e_c)));
         res_cg.push_back(std::max(1e-16, res_c.residual));
@@ -252,12 +252,12 @@ void generate_talbot_convergence_plot(const std::string &out_dir) {
     std::mt19937_64 rng(42);
 
     graph G = structures::erdos_renyi(N, 0.08, rng, true, 0.5, 2.0);
-    mat Q = num::linear::dense_markov_generator(G, true);
-    vec p0 = unit_vector(N, 0);
+    mat<real> Q = num::linear::dense_markov_generator(G, true);
+    vec<real> p0 = unit_vector(N, 0);
 
     const double t = 1.0;
     operators::dense_op Q_op(Q);
-    vec p_exact = expv(t, Q_op, p0, 50, 1e-15);
+    vec<real> p_exact = expv(t, Q_op, p0, 50, 1e-15);
 
     hessenberg_resolvent_solver solver(Q);
 
@@ -273,7 +273,7 @@ void generate_talbot_convergence_plot(const std::string &out_dir) {
             for (idx i = 0; i < N; ++i) density[i] += weight * sol[i];
         }
 
-        vec p_talbot(N, 0.0);
+        vec<real> p_talbot(N, 0.0);
         for (idx i = 0; i < N; ++i) p_talbot[i] = std::max(0.0, density[i].real());
         clip_and_normalize_nonnegative(p_talbot);
 

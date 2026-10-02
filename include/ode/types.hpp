@@ -8,32 +8,32 @@
 namespace num {
 
 /// First-order system callback that writes dy/dt for (t,y).
-using ode_rhs_fn = std::function<void(real t, const vec &y, vec &dydt)>;
+using ode_rhs_fn = std::function<void(real t, const vec<real> &y, vec<real> &dydt)>;
 /// Position-dependent acceleration callback for second-order systems.
-using accel_fn = std::function<void(const vec &q, vec &acc)>;
+using accel_fn = std::function<void(const vec<real> &q, vec<real> &acc)>;
 /// Optional callback invoked after accepted first-order steps.
-using observer_fn = std::function<void(real t, const vec &y)>;
+using observer_fn = std::function<void(real t, const vec<real> &y)>;
 /// Optional callback invoked after accepted symplectic steps.
-using symp_observer_fn = std::function<void(real t, const vec &q, const vec &v)>;
+using symp_observer_fn = std::function<void(real t, const vec<real> &q, const vec<real> &v)>;
 
 /// Snapshot yielded by a first-order lazy integrator.
 struct ode_step {
     real t = 0.0;
-    vec u;
+    vec<real> u;
 };
 
 /// Snapshot yielded by a second-order lazy integrator.
 struct symplectic_step {
     real t = 0.0;
-    vec q;
-    vec v;
+    vec<real> q;
+    vec<real> v;
 };
 
 #include <ostream>
 
 /// Final state and convergence metadata for a first-order integration.
 struct ode_result {
-    vec u;
+    vec<real> u;
     real t = 0.0;
     idx steps = 0;
     bool converged = false;
@@ -49,8 +49,8 @@ struct ode_result {
 
 /// Final position and velocity from a second-order integration.
 struct symplectic_result {
-    vec q;
-    vec v;
+    vec<real> q;
+    vec<real> v;
     real t = 0.0;
     idx steps = 0;
 

@@ -22,12 +22,12 @@ namespace num {
 /// Diagonal inverse preconditioner.
 class jacobi_preconditioner final {
   public:
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
     using laws = law::list<law::spd>;
 
     /// Take ownership of a precomputed inverse diagonal.
-    explicit jacobi_preconditioner(vec inv_diag) : inv_diag_(std::move(inv_diag)) {
+    explicit jacobi_preconditioner(vec<real> inv_diag) : inv_diag_(std::move(inv_diag)) {
         for (const real value : inv_diag_) {
             if (!(value > 0.0) || !std::isfinite(value)) {
                 throw std::invalid_argument(
@@ -40,27 +40,27 @@ class jacobi_preconditioner final {
     [[nodiscard]] idx cols() const noexcept { return inv_diag_.size(); }
 
     /// Compute z=D^-1 r.
-    void apply(const vec &r, vec &z) const {
+    void apply(const vec<real> &r, vec<real> &z) const {
         const idx n = inv_diag_.size();
         if (r.size() != n) {
             throw std::invalid_argument("jacobi_preconditioner: dimension mismatch");
         }
         if (z.size() != n) {
-            z = vec(n, 0.0);
+            z = vec<real>(n, 0.0);
         }
         kernel::hadamard_mul(z.data(), inv_diag_.data(), r.data(), n);
     }
 
   private:
-    vec inv_diag_;
+    vec<real> inv_diag_;
 };
 
 /// Construct a Jacobi preconditioner from a dense matrix diagonal.
-[[nodiscard]] inline jacobi_preconditioner make_jacobi_preconditioner(const mat &A) {
+[[nodiscard]] inline jacobi_preconditioner make_jacobi_preconditioner(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("jacobi_preconditioner: matrix must be square");
     }
-    vec inv(A.rows());
+    vec<real> inv(A.rows());
     for (idx i = 0; i < A.rows(); ++i) {
         if (std::abs(A(i, i)) < real(1e-15)) {
             throw std::invalid_argument("jacobi_preconditioner: zero diagonal");
@@ -75,7 +75,7 @@ class jacobi_preconditioner final {
     if (A.n_rows() != A.n_cols()) {
         throw std::invalid_argument("jacobi_preconditioner: matrix must be square");
     }
-    vec inv(A.n_rows(), 0.0);
+    vec<real> inv(A.n_rows(), 0.0);
     for (idx i = 0; i < A.n_rows(); ++i) {
         const idx row_begin = A.row_ptr()[i];
         const idx row_end = A.row_ptr()[i + 1];

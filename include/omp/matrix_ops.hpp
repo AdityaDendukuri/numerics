@@ -14,7 +14,7 @@
 
 namespace num::omp {
 
-inline void matmul(const mat &A, const mat &B, mat &C) {
+inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) {
     // The kernel's own blocked loop (see `kernel::gemm_config`), with the
     // packed A slab and B panel shared by every thread rather than repacked
     // per row tile. Threads split the packing by tile and the microkernel
@@ -79,7 +79,7 @@ inline void matmul(const mat &A, const mat &B, mat &C) {
     }
 }
 
-inline void matvec(const mat &A, const vec &x, vec &y) {
+inline void matvec(const mat<real> &A, const vec<real> &x, vec<real> &y) {
     const idx n = A.cols();
     const real *ad = A.data();
     const real *xd = x.data();
@@ -92,7 +92,7 @@ inline void matvec(const mat &A, const vec &x, vec &y) {
     }
 }
 
-inline void matadd(real alpha, const mat &A, real beta, const mat &B, mat &C) {
+inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B, mat<real> &C) {
     constexpr idx block_size = idx{1} << 16;
     const idx total = A.size();
     const real *ad = A.data();

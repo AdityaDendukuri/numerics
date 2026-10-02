@@ -27,8 +27,8 @@ class umfpack_factor {
     /// Return the order of the factored matrix.
     [[nodiscard]] idx size() const noexcept;
     /// Solve Ax=B for one or more dense right-hand sides.
-    void solve(const vec &rhs, vec &solution) const;
-    void solve(const mat &rhs, mat &solution) const;
+    void solve(const vec<real> &rhs, vec<real> &solution) const;
+    void solve(const mat<real> &rhs, mat<real> &solution) const;
 
   private:
     struct Impl;

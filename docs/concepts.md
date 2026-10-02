@@ -10,12 +10,12 @@ declares them and a probe samples them.
 
 ```cpp
 // Structure: the operations settle it.
-static_assert( num::vector_space<num::vec>);
+static_assert( num::vector_space<num::vec<num::real>>);
 static_assert( num::vector_space<std::vector<double>>);
 static_assert(!num::vector_space<std::vector<int>>);   // int is not a field
 
 // A law: the caller states it.
-num::mat A = num::identity(4);
+num::mat<num::real> A = num::identity(4);
 auto op  = num::operators::dense_op(A);        // a linear operator, claiming nothing
 auto sym = num::assume_symmetric(op);          // now claims law::self_adjoint
 static_assert(!num::self_adjoint_operator<decltype(op)>);
@@ -70,8 +70,8 @@ Storage layout is described separately, under `num::repr`. Bandedness is a state
 memory, not about a linear map.
 
 ```cpp
-static_assert(num::repr::contiguous<num::vec>);
-static_assert(num::repr::dense_row_major<num::mat>);
+static_assert(num::repr::contiguous<num::vec<num::real>>);
+static_assert(num::repr::dense_row_major<num::mat<num::real>>);
 static_assert(num::repr::csr<num::spmat>);
 ```
 
@@ -84,14 +84,14 @@ A type declares the laws it satisfies with a member alias:
 ```cpp
 struct custom_1d_laplacian {
     using laws          = num::law::list<num::law::spd>;
-    using domain_type   = num::vec;
-    using codomain_type = num::vec;
+    using domain_type   = num::vec<num::real>;
+    using codomain_type = num::vec<num::real>;
 
     num::idx n;
     [[nodiscard]] num::idx rows() const noexcept { return n; }
     [[nodiscard]] num::idx cols() const noexcept { return n; }
 
-    void apply(const num::vec &x, num::vec &y) const {
+    void apply(const num::vec<num::real> &x, num::vec<num::real> &y) const {
         for (num::idx i = 0; i < n; ++i) {
             y[i] = 2.0 * x[i] - (i > 0 ? x[i - 1] : 0.0) - (i + 1 < n ? x[i + 1] : 0.0);
         }
@@ -121,7 +121,7 @@ class positive_diagonal {
   public:
     using laws = num::law::list<num::law::spd>;
 
-    explicit positive_diagonal(num::vec d) : d_(std::move(d)) {
+    explicit positive_diagonal(num::vec<num::real> d) : d_(std::move(d)) {
         for (const num::real value : d_) {
             if (!(value > 0.0) || !std::isfinite(value)) {
                 throw std::invalid_argument("diagonal must be positive and finite");
@@ -129,7 +129,7 @@ class positive_diagonal {
         }
     }
   private:
-    num::vec d_;
+    num::vec<num::real> d_;
 };
 ```
 
@@ -195,7 +195,7 @@ entries and the action. A value with a stronger law converts to one with a weake
 SPD matrix is accepted where a symmetric one is required.
 
 ```cpp
-num::mat A = num::identity(3);
+num::mat<num::real> A = num::identity(3);
 
 auto claimed  = num::assume_spd(A);              // sampled under the active preset
 auto by_law   = num::assume<num::law::spd>(A);   // the same, naming the law
@@ -234,9 +234,9 @@ num::cg(num::operators::dense_op(A), b, x, 1e-10, 100);
 
 ```
 error: no matching function for call to 'cg'
-note: because 'math::spd_operator<num::operators::dense_op, vec>' evaluated to false
-note: because 'psd_operator<num::operators::dense_op, num::basic_vec<double>>' evaluated to false
-note: because 'self_adjoint_operator<num::operators::dense_op, num::basic_vec<double>>' evaluated to false
+note: because 'math::spd_operator<num::operators::dense_op, num::vec<double>>' evaluated to false
+note: because 'psd_operator<num::operators::dense_op, num::vec<double>>' evaluated to false
+note: because 'self_adjoint_operator<num::operators::dense_op, num::vec<double>>' evaluated to false
 note: because 'claims<num::operators::dense_op, law::self_adjoint>' evaluated to false
 ```
 
@@ -295,7 +295,7 @@ The compiler checks that a law was claimed. Two runtime layers check that it is 
 
 ```cpp
 // Compiles; throws at run time.
-num::mat A(3, 3, 0.0);
+num::mat<num::real> A(3, 3, 0.0);
 A(0,0) = 2; A(1,1) = 2; A(2,2) = 2; A(0,1) = 5.0; A(1,0) = -5.0;   // not symmetric
 auto spd = num::assume_spd(num::operators::dense_op(A));
 ```
@@ -323,7 +323,7 @@ Each law-gated routine has a counterpart under `num::unsafe` that takes a plain 
 reports failure through its return value.
 
 ```cpp
-num::mat indefinite(2, 2, 0.0);
+num::mat<num::real> indefinite(2, 2, 0.0);
 indefinite(0, 0) =  1.0;
 indefinite(1, 1) = -1.0;
 

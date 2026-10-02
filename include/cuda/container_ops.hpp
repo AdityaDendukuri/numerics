@@ -1,5 +1,5 @@
 /// @file cuda/container_ops.hpp
-/// @brief `vec`-level convenience overloads over the raw CUDA device kernels.
+/// @brief `vec<real>`-level convenience overloads over the raw CUDA device kernels.
 ///
 /// `cuda_ops.hpp` stays raw-pointer-only (device pointers, explicit lengths) so
 /// callers that manage device buffers directly — `unsafe::cg`, batched solvers —
@@ -14,27 +14,27 @@
 
 namespace num::cuda {
 
-inline void scale(vec &v, real alpha) noexcept { scale(v.gpu_data(), v.size(), alpha); }
+inline void scale(vec<real> &v, real alpha) noexcept { scale(v.gpu_data(), v.size(), alpha); }
 
-inline void axpy(real alpha, const vec &x, vec &y) noexcept {
+inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept {
     axpy(alpha, x.gpu_data(), y.gpu_data(), x.size());
 }
 
-[[nodiscard]] inline real dot(const vec &x, const vec &y) noexcept {
+[[nodiscard]] inline real dot(const vec<real> &x, const vec<real> &y) noexcept {
     return dot(x.gpu_data(), y.gpu_data(), x.size());
 }
 
-[[nodiscard]] inline real norm(const vec &x) noexcept { return std::sqrt(dot(x, x)); }
+[[nodiscard]] inline real norm(const vec<real> &x) noexcept { return std::sqrt(dot(x, x)); }
 
-inline void add(const vec &x, const vec &y, vec &z) noexcept {
+inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept {
     add(x.gpu_data(), y.gpu_data(), z.gpu_data(), x.size());
 }
 
-inline void matvec(const mat &A, const vec &x, vec &y) {
+inline void matvec(const mat<real> &A, const vec<real> &x, vec<real> &y) {
     matvec(A.gpu_data(), x.gpu_data(), y.gpu_data(), A.rows(), A.cols());
 }
 
-inline void matmul(const mat &A, const mat &B, mat &C) {
+inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) {
     matmul(A.gpu_data(), B.gpu_data(), C.gpu_data(), A.rows(), A.cols(), B.cols());
 }
 

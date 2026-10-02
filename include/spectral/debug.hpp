@@ -37,8 +37,8 @@ verify_parseval(const Plan &plan, real tol = 1e-10,
         return;
     }
 
-    cvec in(static_cast<idx>(n));
-    cvec out(static_cast<idx>(n));
+    vec<cplx> in(static_cast<idx>(n));
+    vec<cplx> out(static_cast<idx>(n));
     std::uint64_t state = 0x9E3779B97F4A7C15ULL;
     const auto next = [&state]() {
         state ^= state << 13;

@@ -27,8 +27,8 @@ int main() {
     }
     spmat A = spmat::from_triplets(n, n, rows, cols, vals);
 
-    vec b(n, 1.0);
-    vec x0(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x0(n, 0.0);
 
     // 1. Conjugate Gradient (CG)
     operators::sparse_op aop(A);

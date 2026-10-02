@@ -253,7 +253,7 @@ inline void plot(const series &data, const std::string &label = "",
 }
 
 /// Append parallel x and y vectors to the current panel (supports std::vector,
-/// num::vec, etc.).
+/// num::vec<real>, etc.).
 template <typename ContainerX, typename ContainerY>
 inline void plot(const ContainerX &x, const ContainerY &y, const std::string &label = "",
                  const std::string &style = "lines") {

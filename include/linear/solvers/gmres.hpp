@@ -301,7 +301,7 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::
 /// @param options Tolerance, iteration limit, and restart length.
 /// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
 /// @throws std::invalid_argument If `A` is not square or dimensions mismatch.
-inline solver_result gmres(const spmat &A, const vec &b, vec &x, gmres_options options = {}) {
+inline solver_result gmres(const spmat &A, const vec<real> &b, vec<real> &x, gmres_options options = {}) {
     if (A.n_rows() != A.n_cols()) {
         throw std::invalid_argument("gmres: sparse matrix must be square");
     }
@@ -318,7 +318,7 @@ inline solver_result gmres(const spmat &A, const vec &b, vec &x, gmres_options o
 /// @param options Tolerance, iteration limit, and restart length.
 /// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
 /// @throws std::invalid_argument If `A` is not square or dimensions mismatch.
-inline solver_result gmres(const mat &A, const vec &b, vec &x, gmres_options options = {}) {
+inline solver_result gmres(const mat<real> &A, const vec<real> &b, vec<real> &x, gmres_options options = {}) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("gmres: dense matrix must be square");
     }

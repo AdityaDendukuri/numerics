@@ -10,7 +10,7 @@
 using namespace num;
 
 // Helpers
-static real mat_norm_inf(const mat &A) {
+static real mat_norm_inf(const mat<real> &A) {
     real m = 0;
     for (idx i = 0; i < A.rows(); ++i) {
         for (idx j = 0; j < A.cols(); ++j) {
@@ -20,7 +20,7 @@ static real mat_norm_inf(const mat &A) {
     return m;
 }
 
-static real vec_norm_inf(const vec &v) {
+static real vec_norm_inf(const vec<real> &v) {
     real m = 0;
     for (idx i = 0; i < v.size(); ++i) {
         m = std::max(m, std::abs(v[i]));
@@ -28,8 +28,8 @@ static real vec_norm_inf(const vec &v) {
     return m;
 }
 
-static mat low_rank_update(const mat &matrix, const mat &vectors, const mat &weights) {
-    mat updated = matrix;
+static mat<real> low_rank_update(const mat<real> &matrix, const mat<real> &vectors, const mat<real> &weights) {
+    mat<real> updated = matrix;
     for (idx row = 0; row < matrix.rows(); ++row) {
         for (idx column = 0; column < matrix.cols(); ++column) {
             for (idx left = 0; left < vectors.cols(); ++left) {
@@ -53,19 +53,19 @@ TEST(KLU, SparseFactorAndBlockSolve) {
     const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
                                         {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
     klu_factorization factor(A);
-    vec b{15.0, 10.0, 10.0};
-    vec x;
+    vec<real> b{15.0, 10.0, 10.0};
+    vec<real> x;
     factor.solve(b, x);
     EXPECT_NEAR(x[0], 5.0, 1e-12);
     EXPECT_NEAR(x[1], 5.0, 1e-12);
     EXPECT_NEAR(x[2], 5.0, 1e-12);
 
-    mat B(3, 2, 0.0);
+    mat<real> B(3, 2, 0.0);
     for (idx row = 0; row < 3; ++row) {
         B(row, 0) = b[row];
         B(row, 1) = 2.0 * b[row];
     }
-    mat X;
+    mat<real> X;
     factor.solve(B, X);
     for (idx row = 0; row < 3; ++row) {
         EXPECT_NEAR(X(row, 0), 5.0, 1e-12);
@@ -74,12 +74,12 @@ TEST(KLU, SparseFactorAndBlockSolve) {
 }
 
 TEST(Cholesky, RankOneUpdateAndDowndate) {
-    mat identity_matrix = identity(3);
+    mat<real> identity_matrix = identity(3);
     auto factor = cholesky(assume_spd(identity_matrix));
-    vec update{0.5, -0.25, 0.75};
+    vec<real> update{0.5, -0.25, 0.75};
     cholesky_update(factor, update);
 
-    mat reconstructed(3, 3, 0.0);
+    mat<real> reconstructed(3, 3, 0.0);
     for (idx row = 0; row < 3; ++row) {
         for (idx column = 0; column < 3; ++column) {
             for (idx k = 0; k < 3; ++k) {
@@ -103,16 +103,16 @@ TEST(AutoLinear, SolveTransposeAndInverseDiagonal) {
         spmat::from_triplets(2, 2, {0, 0, 1, 1}, {0, 1, 0, 1}, {4.0, 1.0, 2.0, 3.0});
     auto_linear_solver factor(matrix, {.dense_limit = 0});
 
-    vec solution(2, 0.0);
-    factor.solve(vec{6.0, 8.0}, solution);
+    vec<real> solution(2, 0.0);
+    factor.solve(vec<real>{6.0, 8.0}, solution);
     EXPECT_NEAR(solution[0], 1.0, 1e-12);
     EXPECT_NEAR(solution[1], 2.0, 1e-12);
 
-    factor.solve_transpose(vec{8.0, 7.0}, solution);
+    factor.solve_transpose(vec<real>{8.0, 7.0}, solution);
     EXPECT_NEAR(solution[0], 1.0, 1e-12);
     EXPECT_NEAR(solution[1], 2.0, 1e-12);
 
-    vec inverse_diag(2, 0.0);
+    vec<real> inverse_diag(2, 0.0);
     inverse_diagonal_workspace workspace;
     inverse_diagonal(factor, inverse_diag, workspace, 1);
     EXPECT_NEAR(inverse_diag[0], 0.3, 1e-12);
@@ -120,13 +120,13 @@ TEST(AutoLinear, SolveTransposeAndInverseDiagonal) {
 
     const std::vector<idx> rows{0, 1};
     const std::vector<idx> columns{1, 0};
-    vec selected(2, 0.0);
+    vec<real> selected(2, 0.0);
     selected_inverse(factor, rows, columns, selected, workspace);
     EXPECT_NEAR(selected[0], -0.1, 1e-12);
     EXPECT_NEAR(selected[1], -0.2, 1e-12);
 
     const std::vector<idx> indices{1, 0};
-    mat principal;
+    mat<real> principal;
     inverse_principal_block(factor, indices, principal, workspace);
     EXPECT_NEAR(principal(0, 0), 0.4, 1e-12);
     EXPECT_NEAR(principal(0, 1), -0.2, 1e-12);
@@ -139,27 +139,27 @@ TEST(AutoLinear, ConvenienceOverloadsMatchOutParameterForm) {
         spmat::from_triplets(2, 2, {0, 0, 1, 1}, {0, 1, 0, 1}, {4.0, 1.0, 2.0, 3.0});
     auto_linear_solver factor(matrix, {.dense_limit = 0});
 
-    const vec b{6.0, 8.0};
-    mat B(2, 2, 0.0);
+    const vec<real> b{6.0, 8.0};
+    mat<real> B(2, 2, 0.0);
     B(0, 0) = 6.0;
     B(0, 1) = 1.0;
     B(1, 0) = 8.0;
     B(1, 1) = 5.0;
 
-    vec expected_vector(2, 0.0);
+    vec<real> expected_vector(2, 0.0);
     factor.solve(b, expected_vector);
-    const vec actual_vector = solve(factor, b);
+    const vec<real> actual_vector = solve(factor, b);
     EXPECT_DOUBLE_EQ(actual_vector[0], expected_vector[0]);
     EXPECT_DOUBLE_EQ(actual_vector[1], expected_vector[1]);
 
     factor.solve_transpose(b, expected_vector);
-    const vec actual_transpose = solve_transpose(factor, b);
+    const vec<real> actual_transpose = solve_transpose(factor, b);
     EXPECT_DOUBLE_EQ(actual_transpose[0], expected_vector[0]);
     EXPECT_DOUBLE_EQ(actual_transpose[1], expected_vector[1]);
 
-    mat expected_matrix;
+    mat<real> expected_matrix;
     factor.solve(B, expected_matrix);
-    const mat actual_matrix = solve(factor, B);
+    const mat<real> actual_matrix = solve(factor, B);
     ASSERT_EQ(actual_matrix.rows(), expected_matrix.rows());
     ASSERT_EQ(actual_matrix.cols(), expected_matrix.cols());
     for (idx i = 0; i < expected_matrix.rows(); ++i) {
@@ -169,24 +169,24 @@ TEST(AutoLinear, ConvenienceOverloadsMatchOutParameterForm) {
     }
 
     factor.solve_transpose(B, expected_matrix);
-    const mat actual_matrix_transpose = solve_transpose(factor, B);
+    const mat<real> actual_matrix_transpose = solve_transpose(factor, B);
     for (idx i = 0; i < expected_matrix.rows(); ++i) {
         for (idx j = 0; j < expected_matrix.cols(); ++j) {
             EXPECT_DOUBLE_EQ(actual_matrix_transpose(i, j), expected_matrix(i, j));
         }
     }
 
-    vec expected_diagonal(2, 0.0);
+    vec<real> expected_diagonal(2, 0.0);
     inverse_diagonal_workspace workspace;
     inverse_diagonal(factor, expected_diagonal, workspace);
-    const vec actual_diagonal = inverse_diagonal(factor);
+    const vec<real> actual_diagonal = inverse_diagonal(factor);
     EXPECT_DOUBLE_EQ(actual_diagonal[0], expected_diagonal[0]);
     EXPECT_DOUBLE_EQ(actual_diagonal[1], expected_diagonal[1]);
 
     const std::vector<idx> indices{1, 0};
-    mat expected_block;
+    mat<real> expected_block;
     inverse_principal_block(factor, indices, expected_block, workspace);
-    const mat actual_block = inverse_principal_block(factor, indices);
+    const mat<real> actual_block = inverse_principal_block(factor, indices);
     ASSERT_EQ(actual_block.rows(), expected_block.rows());
     ASSERT_EQ(actual_block.cols(), expected_block.cols());
     for (idx i = 0; i < expected_block.rows(); ++i) {
@@ -197,7 +197,7 @@ TEST(AutoLinear, ConvenienceOverloadsMatchOutParameterForm) {
 }
 
 TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
-    mat matrix(3, 3, 0.0);
+    mat<real> matrix(3, 3, 0.0);
     matrix(0, 0) = 4.0;
     matrix(0, 1) = 1.0;
     matrix(1, 0) = 1.0;
@@ -208,12 +208,12 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
 
     const auto lu_factor = lu(matrix);
     const auto cholesky_factor = cholesky(assume_spd(matrix));
-    const mat inverse = lu_inv(lu_factor);
+    const mat<real> inverse = lu_inv(lu_factor);
     const std::vector<idx> indices{2, 0};
     inverse_diagonal_workspace workspace;
 
     for (const bool use_cholesky : {false, true}) {
-        mat principal;
+        mat<real> principal;
         if (use_cholesky) {
             inverse_principal_block(cholesky_factor, indices, principal, workspace);
         } else {
@@ -226,7 +226,7 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
         }
     }
 
-    mat principal;
+    mat<real> principal;
     EXPECT_THROW(inverse_principal_block(lu_factor, std::vector<idx>{0, 0}, principal, workspace),
                  std::invalid_argument);
     EXPECT_THROW(inverse_principal_block(lu_factor, std::vector<idx>{3}, principal, workspace),
@@ -240,8 +240,8 @@ TEST(UMFPACK, SparseFactorAndSolve) {
     const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
                                         {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
     umfpack_factor factor(A);
-    vec x;
-    factor.solve(vec{15.0, 10.0, 10.0}, x);
+    vec<real> x;
+    factor.solve(vec<real>{15.0, 10.0, 10.0}, x);
     EXPECT_NEAR(x[0], 5.0, 1e-12);
     EXPECT_NEAR(x[1], 5.0, 1e-12);
     EXPECT_NEAR(x[2], 5.0, 1e-12);
@@ -252,7 +252,7 @@ TEST(LU, SolveSmall3x3) {
     // [4  3  2] x  =  [2]
     // [8  7  9]       [3]
     // solution: x = [-1/2, 2, -1/2]  -- computed by hand
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 2;
     A(0, 1) = 1;
     A(1, 0) = 4;
@@ -261,12 +261,12 @@ TEST(LU, SolveSmall3x3) {
     A(2, 0) = 8;
     A(2, 1) = 7;
     A(2, 2) = 9;
-    vec b{1.0, 2.0, 3.0};
+    vec<real> b{1.0, 2.0, 3.0};
 
     auto f = lu(A);
     EXPECT_FALSE(f.singular);
 
-    vec x(3);
+    vec<real> x(3);
     lu_solve(f, b, x);
 
     // Verify A*x = b
@@ -277,14 +277,14 @@ TEST(LU, SolveSmall3x3) {
 
 TEST(LU, SolveIdentitySystem) {
     idx n = 5;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 1.0;
     }
-    vec b{1.0, 2.0, 3.0, 4.0, 5.0};
+    vec<real> b{1.0, 2.0, 3.0, 4.0, 5.0};
 
     auto f = lu(A);
-    vec x(n);
+    vec<real> x(n);
     lu_solve(f, b, x);
 
     for (idx i = 0; i < n; ++i) {
@@ -294,15 +294,15 @@ TEST(LU, SolveIdentitySystem) {
 
 TEST(LU, SolveDiagonalSystem) {
     // Diagonal matrix: trivial but exercises pivot logic
-    mat A(4, 4, 0.0);
+    mat<real> A(4, 4, 0.0);
     A(0, 0) = 3;
     A(1, 1) = 6;
     A(2, 2) = 1;
     A(3, 3) = 4;
-    vec b{3.0, 12.0, 5.0, 8.0};
+    vec<real> b{3.0, 12.0, 5.0, 8.0};
 
     auto f = lu(A);
-    vec x(4);
+    vec<real> x(4);
     lu_solve(f, b, x);
 
     EXPECT_NEAR(x[0], 1.0, 1e-12);
@@ -315,7 +315,7 @@ TEST(LU, SolveLargerSystem) {
     // Random-ish 6x6 diagonally dominant system;
     // solution is x = [1, 1, 1, 1, 1, 1] by construction (b = A * ones)
     idx n = 6;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     // tridiagonal + dominant diagonal
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 10.0;
@@ -327,7 +327,7 @@ TEST(LU, SolveLargerSystem) {
         }
     }
     // b = A * ones
-    vec b(n, 0.0);
+    vec<real> b(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         for (idx j = 0; j < n; ++j) {
             b[i] += A(i, j) * 1.0;
@@ -335,7 +335,7 @@ TEST(LU, SolveLargerSystem) {
     }
 
     auto f = lu(A);
-    vec x(n);
+    vec<real> x(n);
     lu_solve(f, b, x);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], 1.0, 1e-10);
@@ -344,7 +344,7 @@ TEST(LU, SolveLargerSystem) {
 
 TEST(LU, Determinant2x2) {
     // det([3 8; 4 6]) = 18 - 32 = -14
-    mat A(2, 2, 0.0);
+    mat<real> A(2, 2, 0.0);
     A(0, 0) = 3;
     A(0, 1) = 8;
     A(1, 0) = 4;
@@ -357,7 +357,7 @@ TEST(LU, Determinant3x3) {
     // Vandermonde [1 1 1; 2 4 8; 3 9 27]  -- det =
     // 1*(4*27-8*9)-1*(2*27-8*3)+1*(2*9-4*3) = (108-72) - (54-24) + (18-12) = 36
     // - 30 + 6 = 12
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 1;
     A(0, 1) = 1;
     A(0, 2) = 1;
@@ -373,7 +373,7 @@ TEST(LU, Determinant3x3) {
 
 TEST(LU, InverseTimesOriginal) {
     // A * A^{-1} = I  (to machine precision)
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 2;
     A(0, 1) = 1;
     A(0, 2) = 0;
@@ -385,7 +385,7 @@ TEST(LU, InverseTimesOriginal) {
     A(2, 2) = 2;
 
     auto f = lu(A);
-    mat Ainv = lu_inv(f);
+    mat<real> Ainv = lu_inv(f);
 
     // Check A * Ainv ~= I
     for (idx i = 0; i < 3; ++i) {
@@ -402,7 +402,7 @@ TEST(LU, InverseTimesOriginal) {
 
 TEST(LU, MultipleRHS) {
     // Solve A X = B where B has 2 columns
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4;
     A(0, 1) = 1;
     A(0, 2) = 0;
@@ -413,7 +413,7 @@ TEST(LU, MultipleRHS) {
     A(2, 1) = 1;
     A(2, 2) = 4;
 
-    mat B(3, 2, 0.0);
+    mat<real> B(3, 2, 0.0);
     B(0, 0) = 1;
     B(1, 0) = 0;
     B(2, 0) = 0; // first column: e_0
@@ -422,7 +422,7 @@ TEST(LU, MultipleRHS) {
     B(2, 1) = 0; // second column: e_1
 
     for (const auto &factor : {seq::lu(A), lapack::lu(A)}) {
-        mat X;
+        mat<real> X;
         lu_solve(factor, B, X);
 
         for (idx column = 0; column < B.cols(); ++column) {
@@ -438,7 +438,7 @@ TEST(LU, MultipleRHS) {
 }
 
 TEST(LU, SingularMatrix) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     // Rank-1: all rows are [1, 2, 3]
     A(0, 0) = 1;
     A(0, 1) = 2;
@@ -456,7 +456,7 @@ TEST(LU, SingularMatrix) {
 // QR factorization
 
 // Helper: check ||Q^T Q - I||_inf < tol
-static void expect_orthogonal(const mat &Q, real tol = 1e-10) {
+static void expect_orthogonal(const mat<real> &Q, real tol = 1e-10) {
     const idx m = Q.rows();
     for (idx i = 0; i < m; ++i) {
         for (idx j = 0; j < m; ++j) {
@@ -471,7 +471,7 @@ static void expect_orthogonal(const mat &Q, real tol = 1e-10) {
 }
 
 // Helper: check ||Q R - A||_inf < tol
-static void expect_qr_product(const mat &Q, const mat &R, const mat &A, real tol = 1e-10) {
+static void expect_qr_product(const mat<real> &Q, const mat<real> &R, const mat<real> &A, real tol = 1e-10) {
     for (idx i = 0; i < A.rows(); ++i) {
         for (idx j = 0; j < A.cols(); ++j) {
             real qr_ij = 0;
@@ -484,7 +484,7 @@ static void expect_qr_product(const mat &Q, const mat &R, const mat &A, real tol
 }
 
 TEST(QR, OrthogonalitySquare3x3) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 12;
     A(0, 1) = -51;
     A(0, 2) = 4;
@@ -500,7 +500,7 @@ TEST(QR, OrthogonalitySquare3x3) {
 }
 
 TEST(QR, ProductRecoversA_3x3) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 12;
     A(0, 1) = -51;
     A(0, 2) = 4;
@@ -516,7 +516,7 @@ TEST(QR, ProductRecoversA_3x3) {
 }
 
 TEST(QR, RIsUpperTriangular) {
-    mat A(4, 3, 0.0);
+    mat<real> A(4, 3, 0.0);
     A(0, 0) = 1;
     A(0, 1) = 2;
     A(0, 2) = 3;
@@ -548,7 +548,7 @@ TEST(QR, BlockedShapesReconstructAndStayOrthogonal) {
     };
     for (const Shape s : {Shape{33, 33}, Shape{64, 64}, Shape{65, 65}, Shape{100, 70},
                           Shape{70, 100}, Shape{130, 40}}) {
-        mat A(s.m, s.n, 0.0);
+        mat<real> A(s.m, s.n, 0.0);
         for (idx i = 0; i < s.m; ++i) {
             for (idx j = 0; j < s.n; ++j) {
                 A(i, j) = std::sin(0.37 * static_cast<real>(i + 1) * static_cast<real>(j + 2)) +
@@ -570,7 +570,7 @@ TEST(QR, BlockedShapesReconstructAndStayOrthogonal) {
 
 TEST(QR, ProductRecoversA_Overdetermined) {
     // 4x3 overdetermined system
-    mat A(4, 3, 0.0);
+    mat<real> A(4, 3, 0.0);
     A(0, 0) = 1;
     A(0, 1) = 2;
     A(0, 2) = 3;
@@ -593,7 +593,7 @@ TEST(QR, SolveSquareExact) {
     // A = [[2,1,0],[1,3,1],[0,1,2]]
     // x_true = [2, 3, 2]
     // b = A * x_true = [2*2+1*3, 1*2+3*3+1*2, 1*3+2*2] = [7, 13, 7]
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 2;
     A(0, 1) = 1;
     A(1, 0) = 1;
@@ -601,10 +601,10 @@ TEST(QR, SolveSquareExact) {
     A(1, 2) = 1;
     A(2, 1) = 1;
     A(2, 2) = 2;
-    vec b{7.0, 13.0, 7.0};
+    vec<real> b{7.0, 13.0, 7.0};
 
     auto f = qr(A);
-    vec x(3);
+    vec<real> x(3);
     qr_solve(f, b, x);
 
     EXPECT_NEAR(x[0], 2.0, 1e-10);
@@ -616,7 +616,7 @@ TEST(QR, SolveLeastSquares) {
     // Overdetermined: fit y = a + b*t to 4 data points
     // t = [0, 1, 2, 3],  y = [1, 2, 3, 3.5]  (nearly linear)
     // A = [1 0; 1 1; 1 2; 1 3],  b = [1; 2; 3; 3.5]
-    mat A(4, 2, 0.0);
+    mat<real> A(4, 2, 0.0);
     A(0, 0) = 1;
     A(0, 1) = 0;
     A(1, 0) = 1;
@@ -625,10 +625,10 @@ TEST(QR, SolveLeastSquares) {
     A(2, 1) = 2;
     A(3, 0) = 1;
     A(3, 1) = 3;
-    vec b{1.0, 2.0, 3.0, 3.5};
+    vec<real> b{1.0, 2.0, 3.0, 3.5};
 
     auto f = qr(A);
-    vec x(2);
+    vec<real> x(2);
     qr_solve(f, b, x);
 
     // Verify the normal equations A^T A x = A^T b hold
@@ -643,7 +643,7 @@ TEST(QR, SolveLeastSquares) {
     }
 
     // Perturb x slightly and verify residual increases
-    vec x1 = x;
+    vec<real> x1 = x;
     x1[0] += 0.1;
     real res1 = 0;
     for (idx i = 0; i < 4; ++i) {
@@ -658,7 +658,7 @@ TEST(QR, IdentityMatrix) {
     // Each reflector has det = -1, so signs can flip.
     // Correctness check: Q is orthogonal and Q*R = I.
     idx n = 4;
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = 1.0;
     }
@@ -672,7 +672,7 @@ TEST(QR, IdentityMatrix) {
 }
 
 TEST(Cholesky, SPDSolve) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4.0;
     A(0, 1) = 1.0;
     A(1, 0) = 1.0;
@@ -681,13 +681,13 @@ TEST(Cholesky, SPDSolve) {
     A(2, 1) = 1.0;
     A(2, 2) = 2.0;
 
-    vec b{1.0, 2.0, 3.0};
-    vec x(3, 0.0);
+    vec<real> b{1.0, 2.0, 3.0};
+    vec<real> x(3, 0.0);
     auto f = cholesky(assume_spd(A));
     ASSERT_TRUE(f.success);
     cholesky_solve(f, b, x);
 
-    vec Ax(3);
+    vec<real> Ax(3);
     matvec(A, x, Ax);
     for (idx i = 0; i < 3; ++i) {
         EXPECT_NEAR(Ax[i], b[i], 1e-10);
@@ -695,22 +695,22 @@ TEST(Cholesky, SPDSolve) {
 }
 
 TEST(Cholesky, MultipleRHS) {
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 4.0;
     A(0, 1) = A(1, 0) = 1.0;
     A(1, 1) = 3.0;
     A(1, 2) = A(2, 1) = 1.0;
     A(2, 2) = 2.0;
 
-    mat B(3, 2, 0.0);
+    mat<real> B(3, 2, 0.0);
     B(0, 0) = 1.0;
     B(1, 1) = 1.0;
-    mat X;
+    mat<real> X;
     const auto factor = cholesky(assume_spd(A));
     ASSERT_TRUE(factor.success);
     cholesky_solve(factor, B, X);
 
-    mat product(3, 2, 0.0);
+    mat<real> product(3, 2, 0.0);
     matmul(A, X, product);
     for (idx row = 0; row < B.rows(); ++row) {
         for (idx column = 0; column < B.cols(); ++column) {
@@ -720,7 +720,7 @@ TEST(Cholesky, MultipleRHS) {
 }
 
 TEST(Cholesky, IndefiniteFails) {
-    mat A(2, 2, 0.0);
+    mat<real> A(2, 2, 0.0);
     A(0, 0) = 1.0;
     A(1, 1) = -1.0;
 

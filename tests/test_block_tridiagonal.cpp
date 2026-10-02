@@ -38,21 +38,21 @@ class Builder {
     [[nodiscard]] num::spmat sparse() const {
         return num::spmat::from_triplets(n_, n_, rows_, cols_, values_);
     }
-    [[nodiscard]] const num::mat &dense() const { return dense_; }
+    [[nodiscard]] const num::mat<num::real> &dense() const { return dense_; }
 
   private:
     num::idx n_;
     std::vector<num::idx> rows_;
     std::vector<num::idx> cols_;
     std::vector<double> values_;
-    num::mat dense_;
+    num::mat<num::real> dense_;
 };
 
 /// Block-tridiagonal matrix with the given block sizes, diagonally dominant so
 /// the unpivoted block elimination is well conditioned.
 struct Problem {
     num::spmat sparse;
-    num::mat dense;
+    num::mat<num::real> dense;
     std::vector<num::idx> levels;
     num::idx size;
 };
@@ -114,7 +114,7 @@ Problem make_spd_problem(const std::vector<num::idx> &block_sizes, std::uint64_t
     std::mt19937_64 rng(seed);
     std::uniform_real_distribution<double> entry(-0.4, 0.4);
 
-    num::mat dense(n, n, 0.0);
+    num::mat<num::real> dense(n, n, 0.0);
     std::vector<num::idx> levels(n, 0);
     std::vector<num::idx> first(block_sizes.size(), 0);
     num::idx running = 0;
@@ -157,7 +157,7 @@ Problem make_spd_problem(const std::vector<num::idx> &block_sizes, std::uint64_t
     return Problem{builder.sparse(), builder.dense(), std::move(levels), n};
 }
 
-Problem problem_from_dense(const num::mat &dense, std::vector<num::idx> levels) {
+Problem problem_from_dense(const num::mat<num::real> &dense, std::vector<num::idx> levels) {
     Builder builder(dense.rows());
     for (num::idx i = 0; i < dense.rows(); ++i) {
         for (num::idx j = 0; j < dense.cols(); ++j) {
@@ -169,7 +169,7 @@ Problem problem_from_dense(const num::mat &dense, std::vector<num::idx> levels) 
     return Problem{builder.sparse(), builder.dense(), std::move(levels), dense.rows()};
 }
 
-void expect_exact_matrix(const num::mat &actual, const num::mat &expected) {
+void expect_exact_matrix(const num::mat<num::real> &actual, const num::mat<num::real> &expected) {
     ASSERT_EQ(actual.rows(), expected.rows());
     ASSERT_EQ(actual.cols(), expected.cols());
     for (num::idx i = 0; i < actual.rows(); ++i) {
@@ -179,20 +179,20 @@ void expect_exact_matrix(const num::mat &actual, const num::mat &expected) {
     }
 }
 
-num::vec make_rhs(num::idx n, std::uint64_t seed) {
+num::vec<num::real> make_rhs(num::idx n, std::uint64_t seed) {
     std::mt19937_64 rng(seed);
     std::uniform_real_distribution<double> entry(-2.0, 2.0);
-    num::vec b(n, 0.0);
+    num::vec<num::real> b(n, 0.0);
     for (num::idx i = 0; i < n; ++i) {
         b[i] = entry(rng);
     }
     return b;
 }
 
-num::mat make_rhs_matrix(num::idx n, num::idx columns, std::uint64_t seed) {
+num::mat<num::real> make_rhs_matrix(num::idx n, num::idx columns, std::uint64_t seed) {
     std::mt19937_64 rng(seed);
     std::uniform_real_distribution<double> entry(-2.0, 2.0);
-    num::mat B(n, columns, 0.0);
+    num::mat<num::real> B(n, columns, 0.0);
     for (num::idx i = 0; i < n; ++i) {
         for (num::idx c = 0; c < columns; ++c) {
             B(i, c) = entry(rng);
@@ -213,8 +213,8 @@ TEST(BlockTridiagonal, SingleBlockMatchesDenseLU) {
 
     const auto reference = num::lu(problem.dense);
     const auto b = make_rhs(problem.size, 12);
-    num::vec expected(problem.size, 0.0);
-    num::vec actual(problem.size, 0.0);
+    num::vec<num::real> expected(problem.size, 0.0);
+    num::vec<num::real> actual(problem.size, 0.0);
     num::lu_solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -230,8 +230,8 @@ TEST(BlockTridiagonal, MultipleBlocksMatchDenseLU) {
 
     const auto reference = num::lu(problem.dense);
     const auto b = make_rhs(problem.size, 22);
-    num::vec expected(problem.size, 0.0);
-    num::vec actual(problem.size, 0.0);
+    num::vec<num::real> expected(problem.size, 0.0);
+    num::vec<num::real> actual(problem.size, 0.0);
     num::lu_solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -247,8 +247,8 @@ TEST(BlockTridiagonal, MatrixSolveMatchesDenseSolve) {
     const auto reference = num::lu(problem.dense);
 
     const auto B = make_rhs_matrix(problem.size, 3, 32);
-    num::mat expected;
-    num::mat actual;
+    num::mat<num::real> expected;
+    num::mat<num::real> actual;
     num::lu_solve(reference, B, expected);
     num::solve(factor, B, actual);
 
@@ -266,16 +266,16 @@ TEST(BlockTridiagonal, ManyRightHandSidesAgreeColumnwiseWithSingleSolves) {
     const auto factor = num::factor_block_lu(problem.sparse, problem.levels);
 
     const auto B = make_rhs_matrix(problem.size, 7, 42);
-    num::mat actual;
+    num::mat<num::real> actual;
     num::solve(factor, B, actual);
     ASSERT_EQ(actual.cols(), 7u);
 
     for (num::idx c = 0; c < 7; ++c) {
-        num::vec column(problem.size, 0.0);
+        num::vec<num::real> column(problem.size, 0.0);
         for (num::idx i = 0; i < problem.size; ++i) {
             column[i] = B(i, c);
         }
-        num::vec single(problem.size, 0.0);
+        num::vec<num::real> single(problem.size, 0.0);
         num::solve(factor, column, single);
         for (num::idx i = 0; i < problem.size; ++i) {
             EXPECT_NEAR(actual(i, c), single[i], tolerance) << "column " << c << " row " << i;
@@ -291,8 +291,8 @@ TEST(BlockTridiagonal, TransposeSolveMatchesDenseTransposeSolve) {
     const auto reference = num::lu(problem.dense);
 
     const auto b = make_rhs(problem.size, 52);
-    num::vec expected(problem.size, 0.0);
-    num::vec actual(problem.size, 0.0);
+    num::vec<num::real> expected(problem.size, 0.0);
+    num::vec<num::real> actual(problem.size, 0.0);
     num::lu_solve_transpose(reference, b, expected);
     num::solve_transpose(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -300,8 +300,8 @@ TEST(BlockTridiagonal, TransposeSolveMatchesDenseTransposeSolve) {
     }
 
     const auto B = make_rhs_matrix(problem.size, 4, 53);
-    num::mat expected_matrix;
-    num::mat actual_matrix;
+    num::mat<num::real> expected_matrix;
+    num::mat<num::real> actual_matrix;
     num::lu_solve_transpose(reference, B, expected_matrix);
     num::solve_transpose(factor, B, actual_matrix);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -318,9 +318,9 @@ TEST(BlockTridiagonal, TransposeSolveReusesTheFactorsWithoutRefactorizing) {
     const auto factor = num::factor_block_lu(problem.sparse, problem.levels);
     const auto b = make_rhs(problem.size, 62);
 
-    num::vec y(problem.size, 0.0);
+    num::vec<num::real> y(problem.size, 0.0);
     num::solve_transpose(factor, b, y); // y = A^-T b
-    num::vec back(problem.size, 0.0);
+    num::vec<num::real> back(problem.size, 0.0);
     // A^T y = b, so multiplying back through the dense transpose recovers b.
     for (num::idx i = 0; i < problem.size; ++i) {
         double sum = 0.0;
@@ -346,8 +346,8 @@ TEST(BlockTridiagonal, CholeskySolveMatchesDenseCholesky) {
     ASSERT_TRUE(reference.success);
 
     const auto b = make_rhs(problem.size, 72);
-    num::vec expected(problem.size, 0.0);
-    num::vec actual(problem.size, 0.0);
+    num::vec<num::real> expected(problem.size, 0.0);
+    num::vec<num::real> actual(problem.size, 0.0);
     num::cholesky_solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -355,8 +355,8 @@ TEST(BlockTridiagonal, CholeskySolveMatchesDenseCholesky) {
     }
 
     const auto B = make_rhs_matrix(problem.size, 3, 73);
-    num::mat expected_matrix;
-    num::mat actual_matrix;
+    num::mat<num::real> expected_matrix;
+    num::mat<num::real> actual_matrix;
     num::cholesky_solve(reference, B, expected_matrix);
     num::solve(factor, B, actual_matrix);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -419,8 +419,8 @@ TEST(BlockTridiagonal, HandlesStronglyUnequalBlockSizes) {
 
     const auto reference = num::lu(problem.dense);
     const auto b = make_rhs(problem.size, 82);
-    num::vec expected(problem.size, 0.0);
-    num::vec actual(problem.size, 0.0);
+    num::vec<num::real> expected(problem.size, 0.0);
+    num::vec<num::real> actual(problem.size, 0.0);
     num::lu_solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -444,8 +444,8 @@ TEST(BlockTridiagonal, CompressesArbitraryNonContiguousLevelLabels) {
     EXPECT_EQ(factor_odd.offsets, factor_plain.offsets);
 
     const auto b = make_rhs(plain.size, 92);
-    num::vec from_plain(plain.size, 0.0);
-    num::vec from_odd(plain.size, 0.0);
+    num::vec<num::real> from_plain(plain.size, 0.0);
+    num::vec<num::real> from_odd(plain.size, 0.0);
     num::solve(factor_plain, b, from_plain);
     num::solve(factor_odd, b, from_odd);
     for (num::idx i = 0; i < plain.size; ++i) {
@@ -477,8 +477,8 @@ TEST(BlockTridiagonal, HandlesLevelsGivenOutOfOrder) {
 
     const auto reference = num::lu(builder.dense());
     const auto b = make_rhs(6, 101);
-    num::vec expected(6, 0.0);
-    num::vec actual(6, 0.0);
+    num::vec<num::real> expected(6, 0.0);
+    num::vec<num::real> actual(6, 0.0);
     num::lu_solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < 6; ++i) {
@@ -500,8 +500,8 @@ TEST(BlockTridiagonal, AppliedToATallBlockMatchesDenseSolveForWoodbury) {
     const auto U = make_rhs_matrix(problem.size, rank, 112);
     const auto V = make_rhs_matrix(problem.size, rank, 113);
 
-    num::mat applied;
-    num::mat expected;
+    num::mat<num::real> applied;
+    num::mat<num::real> expected;
     num::solve(factor, U, applied);
     num::lu_solve(reference, U, expected);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -511,8 +511,8 @@ TEST(BlockTridiagonal, AppliedToATallBlockMatchesDenseSolveForWoodbury) {
         }
     }
 
-    num::mat applied_transpose;
-    num::mat expected_transpose;
+    num::mat<num::real> applied_transpose;
+    num::mat<num::real> expected_transpose;
     num::solve_transpose(factor, V, applied_transpose);
     num::lu_solve_transpose(reference, V, expected_transpose);
     for (num::idx i = 0; i < problem.size; ++i) {
@@ -557,7 +557,7 @@ TEST(BlockTridiagonal, LUSuffixRefactorReusesPrefixAndMatchesFreshFactor) {
     const auto original = make_problem({3, 4, 2, 5}, 131);
     const auto previous = num::factor_block_lu(original.sparse, original.levels);
 
-    num::mat changed = original.dense;
+    num::mat<num::real> changed = original.dense;
     // Block 2 begins at row 7. Change its diagonal and the boundary coupling
     // from block 1; blocks 0 and 1 remain exactly unchanged.
     changed(7, 7) += 2.0;
@@ -577,8 +577,8 @@ TEST(BlockTridiagonal, LUSuffixRefactorReusesPrefixAndMatchesFreshFactor) {
     expect_exact_matrix(updated.lower[0], previous.lower[0]);
 
     const auto b = make_rhs(updated_problem.size, 132);
-    num::vec reused_solution(updated_problem.size, 0.0);
-    num::vec fresh_solution(updated_problem.size, 0.0);
+    num::vec<num::real> reused_solution(updated_problem.size, 0.0);
+    num::vec<num::real> fresh_solution(updated_problem.size, 0.0);
     num::solve(updated, b, reused_solution);
     num::solve(fresh, b, fresh_solution);
     for (num::idx i = 0; i < updated_problem.size; ++i) {
@@ -590,7 +590,7 @@ TEST(BlockTridiagonal, CholeskySuffixRefactorReusesPrefixAndMatchesFreshFactor) 
     const auto original = make_spd_problem({3, 4, 3}, 141);
     const auto previous = num::factor_block_cholesky(original.sparse, original.levels);
 
-    num::mat changed = original.dense;
+    num::mat<num::real> changed = original.dense;
     // A positive diagonal update in the last block preserves positive
     // definiteness and leaves the first two block rows unchanged.
     changed(7, 7) += 1.0;
@@ -608,8 +608,8 @@ TEST(BlockTridiagonal, CholeskySuffixRefactorReusesPrefixAndMatchesFreshFactor) 
     expect_exact_matrix(updated.lower[0], previous.lower[0]);
 
     const auto b = make_rhs(updated_problem.size, 142);
-    num::vec reused_solution(updated_problem.size, 0.0);
-    num::vec fresh_solution(updated_problem.size, 0.0);
+    num::vec<num::real> reused_solution(updated_problem.size, 0.0);
+    num::vec<num::real> fresh_solution(updated_problem.size, 0.0);
     num::solve(updated, b, reused_solution);
     num::solve(fresh, b, fresh_solution);
     for (num::idx i = 0; i < updated_problem.size; ++i) {
@@ -621,7 +621,7 @@ TEST(BlockTridiagonal, LUSuffixRefactorAppendsANewLevel) {
     const auto original = make_problem({3, 2}, 146);
     const auto previous = num::factor_block_lu(original.sparse, original.levels);
 
-    num::mat enlarged(7, 7, 0.0);
+    num::mat<num::real> enlarged(7, 7, 0.0);
     for (num::idx i = 0; i < original.size; ++i) {
         for (num::idx j = 0; j < original.size; ++j) {
             enlarged(i, j) = original.dense(i, j);
@@ -650,8 +650,8 @@ TEST(BlockTridiagonal, LUSuffixRefactorAppendsANewLevel) {
     expect_exact_matrix(updated.lower[0], previous.lower[0]);
 
     const auto b = make_rhs(enlarged_problem.size, 147);
-    num::vec reused_solution(enlarged_problem.size, 0.0);
-    num::vec fresh_solution(enlarged_problem.size, 0.0);
+    num::vec<num::real> reused_solution(enlarged_problem.size, 0.0);
+    num::vec<num::real> fresh_solution(enlarged_problem.size, 0.0);
     num::solve(updated, b, reused_solution);
     num::solve(fresh, b, fresh_solution);
     for (num::idx i = 0; i < enlarged_problem.size; ++i) {

@@ -17,12 +17,12 @@ namespace num {
 /// input to Hutchinson-type estimators of \f$\operatorname{tr}(A)\f$ and
 /// \f$\operatorname{diag}(A)\f$.
 template <typename RNG = rng>
-[[nodiscard]] mat rademacher_probe(idx n, idx probes, RNG &generator) {
+[[nodiscard]] mat<real> rademacher_probe(idx n, idx probes, RNG &generator) {
     if (probes == 0) {
         throw std::invalid_argument("rademacher_probe: at least one probe is required");
     }
     std::bernoulli_distribution sign(0.5);
-    mat probe(n, probes, 0.0);
+    mat<real> probe(n, probes, 0.0);
     for (idx j = 0; j < n; ++j) {
         for (idx p = 0; p < probes; ++p) {
             probe(j, p) = sign(generator) ? 1.0 : -1.0;
@@ -32,7 +32,7 @@ template <typename RNG = rng>
 }
 
 /// @brief The same probe from a fixed seed.
-[[nodiscard]] inline mat rademacher_probe(idx n, idx probes, unsigned seed) {
+[[nodiscard]] inline mat<real> rademacher_probe(idx n, idx probes, unsigned seed) {
     rng generator(seed);
     return rademacher_probe(n, probes, generator);
 }
@@ -44,12 +44,12 @@ template <typename RNG = rng>
 /// reach for when the estimator's concentration is stated through a chi-square
 /// tail bound, since each row of the probed block is then exactly chi-square.
 template <typename RNG = rng>
-[[nodiscard]] mat gaussian_probe(idx n, idx probes, RNG &generator) {
+[[nodiscard]] mat<real> gaussian_probe(idx n, idx probes, RNG &generator) {
     if (probes == 0) {
         throw std::invalid_argument("gaussian_probe: at least one probe is required");
     }
     std::normal_distribution<real> normal(0.0, 1.0);
-    mat probe(n, probes, 0.0);
+    mat<real> probe(n, probes, 0.0);
     for (idx j = 0; j < n; ++j) {
         for (idx p = 0; p < probes; ++p) {
             probe(j, p) = normal(generator);
@@ -59,7 +59,7 @@ template <typename RNG = rng>
 }
 
 /// @brief The same Gaussian probe from a fixed seed.
-[[nodiscard]] inline mat gaussian_probe(idx n, idx probes, unsigned seed) {
+[[nodiscard]] inline mat<real> gaussian_probe(idx n, idx probes, unsigned seed) {
     rng generator(seed);
     return gaussian_probe(n, probes, generator);
 }
@@ -68,11 +68,11 @@ template <typename RNG = rng>
 ///
 /// If column \f$k\f$ of `probed` is \f$B z_k\f$ for Rademacher probes
 /// \f$z_k\f$, entry \f$j\f$ of the result estimates \f$(B B^T)_{jj}\f$.
-[[nodiscard]] inline vec hutchinson_row_mean_square(const mat &probed) {
+[[nodiscard]] inline vec<real> hutchinson_row_mean_square(const mat<real> &probed) {
     if (probed.cols() == 0) {
         throw std::invalid_argument("hutchinson_row_mean_square: no probed columns");
     }
-    vec estimate(probed.rows(), 0.0);
+    vec<real> estimate(probed.rows(), 0.0);
     for (idx j = 0; j < probed.rows(); ++j) {
         real total = 0.0;
         for (idx p = 0; p < probed.cols(); ++p) {

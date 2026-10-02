@@ -13,8 +13,8 @@ namespace num::operators {
 /// protocol.
 template <class F>
 struct callable_op final {
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
 
     /// Adapt a callable to a rectangular operator with explicit dimensions.
     callable_op(F f, idx rows, idx cols) : f_(std::move(f)), rows_(rows), cols_(cols) {}
@@ -23,9 +23,9 @@ struct callable_op final {
     callable_op(F f, idx n) : callable_op(std::move(f), n, n) {}
 
     /// Evaluate y=A*x, resizing y to the declared row count when needed.
-    void apply(const vec &x, vec &y) const {
+    void apply(const vec<real> &x, vec<real> &y) const {
         if (y.size() != rows_) {
-            y = vec(rows_);
+            y = vec<real>(rows_);
         }
         f_(x, y);
     }

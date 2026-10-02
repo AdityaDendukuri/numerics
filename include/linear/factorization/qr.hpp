@@ -19,8 +19,8 @@ namespace num {
 
 /// @brief QR factorization \f$A=QR\f$.
 struct qr_result {
-    mat Q; ///< Orthonormal factor.
-    mat R; ///< Upper-triangular factor.
+    mat<real> Q; ///< Orthonormal factor.
+    mat<real> R; ///< Upper-triangular factor.
 
     friend std::ostream &operator<<(std::ostream &os, const qr_result &r) {
         os << "qr_result{ Q: " << r.Q.rows() << "x" << r.Q.cols() << ", R: " << r.R.rows() << "x"
@@ -34,21 +34,21 @@ struct qr_result {
 /// Picks LAPACK (`dgeqrf`/`dorgqr`) if configured, else the in-tree blocked
 /// Householder kernel. To force one explicitly, call `num::lapack::qr`/`num::seq::qr`.
 /// @return `qr_result`: `.Q` (orthogonal), `.R` (upper triangular), with `A = Q*R`.
-qr_result qr(const mat &A);
+qr_result qr(const mat<real> &A);
 
 /// @brief Solve \f$\min_x \|Ax-b\|_2\f$.
-void qr_solve(const qr_result &f, const vec &b, vec &x);
+void qr_solve(const qr_result &f, const vec<real> &b, vec<real> &x);
 
 namespace seq {
 /// Blocked Householder QR through `kernel::qr_factor_blocked`, with Q formed
 /// by applying the same compact-WY blocks, last to first, to the identity.
-inline qr_result qr(const mat &A) {
+inline qr_result qr(const mat<real> &A) {
     const idx m = A.rows();
     const idx n = A.cols();
     const idx r = std::min(m, n);
     const idx nb = std::min(kernel::qr_block, r);
 
-    mat R = A;
+    mat<real> R = A;
     // Sized for the wider of the two block applications: the factorization's
     // trailing columns (up to n) and Q's trailing columns (up to m).
     array<real> tau(r), work(kernel::qr_workspace(m, std::max(m, n)));
@@ -57,7 +57,7 @@ inline qr_result qr(const mat &A) {
     // Q = H_0 ... H_{r-1}: for each block from the last, Q[k0:, k0:] <- B_k Q[k0:, k0:].
     // Entries of Q left of column k0 in those rows are still zero, so they
     // are skipped rather than multiplied.
-    mat Q(m, m, real(0));
+    mat<real> Q(m, m, real(0));
     for (idx i = 0; i < m; ++i) {
         Q(i, i) = real(1);
     }
@@ -84,12 +84,12 @@ inline qr_result qr(const mat &A) {
 } // namespace seq
 
 namespace lapack {
-inline qr_result qr(const mat &A) {
+inline qr_result qr(const mat<real> &A) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx m = A.rows(), n = A.cols();
     const idx k = std::min(m, n);
 
-    mat R = A;
+    mat<real> R = A;
     array<double> tau(k);
 
     int info =
@@ -99,14 +99,14 @@ inline qr_result qr(const mat &A) {
         throw std::runtime_error("qr (lapack): dgeqrf failed, info=" + std::to_string(info));
     }
 
-    mat Rmat = R;
+    mat<real> Rmat = R;
     for (idx i = 1; i < m; ++i) {
         for (idx j = 0; j < std::min(i, n); ++j) {
             Rmat(i, j) = 0.0;
         }
     }
 
-    mat Q(m, m, 0.0);
+    mat<real> Q(m, m, 0.0);
     for (idx j = 0; j < k; ++j) {
         for (idx i = 0; i < m; ++i) {
             Q(i, j) = R(i, j);
@@ -129,22 +129,22 @@ inline qr_result qr(const mat &A) {
 
 /// The blocked kernel QR; it measured faster than dgeqrf + dorgqr through
 /// LAPACKE at every size tried, and `num::lapack::qr` remains callable by name.
-inline qr_result qr(const mat &A) {
+inline qr_result qr(const mat<real> &A) {
     return seq::qr(A);
 }
 
-inline void qr_solve(const qr_result &f, const vec &b, vec &x) {
+inline void qr_solve(const qr_result &f, const vec<real> &b, vec<real> &x) {
     const idx m = f.Q.rows();
     const idx n = f.R.cols();
 
-    vec y(m, real(0));
+    vec<real> y(m, real(0));
     for (idx i = 0; i < m; ++i) {
         for (idx j = 0; j < m; ++j) {
             y[i] += f.Q(j, i) * b[j];
         }
     }
 
-    vec xv(n, real(0));
+    vec<real> xv(n, real(0));
     for (idx i = n; i-- > 0;) {
         xv[i] = y[i];
         for (idx j = i + 1; j < n; ++j) {

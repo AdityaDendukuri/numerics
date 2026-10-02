@@ -27,7 +27,7 @@ namespace repr {
 
 /// @brief vec stored in one contiguous block, addressable via a direct raw pointer `.data()`.
 ///
-/// Models include `num::vec`, `num::cvec`, and `std::vector<double>`.
+/// Models include `num::vec<real>`, `num::vec<cplx>`, and `std::vector<double>`.
 ///
 /// @tparam V Container type.
 template <class V>
@@ -39,7 +39,7 @@ concept contiguous = vector_space<V> && requires(V v, const V cv) {
 /// @brief mat stored contiguously in row-major order with row stride equal to `cols()`.
 ///
 /// Allows zero-copy lowering directly to CBLAS row-major routines (`cblas_dgemm`, `cblas_dgemv`).
-/// Models include `num::mat`.
+/// Models include `num::mat<real>`.
 ///
 /// @tparam A mat type.
 template <class A>

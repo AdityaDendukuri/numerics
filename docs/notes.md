@@ -25,7 +25,7 @@ this library has already spent on mathematics.
 
 | alias | is | the word it frees |
 |---|---|---|
-| `num::array<T>` | `std::vector<T>` | `num::vec`, an element of a vector space |
+| `num::array<T>` | `std::vector<T>` | `num::vec<num::real>`, an element of a vector space |
 | `num::static_array<T, N>` | `std::array<T, N>` | — |
 | `num::view<T>` | `std::span<T>` | the span of a set of vectors |
 
@@ -43,7 +43,7 @@ A declaration then says which half of the library it belongs to:
 
 ```cpp
 num::array<num::idx> row_offsets;   // storage
-num::vec             x(4);          // mathematics
+num::vec<num::real>             x(4);          // mathematics
 ```
 
 One member function has an alias as well.
@@ -63,19 +63,19 @@ carry no mathematical meaning — `std::pair`, `std::tuple`, `std::optional`,
 `std::string` — are deliberately left alone, so the library does not end up maintaining a
 parallel vocabulary for the whole standard library.
 
-### Choosing between num::vec and num::array<num::real>
+### Choosing between num::vec<num::real> and num::array<num::real>
 
 Both hold `double`s contiguously, and they are different types with different jobs.
 
 ```cpp
 num::array<num::real> raw(n);   // storage: grows, zero-initialises, 16-byte aligned
-num::vec              x(n);     // mathematics: fixed extent, 64-byte aligned
+num::vec<num::real>              x(n);     // mathematics: fixed extent, 64-byte aligned
 ```
 
-`num::vec` owns over-aligned storage, skips the zero-initialising pass when the contents
+`num::vec<num::real>` owns over-aligned storage, skips the zero-initialising pass when the contents
 are about to be overwritten, and satisfies `num::math::vector_space`, so solvers and
 operators take it directly. It has no `push_back`: its extent is fixed at construction.
-Use `num::array` when the length is not known until the values are, and `num::vec` once
+Use `num::array` when the length is not known until the values are, and `num::vec<num::real>` once
 the data is mathematics.
 
 ## Over-aligned storage

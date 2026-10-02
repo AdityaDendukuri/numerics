@@ -38,8 +38,8 @@ class scalar_field_2d {
     }
 
     /// Access the contiguous values in row-major grid order.
-    vec &as_vec() { return data_; }
-    [[nodiscard]] const vec &as_vec() const { return data_; }
+    vec<real> &as_vec() { return data_; }
+    [[nodiscard]] const vec<real> &as_vec() const { return data_; }
 
     real *data() { return data_.data(); }
     [[nodiscard]] const real *data() const { return data_.data(); }
@@ -47,7 +47,7 @@ class scalar_field_2d {
 
   private:
     grid2d grid_;
-    vec data_;
+    vec<real> data_;
 };
 
 } // namespace num

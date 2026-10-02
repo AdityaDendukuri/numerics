@@ -22,13 +22,13 @@ TEST(RandomMat, ApproxCholBasicGraphFactorizeSolve) {
     EXPECT_EQ(factor_exact.order.size(), 4u);
 
     // Solve against zero-sum RHS (orthogonal to nullspace)
-    vec b = {1.0, -1.0, 1.0, -1.0};
-    vec x(4, 0.0);
+    vec<real> b = {1.0, -1.0, 1.0, -1.0};
+    vec<real> x(4, 0.0);
     randommat::solve(factor_exact, b, x);
 
     // Check L * x = b for the exact factor
     spmat L = num::linear::laplacian(G);
-    vec Lx(4, 0.0);
+    vec<real> Lx(4, 0.0);
     sparse_matvec(L, x, Lx);
 
     for (idx i = 0; i < 4; ++i) {
@@ -47,7 +47,7 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
     }
     G.add_edge(0, n - 1, 0.5);
 
-    mat L = num::linear::dense_laplacian(G);
+    mat<real> L = num::linear::dense_laplacian(G);
     operators::dense_op op(L);
     const space::zero_sum zero_sum_space{};
     const auto laplacian_on_zero_sum = num::assume<law::spd_on<space::zero_sum>>(op);
@@ -60,11 +60,11 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
     const auto exact_prec_on_zero_sum =
         num::assume<law::spd_on<space::zero_sum>>(projected_exact_prec);
 
-    vec b(n, 0.0);
+    vec<real> b(n, 0.0);
     b[0] = 1.0;
     b[n - 1] = -1.0;
 
-    vec x_exact(n, 0.0);
+    vec<real> x_exact(n, 0.0);
     auto res_exact = pcg(laplacian_on_zero_sum, exact_prec_on_zero_sum, b, x_exact, zero_sum_space,
                          {.tolerance = 1e-12, .max_iterations = 10});
     EXPECT_TRUE(res_exact.converged);
@@ -76,7 +76,7 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
     const auto projected_sampled_prec = operators::projected(sampled_prec, zero_sum_space);
     const auto sampled_prec_on_zero_sum =
         num::assume<law::spd_on<space::zero_sum>>(projected_sampled_prec);
-    vec x_sampled(n, 0.0);
+    vec<real> x_sampled(n, 0.0);
     auto res_sampled = pcg(laplacian_on_zero_sum, sampled_prec_on_zero_sum, b, x_sampled,
                            zero_sum_space, {.tolerance = 1e-8, .max_iterations = 50});
     EXPECT_TRUE(res_sampled.converged);
@@ -104,23 +104,23 @@ TEST(RandomMat, GroundedApproxCholExposesFactorActions) {
     const spmat grounded = spmat::from_triplets(3, 3, rows, columns, values);
     const auto factor = grounded_approxchol_factor(grounded, gao_kyng_spielman_2023::ac2, 17);
 
-    mat C(3, 3, 0.0);
+    mat<real> C(3, 3, 0.0);
     for (idx column = 0; column < 3; ++column) {
-        vec basis(3, 0.0);
+        vec<real> basis(3, 0.0);
         basis[column] = 1.0;
-        const vec image = factor.apply_lower(basis);
+        const vec<real> image = factor.apply_lower(basis);
         for (idx row = 0; row < 3; ++row)
             C(row, column) = image[row];
     }
 
-    const vec x{0.5, -1.0, 2.0};
-    const vec Cx = matvec(C, x);
-    const vec recovered_lower = factor.solve_lower(Cx);
+    const vec<real> x{0.5, -1.0, 2.0};
+    const vec<real> Cx = matvec(C, x);
+    const vec<real> recovered_lower = factor.solve_lower(Cx);
     for (idx row = 0; row < 3; ++row)
         EXPECT_NEAR(recovered_lower[row], x[row], 1e-12);
 
-    const vec b{1.0, 2.0, -0.5};
-    const vec upper_solution = factor.solve_upper(b);
+    const vec<real> b{1.0, 2.0, -0.5};
+    const vec<real> upper_solution = factor.solve_upper(b);
     for (idx column = 0; column < 3; ++column) {
         real reconstructed = 0.0;
         for (idx row = 0; row < 3; ++row)

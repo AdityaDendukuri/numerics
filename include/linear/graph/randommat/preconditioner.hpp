@@ -25,8 +25,8 @@ namespace randommat {
 /// Satisfies the num::preconditioner concept for use with num::pcg and Krylov solvers.
 class approx_chol_preconditioner final {
   public:
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
     // A graph-Laplacian factor is singular on the constant-vector nullspace.
     // PCG on a compatible subspace needs `law::spd_on<S>`, which the caller attaches.
     using laws = law::list<law::psd>;
@@ -42,12 +42,12 @@ class approx_chol_preconditioner final {
     [[nodiscard]] idx cols() const noexcept { return n_; }
 
     /// Apply preconditioner z = M^-1 r via forward and backward substitution.
-    void apply(const vec &r, vec &z) const {
+    void apply(const vec<real> &r, vec<real> &z) const {
         if (r.size() != n_) {
             throw std::invalid_argument("approx_chol_preconditioner: dimension mismatch");
         }
         if (z.size() != n_) {
-            z = vec(n_, 0.0);
+            z = vec<real>(n_, 0.0);
         }
         randommat::solve(factor_, r.data(), z.data(), scratch_);
     }
@@ -79,10 +79,10 @@ class grounded_approx_chol_factor final {
     [[nodiscard]] idx cols() const noexcept { return n_; }
 
     /// Apply C, where the approximate grounded matrix is C C^T.
-    [[nodiscard]] vec apply_lower(const vec &x) const {
+    [[nodiscard]] vec<real> apply_lower(const vec<real> &x) const {
         check_dimension(x);
-        const vec permuted = permute(x);
-        vec product(n_, 0.0);
+        const vec<real> permuted = permute(x);
+        vec<real> product(n_, 0.0);
         for (idx column = 0; column < n_; ++column) {
             const auto &entries = retained_column(column);
             product[column] += entries[0].value * permuted[column];
@@ -94,9 +94,9 @@ class grounded_approx_chol_factor final {
     }
 
     /// Apply C^{-1} by forward substitution.
-    [[nodiscard]] vec solve_lower(const vec &b) const {
+    [[nodiscard]] vec<real> solve_lower(const vec<real> &b) const {
         check_dimension(b);
-        vec solution = permute(b);
+        vec<real> solution = permute(b);
         for (idx column = 0; column < n_; ++column) {
             const auto &entries = retained_column(column);
             solution[column] /= entries[0].value;
@@ -109,9 +109,9 @@ class grounded_approx_chol_factor final {
     }
 
     /// Apply C^{-T} by backward substitution.
-    [[nodiscard]] vec solve_upper(const vec &b) const {
+    [[nodiscard]] vec<real> solve_upper(const vec<real> &b) const {
         check_dimension(b);
-        vec solution = permute(b);
+        vec<real> solution = permute(b);
         for (idx step = 0; step < n_; ++step) {
             const idx column = n_ - 1 - step;
             const auto &entries = retained_column(column);
@@ -127,7 +127,7 @@ class grounded_approx_chol_factor final {
     [[nodiscard]] const cholesky_factor<real, idx> &factor() const noexcept { return factor_; }
 
   private:
-    void check_dimension(const vec &x) const {
+    void check_dimension(const vec<real> &x) const {
         if (x.size() != n_)
             throw std::invalid_argument("grounded_approx_chol_factor: dimension mismatch");
     }
@@ -139,15 +139,15 @@ class grounded_approx_chol_factor final {
         return entries;
     }
 
-    [[nodiscard]] vec permute(const vec &x) const {
-        vec result(n_, 0.0);
+    [[nodiscard]] vec<real> permute(const vec<real> &x) const {
+        vec<real> result(n_, 0.0);
         for (idx position = 0; position < n_; ++position)
             result[position] = x[factor_.order[position]];
         return result;
     }
 
-    [[nodiscard]] vec inverse_permute(const vec &x) const {
-        vec result(n_, 0.0);
+    [[nodiscard]] vec<real> inverse_permute(const vec<real> &x) const {
+        vec<real> result(n_, 0.0);
         for (idx position = 0; position < n_; ++position)
             result[factor_.order[position]] = x[position];
         return result;
@@ -157,7 +157,7 @@ class grounded_approx_chol_factor final {
     idx n_ = 0;
 };
 
-static_assert(linear_operator<approx_chol_preconditioner, vec, vec>);
+static_assert(linear_operator<approx_chol_preconditioner, vec<real>, vec<real>>);
 
 /// Convert num::basic_graph to randommat::graph.
 template <typename Weight, std::integral Index>

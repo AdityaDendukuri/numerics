@@ -21,8 +21,8 @@ using namespace num;
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /// Generate a diagonally dominant nxn matrix (well-conditioned for LU/QR).
-static mat make_spd(idx n) {
-    mat A(n, n, 0.0);
+static mat<real> make_spd(idx n) {
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         for (idx j = 0; j < n; ++j)
             A(i, j) = static_cast<real>(1 + (i == j ? n : 0)) / static_cast<real>(1 + i + j);
@@ -35,7 +35,7 @@ static mat make_spd(idx n) {
 
 static void BM_LU_Seq(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A = make_spd(n);
+    mat<real> A = make_spd(n);
     for (auto _ : state) {
         auto f = seq::lu(A);
         benchmark::DoNotOptimize(f.LU.data());
@@ -51,7 +51,7 @@ BENCHMARK(BM_LU_Seq)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
 #if defined(NUMERICS_HAS_LAPACK)
 static void BM_LU_Lapack(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A = make_spd(n);
+    mat<real> A = make_spd(n);
     for (auto _ : state) {
         auto f = lapack::lu(A);
         benchmark::DoNotOptimize(f.LU.data());
@@ -68,7 +68,7 @@ BENCHMARK(BM_LU_Lapack)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
 
 static void BM_QR_Seq(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A = make_spd(n);
+    mat<real> A = make_spd(n);
     for (auto _ : state) {
         auto f = seq::qr(A);
         benchmark::DoNotOptimize(f.R.data());
@@ -84,7 +84,7 @@ BENCHMARK(BM_QR_Seq)->RangeMultiplier(2)->Range(64, 512)->Complexity();
 #if defined(NUMERICS_HAS_LAPACK)
 static void BM_QR_Lapack(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A = make_spd(n);
+    mat<real> A = make_spd(n);
     for (auto _ : state) {
         auto f = lapack::qr(A);
         benchmark::DoNotOptimize(f.R.data());

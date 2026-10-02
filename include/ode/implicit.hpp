@@ -26,7 +26,7 @@ template <vec_field field, typename Observer>
 void advance(field &u, const linear_solver &solver, implicit_params p, Observer &&obs) {
     obs(0, 0.0, u);
     for (int s = 0; s < p.nstep; ++s) {
-        vec rhs = u.as_vec();
+        vec<real> rhs = u.as_vec();
         solver(rhs, u.as_vec());
         obs(s + 1, (s + 1) * p.dt, u);
     }
@@ -36,7 +36,7 @@ void advance(field &u, const linear_solver &solver, implicit_params p, Observer 
 template <vec_field field>
 void advance(field &u, const linear_solver &solver, implicit_params p) {
     for (int s = 0; s < p.nstep; ++s) {
-        vec rhs = u.as_vec();
+        vec<real> rhs = u.as_vec();
         solver(rhs, u.as_vec());
     }
 }

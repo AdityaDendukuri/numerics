@@ -18,8 +18,8 @@ namespace {
 
 /// Strictly diagonally dominant by rows, so `factor_no_pivot` never reports
 /// `singular` and the elimination never meets a zero pivot.
-mat make_diagonally_dominant(idx n) {
-    mat A(n, n, 0.0);
+mat<real> make_diagonally_dominant(idx n) {
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         real row_sum = 0.0;
         for (idx j = 0; j < n; ++j) {
@@ -38,26 +38,26 @@ mat make_diagonally_dominant(idx n) {
 } // namespace
 
 TEST(LUNoPivot, NotSingularOnDiagonallyDominantMatrix) {
-    mat A = make_diagonally_dominant(5);
+    mat<real> A = make_diagonally_dominant(5);
     const auto factor = factor_no_pivot(A);
     EXPECT_FALSE(factor.singular);
 }
 
 TEST(LUNoPivot, SolveMatchesPivotedLU) {
     const idx n = 6;
-    mat A = make_diagonally_dominant(n);
-    vec b(n);
+    mat<real> A = make_diagonally_dominant(n);
+    vec<real> b(n);
     for (idx i = 0; i < n; ++i) {
         b[i] = static_cast<real>(i + 1);
     }
 
     const auto factor = factor_no_pivot(A);
     ASSERT_FALSE(factor.singular);
-    vec x(n);
+    vec<real> x(n);
     solve(factor, b, x);
 
     const auto reference = lu(A);
-    vec x_ref(n);
+    vec<real> x_ref(n);
     lu_solve(reference, b, x_ref);
 
     for (idx i = 0; i < n; ++i) {
@@ -67,19 +67,19 @@ TEST(LUNoPivot, SolveMatchesPivotedLU) {
 
 TEST(LUNoPivot, SolveMultipleRHSMatchesPivotedLU) {
     const idx n = 5;
-    mat A = make_diagonally_dominant(n);
-    mat B(n, 2, 0.0);
+    mat<real> A = make_diagonally_dominant(n);
+    mat<real> B(n, 2, 0.0);
     for (idx i = 0; i < n; ++i) {
         B(i, 0) = static_cast<real>(i + 1);
         B(i, 1) = static_cast<real>(n - i);
     }
 
     const auto factor = factor_no_pivot(A);
-    mat X;
+    mat<real> X;
     solve(factor, B, X);
 
     const auto reference = lu(A);
-    mat X_ref;
+    mat<real> X_ref;
     lu_solve(reference, B, X_ref);
 
     for (idx i = 0; i < n; ++i) {
@@ -91,18 +91,18 @@ TEST(LUNoPivot, SolveMultipleRHSMatchesPivotedLU) {
 
 TEST(LUNoPivot, SolveTransposeMatchesPivotedLU) {
     const idx n = 5;
-    mat A = make_diagonally_dominant(n);
-    vec b(n);
+    mat<real> A = make_diagonally_dominant(n);
+    vec<real> b(n);
     for (idx i = 0; i < n; ++i) {
         b[i] = static_cast<real>(2 * i + 1);
     }
 
     const auto factor = factor_no_pivot(A);
-    vec x(n);
+    vec<real> x(n);
     solve_transpose(factor, b, x);
 
     const auto reference = lu(A);
-    vec x_ref(n);
+    vec<real> x_ref(n);
     lu_solve_transpose(reference, b, x_ref);
 
     for (idx i = 0; i < n; ++i) {
@@ -112,7 +112,7 @@ TEST(LUNoPivot, SolveTransposeMatchesPivotedLU) {
 
 TEST(LUNoPivot, ReportsSingularOnZeroPivot) {
     // No diagonal dominance at all: the (0,0) pivot is exactly zero.
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 1) = 1.0;
     A(1, 0) = 1.0;
     A(1, 1) = 2.0;

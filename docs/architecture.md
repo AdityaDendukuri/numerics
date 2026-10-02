@@ -12,7 +12,7 @@ Numerics is organized into unidirectional tiers. Each tier depends only on the t
 └──────────────────────────────┬──────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────┐
-│ Tier 2: Containers & Operators (vec, mat, dense_op)    │
+│ Tier 2: Containers & Operators (vec<real>, mat<real>, dense_op)    │
 └──────────────────────────────┬──────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────┐
@@ -46,7 +46,7 @@ site picks one.
 | :--- | :--- | :--- | :--- |
 | **Tier 0** | `kernel` | Raw compute over pointers (`T*`), dimensions, and callables; zero allocations | *None* (Pure Standard C++20) |
 | **Tier 1** | `core`, `algebra` | scalar fields, vector spaces, operator laws, and their runtime probes | `kernel` |
-| **Tier 2** | `container`, `operator` | `vec`, `mat`, `spmat`, matrix-free operators; defines `num::seq` (container-aware wrapper over `num::kernel`) and the untagged `num::` entry points that resolve through `num::accel` | `core`, `algebra`, `kernel` |
+| **Tier 2** | `container`, `operator` | `vec<real>`, `mat<real>`, `spmat`, matrix-free operators; defines `num::seq` (container-aware wrapper over `num::kernel`) and the untagged `num::` entry points that resolve through `num::accel` | `core`, `algebra`, `kernel` |
 | **Tier 3** | `linear`, `ode`, `pde`, `spectral`, `quadrature`, `roots`, `structures`, `spatial`, `stochastic` | Numerical domain algorithms (factorizations, Krylov solvers, RK45, Verlet, FFT, graph structures) | Tier 0–2 |
 | **Accelerators** | `omp`, `blas`, `lapack`, `cuda`, `mpi` | One namespace each (`num::omp`, `num::blas`, ...), same signatures as `num::kernel`. Optional; selected by what the build links, never by a tag or enum | `container`, plus the external library |
 | **Auxiliary** | `io`, `plot` | Header-only I/O and terminal plotting. Nothing in Tiers 0–3 includes them, so they can be deleted or lifted out on their own | `container` |
@@ -62,7 +62,7 @@ The bottom tier (`include/kernel/`) is a completely self-contained mathematical 
 ### Key Characteristics of Tier 0
 * **Zero External Dependencies:** Depends strictly on standard C++ library headers (`<algorithm>`, `<cmath>`, `<complex>`, `<concepts>`, `<cstddef>`).
 * **Zero Dynamic Heap Allocations:** Never calls `new`, `malloc`, or allocates heap buffers. All temporary workspace is caller-managed (`T* work`).
-* **Foreign Type Agnostic:** The kernel takes raw pointers, so `std::vector<T>`, `std::array<T, N>`, Eigen vectors (`v.data()`), Armadillo matrices (`M.memptr()`), PyTorch/CUDA host tensors and raw buffers all work directly. Above the kernel, the matrix operations are constrained on storage layout rather than on `num::mat` and `num::spmat`, so a foreign type exposing the accessors of `num::repr::dense_row_major` or `num::repr::csr` participates in `matvec`, `transpose`, `diagonal`, `dense` and `scaled` with no adapter (see [Containers](reference/containers.md)).
+* **Foreign Type Agnostic:** The kernel takes raw pointers, so `std::vector<T>`, `std::array<T, N>`, Eigen vectors (`v.data()`), Armadillo matrices (`M.memptr()`), PyTorch/CUDA host tensors and raw buffers all work directly. Above the kernel, the matrix operations are constrained on storage layout rather than on `num::mat<num::real>` and `num::spmat`, so a foreign type exposing the accessors of `num::repr::dense_row_major` or `num::repr::csr` participates in `matvec`, `transpose`, `diagonal`, `dense` and `scaled` with no adapter (see [Containers](reference/containers.md)).
 * **100% Copyable / Vendorable:** Drop `include/kernel/` directly into any embedded, real-time, game engine, or legacy codebase.
 
 ### Including and Linking Tier 0
@@ -210,7 +210,7 @@ int main() {
 Every high-level algorithm in Numerics lowers directly to the Tier-0 raw kernels. There is **exactly one mathematical implementation** for each algorithm in the codebase:
 
 1. **Typed High-Level Layer (`num::cg`, `num::cholesky`):** Enforces C++20 concepts (`spd_operator`, `inner_product_space`), validates invariants under active diagnostic presets, extracts buffer pointers, and dispatches to the raw kernel.
-2. **Container Adaptors (`num::mat`, `num::vec`):** Manage contiguous memory lifetimes and provide convenient algebraic syntax.
+2. **Container Adaptors (`num::mat<num::real>`, `num::vec<num::real>`):** Manage contiguous memory lifetimes and provide convenient algebraic syntax.
 3. **Hardware Dispatch:** When BLAS/LAPACK backends are linked, typed wrappers route large matrix operations to vendor GEMM/POTRF microkernels while small matrices and matrix-free operators execute in-tree Tier-0 code.
 
 ---
@@ -222,9 +222,9 @@ know about?**
 
 | You are adding | It goes in | Because |
 | :--- | :--- | :--- |
-| A loop over `T*` and lengths: a new BLAS-like primitive, a factorization step, a stencil apply | `include/kernel/<area>.hpp` | It knows only pointers. Nothing above Tier 0 may be mentioned: no `vec`, no `mat`, no external library, no allocation. |
+| A loop over `T*` and lengths: a new BLAS-like primitive, a factorization step, a stencil apply | `include/kernel/<area>.hpp` | It knows only pointers. Nothing above Tier 0 may be mentioned: no `vec<real>`, no `mat<real>`, no external library, no allocation. |
 | A new concept or property tag (`spd_operator`, `inner_product_space`) | `include/algebra/` | Tier 1 is where mathematical structure is *stated*; Tier 0 is where it is *computed*. |
-| A container operation on `vec`/`mat` | `include/container/<name>_ops.hpp` | Define it in `num::seq` (the portable path) and, if it needs one, an untagged `num::` forward that resolves through `num::accel`. |
+| A container operation on `vec<real>`/`mat<real>` | `include/container/<name>_ops.hpp` | Define it in `num::seq` (the portable path) and, if it needs one, an untagged `num::` forward that resolves through `num::accel`. |
 | A numerical algorithm: a solver, an integrator, a transform | `include/<domain>/` (`linear`, `ode`, `pde`, `spectral`, ...) | Tier 3. It composes containers and concepts; it must not re-implement arithmetic that belongs in `kernel`. |
 | A faster path using an external library | `include/<backend>/<area>_ops.hpp` | A new sibling namespace, matching `num::kernel`'s signatures exactly. Add a CMake target that carries the `NUMERICS_HAS_<X>` define, and give it a `num::seq` fallback so the namespace always compiles. |
 

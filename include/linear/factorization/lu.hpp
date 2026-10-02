@@ -24,7 +24,7 @@ namespace num {
 
 /// @brief Packed factorization \f$PA=LU\f$.
 struct lu_result {
-    mat LU;                ///< Packed unit-lower and upper factors.
+    mat<real> LU;                ///< Packed unit-lower and upper factors.
     array<idx> piv;        ///< Zero-based row swaps applied during factorization.
     bool singular = false; ///< True when a zero pivot was encountered.
 
@@ -41,35 +41,35 @@ struct lu_result {
 /// else the in-tree blocked kernel. Call `num::lapack::lu` or `num::seq::lu` to force one.
 /// @return `lu_result`: `.LU` (packed factors), `.piv` (row pivots), `.singular`.
 /// @throws std::invalid_argument If `A` is not square.
-inline lu_result lu(const mat &A);
+inline lu_result lu(const mat<real> &A);
 
 /// @brief Solve \f$Ax=b\f$ from a precomputed \f$PA=LU\f$ factorization.
-void lu_solve(const lu_result &f, const vec &b, vec &x);
+void lu_solve(const lu_result &f, const vec<real> &b, vec<real> &x);
 
 /// @brief Solve \f$AX=B\f$ from a precomputed \f$PA=LU\f$ factorization.
-void lu_solve(const lu_result &f, const mat &B, mat &X);
+void lu_solve(const lu_result &f, const mat<real> &B, mat<real> &X);
 
 /// Solve A^T x=b from a precomputed PA=LU factorization.
-void lu_solve_transpose(const lu_result &f, const vec &b, vec &x);
+void lu_solve_transpose(const lu_result &f, const vec<real> &b, vec<real> &x);
 /// Solve A^T X=B for several right-hand sides.
-void lu_solve_transpose(const lu_result &f, const mat &B, mat &X);
+void lu_solve_transpose(const lu_result &f, const mat<real> &B, mat<real> &X);
 
 /// Replace one or more right-hand sides with the corresponding solutions.
-void solve_in_place(const lu_result &f, vec &right_hand_side);
-void solve_in_place(const lu_result &f, mat &right_hand_sides);
+void solve_in_place(const lu_result &f, vec<real> &right_hand_side);
+void solve_in_place(const lu_result &f, mat<real> &right_hand_sides);
 
 /// @brief Compute \f$\det(A)=\det(P)^{-1}\prod_i U_{ii}\f$.
 real lu_det(const lu_result &f);
 
 /// @brief Compute \f$A^{-1}\f$ by solving \f$AX=I\f$.
-mat lu_inv(const lu_result &f);
+mat<real> lu_inv(const lu_result &f);
 
 namespace seq {
 /// Blocked partial-pivoting LU through `kernel::lu_factor_blocked`: panel
 /// factorization, then a `trsm` and a `gemm` per panel, so the bulk of the
 /// work runs at `gemm` speed. A pivot below `singular_tol` marks the result
 /// singular; the factorization still completes so the caller can inspect it.
-inline lu_result lu(const mat &A) {
+inline lu_result lu(const mat<real> &A) {
     constexpr real singular_tol = 1e-14;
     const idx n = A.rows();
     lu_result f;
@@ -84,7 +84,7 @@ inline lu_result lu(const mat &A) {
 } // namespace seq
 
 namespace lapack {
-inline lu_result lu(const mat &A) {
+inline lu_result lu(const mat<real> &A) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = A.rows();
     lu_result f;
@@ -115,7 +115,7 @@ inline lu_result lu(const mat &A) {
 }
 } // namespace lapack
 
-inline lu_result lu(const mat &A) {
+inline lu_result lu(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("lu: matrix must be square");
     }
@@ -127,10 +127,10 @@ inline lu_result lu(const mat &A) {
     return seq::lu(A);
 }
 
-inline void lu_solve(const lu_result &f, const vec &b, vec &x) {
+inline void lu_solve(const lu_result &f, const vec<real> &b, vec<real> &x) {
     const idx n = f.LU.rows();
-    const mat &M = f.LU;
-    vec y = b;
+    const mat<real> &M = f.LU;
+    vec<real> y = b;
 
     for (idx k = 0; k < n; ++k) {
         if (f.piv[k] != k) {
@@ -154,7 +154,7 @@ inline void lu_solve(const lu_result &f, const vec &b, vec &x) {
     x = std::move(y);
 }
 
-inline void lu_solve(const lu_result &f, const mat &B, mat &X) {
+inline void lu_solve(const lu_result &f, const mat<real> &B, mat<real> &X) {
     const idx n = B.rows();
     if (f.LU.rows() != n || f.LU.cols() != n) {
         throw std::invalid_argument("lu_solve: dimension mismatch");
@@ -175,7 +175,7 @@ inline void lu_solve(const lu_result &f, const mat &B, mat &X) {
 
 /// Solve \f$A^T X = B\f$ for several right-hand sides from \f$PA = LU\f$:
 /// \f$A^T = U^T L^T P\f$, so \f$U^T Q = B\f$, \f$L^T Y = Q\f$, \f$X = P^T Y\f$.
-inline void lu_solve_transpose(const lu_result &f, const mat &B, mat &X) {
+inline void lu_solve_transpose(const lu_result &f, const mat<real> &B, mat<real> &X) {
     const idx n = f.LU.rows();
     if (f.LU.cols() != n || B.rows() != n) {
         throw std::invalid_argument("lu_solve_transpose: dimension mismatch");
@@ -192,31 +192,31 @@ inline void lu_solve_transpose(const lu_result &f, const mat &B, mat &X) {
     }
 }
 
-inline void lu_solve_transpose(const lu_result &f, const vec &b, vec &x) {
+inline void lu_solve_transpose(const lu_result &f, const vec<real> &b, vec<real> &x) {
     const idx n = f.LU.rows();
     if (f.LU.cols() != n || b.size() != n) {
         throw std::invalid_argument("lu_solve_transpose: dimension mismatch");
     }
-    mat column(n, 1, 0.0);
+    mat<real> column(n, 1, 0.0);
     for (idx row = 0; row < n; ++row) {
         column(row, 0) = b[row];
     }
-    mat solution;
+    mat<real> solution;
     lu_solve_transpose(f, column, solution);
-    x = vec(n, 0.0);
+    x = vec<real>(n, 0.0);
     for (idx row = 0; row < n; ++row) {
         x[row] = solution(row, 0);
     }
 }
 
-inline void solve_in_place(const lu_result &f, vec &right_hand_side) {
-    vec result(right_hand_side.size(), 0.0);
+inline void solve_in_place(const lu_result &f, vec<real> &right_hand_side) {
+    vec<real> result(right_hand_side.size(), 0.0);
     lu_solve(f, right_hand_side, result);
     right_hand_side = std::move(result);
 }
 
-inline void solve_in_place(const lu_result &f, mat &right_hand_sides) {
-    mat result;
+inline void solve_in_place(const lu_result &f, mat<real> &right_hand_sides) {
+    mat<real> result;
     lu_solve(f, right_hand_sides, result);
     right_hand_sides = std::move(result);
 }
@@ -236,9 +236,9 @@ inline real lu_det(const lu_result &f) {
     return (swaps % 2 == 0) ? det : -det;
 }
 
-inline mat lu_inv(const lu_result &f) {
+inline mat<real> lu_inv(const lu_result &f) {
     const idx n = f.LU.rows();
-    mat inv = f.LU;
+    mat<real> inv = f.LU;
 #if defined(NUMERICS_LAPACK_DEFAULT)
     array<lapack_int> ipiv(n);
     for (idx i = 0; i < n; ++i)

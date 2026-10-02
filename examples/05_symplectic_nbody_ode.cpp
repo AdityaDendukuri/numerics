@@ -7,9 +7,9 @@
 int main() {
     using namespace num;
 
-    auto accel = [](const vec &q, vec &a) { a[0] = -q[0]; };
+    auto accel = [](const vec<real> &q, vec<real> &a) { a[0] = -q[0]; };
 
-    vec q0{1.0}, v0{0.0};
+    vec<real> q0{1.0}, v0{0.0};
     ode_params p;
     p.t0 = 0.0;
     p.tf = 10.0;

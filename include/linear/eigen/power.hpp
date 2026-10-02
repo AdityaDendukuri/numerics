@@ -22,7 +22,7 @@ namespace num {
 /// @brief Result of a single-eigenvalue iteration
 struct power_result {
     real eigenvalue = 0.0;  ///< Converged eigenvalue (Rayleigh quotient)
-    vec eigenvector;     ///< Corresponding unit eigenvector
+    vec<real> eigenvector;     ///< Corresponding unit eigenvector
     idx iterations = 0;     ///< Iterations performed
     bool converged = false; ///< Whether tolerance was met
 
@@ -36,7 +36,7 @@ struct power_result {
 
 namespace detail {
 /// Normalise v in-place; returns the old norm.
-inline real normalise(vec &v) {
+inline real normalise(vec<real> &v) {
     // nrm <- ||v||_2
     const real nrm = kernel::norm(v.data(), v.size());
     if (nrm > 1e-300) {
@@ -52,7 +52,7 @@ inline real normalise(vec &v) {
 /// @param A        Square matrix (need not be symmetric)
 /// @param tol      Tolerance on eigenvalue change between iterations
 /// @param max_iter Maximum iterations
-power_result power_iteration(const mat &A, real tol = 1e-10, idx max_iter = 1000);
+power_result power_iteration(const mat<real> &A, real tol = 1e-10, idx max_iter = 1000);
 
 /// @brief Inverse iteration  -- finds the eigenvalue closest to a shift sigma.
 ///
@@ -62,7 +62,7 @@ power_result power_iteration(const mat &A, real tol = 1e-10, idx max_iter = 1000
 /// @param sigma    Shift  -- should be near the target eigenvalue
 /// @param tol      Tolerance on eigenvalue change between iterations
 /// @param max_iter Maximum iterations
-power_result inverse_iteration(const mat &A, real sigma, real tol = 1e-10, idx max_iter = 1000);
+power_result inverse_iteration(const mat<real> &A, real sigma, real tol = 1e-10, idx max_iter = 1000);
 
 /// @brief Rayleigh quotient iteration  -- cubically convergent.
 ///
@@ -72,17 +72,17 @@ power_result inverse_iteration(const mat &A, real sigma, real tol = 1e-10, idx m
 /// @param x0       Starting vector (determines which eigenvalue is found)
 /// @param tol      Tolerance on residual ||A*v - lambda*v||
 /// @param max_iter Maximum iterations
-power_result rayleigh_iteration(const mat &A, const vec &x0, real tol = 1e-10,
+power_result rayleigh_iteration(const mat<real> &A, const vec<real> &x0, real tol = 1e-10,
                                idx max_iter = 50);
 
-inline power_result power_iteration(const mat &A, real tol, idx max_iter) {
+inline power_result power_iteration(const mat<real> &A, real tol, idx max_iter) {
     constexpr real tiny = 1e-300;
     const idx n = A.rows();
     if (A.cols() != n) {
         throw std::invalid_argument("power_iteration: matrix must be square");
     }
 
-    vec v(n, 0.0);
+    vec<real> v(n, 0.0);
     v[0] = 1.0;
 
     real lambda = 0.0;
@@ -91,7 +91,7 @@ inline power_result power_iteration(const mat &A, real tol, idx max_iter) {
     for (idx iter = 0; iter < max_iter; ++iter) {
         result.iterations = iter + 1;
 
-        vec w(n);
+        vec<real> w(n);
         matvec(A, v, w);
 
         real new_lambda = dot(v, w);
@@ -112,7 +112,7 @@ inline power_result power_iteration(const mat &A, real tol, idx max_iter) {
     return result;
 }
 
-inline power_result inverse_iteration(const mat &A, real sigma, real tol, idx max_iter) {
+inline power_result inverse_iteration(const mat<real> &A, real sigma, real tol, idx max_iter) {
     constexpr real tiny = 1e-300;
     const idx n = A.rows();
     if (A.cols() != n) {
@@ -120,14 +120,14 @@ inline power_result inverse_iteration(const mat &A, real sigma, real tol, idx ma
     }
 
     // Factorize (A - sigma*I) once
-    mat M = A;
+    mat<real> M = A;
     for (idx i = 0; i < n; ++i) {
         M(i, i) -= sigma;
     }
     // M is A (rejected above unless square) shifted along its diagonal.
     lu_result f = lu(M);
 
-    vec v(n, 0.0);
+    vec<real> v(n, 0.0);
     v[0] = 1.0;
 
     real lambda = 0.0;
@@ -136,12 +136,12 @@ inline power_result inverse_iteration(const mat &A, real sigma, real tol, idx ma
     for (idx iter = 0; iter < max_iter; ++iter) {
         result.iterations = iter + 1;
 
-        vec w(n);
+        vec<real> w(n);
         lu_solve(f, v, w);
         detail::normalise(w);
 
         // Rayleigh quotient as eigenvalue estimate
-        vec av(n);
+        vec<real> av(n);
         matvec(A, w, av);
         real new_lambda = dot(w, av);
 
@@ -160,7 +160,7 @@ inline power_result inverse_iteration(const mat &A, real sigma, real tol, idx ma
     return result;
 }
 
-inline power_result rayleigh_iteration(const mat &A, const vec &x0, real tol, idx max_iter) {
+inline power_result rayleigh_iteration(const mat<real> &A, const vec<real> &x0, real tol, idx max_iter) {
     const idx n = A.rows();
     if (A.cols() != n) {
         throw std::invalid_argument("rayleigh_iteration: matrix must be square");
@@ -169,11 +169,11 @@ inline power_result rayleigh_iteration(const mat &A, const vec &x0, real tol, id
         throw std::invalid_argument("rayleigh_iteration: x0 size mismatch");
     }
 
-    vec v = x0;
+    vec<real> v = x0;
     detail::normalise(v);
 
     // Initial Rayleigh quotient
-    vec av(n);
+    vec<real> av(n);
     matvec(A, v, av);
     real sigma = dot(v, av);
 
@@ -183,7 +183,7 @@ inline power_result rayleigh_iteration(const mat &A, const vec &x0, real tol, id
         result.iterations = iter + 1;
 
         // Factorize (A - sigma*I); fresh each iteration (cubic convergence)
-        mat M = A;
+        mat<real> M = A;
         for (idx i = 0; i < n; ++i) {
             M(i, i) -= sigma;
         }
@@ -194,7 +194,7 @@ inline power_result rayleigh_iteration(const mat &A, const vec &x0, real tol, id
             break;
         }
 
-        vec w(n);
+        vec<real> w(n);
         lu_solve(f, v, w);
         detail::normalise(w);
 

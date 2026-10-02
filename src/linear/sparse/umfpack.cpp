@@ -88,12 +88,12 @@ idx umfpack_factor::size() const noexcept {
     return impl_ ? impl_->n : 0;
 }
 
-void umfpack_factor::solve(const vec &rhs, vec &solution) const {
+void umfpack_factor::solve(const vec<real> &rhs, vec<real> &solution) const {
 #if defined(NUMERICS_HAS_UMFPACK)
     if (rhs.size() != impl_->n) {
         throw std::invalid_argument("UMFPACK solve dimension mismatch");
     }
-    solution = vec(impl_->n, 0.0);
+    solution = vec<real>(impl_->n, 0.0);
     const int status =
         umfpack_di_solve(UMFPACK_A, impl_->ap.data(), impl_->ai.data(), impl_->ax.data(),
                          solution.data(), rhs.data(), impl_->numeric, nullptr, nullptr);
@@ -107,13 +107,13 @@ void umfpack_factor::solve(const vec &rhs, vec &solution) const {
 #endif
 }
 
-void umfpack_factor::solve(const mat &rhs, mat &solution) const {
+void umfpack_factor::solve(const mat<real> &rhs, mat<real> &solution) const {
 #if defined(NUMERICS_HAS_UMFPACK)
     if (rhs.rows() != impl_->n) {
         throw std::invalid_argument("UMFPACK block solve dimension mismatch");
     }
-    solution = mat(rhs.rows(), rhs.cols(), 0.0);
-    vec b(impl_->n, 0.0), x(impl_->n, 0.0);
+    solution = mat<real>(rhs.rows(), rhs.cols(), 0.0);
+    vec<real> b(impl_->n, 0.0), x(impl_->n, 0.0);
     for (idx col = 0; col < rhs.cols(); ++col) {
         for (idx row = 0; row < rhs.rows(); ++row) {
             b[row] = rhs(row, col);

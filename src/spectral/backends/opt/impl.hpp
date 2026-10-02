@@ -132,14 +132,14 @@ struct fft_plan_impl : public num::spectral::fft_plan_impl {
         }
     }
 
-    void execute(const num::cvec &in, num::cvec &out) const override {
+    void execute(const num::vec<cplx> &in, num::vec<cplx> &out) const override {
         for (num::idx i = 0; i < static_cast<num::idx>(n); ++i) {
             out[i] = in[i];
         }
         execute_inplace(out);
     }
 
-    void execute_inplace(num::cvec &out) const {
+    void execute_inplace(num::vec<cplx> &out) const {
         backends::seq::bit_reverse(out);
         num::cplx *data = out.data();
         int stage = 0;
@@ -153,7 +153,7 @@ struct fft_plan_impl : public num::spectral::fft_plan_impl {
     }
 };
 
-inline void fft(const num::cvec &in, num::cvec &out) {
+inline void fft(const num::vec<cplx> &in, num::vec<cplx> &out) {
     int n = static_cast<int>(in.size());
     for (int i = 0; i < n; ++i) {
         out[i] = in[i];
@@ -162,7 +162,7 @@ inline void fft(const num::cvec &in, num::cvec &out) {
     plan.execute_inplace(out);
 }
 
-inline void ifft(const num::cvec &in, num::cvec &out) {
+inline void ifft(const num::vec<cplx> &in, num::vec<cplx> &out) {
     int n = static_cast<int>(in.size());
     for (int i = 0; i < n; ++i) {
         out[i] = in[i];
@@ -171,9 +171,9 @@ inline void ifft(const num::cvec &in, num::cvec &out) {
     plan.execute_inplace(out);
 }
 
-inline void rfft(const num::vec &in, num::cvec &out) {
+inline void rfft(const num::vec<real> &in, num::vec<cplx> &out) {
     int n = static_cast<int>(in.size());
-    num::cvec tmp(static_cast<num::idx>(n), num::cplx{0, 0});
+    num::vec<cplx> tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (int i = 0; i < n; ++i) {
         tmp[i] = {in[i], 0.0};
     }
@@ -184,8 +184,8 @@ inline void rfft(const num::vec &in, num::cvec &out) {
     }
 }
 
-inline void irfft(const num::cvec &in, int n, num::vec &out) {
-    num::cvec tmp(static_cast<num::idx>(n), num::cplx{0, 0});
+inline void irfft(const num::vec<cplx> &in, int n, num::vec<real> &out) {
+    num::vec<cplx> tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (int k = 0; k < (n / 2) + 1; ++k) {
         tmp[k] = in[k];
     }

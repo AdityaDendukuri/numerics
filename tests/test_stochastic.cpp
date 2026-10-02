@@ -16,7 +16,7 @@ TEST(rng, AliasesAreTheStandardEngines) {
 
 TEST(probe, RademacherEntriesAreSigns) {
     rng generator(3);
-    const mat probe = rademacher_probe(5, 8, generator);
+    const mat<real> probe = rademacher_probe(5, 8, generator);
     EXPECT_EQ(probe.rows(), 5);
     EXPECT_EQ(probe.cols(), 8);
     for (idx j = 0; j < probe.rows(); ++j)
@@ -26,8 +26,8 @@ TEST(probe, RademacherEntriesAreSigns) {
 }
 
 TEST(probe, SeededOverloadIsReproducible) {
-    const mat first = rademacher_probe(6, 4, 11u);
-    const mat second = rademacher_probe(6, 4, 11u);
+    const mat<real> first = rademacher_probe(6, 4, 11u);
+    const mat<real> second = rademacher_probe(6, 4, 11u);
     for (idx j = 0; j < 6; ++j)
         for (idx p = 0; p < 4; ++p)
             EXPECT_DOUBLE_EQ(first(j, p), second(j, p));
@@ -35,14 +35,14 @@ TEST(probe, SeededOverloadIsReproducible) {
 
 TEST(probe, HutchinsonRecoversDiagonalOfDiagonalMatrix) {
     // B = diag(d): probed = B z has rows d_j z_j, so the mean square is d_j^2 exactly.
-    const vec d{1.0, -2.0, 0.5};
-    const mat probe = rademacher_probe(3, 16, 5u);
-    mat probed(3, 16, 0.0);
+    const vec<real> d{1.0, -2.0, 0.5};
+    const mat<real> probe = rademacher_probe(3, 16, 5u);
+    mat<real> probed(3, 16, 0.0);
     for (idx j = 0; j < 3; ++j)
         for (idx p = 0; p < 16; ++p)
             probed(j, p) = d[j] * probe(j, p);
-    const vec estimate = hutchinson_row_mean_square(probed);
+    const vec<real> estimate = hutchinson_row_mean_square(probed);
     for (idx j = 0; j < 3; ++j)
         EXPECT_NEAR(estimate[j], d[j] * d[j], 1e-14);
-    EXPECT_THROW(hutchinson_row_mean_square(mat(3, 0, 0.0)), std::invalid_argument);
+    EXPECT_THROW(hutchinson_row_mean_square(mat<real>(3, 0, 0.0)), std::invalid_argument);
 }

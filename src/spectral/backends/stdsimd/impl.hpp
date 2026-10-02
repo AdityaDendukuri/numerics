@@ -33,7 +33,7 @@ struct fft_plan_impl : public num::spectral::fft_plan_impl {
         }
     }
 
-    void execute(const num::cvec &in, num::cvec &out) const override {
+    void execute(const num::vec<cplx> &in, num::vec<cplx> &out) const override {
         using vd = stdx::simd<double, stdx::simd_abi::native<double>>;
         constexpr int W = static_cast<int>(vd::size());
 
@@ -79,37 +79,37 @@ struct fft_plan_impl : public num::spectral::fft_plan_impl {
     }
 };
 
-inline void fft(const num::cvec &in, num::cvec &out) {
+inline void fft(const num::vec<cplx> &in, num::vec<cplx> &out) {
     int n = static_cast<int>(in.size());
     fft_plan_impl plan(n, false);
     plan.execute(in, out);
 }
 
-inline void ifft(const num::cvec &in, num::cvec &out) {
+inline void ifft(const num::vec<cplx> &in, num::vec<cplx> &out) {
     int n = static_cast<int>(in.size());
     fft_plan_impl plan(n, true);
     plan.execute(in, out);
 }
 
-inline void rfft(const num::vec &in, num::cvec &out) {
+inline void rfft(const num::vec<real> &in, num::vec<cplx> &out) {
     int n = static_cast<int>(in.size());
-    num::cvec tmp(static_cast<num::idx>(n), num::cplx{0, 0});
+    num::vec<cplx> tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (int i = 0; i < n; ++i)
         tmp[i] = {in[i], 0.0};
-    num::cvec tmp_out(static_cast<num::idx>(n), num::cplx{0, 0});
+    num::vec<cplx> tmp_out(static_cast<num::idx>(n), num::cplx{0, 0});
     fft_plan_impl plan(n, false);
     plan.execute(tmp, tmp_out);
     for (int k = 0; k < n / 2 + 1; ++k)
         out[k] = tmp_out[k];
 }
 
-inline void irfft(const num::cvec &in, int n, num::vec &out) {
-    num::cvec tmp(static_cast<num::idx>(n), num::cplx{0, 0});
+inline void irfft(const num::vec<cplx> &in, int n, num::vec<real> &out) {
+    num::vec<cplx> tmp(static_cast<num::idx>(n), num::cplx{0, 0});
     for (int k = 0; k < n / 2 + 1; ++k)
         tmp[k] = in[k];
     for (int k = 1; k < (n - 1) / 2 + 1; ++k)
         tmp[n - k] = std::conj(in[k]);
-    num::cvec tmp_out(static_cast<num::idx>(n), num::cplx{0, 0});
+    num::vec<cplx> tmp_out(static_cast<num::idx>(n), num::cplx{0, 0});
     fft_plan_impl plan(n, true);
     plan.execute(tmp, tmp_out);
     for (int i = 0; i < n; ++i)

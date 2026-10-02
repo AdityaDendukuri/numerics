@@ -25,12 +25,12 @@ namespace num {
 namespace seq {
 
 template <typename Float = double>
-inline void thomas(const basic_vec<Float> &a, const basic_vec<Float> &b,
-                   const basic_vec<Float> &c, const basic_vec<Float> &d,
-                   basic_vec<Float> &x) {
+inline void thomas(const vec<Float> &a, const vec<Float> &b,
+                   const vec<Float> &c, const vec<Float> &d,
+                   vec<Float> &x) {
     const idx n = b.size();
-    basic_vec<Float> b_work = b;
-    basic_vec<Float> d_work = d;
+    vec<Float> b_work = b;
+    vec<Float> d_work = d;
 
     for (idx i = 1; i < n; ++i) {
         Float w = a[i - 1] / b_work[i - 1];
@@ -48,7 +48,7 @@ inline void thomas(const basic_vec<Float> &a, const basic_vec<Float> &b,
 
 namespace lapack {
 
-inline void thomas(const vec &a, const vec &b, const vec &c, const vec &d, vec &x) {
+inline void thomas(const vec<real> &a, const vec<real> &b, const vec<real> &c, const vec<real> &d, vec<real> &x) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = b.size();
     array<double> dl(a.data(), a.data() + (n - 1));
@@ -69,17 +69,17 @@ inline void thomas(const vec &a, const vec &b, const vec &c, const vec &d, vec &
 
 #ifdef NUMERICS_HAS_CUDA
 namespace cuda {
-inline void thomas(const vec &a, const vec &b, const vec &c, const vec &d, vec &x) {
+inline void thomas(const vec<real> &a, const vec<real> &b, const vec<real> &c, const vec<real> &d, vec<real> &x) {
     const idx n = b.size();
-    vec ag = a;
+    vec<real> ag = a;
     ag.to_gpu();
-    vec bg = b;
+    vec<real> bg = b;
     bg.to_gpu();
-    vec cg = c;
+    vec<real> cg = c;
     cg.to_gpu();
-    vec dg = d;
+    vec<real> dg = d;
     dg.to_gpu();
-    x = vec(n);
+    x = vec<real>(n);
     x.to_gpu();
     num::cuda::thomas_batched(ag.gpu_data(), bg.gpu_data(), cg.gpu_data(), dg.gpu_data(),
                               x.gpu_data(), n, 1);
@@ -104,9 +104,9 @@ inline void thomas(const vec &a, const vec &b, const vec &c, const vec &d, vec &
 /// @throws std::invalid_argument If dimensions do not match (\f$a, c\f$ size \f$n-1\f$, \f$b, d, x\f$ size \f$n\f$).
 /// @see banded_solve, lu_solve
 template <typename Float = double>
-inline void thomas(const basic_vec<Float> &a, const basic_vec<Float> &b,
-                   const basic_vec<Float> &c, const basic_vec<Float> &d,
-                   basic_vec<Float> &x) {
+inline void thomas(const vec<Float> &a, const vec<Float> &b,
+                   const vec<Float> &c, const vec<Float> &d,
+                   vec<Float> &x) {
     const idx n = b.size();
     if (a.size() != n - 1 || c.size() != n - 1 || d.size() != n || x.size() != n) {
         throw std::invalid_argument("Dimension mismatch in Thomas solver");

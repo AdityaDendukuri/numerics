@@ -35,7 +35,7 @@ int main() {
     std::cout << std::string(80, '-') << "\n";
 
     for (num::idx n : sizes) {
-        num::mat A(n, n, 0.0);
+        num::mat<num::real> A(n, n, 0.0);
         for (num::idx i = 0; i < n; ++i) {
             for (num::idx j = 0; j < n; ++j) {
                 A(i, j) = dist(rng);
@@ -43,7 +43,7 @@ int main() {
             A(i, i) += 5.0; // Ensure well-conditioned
         }
 
-        num::vec b(n);
+        num::vec<num::real> b(n);
         for (num::idx i = 0; i < n; ++i) {
             b[i] = dist(rng);
         }

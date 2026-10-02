@@ -39,8 +39,8 @@ Every routine in the library accepts them or a view of them.
 #include <numerics.hpp>
 
 // Standard direct construction
-num::vec x{1.0, 2.0, 3.0}; // Length-3 vector
-num::mat A(3, 3, 0.0);      // 3x3 row-major dense matrix initialized to zero
+num::vec<num::real> x{1.0, 2.0, 3.0}; // Length-3 vector
+num::mat<num::real> A(3, 3, 0.0);      // 3x3 row-major dense matrix initialized to zero
 
 // mat and vector element access
 A(0, 0) = 4.0;
@@ -48,9 +48,9 @@ A(0, 1) = 1.0;
 x[0] = 2.0;
 
 // Factory constructors and utilities
-num::mat Z = num::zeros(3, 3);       // Zero matrix
-num::mat I = num::eye(3);            // Identity matrix
-num::vec v = num::linspace(0.0, 1.0, 5); // [0.0, 0.25, 0.5, 0.75, 1.0]
+num::mat<num::real> Z = num::zeros(3, 3);       // Zero matrix
+num::mat<num::real> I = num::eye(3);            // Identity matrix
+num::vec<num::real> v = num::linspace(0.0, 1.0, 5); // [0.0, 0.25, 0.5, 0.75, 1.0]
 num::real s   = num::accu(A);           // Sum of all elements
 ```
 
@@ -66,13 +66,13 @@ For rapid prototyping, test assertions, and textbook formula readability, enable
 ```cpp
 using namespace num::ops;
 
-num::mat A = num::ones(3, 3);
-num::mat B = num::eye(3);
-num::vec x{1.0, 2.0, 3.0};
+num::mat<num::real> A = num::ones(3, 3);
+num::mat<num::real> B = num::eye(3);
+num::vec<num::real> x{1.0, 2.0, 3.0};
 
 // Natural algebraic expressions
-num::mat C = A * B + 2.0 * B;
-num::vec y = A * x - x / 2.0;
+num::mat<num::real> C = A * B + 2.0 * B;
+num::vec<num::real> y = A * x - x / 2.0;
 ```
 
 ### High-Performance Zero-Allocation Kernels (Production Simulations)
@@ -80,8 +80,8 @@ In performance-critical simulation loops, ODE integrators, and inner iterative s
 
 ```cpp
 // Allocate once outside the simulation loop
-num::vec y(3, 0.0);
-num::vec z(3, 1.0);
+num::vec<num::real> y(3, 0.0);
+num::vec<num::real> z(3, 1.0);
 
 for (num::idx step = 0; step < total_steps; ++step) {
     // Zero dynamic allocations inside the loop
@@ -106,7 +106,7 @@ Passing a matrix without the required law to `num::cg` or `num::cholesky` produc
 When you know from domain physics that a matrix is positive-definite, attach the law explicitly:
 
 ```cpp
-num::mat A(3, 3, 0.0);
+num::mat<num::real> A(3, 3, 0.0);
 // fill symmetric positive-definite entries...
 
 // 1. Tag by claim (verified probabilistically under active diagnostic preset)
@@ -116,8 +116,8 @@ auto spd_A = num::assume_spd(A);
 auto spd_validated = num::make_spd(A);
 
 // Now accepted by CG and Cholesky
-num::vec b{1.0, 2.0, 3.0};
-num::vec x(3, 0.0);
+num::vec<num::real> b{1.0, 2.0, 3.0};
+num::vec<num::real> x(3, 0.0);
 num::cg(spd_A, b, x);
 ```
 
@@ -131,8 +131,8 @@ const num::grid2d grid{32, 1.0 / 33.0};
 // A backward-Euler discretization of Dirichlet diffusion is SPD by construction:
 const num::operators::backward_euler_2d system(grid.N, /*dt=*/0.05);
 
-num::vec rhs(grid.size(), 1.0);
-num::vec solution(grid.size(), 0.0);
+num::vec<num::real> rhs(grid.size(), 1.0);
+num::vec<num::real> solution(grid.size(), 0.0);
 
 // Accepted directly by CG without any manual assume_spd() tagging:
 const auto result = num::cg(system, rhs, solution);

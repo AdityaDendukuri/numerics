@@ -17,7 +17,7 @@ namespace num {
 namespace linear {
 
 /// Maximum absolute difference between mirrored entries of a square matrix.
-[[nodiscard]] inline real symmetry_error(const mat &A) {
+[[nodiscard]] inline real symmetry_error(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("symmetry_error: matrix must be square");
     }
@@ -31,7 +31,7 @@ namespace linear {
 }
 
 /// Maximum mirrored-entry error relative to the largest off-diagonal entry.
-[[nodiscard]] inline real relative_symmetry_error(const mat &A) {
+[[nodiscard]] inline real relative_symmetry_error(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("relative_symmetry_error: matrix must be square");
     }
@@ -48,7 +48,7 @@ namespace linear {
 }
 
 /// Test absolute entrywise symmetry using the supplied tolerance.
-[[nodiscard]] inline bool is_symmetric(const mat &A, real tol = 1e-12) {
+[[nodiscard]] inline bool is_symmetric(const mat<real> &A, real tol = 1e-12) {
     if (A.rows() != A.cols()) {
         return false;
     }
@@ -66,18 +66,18 @@ namespace linear {
 /// Test symmetry and positive definiteness by a Cholesky factorization, which fails exactly
 /// when a pivot is not positive. The raw kernel is used because `num::cholesky` requires the
 /// invariant being tested.
-[[nodiscard]] inline bool is_spd(const mat &A, real tol = 1e-12) {
+[[nodiscard]] inline bool is_spd(const mat<real> &A, real tol = 1e-12) {
     if (!is_symmetric(A, tol)) {
         return false;
     }
-    mat factor(A.rows(), A.cols(), 0.0);
+    mat<real> factor(A.rows(), A.cols(), 0.0);
     return kernel::cholesky(factor.data(), A.data(), A.rows());
 }
 
 /// @brief Check symmetry \f$\max_{i,j} |A_{ij} - A_{ji}| \le \mathrm{tol}\f$ exhaustively, then
 /// attach it.
 /// @throws std::invalid_argument If `A` is not symmetric within `tol`.
-template <class Mat = mat>
+template <class Mat = mat<real>>
 [[nodiscard]] inline with_law<Mat, law::self_adjoint>
 make_symmetric(Mat A, real tol = 1e-12) {
     if (!is_symmetric(A, tol)) {
@@ -89,7 +89,7 @@ make_symmetric(Mat A, real tol = 1e-12) {
 /// @brief Check symmetric positive definiteness exhaustively by a Cholesky factorization, then
 /// attach it.
 /// @throws std::invalid_argument If `A` is not symmetric within `tol`, or a pivot is not positive.
-template <class Mat = mat>
+template <class Mat = mat<real>>
 [[nodiscard]] inline with_law<Mat, law::spd>
 make_spd(Mat A, real tol = 1e-12) {
     if (!is_spd(A, tol)) {

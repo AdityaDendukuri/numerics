@@ -30,12 +30,12 @@ namespace detail {
 
 // Skeel's condition number || |A^{-1}| |A| ||_inf, or infinity for a singular A.
 // Unlike the plain condition number it ignores the scaling of the rows of A.
-inline real skeel_condition(const mat &A) {
+inline real skeel_condition(const mat<real> &A) {
     const lu_result factor = lu(A);
     if (factor.singular) {
         return std::numeric_limits<real>::infinity();
     }
-    mat inverse;
+    mat<real> inverse;
     lu_solve(factor, identity(A.rows()), inverse);
     real worst = 0.0;
     for (idx i = 0; i < A.rows(); ++i) {
@@ -97,9 +97,9 @@ class corrected_lu {
             return false;
         }
         using namespace ops;
-        const mat &P = correction_->left();
-        const mat &W = correction_->transpose_right();
-        const mat G = identity(P.cols()) + transpose(P) * W;
+        const mat<real> &P = correction_->left();
+        const mat<real> &W = correction_->transpose_right();
+        const mat<real> G = identity(P.cols()) + transpose(P) * W;
         if (!(detail::skeel_condition(G) * std::numeric_limits<real>::epsilon() <= tolerance)) {
             correction_.reset();
             return false;

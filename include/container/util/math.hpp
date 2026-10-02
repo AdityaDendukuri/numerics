@@ -251,12 +251,12 @@ inline real beta(real a, real b) {
 
 /// @brief Evenly spaced values from start to stop, inclusive. MATLAB/NumPy linspace.
 ///
-/// Returns `vec` rather than `std::vector<real>`, matching `zeros` and `ones`. The
+/// Returns `vec<real>` rather than `std::vector<real>`, matching `zeros` and `ones`. The
 /// constructor from `std::vector` is explicit, so the earlier return type made
-/// `num::vec v = num::linspace(...)` ill-formed.
-[[nodiscard]] inline vec linspace(real start, real stop, idx n) {
+/// `num::vec<real> v = num::linspace(...)` ill-formed.
+[[nodiscard]] inline vec<real> linspace(real start, real stop, idx n) {
     assert(n >= 2);
-    vec out(n);
+    vec<real> out(n);
     real step = (stop - start) / static_cast<real>(n - 1);
     for (idx i = 0; i < n; ++i) {
         out[i] = start + (static_cast<real>(i) * step);
@@ -265,8 +265,8 @@ inline real beta(real a, real b) {
 }
 
 /// @brief Values with evenly spaced exponents, inclusive.
-[[nodiscard]] inline vec logspace(real start, real stop, idx n, real base = 10.0) {
-    vec out = linspace(start, stop, n);
+[[nodiscard]] inline vec<real> logspace(real start, real stop, idx n, real base = 10.0) {
+    vec<real> out = linspace(start, stop, n);
     for (real &exponent : out) {
         exponent = std::pow(base, exponent);
     }

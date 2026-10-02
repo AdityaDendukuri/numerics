@@ -12,9 +12,9 @@ int main() {
     using namespace num;
 
     // Dense vectors own contiguous storage.
-    vec x{1.0, 2.0, 3.0};
-    vec y(3, 2.0);
-    vec z(3, 0.0);
+    vec<real> x{1.0, 2.0, 3.0};
+    vec<real> y(3, 2.0);
+    vec<real> z(3, 0.0);
 
     scale(y, 0.5);    // y <- 0.5 y
     add(x, y, z);     // z <- x+y
@@ -29,32 +29,32 @@ int main() {
     copy_to(x, host);
 
     // Interleaved coordinate views avoid copying particle data.
-    vec coordinates{1.0, 2.0, 3.0, 4.0};
+    vec<real> coordinates{1.0, 2.0, 3.0, 4.0};
     vec2_view points{coordinates};
     points.x(1) = 5.0;
 
     // Dense matrices are row-major and dispatch arithmetic by backend.
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     set_diagonal(A, std::array<real, 3>{4.0, 5.0, 6.0});
     A(0, 1) = 1.0;
     A(1, 0) = 1.0;
 
-    vec Ax(3, 0.0);
+    vec<real> Ax(3, 0.0);
     matvec(A, x, Ax);
-    mat At = transpose(A);
-    mat product(3, 3, 0.0);
+    mat<real> At = transpose(A);
+    mat<real> product(3, 3, 0.0);
     matmul(A, At, product);
-    mat sum(3, 3, 0.0);
+    mat<real> sum(3, 3, 0.0);
     matadd(1.0, A, 1.0, At, sum);
 
     // mat constructors cover common right-hand sides and scalings.
-    const vec e1 = unit_vector(3, 1);
-    const mat I = identity(3);
-    const mat rhs = identity_columns(3, 1, 2);
-    const vec diag = diagonal(A);
-    const mat D = diagonal_matrix(std::span<const real>(diag.data(), diag.size()));
+    const vec<real> e1 = unit_vector(3, 1);
+    const mat<real> I = identity(3);
+    const mat<real> rhs = identity_columns(3, 1, 2);
+    const vec<real> diag = diagonal(A);
+    const mat<real> D = diagonal_matrix(std::span<const real>(diag.data(), diag.size()));
 
-    vec weighted = x;
+    vec<real> weighted = x;
     const std::array<real, 3> weights{1.0, 2.0, 4.0};
     scale_elements(weighted, weights);
     divide_elements(weighted, weights);
@@ -71,13 +71,13 @@ int main() {
     const spmat sparse = spmat::from_triplets(3, 3, std::vector<idx>{0, 0, 1, 2},
                                                             std::vector<idx>{0, 1, 1, 2},
                                                             std::vector<real>{2.0, 1.0, 3.0, 4.0});
-    vec sparse_x(3, 0.0);
+    vec<real> sparse_x(3, 0.0);
     sparse_matvec(sparse, x, sparse_x);
     const spmat sparse_t = transpose(sparse);
     const spmat half = scaled(sparse, 0.5);
-    const mat sparse_dense = dense(sparse);
-    const vec sparse_diag = diagonal(sparse);
-    const mat similar = diagonal_similarity(sparse, weights);
+    const mat<real> sparse_dense = dense(sparse);
+    const vec<real> sparse_diag = diagonal(sparse);
+    const mat<real> similar = diagonal_similarity(sparse, weights);
 
     // Property wrappers distinguish checked and construction-guaranteed claims.
     const bool symmetric = linear::is_symmetric(A);
@@ -88,7 +88,7 @@ int main() {
     // Selection and probability helpers replace common application loops.
     const idx largest = argmax(std::span<const real>(diag.data(), diag.size()));
     const auto smallest = smallest_indices(std::span<const real>(diag.data(), diag.size()), 2);
-    vec probability{0.2, -0.1, 0.8};
+    vec<real> probability{0.2, -0.1, 0.8};
     const real clipped_mass =
         clip_and_normalize_nonnegative(std::span<real>(probability.data(), probability.size()));
     const real expectation =

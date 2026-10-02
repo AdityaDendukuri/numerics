@@ -65,7 +65,7 @@ static constexpr real rk45_e1 = 71.0 / 57600.0, rk45_e3 = -71.0 / 16695.0, rk45_
 } // namespace detail
 
 /// Lazy fixed-step forward Euler trajectory.
-template <typename RHS = ode_rhs_fn, typename State = vec>
+template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_euler_steps {
     RHS f_{};
     State y_{}, dydt_{};
@@ -124,10 +124,10 @@ class basic_euler_steps {
     }
 };
 
-using euler_steps = basic_euler_steps<ode_rhs_fn, vec>;
+using euler_steps = basic_euler_steps<ode_rhs_fn, vec<real>>;
 
 /// Lazy fixed-step classical fourth-order Runge-Kutta trajectory.
-template <typename RHS = ode_rhs_fn, typename State = vec>
+template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_rk4_steps {
     RHS f_{};
     State y_{}, k1_{}, k2_{}, k3_{}, k4_{}, ytmp_{};
@@ -201,10 +201,10 @@ class basic_rk4_steps {
     }
 };
 
-using rk4_steps = basic_rk4_steps<ode_rhs_fn, vec>;
+using rk4_steps = basic_rk4_steps<ode_rhs_fn, vec<real>>;
 
 /// Lazy adaptive Dormand-Prince trajectory with accepted-step iteration.
-template <typename RHS = ode_rhs_fn, typename State = vec>
+template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_rk45_steps {
     RHS f_{};
     State y_{}, k1_{}, k2_{}, k3_{}, k4_{}, k5_{}, k6_{}, k7_{}, ytmp_{}, err_{};
@@ -330,10 +330,10 @@ class basic_rk45_steps {
     }
 };
 
-using rk45_steps = basic_rk45_steps<ode_rhs_fn, vec>;
+using rk45_steps = basic_rk45_steps<ode_rhs_fn, vec<real>>;
 
 /// Lazy velocity-Verlet trajectory for q''=a(q).
-template <typename Accel = accel_fn, typename State = vec>
+template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_verlet_steps {
     Accel accel_{};
     State q_{}, v_{}, a_cur_{}, a_next_{};
@@ -403,10 +403,10 @@ class basic_verlet_steps {
     }
 };
 
-using verlet_steps = basic_verlet_steps<accel_fn, vec>;
+using verlet_steps = basic_verlet_steps<accel_fn, vec<real>>;
 
 /// Lazy fourth-order Yoshida symplectic trajectory for q''=a(q).
-template <typename Accel = accel_fn, typename State = vec>
+template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_yoshida4_steps {
     Accel accel_{};
     State q_{}, v_{}, acc_{};
@@ -499,10 +499,10 @@ class basic_yoshida4_steps {
     }
 };
 
-using yoshida4_steps = basic_yoshida4_steps<accel_fn, vec>;
+using yoshida4_steps = basic_yoshida4_steps<accel_fn, vec<real>>;
 
 /// Lazy non-symplectic fourth-order trajectory for q''=a(q).
-template <typename Accel = accel_fn, typename State = vec>
+template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_rk4_2nd_steps {
     Accel accel_{};
     State q_{}, v_{}, a1_{}, a2_{}, a3_{}, a4_{}, qtmp_{};
@@ -582,6 +582,6 @@ class basic_rk4_2nd_steps {
     }
 };
 
-using rk4_2nd_steps = basic_rk4_2nd_steps<accel_fn, vec>;
+using rk4_2nd_steps = basic_rk4_2nd_steps<accel_fn, vec<real>>;
 
 } // namespace num

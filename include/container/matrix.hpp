@@ -16,27 +16,27 @@
 
 namespace num {
 
-/// @brief Dense row-major owning matrix.
+/// @brief Dense row-major owning matrix. `mat<real>` takes the CPU and GPU backends.
 template <std::floating_point T>
-class basic_mat {
+class mat {
   public:
     using value_type = T;
 
     /// Construct an empty matrix.
-    basic_mat() : rows_(0), cols_(0), data_(nullptr) {}
+    mat() : rows_(0), cols_(0), data_(nullptr) {}
 
     /// Construct a zero-initialized rows-by-cols matrix.
-    basic_mat(idx rows, idx cols)
+    mat(idx rows, idx cols)
         : rows_(rows), cols_(cols), data_(make_aligned<T>(checked_size(rows, cols))) {}
 
     /// Construct a rows-by-cols matrix filled with val.
-    basic_mat(idx rows, idx cols, T val)
+    mat(idx rows, idx cols, T val)
         : rows_(rows), cols_(cols),
           data_(make_aligned_for_overwrite<T>(checked_size(rows, cols))) {
         if (size() > 0) std::fill_n(data_.get(), size(), val);
     }
 
-    ~basic_mat() {
+    ~mat() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
             if (d_data_) {
@@ -47,7 +47,7 @@ class basic_mat {
 #endif
     }
 
-    basic_mat(const basic_mat &o)
+    mat(const mat &o)
         : rows_(o.rows_), cols_(o.cols_),
           data_(make_aligned_for_overwrite<T>(o.data_ ? o.size() : 0)) {
         if (size() > 0 && o.data_) {
@@ -55,13 +55,13 @@ class basic_mat {
         }
     }
 
-    basic_mat(basic_mat &&o) noexcept
+    mat(mat &&o) noexcept
         : rows_(o.rows_), cols_(o.cols_), data_(std::move(o.data_)), d_data_(o.d_data_) {
         o.rows_ = o.cols_ = 0;
         o.d_data_ = nullptr;
     }
 
-    basic_mat &operator=(const basic_mat &o) {
+    mat &operator=(const mat &o) {
         if (this != &o) {
 #if defined(NUMERICS_HAS_CUDA)
             if constexpr (std::is_same_v<T, real>) {
@@ -83,7 +83,7 @@ class basic_mat {
         return *this;
     }
 
-    basic_mat &operator=(basic_mat &&o) noexcept {
+    mat &operator=(mat &&o) noexcept {
         if (this != &o) {
 #if defined(NUMERICS_HAS_CUDA)
             if constexpr (std::is_same_v<T, real>) {
@@ -148,7 +148,7 @@ class basic_mat {
     [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
 
     /// Operator protocol application: y <- A * x
-    template <class X = vec, class Y = vec>
+    template <class X = vec<real>, class Y = vec<real>>
     void apply(const X &x, Y &y) const;
 
   private:
@@ -159,7 +159,7 @@ class basic_mat {
     /// that `operator()` then indexes past.
     static idx checked_size(idx rows, idx cols) {
         if (rows != 0 && cols > std::numeric_limits<idx>::max() / rows) {
-            throw std::overflow_error("basic_mat: rows * cols exceeds the index range");
+            throw std::overflow_error("mat: rows * cols exceeds the index range");
         }
         return rows * cols;
     }
@@ -169,11 +169,8 @@ class basic_mat {
     T *d_data_ = nullptr;
 };
 
-/// @brief Double-precision dense matrix with full backend dispatch (CPU + GPU).
-using mat = basic_mat<real>;
-
 #if defined(NUMERICS_EXTERN_TEMPLATES)
-extern template class basic_mat<double>;
+extern template class mat<double>;
 #endif
 
 } // namespace num

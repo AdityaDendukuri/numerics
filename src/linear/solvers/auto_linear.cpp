@@ -37,7 +37,7 @@ idx auto_linear_solver::size() const noexcept {
     return impl_ ? impl_->n : 0;
 }
 
-void auto_linear_solver::solve(const vec &rhs, vec &solution) const {
+void auto_linear_solver::solve(const vec<real> &rhs, vec<real> &solution) const {
     if (impl_->sparse_factor) {
         impl_->sparse_factor->solve(rhs, solution);
     } else {
@@ -45,7 +45,7 @@ void auto_linear_solver::solve(const vec &rhs, vec &solution) const {
     }
 }
 
-void auto_linear_solver::solve(const mat &rhs, mat &solution) const {
+void auto_linear_solver::solve(const mat<real> &rhs, mat<real> &solution) const {
     if (impl_->sparse_factor) {
         impl_->sparse_factor->solve(rhs, solution);
     } else {
@@ -53,7 +53,7 @@ void auto_linear_solver::solve(const mat &rhs, mat &solution) const {
     }
 }
 
-void auto_linear_solver::solve_transpose(const vec &rhs, vec &solution) const {
+void auto_linear_solver::solve_transpose(const vec<real> &rhs, vec<real> &solution) const {
     if (impl_->sparse_factor) {
         impl_->sparse_factor->solve_transpose(rhs, solution);
     } else {
@@ -61,7 +61,7 @@ void auto_linear_solver::solve_transpose(const vec &rhs, vec &solution) const {
     }
 }
 
-void auto_linear_solver::solve_transpose(const mat &rhs, mat &solution) const {
+void auto_linear_solver::solve_transpose(const mat<real> &rhs, mat<real> &solution) const {
     if (impl_->sparse_factor) {
         impl_->sparse_factor->solve_transpose(rhs, solution);
     } else {
@@ -69,14 +69,14 @@ void auto_linear_solver::solve_transpose(const mat &rhs, mat &solution) const {
     }
 }
 
-void auto_linear_solver::solve_in_place(vec &right_hand_side) const {
-    vec solution(right_hand_side.size(), 0.0);
+void auto_linear_solver::solve_in_place(vec<real> &right_hand_side) const {
+    vec<real> solution(right_hand_side.size(), 0.0);
     solve(right_hand_side, solution);
     right_hand_side = std::move(solution);
 }
 
-void auto_linear_solver::solve_in_place(mat &right_hand_sides) const {
-    mat solution;
+void auto_linear_solver::solve_in_place(mat<real> &right_hand_sides) const {
+    mat<real> solution;
     solve(right_hand_sides, solution);
     right_hand_sides = std::move(solution);
 }

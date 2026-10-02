@@ -21,7 +21,7 @@ namespace num {
 
 /// @brief Lower-triangular factorization \f$A=LL^T\f$.
 struct cholesky_result {
-    mat L;                ///< Lower-triangular factor when successful.
+    mat<real> L;                ///< Lower-triangular factor when successful.
     bool success = false; ///< False when the input is not positive definite.
 
     friend std::ostream &operator<<(std::ostream &os, const cholesky_result &r) {
@@ -32,11 +32,11 @@ struct cholesky_result {
 };
 
 namespace detail {
-cholesky_result cholesky_impl(const mat &A);
+cholesky_result cholesky_impl(const mat<real> &A);
 }
 
 /// Factor a matrix whose SPD property has already been established.
-cholesky_result cholesky(const with_law<mat, law::spd> &A);
+cholesky_result cholesky(const with_law<mat<real>, law::spd> &A);
 
 namespace unsafe {
 
@@ -46,14 +46,14 @@ namespace unsafe {
 /// that survives grep, that the SPD precondition is being taken on faith. Nothing
 /// is sampled; if A is not positive definite the factorization simply reports
 /// failure through `cholesky_result::success`.
-cholesky_result cholesky(const mat &A);
+cholesky_result cholesky(const mat<real> &A);
 
 } // namespace unsafe
 
 /// @brief Rejects an untagged matrix at compile time.
 ///
 /// Cholesky is defined only for symmetric positive definite matrices, so a raw
-/// `mat` does not satisfy its precondition. This overload exists to say so in a
+/// `mat<real>` does not satisfy its precondition. This overload exists to say so in a
 /// diagnostic rather than to run: a warning can be silenced by an unrelated
 /// `-Wno-` flag, whereas this cannot compile.
 template <class M>
@@ -68,33 +68,33 @@ cholesky_result cholesky(const M & /*untagged*/) {
 }
 
 /// Solve Ax=b from a reusable Cholesky factorization.
-void cholesky_solve(const cholesky_result &f, const vec &b, vec &x);
+void cholesky_solve(const cholesky_result &f, const vec<real> &b, vec<real> &x);
 
 /// @brief Solve \f$AX=B\f$ for several right-hand sides at once.
-void cholesky_solve(const cholesky_result &f, const mat &B, mat &X);
+void cholesky_solve(const cholesky_result &f, const mat<real> &B, mat<real> &X);
 
 /// Replace one or more right-hand sides with the corresponding solutions.
-void solve_in_place(const cholesky_result &f, vec &right_hand_side);
-void solve_in_place(const cholesky_result &f, mat &right_hand_sides);
+void solve_in_place(const cholesky_result &f, vec<real> &right_hand_side);
+void solve_in_place(const cholesky_result &f, mat<real> &right_hand_sides);
 
 /// Replace A=LL^T by A+x*x^T in O(n^2).
-void cholesky_update(cholesky_result &factor, const vec &update);
+void cholesky_update(cholesky_result &factor, const vec<real> &update);
 
 /// Replace A=LL^T by A-x*x^T in O(n^2), or throw if it is not SPD.
-void cholesky_downdate(cholesky_result &factor, const vec &update);
+void cholesky_downdate(cholesky_result &factor, const vec<real> &update);
 
 namespace lapack {
 
 /// Cholesky through LAPACKE's dpotrf. Not the default: the kernel's blocked
 /// factorization measured faster at every size tried (see
 /// `lapack_factor_threshold`), but the binding stays callable by name.
-inline cholesky_result cholesky(const mat &A) {
+inline cholesky_result cholesky(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("cholesky: matrix must be square");
     }
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = A.rows();
-    mat L = A;
+    mat<real> L = A;
     int info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), L.data(),
                               static_cast<lapack_int>(n));
     if (info != 0) {
@@ -107,7 +107,7 @@ inline cholesky_result cholesky(const mat &A) {
     }
     return {std::move(L), true};
 #else
-    mat L = A;
+    mat<real> L = A;
     const bool ok = kernel::cholesky_blocked(L.data(), A.rows());
     return {std::move(L), ok};
 #endif
@@ -117,33 +117,33 @@ inline cholesky_result cholesky(const mat &A) {
 
 namespace detail {
 
-inline cholesky_result cholesky_impl(const mat &A) {
+inline cholesky_result cholesky_impl(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("cholesky: matrix must be square");
     }
     // The blocked kernel (kernel/factor.hpp): panel solve and trailing update
     // through the packed trsm/syrk, faster than dpotrf through LAPACKE at every
     // size measured.
-    mat L = A;
+    mat<real> L = A;
     const bool ok = kernel::cholesky_blocked(L.data(), A.rows());
     return {std::move(L), ok};
 }
 
 } // namespace detail
 
-inline cholesky_result cholesky(const with_law<mat, law::spd> &A) {
+inline cholesky_result cholesky(const with_law<mat<real>, law::spd> &A) {
     return detail::cholesky_impl(A.base());
 }
 
 namespace unsafe {
 
-inline cholesky_result cholesky(const mat &A) {
+inline cholesky_result cholesky(const mat<real> &A) {
     return detail::cholesky_impl(A);
 }
 
 } // namespace unsafe
 
-inline void cholesky_solve(const cholesky_result &f, const vec &b, vec &x) {
+inline void cholesky_solve(const cholesky_result &f, const vec<real> &b, vec<real> &x) {
     if (!f.success) {
         throw std::invalid_argument("cholesky_solve: factorization failed");
     }
@@ -157,7 +157,7 @@ inline void cholesky_solve(const cholesky_result &f, const vec &b, vec &x) {
     kernel::trsv_transpose_lower(x.data(), f.L.data(), n, n);
 }
 
-inline void cholesky_solve(const cholesky_result &f, const mat &B, mat &X) {
+inline void cholesky_solve(const cholesky_result &f, const mat<real> &B, mat<real> &X) {
     if (!f.success) {
         throw std::invalid_argument("cholesky_solve: factorization failed");
     }
@@ -174,23 +174,23 @@ inline void cholesky_solve(const cholesky_result &f, const mat &B, mat &X) {
     kernel::trsm_lower_transpose_inplace(X.data(), B.cols(), f.L.data(), n, B.cols());
 }
 
-inline void solve_in_place(const cholesky_result &f, vec &right_hand_side) {
-    vec result(right_hand_side.size(), 0.0);
+inline void solve_in_place(const cholesky_result &f, vec<real> &right_hand_side) {
+    vec<real> result(right_hand_side.size(), 0.0);
     cholesky_solve(f, right_hand_side, result);
     right_hand_side = std::move(result);
 }
 
-inline void solve_in_place(const cholesky_result &f, mat &right_hand_sides) {
-    mat result;
+inline void solve_in_place(const cholesky_result &f, mat<real> &right_hand_sides) {
+    mat<real> result;
     cholesky_solve(f, right_hand_sides, result);
     right_hand_sides = std::move(result);
 }
 
-inline void cholesky_update(cholesky_result &factor, const vec &update) {
+inline void cholesky_update(cholesky_result &factor, const vec<real> &update) {
     if (!factor.success || factor.L.rows() != update.size()) {
         throw std::invalid_argument("cholesky_update: invalid factor or update size");
     }
-    vec work = update;
+    vec<real> work = update;
     for (idx column = 0; column < work.size(); ++column) {
         const real diagonal = factor.L(column, column);
         const real replacement = std::hypot(diagonal, work[column]);
@@ -204,12 +204,12 @@ inline void cholesky_update(cholesky_result &factor, const vec &update) {
     }
 }
 
-inline void cholesky_downdate(cholesky_result &factor, const vec &update) {
+inline void cholesky_downdate(cholesky_result &factor, const vec<real> &update) {
     if (!factor.success || factor.L.rows() != update.size()) {
         throw std::invalid_argument("cholesky_downdate: invalid factor or update size");
     }
-    mat candidate = factor.L;
-    vec work = update;
+    mat<real> candidate = factor.L;
+    vec<real> work = update;
     for (idx column = 0; column < work.size(); ++column) {
         const real diagonal = candidate(column, column);
         const real square = (diagonal * diagonal) - (work[column] * work[column]);

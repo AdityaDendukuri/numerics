@@ -26,15 +26,15 @@ class klu_factorization {
     /// Return the order of the factored matrix.
     [[nodiscard]] idx size() const noexcept;
     /// Solve Ax=B for one or more dense right-hand sides.
-    void solve(const vec &rhs, vec &solution) const;
-    void solve(const mat &rhs, mat &solution) const;
+    void solve(const vec<real> &rhs, vec<real> &solution) const;
+    void solve(const mat<real> &rhs, mat<real> &solution) const;
     /// Solve A^T x=b.
-    void solve_transpose(const vec &rhs, vec &solution) const;
+    void solve_transpose(const vec<real> &rhs, vec<real> &solution) const;
     /// Solve A^T X=B for several dense right-hand sides.
-    void solve_transpose(const mat &rhs, mat &solution) const;
+    void solve_transpose(const mat<real> &rhs, mat<real> &solution) const;
     /// Replace one or more right-hand sides with their solutions.
-    void solve_in_place(vec &right_hand_side) const;
-    void solve_in_place(mat &right_hand_sides) const;
+    void solve_in_place(vec<real> &right_hand_side) const;
+    void solve_in_place(mat<real> &right_hand_sides) const;
 
   private:
     struct Impl;

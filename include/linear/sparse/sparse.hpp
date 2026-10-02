@@ -56,9 +56,9 @@ class spmat {
     [[nodiscard]] const idx *row_ptr() const { return row_ptr_.data(); }
 
     /// Operator protocol application: y <- A * x
-    template <class X = vec, class Y = vec>
+    template <class X = vec<real>, class Y = vec<real>>
     void apply(const X &x, Y &y) const {
-        if constexpr (std::is_same_v<X, vec> && std::is_same_v<Y, vec>) {
+        if constexpr (std::is_same_v<X, vec<real>> && std::is_same_v<Y, vec<real>>) {
             sparse_matvec(*this, x, y);
         } else {
             for (idx i = 0; i < n_rows_; ++i) {
@@ -84,7 +84,7 @@ class spmat {
 /// @param x Input vector of dimension \f$A.\text{cols()}\f$.
 /// @param y Output vector of dimension \f$A.\text{rows()}\f$.
 /// @throws std::invalid_argument If dimensions do not match.
-void sparse_matvec(const spmat &A, const vec &x, vec &y);
+void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y);
 
 /// @brief Return scaled sparse matrix \f$\alpha A\f$ while preserving the exact CSR sparsity structure.
 /// @param A Input CSR matrix.
@@ -97,7 +97,7 @@ void sparse_matvec(const spmat &A, const vec &x, vec &y);
 
 /// @brief Convert a sparse matrix in CSR format to dense matrix storage.
 /// @param A Input CSR matrix.
-/// @return Dense `mat` of dimension \f$m \times n\f$.
+/// @return Dense `mat<real>` of dimension \f$m \times n\f$.
 
 /// @brief Extract the main diagonal entries of a sparse matrix: \f$d_i = A_{ii}\f$.
 /// @param A Input sparse matrix.
@@ -108,7 +108,7 @@ void sparse_matvec(const spmat &A, const vec &x, vec &y);
 /// @param weights Positive diagonal weight entries \f$w_i > 0\f$.
 /// @return Dense similarity transformed matrix \f$D^{-1} A D\f$.
 /// @throws std::invalid_argument If dimensions mismatch or any weight is non-positive.
-[[nodiscard]] mat diagonal_similarity(const spmat &A, view<const real> weights);
+[[nodiscard]] mat<real> diagonal_similarity(const spmat &A, view<const real> weights);
 
 /// @brief Compute \f$D^{-1} A D\f$ without leaving the sparse representation.
 ///
@@ -306,7 +306,7 @@ inline real spmat::operator()(idx i, idx j) const {
 /// accessors -- an Eigen sparse matrix or a raw triple of buffers -- with no adapter.
 template <class M>
 requires repr::csr<M>
-inline void matvec(const M &A, const vec &x, vec &y) {
+inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
     if (A.n_cols() != x.size() || A.n_rows() != y.size()) {
         throw std::invalid_argument("Dimension mismatch in matvec");
     }
@@ -314,7 +314,7 @@ inline void matvec(const M &A, const vec &x, vec &y) {
 }
 
 /// @brief \f$y \leftarrow Ax\f$ for a sparse matrix. Prefer the unified `matvec`.
-inline void sparse_matvec(const spmat &A, const vec &x, vec &y) { matvec(A, x, y); }
+inline void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y) { matvec(A, x, y); }
 
 template <class M>
 requires repr::csr<M>
@@ -355,8 +355,8 @@ inline spmat transpose(const M &A) {
 /// @brief Expand a CSR matrix into a dense one.
 template <class M>
 requires repr::csr<M>
-inline mat dense(const M &A) {
-    mat result(A.n_rows(), A.n_cols(), 0.0);
+inline mat<real> dense(const M &A) {
+    mat<real> result(A.n_rows(), A.n_cols(), 0.0);
     for (idx row = 0; row < A.n_rows(); ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
             result(row, A.col_idx()[entry]) = A.values()[entry];
@@ -367,9 +367,9 @@ inline mat dense(const M &A) {
 
 template <class M>
 requires repr::csr<M>
-inline vec diagonal(const M &A) {
+inline vec<real> diagonal(const M &A) {
     const idx n = std::min(A.n_rows(), A.n_cols());
-    vec result(n, 0.0);
+    vec<real> result(n, 0.0);
     for (idx row = 0; row < n; ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
             if (A.col_idx()[entry] == row) {
@@ -435,14 +435,14 @@ inline spmat sparse_diagonal_similarity(const spmat &A, view<const real> weights
             array<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
 }
 
-inline mat diagonal_similarity(const spmat &A, view<const real> weights) {
+inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
     if (A.n_rows() != A.n_cols() || weights.size() != A.n_rows()) {
         throw std::invalid_argument("diagonal_similarity: dimensions must match");
     }
     if (!std::all_of(weights.begin(), weights.end(), [](real value) { return value > 0.0; })) {
         throw std::invalid_argument("diagonal_similarity: weights must be positive");
     }
-    mat result(A.n_rows(), A.n_cols(), 0.0);
+    mat<real> result(A.n_rows(), A.n_cols(), 0.0);
     for (idx row = 0; row < A.n_rows(); ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
             const idx column = A.col_idx()[entry];

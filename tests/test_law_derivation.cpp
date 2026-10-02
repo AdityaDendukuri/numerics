@@ -21,11 +21,11 @@ struct claims_spd_and_dominance {
 } // namespace
 
 TEST(LawDerivation, AStrongerLawImpliesTheWeakerOnes) {
-    static_assert(claims<with_law<mat, L::spd>, L::spd>);
-    static_assert(claims<with_law<mat, L::spd>, L::psd>);
-    static_assert(claims<with_law<mat, L::spd>, L::self_adjoint>);
-    static_assert(!claims<with_law<mat, L::psd>, L::spd>);
-    static_assert(!claims<mat, L::self_adjoint>, "a type declaring nothing claims nothing");
+    static_assert(claims<with_law<mat<real>, L::spd>, L::spd>);
+    static_assert(claims<with_law<mat<real>, L::spd>, L::psd>);
+    static_assert(claims<with_law<mat<real>, L::spd>, L::self_adjoint>);
+    static_assert(!claims<with_law<mat<real>, L::psd>, L::spd>);
+    static_assert(!claims<mat<real>, L::self_adjoint>, "a type declaring nothing claims nothing");
     SUCCEED();
 }
 
@@ -41,7 +41,7 @@ TEST(LawDerivation, DiagonalDominanceIsIncomparableWithDefiniteness) {
 }
 
 TEST(LawDerivation, ProjectionCarriesTheLawOntoTheSubspace) {
-    const mat identity_4 = identity(4);
+    const mat<real> identity_4 = identity(4);
     const auto a = num::assume_spd(operators::dense_op(identity_4));
     const auto pa = operators::projected(a, space::zero_sum{});
 
@@ -53,7 +53,7 @@ TEST(LawDerivation, ProjectionCarriesTheLawOntoTheSubspace) {
 }
 
 TEST(LawDerivation, ProjectionDoesNotClaimTheGlobalLaw) {
-    const mat identity_4 = identity(4);
+    const mat<real> identity_4 = identity(4);
     const auto a = num::assume_spd(operators::dense_op(identity_4));
     const auto pa = operators::projected(a, space::zero_sum{});
 
@@ -64,7 +64,7 @@ TEST(LawDerivation, ProjectionDoesNotClaimTheGlobalLaw) {
 }
 
 TEST(LawDerivation, ProjectionOfAWeakerOperandDerivesAWeakerRestriction) {
-    const mat identity_4 = identity(4);
+    const mat<real> identity_4 = identity(4);
     const auto sym = num::assume_symmetric(operators::dense_op(identity_4));
     const auto ps = operators::projected(sym, space::zero_sum{});
     static_assert(claims<decltype(ps), L::self_adjoint_on<space::zero_sum>>);
@@ -79,7 +79,7 @@ TEST(LawDerivation, ProjectionOfAWeakerOperandDerivesAWeakerRestriction) {
 }
 
 TEST(LawDerivation, DiagonalDominanceIsCheckedExactlyNotSampled) {
-    mat dominant(3, 3, 0.0);
+    mat<real> dominant(3, 3, 0.0);
     for (idx i = 0; i < 3; ++i) {
         dominant(i, i) = 4.0;
         if (i + 1 < 3) {
@@ -90,7 +90,7 @@ TEST(LawDerivation, DiagonalDominanceIsCheckedExactlyNotSampled) {
     EXPECT_NO_THROW(static_cast<void>(assume_diagonally_dominant(dominant)));
 
     // A single offending row is enough, and no probe direction can hide it.
-    mat offending = dominant;
+    mat<real> offending = dominant;
     offending(2, 2) = 1.0; // |1| < |1| from the (2,1) entry
     EXPECT_THROW(static_cast<void>(assume_diagonally_dominant(offending)),
                  std::invalid_argument);

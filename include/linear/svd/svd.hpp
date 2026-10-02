@@ -19,9 +19,9 @@ namespace num {
 
 /// Singular value decomposition and convergence metadata.
 struct svd_result {
-    mat U;                  ///< Left singular vectors.
-    vec S;                  ///< Singular values in descending order.
-    mat Vt;                 ///< Transposed right singular vectors.
+    mat<real> U;                  ///< Left singular vectors.
+    vec<real> S;                  ///< Singular values in descending order.
+    mat<real> Vt;                 ///< Transposed right singular vectors.
     idx sweeps = 0;         ///< Jacobi sweeps for the fallback implementation.
     bool converged = false; ///< Whether the requested tolerance was met.
 
@@ -45,7 +45,7 @@ struct svd_result {
 /// @return `svd_result` with left singular vectors \f$U\f$, singular values \f$\Sigma\f$, and
 /// transposed right vectors \f$V^T\f$.
 /// @see svd_truncated, eig_sym, qr
-svd_result svd(const mat &A, real tol = 1e-12, idx max_sweeps = 100);
+svd_result svd(const mat<real> &A, real tol = 1e-12, idx max_sweeps = 100);
 
 /// @brief Randomized rank-\f$k\f$ SVD \f$A \approx U_k \Sigma_k V_k^T\f$, from a Gaussian range
 /// finder of dimension \f$k + \text{oversampling}\f$.
@@ -57,31 +57,31 @@ svd_result svd(const mat &A, real tol = 1e-12, idx max_sweeps = 100);
 /// @return `svd_result` containing rank-\f$k\f$ truncated factors \f$U_k, \Sigma_k, V_k^T\f$.
 /// @throws std::invalid_argument If \f$k\f$ is out of range.
 /// @see svd, lanczos
-svd_result svd_truncated(const mat &A, idx k, idx oversampling = 10, rng_state *rng = nullptr);
+svd_result svd_truncated(const mat<real> &A, idx k, idx oversampling = 10, rng_state *rng = nullptr);
 
 namespace seq {
 /// One-sided Jacobi (Hestenes) SVD on the transpose.
 ///
 /// It rotates rows of \f$A^T\f$, which are contiguous, and carries the norms through each
 /// sweep. It is slower than bidiagonalization but accurate for small singular values.
-inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
+inline svd_result svd(const mat<real> &A_in, real tol, idx max_sweeps) {
     constexpr real tiny = 1e-300;
     const idx m = A_in.rows(), n = A_in.cols();
     const idx r = std::min(m, n);
 
     // Rows of `columns` are the columns of A; rows of `rotations` accumulate V^T.
-    mat columns(n, m, 0.0);
+    mat<real> columns(n, m, 0.0);
     for (idx i = 0; i < m; ++i) {
         for (idx j = 0; j < n; ++j) {
             columns(j, i) = A_in(i, j);
         }
     }
-    mat rotations(n, n, 0.0);
+    mat<real> rotations(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         rotations(i, i) = 1.0;
     }
 
-    vec norms(r, 0.0);
+    vec<real> norms(r, 0.0);
     idx sweeps = 0;
     bool converged = false;
     for (idx sweep = 0; sweep < max_sweeps; ++sweep) {
@@ -124,7 +124,7 @@ inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
         }
     }
 
-    vec S(r, 0.0);
+    vec<real> S(r, 0.0);
     for (idx j = 0; j < r; ++j) {
         S[j] = std::sqrt(kernel::norm_sq(&columns(j, 0), m));
     }
@@ -136,9 +136,9 @@ inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
     }
     std::stable_sort(order.begin(), order.end(), [&](idx a, idx b) { return S[a] > S[b]; });
 
-    mat U(m, r, 0.0);
-    mat Vt(r, n, 0.0);
-    vec sorted(r, 0.0);
+    mat<real> U(m, r, 0.0);
+    mat<real> Vt(r, n, 0.0);
+    vec<real> sorted(r, 0.0);
     for (idx k = 0; k < r; ++k) {
         const idx j = order[k];
         sorted[k] = S[j];
@@ -158,14 +158,14 @@ inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
 } // namespace seq
 
 namespace lapack {
-inline svd_result svd(const mat &A_in) {
+inline svd_result svd(const mat<real> &A_in) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx m = A_in.rows(), n = A_in.cols();
     const idx r = std::min(m, n);
-    mat Aw = A_in;
-    vec S(r);
-    mat U(m, r);
-    mat Vt(r, n);
+    mat<real> Aw = A_in;
+    vec<real> S(r);
+    mat<real> U(m, r);
+    mat<real> Vt(r, n);
 
     int info =
         LAPACKE_dgesdd(LAPACK_ROW_MAJOR, 'S', static_cast<lapack_int>(m),
@@ -182,7 +182,7 @@ inline svd_result svd(const mat &A_in) {
 }
 } // namespace lapack
 
-inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
+inline svd_result svd(const mat<real> &A_in, real tol, idx max_sweeps) {
 #if defined(NUMERICS_LAPACK_DEFAULT)
     return lapack::svd(A_in);
 #else
@@ -190,7 +190,7 @@ inline svd_result svd(const mat &A_in, real tol, idx max_sweeps) {
 #endif
 }
 
-inline svd_result svd_truncated(const mat &A, idx k, idx oversampling, rng_state *rng) {
+inline svd_result svd_truncated(const mat<real> &A, idx k, idx oversampling, rng_state *rng) {
     const idx m = A.rows(), n = A.cols();
     if (k == 0 || k > std::min(m, n)) {
         throw std::invalid_argument("svd_truncated: k out of range");
@@ -203,36 +203,36 @@ inline svd_result svd_truncated(const mat &A, idx k, idx oversampling, rng_state
         rng = &local_rng;
     }
 
-    mat Omega(n, l);
+    mat<real> Omega(n, l);
     for (idx j = 0; j < l; ++j) {
         for (idx i = 0; i < n; ++i) {
             Omega(i, j) = rng_normal(rng, 0.0, 1.0);
         }
     }
 
-    mat Y(m, l, 0.0);
+    mat<real> Y(m, l, 0.0);
     matmul(A, Omega, Y);
 
     qr_result qr_res = qr(Y);
-    const mat &Q = qr_res.Q;
+    const mat<real> &Q = qr_res.Q;
 
-    mat B(l, n, 0.0);
+    mat<real> B(l, n, 0.0);
     // B <- Q_l^T*A
     kernel::gemm_transpose_left(B.data(), B.cols(), Q.data(), Q.cols(), A.data(), A.cols(), real(1),
                                 real(0), m, l, n);
 
     svd_result small = svd(B);
 
-    mat U(m, k, 0.0);
+    mat<real> U(m, k, 0.0);
     // U_k <- Q_l*U(B)[:,0:k]
     kernel::gemm(U.data(), U.cols(), Q.data(), Q.cols(), small.U.data(), small.U.cols(), real(1),
                  real(0), m, k, l);
 
-    vec S(k);
+    vec<real> S(k);
     // sigma_k <- sigma(B)[0:k]
     kernel::copy(S.data(), small.S.data(), k);
 
-    mat Vt(k, n, 0.0);
+    mat<real> Vt(k, n, 0.0);
     // V_k^T <- V(B)^T[0:k,:]
     kernel::copy(Vt.data(), small.Vt.data(), k * n);
 

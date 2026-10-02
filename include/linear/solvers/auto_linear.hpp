@@ -28,63 +28,63 @@ class auto_linear_solver {
     /// Return the order of the factored matrix, or zero after a move.
     [[nodiscard]] idx size() const noexcept;
     /// Solve AX=B without modifying the stored factorization.
-    void solve(const vec &rhs, vec &solution) const;
-    void solve(const mat &rhs, mat &solution) const;
+    void solve(const vec<real> &rhs, vec<real> &solution) const;
+    void solve(const mat<real> &rhs, mat<real> &solution) const;
     /// Solve A^T x=b without modifying the stored factorization.
-    void solve_transpose(const vec &rhs, vec &solution) const;
+    void solve_transpose(const vec<real> &rhs, vec<real> &solution) const;
     /// Solve A^T X=B for several dense right-hand sides.
-    void solve_transpose(const mat &rhs, mat &solution) const;
+    void solve_transpose(const mat<real> &rhs, mat<real> &solution) const;
     /// Replace one or more right-hand sides with their solutions.
-    void solve_in_place(vec &right_hand_side) const;
-    void solve_in_place(mat &right_hand_sides) const;
+    void solve_in_place(vec<real> &right_hand_side) const;
+    void solve_in_place(mat<real> &right_hand_sides) const;
 
   private:
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
 
-inline void solve(const auto_linear_solver &factor, const vec &rhs, vec &solution) {
+inline void solve(const auto_linear_solver &factor, const vec<real> &rhs, vec<real> &solution) {
     factor.solve(rhs, solution);
 }
 
-inline void solve(const auto_linear_solver &factor, const mat &rhs, mat &solution) {
+inline void solve(const auto_linear_solver &factor, const mat<real> &rhs, mat<real> &solution) {
     factor.solve(rhs, solution);
 }
 
-inline void solve_transpose(const auto_linear_solver &factor, const vec &rhs, vec &solution) {
+inline void solve_transpose(const auto_linear_solver &factor, const vec<real> &rhs, vec<real> &solution) {
     factor.solve_transpose(rhs, solution);
 }
 
-inline void solve_transpose(const auto_linear_solver &factor, const mat &rhs, mat &solution) {
+inline void solve_transpose(const auto_linear_solver &factor, const mat<real> &rhs, mat<real> &solution) {
     factor.solve_transpose(rhs, solution);
 }
 
 /// Convenience solve overload. Allocates; prefer the out-param form in hot loops.
-[[nodiscard]] inline vec solve(const auto_linear_solver &factor, const vec &rhs) {
-    vec solution(rhs.size(), 0.0);
+[[nodiscard]] inline vec<real> solve(const auto_linear_solver &factor, const vec<real> &rhs) {
+    vec<real> solution(rhs.size(), 0.0);
     factor.solve(rhs, solution);
     return solution;
 }
 
 /// Convenience solve overload for several dense right-hand sides.
 /// Allocates; prefer the out-param form in hot loops.
-[[nodiscard]] inline mat solve(const auto_linear_solver &factor, const mat &rhs) {
-    mat solution;
+[[nodiscard]] inline mat<real> solve(const auto_linear_solver &factor, const mat<real> &rhs) {
+    mat<real> solution;
     factor.solve(rhs, solution);
     return solution;
 }
 
 /// Convenience transpose solve overload. Allocates; prefer the out-param form in hot loops.
-[[nodiscard]] inline vec solve_transpose(const auto_linear_solver &factor, const vec &rhs) {
-    vec solution(rhs.size(), 0.0);
+[[nodiscard]] inline vec<real> solve_transpose(const auto_linear_solver &factor, const vec<real> &rhs) {
+    vec<real> solution(rhs.size(), 0.0);
     factor.solve_transpose(rhs, solution);
     return solution;
 }
 
 /// Convenience transpose solve overload for several dense right-hand sides.
 /// Allocates; prefer the out-param form in hot loops.
-[[nodiscard]] inline mat solve_transpose(const auto_linear_solver &factor, const mat &rhs) {
-    mat solution;
+[[nodiscard]] inline mat<real> solve_transpose(const auto_linear_solver &factor, const mat<real> &rhs) {
+    mat<real> solution;
     factor.solve_transpose(rhs, solution);
     return solution;
 }

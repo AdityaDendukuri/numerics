@@ -16,14 +16,14 @@ namespace num::operators {
 
 /// @brief Adapt a spmat to the operator protocol.
 struct sparse_op final {
-    using domain_type = vec;
-    using codomain_type = vec;
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
 
     /// Store a non-owning reference to a CSR matrix.
     explicit sparse_op(const spmat &A) : A_(A) {}
 
     /// Compute y=A*x.
-    void apply(const vec &x, vec &y) const;
+    void apply(const vec<real> &x, vec<real> &y) const;
     [[nodiscard]] idx rows() const noexcept { return A_.n_rows(); }
     [[nodiscard]] idx cols() const noexcept { return A_.n_cols(); }
 
@@ -33,12 +33,12 @@ struct sparse_op final {
 
 static_assert(linear_operator<sparse_op>);
 
-inline void sparse_op::apply(const vec &x, vec &y) const {
+inline void sparse_op::apply(const vec<real> &x, vec<real> &y) const {
     if (x.size() != A_.n_cols()) {
         throw std::invalid_argument("sparse_op::apply: input dimension mismatch");
     }
     if (y.size() != A_.n_rows()) {
-        y = vec(A_.n_rows());
+        y = vec<real>(A_.n_rows());
     }
     sparse_matvec(A_, x, y);
 }

@@ -26,19 +26,19 @@ struct minres_options {
 
 namespace math_krylov_detail {
 
-inline vec minres_projected_solve(const array<real> &alpha, const array<real> &beta,
+inline vec<real> minres_projected_solve(const array<real> &alpha, const array<real> &beta,
                                      real beta0, idx m) {
-    mat H(m + 1, m, 0.0);
+    mat<real> H(m + 1, m, 0.0);
     for (idx j = 0; j < m; ++j) {
         H(j, j) = alpha[j];
         if (j > 0)
             H(j - 1, j) = beta[j - 1];
         H(j + 1, j) = beta[j];
     }
-    vec rhs(m + 1, 0.0);
+    vec<real> rhs(m + 1, 0.0);
     rhs[0] = beta0;
     const qr_result factor = qr(H);
-    vec y(m, 0.0);
+    vec<real> y(m, 0.0);
     qr_solve(factor, rhs, y);
     return y;
 }
@@ -111,7 +111,7 @@ requires math::inner_product_space<V> &&math::self_adjoint_operator<Op, V> &&
         }
         beta.push_back(next_beta);
 
-        const vec y = math_krylov_detail::minres_projected_solve(alpha, beta, beta0, j + 1);
+        const vec<real> y = math_krylov_detail::minres_projected_solve(alpha, beta, beta0, j + 1);
         V candidate = x;
         for (idx column = 0; column <= j; ++column)
             math::axpy(y[column], basis[column], candidate);

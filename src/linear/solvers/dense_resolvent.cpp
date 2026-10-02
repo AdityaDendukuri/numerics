@@ -11,7 +11,7 @@
 namespace num {
 
 struct dense_resolvent_solver::Impl {
-    explicit Impl(mat input)
+    explicit Impl(mat<real> input)
         : decomp(input), M_buf(input.rows() * input.rows()), pivots(input.rows()) {
         debug::check_dim(input.rows(), input.cols(), "dense_resolvent_solver requires a square matrix");
         debug::check_non_empty(input.rows(), "dense_resolvent_solver matrix");
@@ -24,7 +24,7 @@ struct dense_resolvent_solver::Impl {
     bool factored = false;
 };
 
-dense_resolvent_solver::dense_resolvent_solver(const mat &matrix)
+dense_resolvent_solver::dense_resolvent_solver(const mat<real> &matrix)
     : impl_(std::make_unique<Impl>(matrix)) {}
 
 dense_resolvent_solver::dense_resolvent_solver(const spmat &matrix)

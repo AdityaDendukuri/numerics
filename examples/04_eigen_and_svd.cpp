@@ -6,7 +6,7 @@
 int main() {
     using namespace num;
 
-    mat A(3, 3, 0.0);
+    mat<real> A(3, 3, 0.0);
     A(0, 0) = 2.0;
     A(0, 1) = -1.0;
     A(0, 2) = 0.0;

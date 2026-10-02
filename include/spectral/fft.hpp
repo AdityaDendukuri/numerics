@@ -74,7 +74,7 @@ inline constexpr fft_backend default_fft_backend =
 /// @param out Output complex spectrum vector (must be sized to \f$n\f$).
 /// @param b FFT backend tag (`fft_backend::fftw`, `fft_backend::simd`, `fft_backend::seq`).
 /// @see ifft, rfft, fft_plan
-void fft(const cvec &in, cvec &out, fft_backend b = default_fft_backend);
+void fft(const vec<cplx> &in, vec<cplx> &out, fft_backend b = default_fft_backend);
 
 /// @brief Compute unnormalized inverse 1D Fast Fourier Transform \f$x_j = \sum_{k=0}^{n-1} X_k e^{+2\pi i j k / n}\f$.
 ///
@@ -84,7 +84,7 @@ void fft(const cvec &in, cvec &out, fft_backend b = default_fft_backend);
 /// @param out Output reconstructed complex vector (size \f$n\f$).
 /// @param b FFT backend tag.
 /// @see fft, irfft
-void ifft(const cvec &in, cvec &out, fft_backend b = default_fft_backend);
+void ifft(const vec<cplx> &in, vec<cplx> &out, fft_backend b = default_fft_backend);
 
 /// @brief Compute nonredundant half-spectrum of a real input signal: \f$n \to \lfloor n/2 \rfloor + 1\f$ complex coefficients.
 ///
@@ -94,7 +94,7 @@ void ifft(const cvec &in, cvec &out, fft_backend b = default_fft_backend);
 /// @param out Output complex half-spectrum vector of size \f$n/2 + 1\f$.
 /// @param b FFT backend tag.
 /// @see irfft, fft
-void rfft(const vec &in, cvec &out, fft_backend b = default_fft_backend);
+void rfft(const vec<real> &in, vec<cplx> &out, fft_backend b = default_fft_backend);
 
 /// @brief Reconstruct an \f$n\f$-point real signal from its nonredundant half-spectrum.
 ///
@@ -103,12 +103,12 @@ void rfft(const vec &in, cvec &out, fft_backend b = default_fft_backend);
 /// @param out Output real signal vector (size \f$n\f$).
 /// @param b FFT backend tag.
 /// @see rfft, ifft
-void irfft(const cvec &in, int n, vec &out, fft_backend b = default_fft_backend);
+void irfft(const vec<cplx> &in, int n, vec<real> &out, fft_backend b = default_fft_backend);
 
 /// Backend interface owned by fft_plan.
 struct fft_plan_impl {
     virtual ~fft_plan_impl() = default;
-    virtual void execute(const cvec &in, cvec &out) const = 0;
+    virtual void execute(const vec<cplx> &in, vec<cplx> &out) const = 0;
 };
 
 /// @brief Precomputed 1D complex FFT execution plan for repeated transforms.
@@ -132,7 +132,7 @@ class fft_plan {
     /// @brief Execute planned transform on input buffer.
     /// @param in Input complex vector (must have length \f$n\f$).
     /// @param out Output complex vector (must have length \f$n\f$).
-    void execute(const cvec &in, cvec &out) const;
+    void execute(const vec<cplx> &in, vec<cplx> &out) const;
 
     [[nodiscard]] int size() const { return n_; }
     [[nodiscard]] fft_backend backend() const { return backend_; }

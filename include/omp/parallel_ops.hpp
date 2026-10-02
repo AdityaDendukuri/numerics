@@ -4,7 +4,7 @@
 /// Each thread calls the raw kernel on a block, and block partials are summed in index order,
 /// so the result does not depend on the thread count. See the backends page.
 ///
-/// Independent of `vec`/`mat`, so container headers can use it without a circular include.
+/// Independent of `vec<real>`/`mat<real>`, so container headers can use it without a circular include.
 #pragma once
 
 #include "core/types.hpp"

@@ -1,8 +1,8 @@
 /// @file fields/field3d.hpp
 /// @brief 3D scalar and vector fields on uniform Cartesian grids.
 ///
-/// A scalar_field_3d is geometry (grid_3d) + values (num::vec), mirroring the
-/// 2D scalar_field_2d design. Because the values live in a num::vec, the field
+/// A scalar_field_3d is geometry (grid_3d) + values (num::vec<real>), mirroring the
+/// 2D scalar_field_2d design. Because the values live in a num::vec<real>, the field
 /// plugs straight into linear solvers and operators via .as_vec() with no copy.
 #pragma once
 
@@ -75,8 +75,8 @@ class scalar_field_3d {
     }
 
     /// Access the contiguous values in grid flattening order.
-    vec &as_vec() { return data_; }
-    [[nodiscard]] const vec &as_vec() const { return data_; }
+    vec<real> &as_vec() { return data_; }
+    [[nodiscard]] const vec<real> &as_vec() const { return data_; }
     real *data() { return data_.data(); }
     [[nodiscard]] const real *data() const { return data_.data(); }
     [[nodiscard]] idx size() const { return data_.size(); }
@@ -86,7 +86,7 @@ class scalar_field_3d {
 
   private:
     grid_3d grid_;
-    vec data_;
+    vec<real> data_;
 };
 
 /// Three-component vector field sharing a common 3D grid.

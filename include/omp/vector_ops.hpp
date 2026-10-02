@@ -17,13 +17,13 @@ namespace num::omp {
 // Level-1 vector operations
 // -----------------------------------------------------------------------------
 
-inline void scale(vec &v, real alpha) noexcept {
+inline void scale(vec<real> &v, real alpha) noexcept {
     real *d = v.data();
     parallel_apply(v.size(),
                    [d, alpha](idx offset, idx length) { kernel::scale(d + offset, alpha, length); });
 }
 
-inline void axpy(real alpha, const vec &x, vec &y) noexcept {
+inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept {
     const real *xd = x.data();
     real *yd = y.data();
     parallel_apply(x.size(), [xd, yd, alpha](idx offset, idx length) {
@@ -31,7 +31,7 @@ inline void axpy(real alpha, const vec &x, vec &y) noexcept {
     });
 }
 
-[[nodiscard]] inline real dot(const vec &x, const vec &y) noexcept {
+[[nodiscard]] inline real dot(const vec<real> &x, const vec<real> &y) noexcept {
     const real *xd = x.data();
     const real *yd = y.data();
     // A block each, reduced by the raw kernel, so threading composes with the
@@ -40,11 +40,11 @@ inline void axpy(real alpha, const vec &x, vec &y) noexcept {
         x.size(), [xd, yd](idx offset, idx length) { return kernel::dot(xd + offset, yd + offset, length); });
 }
 
-[[nodiscard]] inline real norm(const vec &x) noexcept {
+[[nodiscard]] inline real norm(const vec<real> &x) noexcept {
     return std::sqrt(dot(x, x));
 }
 
-inline void add(const vec &x, const vec &y, vec &z) noexcept {
+inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept {
     const real *xd = x.data();
     const real *yd = y.data();
     real *zd = z.data();
@@ -53,7 +53,7 @@ inline void add(const vec &x, const vec &y, vec &z) noexcept {
     });
 }
 
-inline void axpby(real a, const vec &x, real b, vec &y) noexcept {
+inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
     const real *xd = x.data();
     real *yd = y.data();
     parallel_apply(x.size(), [xd, yd, a, b](idx offset, idx length) {
@@ -61,7 +61,7 @@ inline void axpby(real a, const vec &x, real b, vec &y) noexcept {
     });
 }
 
-inline void axpbyz(real a, const vec &x, real b, const vec &y, vec &z) noexcept {
+inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<real> &z) noexcept {
     const real *xd = x.data();
     const real *yd = y.data();
     real *zd = z.data();

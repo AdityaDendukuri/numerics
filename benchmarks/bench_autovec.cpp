@@ -37,7 +37,7 @@ using namespace num;
 
 /// Naive i-j-k triple loop, purely scalar.
 /// Inner k-loop reads B column-wise (stride N)  -- cache-hostile.
-static void matmul_scalar(const mat &A, const mat &B, mat &C) {
+static void matmul_scalar(const mat<real> &A, const mat<real> &B, mat<real> &C) {
     const idx M = A.rows(), K = A.cols(), N = B.cols();
     for (idx i = 0; i < M; ++i)
         for (idx j = 0; j < N; ++j) {
@@ -50,7 +50,7 @@ static void matmul_scalar(const mat &A, const mat &B, mat &C) {
 
 /// Cache-blocked i-k-j with 64-wide tiles, purely scalar.
 /// Shows that cache efficiency alone gives a large speedup even without SIMD.
-static void matmul_scalar_blocked(const mat &A, const mat &B, mat &C) {
+static void matmul_scalar_blocked(const mat<real> &A, const mat<real> &B, mat<real> &C) {
     constexpr idx BS = 64;
     const idx M = A.rows(), K = A.cols(), N = B.cols();
     std::fill_n(C.data(), M * N, real(0));
@@ -81,7 +81,7 @@ static double flops(idx n) {
 
 static void BM_Matmul_Scalar(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A(n, n, 1.0), B(n, n, 1.0), C(n, n);
+    mat<real> A(n, n, 1.0), B(n, n, 1.0), C(n, n);
     for (auto _ : state) {
         matmul_scalar(A, B, C);
         benchmark::DoNotOptimize(C.data());
@@ -94,7 +94,7 @@ BENCHMARK(BM_Matmul_Scalar)->RangeMultiplier(2)->Range(64, 512)->Complexity();
 
 static void BM_Matmul_Scalar_Blocked(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A(n, n, 1.0), B(n, n, 1.0), C(n, n);
+    mat<real> A(n, n, 1.0), B(n, n, 1.0), C(n, n);
     for (auto _ : state) {
         matmul_scalar_blocked(A, B, C);
         benchmark::DoNotOptimize(C.data());

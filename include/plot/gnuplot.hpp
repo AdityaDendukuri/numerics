@@ -23,7 +23,7 @@ struct series : array<plot_point> {
 };
 
 /// Extract one row as (x_j,u_j) plot data.
-inline series row_slice(const vec &u, int N, double h, int row) {
+inline series row_slice(const vec<real> &u, int N, double h, int row) {
     series result;
     result.reserve(static_cast<std::size_t>(N));
     for (int column = 0; column < N; ++column) {
@@ -33,7 +33,7 @@ inline series row_slice(const vec &u, int N, double h, int row) {
 }
 
 /// Extract one column as (y_i,u_i) plot data.
-inline series col_slice(const vec &u, int N, double h, int column) {
+inline series col_slice(const vec<real> &u, int N, double h, int column) {
     series result;
     result.reserve(static_cast<std::size_t>(N));
     for (int row = 0; row < N; ++row) {

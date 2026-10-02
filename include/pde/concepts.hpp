@@ -17,7 +17,7 @@ namespace num {
 /// A stencil writes \f$(Lu)_i\f$ from a neighbourhood of \f$u_i\f$ without
 /// assembling a matrix, which is what keeps the work \f$O(N)\f$ per step for a
 /// grid of \f$N\f$ points.
-template <class S, class V = vec>
+template <class S, class V = vec<real>>
 concept grid_stencil = vector_space<V> && requires(const S &stencil, const V &u, V &out, int n) {
     stencil.apply(u, out, n);
 };
@@ -39,7 +39,7 @@ concept assemblable_grid_operator = linear_operator<Op> && requires(const Op &A)
 ///
 /// The field is required to expose a vector space, which is what an implicit step needs
 /// to solve in — the same requirement `num::vec_field` states for ODE state.
-template <class S, class F, class V = vec>
+template <class S, class F, class V = vec<real>>
 concept field_stepper = vec_field<F, V> && requires(S &stepper, F &u, real dt) {
     stepper.step(u, dt);
 };

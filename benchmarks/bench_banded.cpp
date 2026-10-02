@@ -69,8 +69,8 @@ static void BM_BandedSolve_Tridiagonal(benchmark::State &state) {
     band_mat A(n, 1, 1, 0.0);
     setup_tridiagonal(A, n);
 
-    vec b(n, 1.0);
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -98,11 +98,11 @@ BENCHMARK(BM_BandedSolve_Tridiagonal)
 static void BM_Thomas_Baseline(benchmark::State &state) {
     idx n = state.range(0);
 
-    vec a(n - 1, -1.0); // Lower diagonal
-    vec b(n, 2.0);      // Main diagonal
-    vec c(n - 1, -1.0); // Upper diagonal
-    vec d(n, 1.0);      // RHS
-    vec x(n);
+    vec<real> a(n - 1, -1.0); // Lower diagonal
+    vec<real> b(n, 2.0);      // Main diagonal
+    vec<real> c(n - 1, -1.0); // Upper diagonal
+    vec<real> d(n, 1.0);      // RHS
+    vec<real> x(n);
 
     for (auto _ : state) {
         thomas(a, b, c, d, x);
@@ -127,8 +127,8 @@ static void BM_BandedSolve_Pentadiagonal(benchmark::State &state) {
     band_mat A(n, 2, 2, 0.0);
     setup_pentadiagonal(A, n);
 
-    vec b(n, 1.0);
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -160,8 +160,8 @@ static void BM_BandedSolve_General_KL2_KU4(benchmark::State &state) {
     band_mat A(n, kl, ku, 0.0);
     setup_general_banded(A, n, kl, ku);
 
-    vec b(n, 1.0);
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -191,8 +191,8 @@ static void BM_BandedSolve_General_KL5_KU5(benchmark::State &state) {
     band_mat A(n, kl, ku, 0.0);
     setup_general_banded(A, n, kl, ku);
 
-    vec b(n, 1.0);
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -249,11 +249,11 @@ static void BM_BandedLU_Solve(benchmark::State &state) {
     std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
     banded_lu(A, ipiv.get()); // Factor once
 
-    vec b(n, 1.0);
+    vec<real> b(n, 1.0);
 
     for (auto _ : state) {
         state.PauseTiming();
-        vec x = b; // Copy RHS
+        vec<real> x = b; // Copy RHS
         state.ResumeTiming();
 
         banded_lu_solve(A, ipiv.get(), x);
@@ -307,8 +307,8 @@ static void BM_BandedMatvec_Tridiagonal(benchmark::State &state) {
     band_mat A(n, 1, 1, 0.0);
     setup_tridiagonal(A, n);
 
-    vec x(n, 1.0);
-    vec y(n);
+    vec<real> x(n, 1.0);
+    vec<real> y(n);
 
     for (auto _ : state) {
         banded_matvec(A, x, y);
@@ -333,8 +333,8 @@ static void BM_BandedMatvec_Pentadiagonal(benchmark::State &state) {
     band_mat A(n, 2, 2, 0.0);
     setup_pentadiagonal(A, n);
 
-    vec x(n, 1.0);
-    vec y(n);
+    vec<real> x(n, 1.0);
+    vec<real> y(n);
 
     for (auto _ : state) {
         banded_matvec(A, x, y);
@@ -364,8 +364,8 @@ static void BM_BandedSolve_Bandwidth_Scaling(benchmark::State &state) {
     band_mat A(n, kl, ku, 0.0);
     setup_general_banded(A, n, kl, ku);
 
-    vec b(n, 1.0);
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -422,8 +422,8 @@ static void BM_RadiativeTransfer_TwoStream(benchmark::State &state) {
         }
     }
 
-    vec b(n, 1.0); // Solar source term
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0); // Solar source term
+    vec<real> x(n, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();

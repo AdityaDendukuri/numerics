@@ -23,9 +23,9 @@ namespace num {
 /// @param tol      Convergence tolerance on residual norm (default 1e-10)
 /// @param max_iter Maximum iterations (default 1000)
 /// @return solver_result with convergence info
-template <class Mat = with_law<mat, law::diagonally_dominant>, bool Parallel = has_omp>
+template <class Mat = with_law<mat<real>, law::diagonally_dominant>, bool Parallel = has_omp>
 requires claims<Mat, law::diagonally_dominant>
-inline solver_result jacobi(const Mat &A_in, const vec &b, vec &x, real tol = 1e-10,
+inline solver_result jacobi(const Mat &A_in, const vec<real> &b, vec<real> &x, real tol = 1e-10,
                            idx max_iter = 1000) {
     const auto &A = A_in.base();
     constexpr real zero_diag_tol = 1e-15;
@@ -34,7 +34,7 @@ inline solver_result jacobi(const Mat &A_in, const vec &b, vec &x, real tol = 1e
         throw std::invalid_argument("Dimension mismatch in Jacobi solver");
     }
 
-    vec x_new(n);
+    vec<real> x_new(n);
     solver_result result{0, 0.0, false};
 
     for (idx iter = 0; iter < max_iter; ++iter) {

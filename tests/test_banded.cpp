@@ -136,8 +136,8 @@ TEST(BandedSolver, Tridiagonal4x4) {
         }
     }
 
-    vec b{1.0, 0.0, 0.0, 1.0};
-    vec x(4, 0.0);
+    vec<real> b{1.0, 0.0, 0.0, 1.0};
+    vec<real> x(4, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 
@@ -164,15 +164,15 @@ TEST(BandedSolver, Tridiagonal1DLaplacian) {
         }
     }
 
-    vec b(n, 1.0); // Constant RHS
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0); // Constant RHS
+    vec<real> x(n, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Verify solution by computing residual
-    vec r(n);
+    vec<real> r(n);
     banded_matvec(A, x, r);
 
     real max_err = 0.0;
@@ -211,15 +211,15 @@ TEST(BandedSolver, Pentadiagonal) {
         A(i, i) = 10.0; // Override for numerical stability
     }
 
-    vec b(n, 1.0);
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x(n, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Verify residual
-    vec r(n);
+    vec<real> r(n);
     banded_matvec(A, x, r);
 
     real norm_r = 0.0;
@@ -250,19 +250,19 @@ TEST(BandedSolver, GeneralBanded) {
         A(j, j) = diag_sum + 1.0; // Diagonally dominant
     }
 
-    vec b(n);
+    vec<real> b(n);
     for (idx i = 0; i < n; ++i) {
         b[i] = static_cast<real>(i + 1);
     }
 
-    vec x(n, 0.0);
+    vec<real> x(n, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Verify residual
-    vec r(n);
+    vec<real> r(n);
     banded_matvec(A, x, r);
 
     real norm_r = 0.0;
@@ -301,16 +301,16 @@ TEST(BandedSolver, LUFactorizationReuse) {
 
     // Solve with different RHS vectors
     for (int trial = 0; trial < 5; ++trial) {
-        vec b(n);
+        vec<real> b(n);
         for (idx i = 0; i < n; ++i) {
             b[i] = static_cast<real>((trial + 1) * (i + 1));
         }
 
-        vec x = b; // Copy RHS
+        vec<real> x = b; // Copy RHS
         banded_lu_solve(A, ipiv.get(), x);
 
         // Verify with original matrix
-        vec r(n);
+        vec<real> r(n);
         banded_matvec(A_orig, x, r);
 
         real max_err = 0.0;
@@ -361,14 +361,14 @@ TEST(BandedSolver, MultipleRHS) {
 
     // Verify each solution
     for (idx rhs = 0; rhs < nrhs; ++rhs) {
-        vec x(n);
-        vec b(n);
+        vec<real> x(n);
+        vec<real> b(n);
         for (idx i = 0; i < n; ++i) {
             x[i] = B[i + (rhs * n)];
             b[i] = B_orig[i + (rhs * n)];
         }
 
-        vec r(n);
+        vec<real> r(n);
         banded_matvec(A_orig, x, r);
 
         real max_err = 0.0;
@@ -394,8 +394,8 @@ TEST(BandedMatvec, Basic) {
     A(3, 2) = -1.0;
     A(3, 3) = 2.0;
 
-    vec x{1.0, 2.0, 3.0, 4.0};
-    vec y(4);
+    vec<real> x{1.0, 2.0, 3.0, 4.0};
+    vec<real> y(4);
 
     banded_matvec(A, x, y);
 
@@ -420,8 +420,8 @@ TEST(BandedMatvec, GEMV) {
     A(2, 1) = 6.0;
     A(2, 2) = 7.0;
 
-    vec x{1.0, 1.0, 1.0};
-    vec y{10.0, 20.0, 30.0};
+    vec<real> x{1.0, 1.0, 1.0};
+    vec<real> y{10.0, 20.0, 30.0};
 
     // y = 2*A*x + 3*y
     banded_gemv(2.0, A, x, 3.0, y);
@@ -451,8 +451,8 @@ TEST(BandedSolver, LargeTridiagonal) {
         }
     }
 
-    vec b(n, 1.0);
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x(n, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 
@@ -460,7 +460,7 @@ TEST(BandedSolver, LargeTridiagonal) {
 
     // Spot check residual at several points
     // Tolerance relaxed for large systems due to floating-point accumulation
-    vec r(n);
+    vec<real> r(n);
     banded_matvec(A, x, r);
 
     real max_err = 0.0;
@@ -492,15 +492,15 @@ TEST(BandedSolver, LargePentadiagonal) {
         }
     }
 
-    vec b(n, 1.0);
-    vec x(n, 0.0);
+    vec<real> b(n, 1.0);
+    vec<real> x(n, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 
     EXPECT_TRUE(result.success);
 
     // Verify residual
-    vec r(n);
+    vec<real> r(n);
     banded_matvec(A, x, r);
 
     real norm_r = 0.0;
@@ -536,8 +536,8 @@ TEST(BandedSolver, Size1) {
     band_mat A(1, 0, 0, 0.0);
     A(0, 0) = 5.0;
 
-    vec b{10.0};
-    vec x(1, 0.0);
+    vec<real> b{10.0};
+    vec<real> x(1, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 
@@ -554,8 +554,8 @@ TEST(BandedSolver, Size2) {
 
     // System: 3x + y = 5, 2x + 4y = 6
     // Solution: x = 1.4, y = 0.8
-    vec b{5.0, 6.0};
-    vec x(2, 0.0);
+    vec<real> b{5.0, 6.0};
+    vec<real> x(2, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 
@@ -573,8 +573,8 @@ TEST(BandedSolver, DiagonalMatrix) {
         A(i, i) = static_cast<real>(i + 1);
     }
 
-    vec b{1.0, 2.0, 3.0, 4.0, 5.0};
-    vec x(n, 0.0);
+    vec<real> b{1.0, 2.0, 3.0, 4.0, 5.0};
+    vec<real> x(n, 0.0);
 
     banded_solver_result result = banded_solve(A, b, x);
 

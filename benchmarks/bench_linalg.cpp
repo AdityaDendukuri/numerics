@@ -60,7 +60,7 @@ static double matmul_flops(idx n) {
 
 static void BM_Matmul_Kernel(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A(n, n, 1.0), B(n, n, 1.0), C(n, n);
+    mat<real> A(n, n, 1.0), B(n, n, 1.0), C(n, n);
     for (auto _ : state) {
         seq::matmul(A, B, C);
         benchmark::DoNotOptimize(C.data());
@@ -75,7 +75,7 @@ BENCHMARK(BM_Matmul_Kernel)->RangeMultiplier(2)->Range(64, 1024)->Complexity();
 #define NUMERICS_BENCH_MATMUL(name, call)                                                          \
     static void BM_Matmul_##name(benchmark::State &state) {                                        \
         idx n = static_cast<idx>(state.range(0));                                                  \
-        mat A(n, n, 1.0), B_mat(n, n, 1.0), C(n, n);                                               \
+        mat<real> A(n, n, 1.0), B_mat(n, n, 1.0), C(n, n);                                               \
         for (auto _ : state) {                                                                     \
             call;                                                                                  \
             benchmark::DoNotOptimize(C.data());                                                    \
@@ -95,7 +95,7 @@ NUMERICS_BENCH_MATMUL(Omp, omp::matmul(A, B_mat, C));
 #ifdef NUMERICS_HAS_CUDA
 static void BM_Matmul_GPU(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A(n, n, 1.0), B(n, n, 1.0), C(n, n);
+    mat<real> A(n, n, 1.0), B(n, n, 1.0), C(n, n);
     A.to_gpu();
     B.to_gpu();
     C.to_gpu();
@@ -118,8 +118,8 @@ BENCHMARK(BM_Matmul_GPU)->RangeMultiplier(2)->Range(64, 512)->Complexity();
 #define NUMERICS_BENCH_MATVEC(name, call)                                                          \
     static void BM_Matvec_##name(benchmark::State &state) {                                        \
         idx n = static_cast<idx>(state.range(0));                                                  \
-        mat A(n, n, 1.0);                                                                          \
-        vec x(n, 1.0), y(n);                                                                       \
+        mat<real> A(n, n, 1.0);                                                                          \
+        vec<real> x(n, 1.0), y(n);                                                                       \
         for (auto _ : state) {                                                                     \
             call;                                                                                  \
             benchmark::DoNotOptimize(y.data());                                                    \
@@ -138,8 +138,8 @@ NUMERICS_BENCH_MATVEC(Blas, blas::matvec(A, x, y));
 #ifdef NUMERICS_HAS_CUDA
 static void BM_Matvec_GPU(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A(n, n, 1.0);
-    vec x(n, 1.0), y(n);
+    mat<real> A(n, n, 1.0);
+    vec<real> x(n, 1.0), y(n);
     A.to_gpu();
     x.to_gpu();
     y.to_gpu();
@@ -159,8 +159,8 @@ BENCHMARK(BM_Matvec_GPU)->RangeMultiplier(2)->Range(64, 2048);
 
 #define NUMERICS_BENCH_DOT(name, call)                                                             \
     static void BM_Dot_##name(benchmark::State &state) {                                           \
-        vec x(static_cast<idx>(state.range(0)), 1.0);                                              \
-        vec y(static_cast<idx>(state.range(0)), 2.0);                                              \
+        vec<real> x(static_cast<idx>(state.range(0)), 1.0);                                              \
+        vec<real> y(static_cast<idx>(state.range(0)), 2.0);                                              \
         for (auto _ : state) {                                                                     \
             benchmark::DoNotOptimize(call);                                                        \
         }                                                                                          \
@@ -176,8 +176,8 @@ NUMERICS_BENCH_DOT(Blas, blas::dot(x, y));
 
 #ifdef NUMERICS_HAS_CUDA
 static void BM_Dot_GPU(benchmark::State &state) {
-    vec x(static_cast<idx>(state.range(0)), 1.0);
-    vec y(static_cast<idx>(state.range(0)), 2.0);
+    vec<real> x(static_cast<idx>(state.range(0)), 1.0);
+    vec<real> y(static_cast<idx>(state.range(0)), 2.0);
     x.to_gpu();
     y.to_gpu();
     cudaDeviceSynchronize();
@@ -194,8 +194,8 @@ BENCHMARK(BM_Dot_GPU)->RangeMultiplier(4)->Range(1024, 1 << 20);
 
 #define NUMERICS_BENCH_AXPY(name, call)                                                            \
     static void BM_Axpy_##name(benchmark::State &state) {                                          \
-        vec x(static_cast<idx>(state.range(0)), 1.0);                                              \
-        vec y(static_cast<idx>(state.range(0)), 2.0);                                              \
+        vec<real> x(static_cast<idx>(state.range(0)), 1.0);                                              \
+        vec<real> y(static_cast<idx>(state.range(0)), 2.0);                                              \
         for (auto _ : state) {                                                                     \
             call;                                                                                  \
             benchmark::DoNotOptimize(y.data());                                                    \
@@ -212,8 +212,8 @@ NUMERICS_BENCH_AXPY(Blas, blas::axpy(2.0, x, y));
 
 #ifdef NUMERICS_HAS_CUDA
 static void BM_Axpy_GPU(benchmark::State &state) {
-    vec x(static_cast<idx>(state.range(0)), 1.0);
-    vec y(static_cast<idx>(state.range(0)), 2.0);
+    vec<real> x(static_cast<idx>(state.range(0)), 1.0);
+    vec<real> y(static_cast<idx>(state.range(0)), 2.0);
     x.to_gpu();
     y.to_gpu();
     cudaDeviceSynchronize();
@@ -231,7 +231,7 @@ BENCHMARK(BM_Axpy_GPU)->RangeMultiplier(4)->Range(1024, 1 << 20);
 
 static void BM_CG(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = static_cast<real>(n);
         if (i > 0)
@@ -239,7 +239,7 @@ static void BM_CG(benchmark::State &state) {
         if (i < n - 1)
             A(i, i + 1) = 1.0;
     }
-    vec b(n, 1.0), x(n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0);
     for (auto _ : state) {
         state.PauseTiming();
         for (idx i = 0; i < n; ++i)
@@ -256,7 +256,7 @@ BENCHMARK(BM_CG)->RangeMultiplier(2)->Range(32, 256)->Complexity();
 #ifdef NUMERICS_HAS_CUDA
 static void BM_CG_GPU(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    mat A(n, n, 0.0);
+    mat<real> A(n, n, 0.0);
     for (idx i = 0; i < n; ++i) {
         A(i, i) = static_cast<real>(n);
         if (i > 0)
@@ -264,7 +264,7 @@ static void BM_CG_GPU(benchmark::State &state) {
         if (i < n - 1)
             A(i, i + 1) = 1.0;
     }
-    vec b(n, 1.0), x(n, 0.0);
+    vec<real> b(n, 1.0), x(n, 0.0);
     for (auto _ : state) {
         state.PauseTiming();
         for (idx i = 0; i < n; ++i)
@@ -284,7 +284,7 @@ BENCHMARK(BM_CG_GPU)->RangeMultiplier(2)->Range(32, 256)->Complexity();
 
 static void BM_Thomas(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
-    vec a(n - 1, -1.0), b(n, 2.0), c(n - 1, -1.0), d(n, 1.0), x(n);
+    vec<real> a(n - 1, -1.0), b(n, 2.0), c(n - 1, -1.0), d(n, 1.0), x(n);
     for (auto _ : state) {
         thomas(a, b, c, d, x);
         benchmark::DoNotOptimize(x.data());

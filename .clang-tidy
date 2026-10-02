@@ -28,7 +28,7 @@ CheckOptions:
   # Types follow a deliberate two-tier convention, so neither case can be enforced
   # globally without flagging correct code.
   #
-  #   lower_case  the core containers (vec, mat, spmat, basic_vec) and the law tags
+  #   lower_case  the core containers (vec, mat, spmat) and the law tags
   #               (law::spd, law::self_adjoint). These are the names written most
   #               often, and they match the standard library's own spelling of the
   #               same kind of thing: std::vector, std::same_as.

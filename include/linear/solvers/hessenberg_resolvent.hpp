@@ -19,25 +19,25 @@ namespace num {
 class hessenberg_resolvent_solver {
   public:
     /// Construct and decompose A into upper Hessenberg form.
-    explicit hessenberg_resolvent_solver(const mat &A);
+    explicit hessenberg_resolvent_solver(const mat<real> &A);
     explicit hessenberg_resolvent_solver(hessenberg_decomposition decomp);
 
     [[nodiscard]] idx size() const noexcept { return decomp_.size(); }
     [[nodiscard]] const hessenberg_decomposition &decomposition() const noexcept { return decomp_; }
 
     /// Solve (sI - A) x = b for a single shift and real RHS in O(n^2).
-    [[nodiscard]] array<cplx> solve(cplx shift, const vec &b) const;
+    [[nodiscard]] array<cplx> solve(cplx shift, const vec<real> &b) const;
 
     /// Solve (sI - A) x = b for a single shift and complex RHS in O(n^2).
     [[nodiscard]] array<cplx> solve(cplx shift, const array<cplx> &b) const;
 
     /// Solve for multiple shifts and a single RHS in parallel O(n^3 + k * n^2).
     [[nodiscard]] array<array<cplx>>
-    solve_batch(const array<cplx> &shifts, const vec &b) const;
+    solve_batch(const array<cplx> &shifts, const vec<real> &b) const;
 
     /// Solve for multiple shifts and multiple RHS vectors in parallel.
     [[nodiscard]] array<array<array<cplx>>>
-    solve_batch(const array<cplx> &shifts, const array<vec> &rhs_list) const;
+    solve_batch(const array<cplx> &shifts, const array<vec<real>> &rhs_list) const;
 
   private:
     hessenberg_decomposition decomp_;
