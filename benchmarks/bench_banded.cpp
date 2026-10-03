@@ -78,7 +78,7 @@ static void BM_BandedSolve_Tridiagonal(benchmark::State &state) {
             x[i] = 0.0;
         state.ResumeTiming();
 
-        banded_solve(A, b, x);
+        solve(lu(A), b, x);
         benchmark::DoNotOptimize(x.data());
     }
 
@@ -136,7 +136,7 @@ static void BM_BandedSolve_Pentadiagonal(benchmark::State &state) {
             x[i] = 0.0;
         state.ResumeTiming();
 
-        banded_solve(A, b, x);
+        solve(lu(A), b, x);
         benchmark::DoNotOptimize(x.data());
     }
 
@@ -169,7 +169,7 @@ static void BM_BandedSolve_General_KL2_KU4(benchmark::State &state) {
             x[i] = 0.0;
         state.ResumeTiming();
 
-        banded_solve(A, b, x);
+        solve(lu(A), b, x);
         benchmark::DoNotOptimize(x.data());
     }
 
@@ -200,7 +200,7 @@ static void BM_BandedSolve_General_KL5_KU5(benchmark::State &state) {
             x[i] = 0.0;
         state.ResumeTiming();
 
-        banded_solve(A, b, x);
+        solve(lu(A), b, x);
         benchmark::DoNotOptimize(x.data());
     }
 
@@ -222,15 +222,13 @@ static void BM_BandedLU_Factorization(benchmark::State &state) {
     band_mat A_template(n, 2, 2, 0.0);
     setup_pentadiagonal(A_template, n);
 
-    std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
-
     for (auto _ : state) {
         state.PauseTiming();
         band_mat A = A_template; // Fresh copy each iteration
         state.ResumeTiming();
 
-        banded_lu(A, ipiv.get());
-        benchmark::DoNotOptimize(A.data());
+        banded_lu_result factor = lu(std::move(A));
+        benchmark::DoNotOptimize(factor.LU.data());
     }
 
     state.SetItemsProcessed(state.iterations() * n);
@@ -246,8 +244,7 @@ static void BM_BandedLU_Solve(benchmark::State &state) {
     band_mat A(n, 2, 2, 0.0);
     setup_pentadiagonal(A, n);
 
-    std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
-    banded_lu(A, ipiv.get()); // Factor once
+    const banded_lu_result factor = lu(A); // Factor once
 
     vec<real> b(n, 1.0);
 
@@ -256,7 +253,7 @@ static void BM_BandedLU_Solve(benchmark::State &state) {
         vec<real> x = b; // Copy RHS
         state.ResumeTiming();
 
-        banded_lu_solve(A, ipiv.get(), x);
+        solve(factor, x, x);
         benchmark::DoNotOptimize(x.data());
     }
 
@@ -273,22 +270,18 @@ static void BM_BandedSolve_MultiRHS(benchmark::State &state) {
     band_mat A(n, 2, 2, 0.0);
     setup_pentadiagonal(A, n);
 
-    std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
-    banded_lu(A, ipiv.get());
+    const banded_lu_result factor = lu(A);
 
-    std::unique_ptr<real[]> B = std::make_unique<real[]>(n * nrhs);
-    for (idx i = 0; i < n * nrhs; ++i)
-        B[i] = 1.0;
-
-    std::unique_ptr<real[]> B_work = std::make_unique<real[]>(n * nrhs);
+    const mat<real> B(n, nrhs, 1.0);
+    mat<real> B_work(n, nrhs, 0.0);
 
     for (auto _ : state) {
         state.PauseTiming();
-        std::memcpy(B_work.get(), B.get(), n * nrhs * sizeof(real));
+        B_work = B;
         state.ResumeTiming();
 
-        banded_lu_solve_multi(A, ipiv.get(), B_work.get(), nrhs);
-        benchmark::DoNotOptimize(B_work.get());
+        solve(factor, B_work, B_work);
+        benchmark::DoNotOptimize(B_work.data());
     }
 
     state.SetItemsProcessed(state.iterations() * n * nrhs);
@@ -373,7 +366,7 @@ static void BM_BandedSolve_Bandwidth_Scaling(benchmark::State &state) {
             x[i] = 0.0;
         state.ResumeTiming();
 
-        banded_solve(A, b, x);
+        solve(lu(A), b, x);
         benchmark::DoNotOptimize(x.data());
     }
 
@@ -431,7 +424,7 @@ static void BM_RadiativeTransfer_TwoStream(benchmark::State &state) {
             x[i] = 0.0;
         state.ResumeTiming();
 
-        banded_solve(A, b, x);
+        solve(lu(A), b, x);
         benchmark::DoNotOptimize(x.data());
     }
 

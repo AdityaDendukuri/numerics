@@ -37,7 +37,7 @@ struct plot_panel {
     array<heatmap_entry> heatmaps;
     std::string title_, xlabel_, ylabel_;
     std::string xrange_, yrange_;
-    std::string palette_; // gnuplot palette string; empty = hot/fire
+    std::string palette_; // gnuplot palette string; empty = cividis
     bool legend_ = false;
     std::string legend_pos_ = "top right";
     bool logx_ = false;
@@ -87,8 +87,11 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
         if (!p.palette_.empty()) {
             fprintf(pipe, "set palette %s\n", p.palette_.c_str());
         } else {
-            fputs("set palette defined "
-                  "(0 'white', 0.35 '#ffffb2', 0.65 '#fd8d3c', 1 '#bd0026')\n",
+            // cividis: perceptually uniform, readable with red-green colour blindness,
+            // and running from navy to gold like the docs.
+            fputs("set palette defined (0 '#00204d', 1 '#00336f', 2 '#39486b', 3 '#575c6d', "
+                  "4 '#707173', 5 '#8a8779', 6 '#a69d75', 7 '#c4b56c', 8 '#e4cf5b', "
+                  "9 '#ffea46')\n",
                   pipe);
         }
         fprintf(pipe, "set cbrange [%g:%g]\n", hm.vmin, hm.vmax);
@@ -192,11 +195,13 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
 
     // Global theme
     if (s.term_override_ != "dumb") {
-        fputs("set style line 1 lt 1 lw 2 pt 7  ps 0.7 lc rgb '#2c3e50'\n", pipe);
-        fputs("set style line 2 lt 2 lw 2 pt 5  ps 0.7 lc rgb '#c0392b'\n", pipe);
-        fputs("set style line 3 lt 3 lw 2 pt 9  ps 0.7 lc rgb '#2980b9'\n", pipe);
-        fputs("set style line 4 lt 4 lw 2 pt 13 ps 0.7 lc rgb '#27ae60'\n", pipe);
-        fputs("set style line 5 lt 5 lw 2 pt 11 ps 0.7 lc rgb '#8e44ad'\n", pipe);
+        // UCSB navy, Arkansas cardinal, UCA purple, UCA gray and UCSB aqua. Gold is too light
+        // for a line on white.
+        fputs("set style line 1 lt 1 lw 2 pt 7  ps 0.7 lc rgb '#003660'\n", pipe);
+        fputs("set style line 2 lt 2 lw 2 pt 5  ps 0.7 lc rgb '#9d2235'\n", pipe);
+        fputs("set style line 3 lt 3 lw 2 pt 9  ps 0.7 lc rgb '#582c83'\n", pipe);
+        fputs("set style line 4 lt 4 lw 2 pt 13 ps 0.7 lc rgb '#7c878e'\n", pipe);
+        fputs("set style line 5 lt 5 lw 2 pt 11 ps 0.7 lc rgb '#047c91'\n", pipe);
         fputs("set style line 100 lt 1 lw 0.5 lc rgb '#cccccc'\n", pipe);
         fputs("set grid back ls 100\n", pipe);
         fputs("set border 3 lw 1.5\n", pipe);
@@ -244,7 +249,7 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
 
 } // namespace detail
 
-// -- series builders ----------------------------------------------------------
+// series builders
 
 /// Append a series (vector of (x,y) pairs) to the current panel.
 inline void plot(const series &data, const std::string &label = "",
@@ -265,7 +270,7 @@ inline void plot(const ContainerX &x, const ContainerY &y, const std::string &la
     detail::state().current.series.push_back({std::move(s), label, style});
 }
 
-// -- Decorators ---------------------------------------------------------------
+// Decorators
 
 /// Set the current panel title.
 inline void title(const std::string &t) {
@@ -403,7 +408,7 @@ inline void semilogx() {
     detail::state().current.logx_ = true;
 }
 
-// -- Multiplot ----------------------------------------------------------------
+// Multiplot
 
 /// @brief Start a multiplot with the given grid dimensions.
 inline void subplot(int rows, int cols = 1) {
@@ -418,7 +423,7 @@ inline void next() {
     detail::state().current = detail::plot_panel{};
 }
 
-// -- 2-D heatmap --------------------------------------------------------------
+// 2-D heatmap
 
 template <typename Container>
 /// Add an N-by-N row-major scalar array as a heatmap.
@@ -443,7 +448,7 @@ inline void colormap(const std::string &palette) {
     detail::state().current.palette_ = palette;
 }
 
-// -- In-Terminal ASCII Plotting -----------------------------------------------
+// In-Terminal ASCII Plotting
 
 /// Configure terminal ASCII mode with custom width and height.
 inline void terminal_dumb(int width = 140, int height = 35) {
@@ -465,7 +470,7 @@ inline void show_dumb(int width = 140, int height = 35) {
     detail::state().reset();
 }
 
-// -- Output -------------------------------------------------------------------
+// Output
 
 /// Render accumulated panels in an interactive gnuplot window and clear state.
 inline void show() {

@@ -10,7 +10,7 @@
 namespace num {
 namespace spectral {
 
-// -- One-shot dispatch --------------------------------------------------------
+// One-shot dispatch
 
 void fft(const vec<cplx> &in, vec<cplx> &out, fft_backend b) {
     if (out.size() != in.size()) {
@@ -116,7 +116,7 @@ void irfft(const vec<cplx> &in, int n, vec<real> &out, fft_backend b) {
     num::backends::seq::irfft(in, n, out);
 }
 
-// -- fft_plan ------------------------------------------------------------------
+// fft_plan
 
 fft_plan::fft_plan(int n, bool forward, fft_backend b) : n_(n), backend_(b) {
 #ifdef NUMERICS_HAS_FFTW

@@ -430,7 +430,7 @@ static void BM_MathSpine_CG_Raw(benchmark::State &state) {
 
     for (auto _ : state) {
         std::fill(x.begin(), x.end(), 0.0);
-        auto result = kernel::cg(apply, x.data(), b.data(), n, work.data(), 1e-10, 100);
+        auto result = num::cg(apply, x.data(), b.data(), n, work.data(), 1e-10, 100);
         benchmark::DoNotOptimize(result);
         benchmark::ClobberMemory();
     }

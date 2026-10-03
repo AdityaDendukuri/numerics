@@ -48,23 +48,20 @@ int main() {
             b[i] = dist(rng);
         }
 
-        // 1. Naive O(k * n^3) approach: factorize sI - A fresh on every shift
+        // 1. Naive O(k * n^3) approach: reduce A to Hessenberg form again for every shift
         auto t0 = std::chrono::high_resolution_clock::now();
-        std::vector<std::vector<num::cplx>> naive_sol(num_shifts);
+        std::vector<num::vec<num::cplx>> naive_sol(num_shifts);
         for (std::size_t k = 0; k < num_shifts; ++k) {
-            num::dense_resolvent_solver naive_solver(A);
-            naive_solver.factorize(shifts[k]);
-            std::vector<num::cplx> b_cplx(n);
-            for (num::idx i = 0; i < n; ++i) b_cplx[i] = b[i];
-            naive_sol[k] = naive_solver.solve(b_cplx);
+            num::hessenberg_resolvent naive_solver(A);
+            naive_sol[k] = num::solve(num::shift(naive_solver, shifts[k]), b);
         }
         auto t1 = std::chrono::high_resolution_clock::now();
         double naive_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
         // 2. Optimized O(n^3 + k * n^2) Hessenberg approach
         auto t2 = std::chrono::high_resolution_clock::now();
-        num::hessenberg_resolvent_solver hess_solver(A);
-        auto hess_sol = hess_solver.solve_batch(shifts, b);
+        num::hessenberg_resolvent hess_solver(A);
+        auto hess_sol = num::solve_batch(hess_solver, shifts, b);
         auto t3 = std::chrono::high_resolution_clock::now();
         double hess_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();
 

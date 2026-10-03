@@ -48,25 +48,6 @@ NUM_K_AINLINE void matvec_transpose(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT
     }
 }
 
-/// @brief Inner product of columns \f$p\f$ and \f$q\f$ of a row-major matrix.
-template <std::floating_point T>
-NUM_K_AINLINE T column_dot(const T *NUM_K_RESTRICT A, idx lda, idx rows, idx p, idx q) noexcept {
-    return detail::reduce<T>(rows,
-                             [A, lda, p, q](idx i) { return A[(i * lda) + p] * A[(i * lda) + q]; });
-}
-
-/// @brief Applies a Givens rotation to columns \f$p\f$ and \f$q\f$ in place.
-template <std::floating_point T>
-NUM_K_AINLINE void rotate_columns(T *NUM_K_RESTRICT A, idx lda, idx rows, idx p, idx q, T c,
-                                  T s) noexcept {
-    for (idx i = 0; i < rows; ++i) {
-        T *row = A + (i * lda);
-        const T ap = row[p], aq = row[q];
-        row[p] = (c * ap) - (s * aq);
-        row[q] = (s * ap) + (c * aq);
-    }
-}
-
 // Dense matrix product, blocked for the register file and the cache; see @ref gemm_config.
 // The summation order per output element is ascending in p, as in the naive triple loop,
 // so results are bit-identical to it.
@@ -422,60 +403,6 @@ inline void gemm(T *NUM_K_RESTRICT C, const T *NUM_K_RESTRICT A, const T *NUM_K_
     gemm(C, n, A, k, B, n, alpha, beta, m, n, k);
 }
 
-/// @brief In-place LU without row pivoting, for matrices such as M-matrices whose pivots
-/// stay nonzero. Returns false if a pivot fell below tolerance.
-template <std::floating_point T>
-[[nodiscard]] inline bool lu_no_pivot(T *A, idx n) noexcept {
-    constexpr T tolerance = T(1e-15);
-    bool nonsingular = true;
-    for (idx k = 0; k < n; ++k) {
-        if (std::abs(A[k * n + k]) < tolerance) {
-            nonsingular = false;
-            continue;
-        }
-        const T inverse_pivot = T(1) / A[k * n + k];
-        for (idx i = k + 1; i < n; ++i) {
-            A[i * n + k] *= inverse_pivot;
-            const T multiplier = A[i * n + k];
-            for (idx j = k + 1; j < n; ++j)
-                A[i * n + j] -= multiplier * A[k * n + j];
-        }
-    }
-    return nonsingular;
-}
-
-/// @brief Solves several right-hand sides from an unpivoted LU factor.
-template <std::floating_point T>
-inline void lu_no_pivot_solve_multiple(T *X, const T *LU, idx n, idx columns) noexcept {
-    for (idx i = 0; i < n; ++i)
-        for (idx j = 0; j < i; ++j)
-            for (idx c = 0; c < columns; ++c)
-                X[i * columns + c] -= LU[i * n + j] * X[j * columns + c];
-    for (idx i = n; i-- > 0;) {
-        for (idx j = i + 1; j < n; ++j)
-            for (idx c = 0; c < columns; ++c)
-                X[i * columns + c] -= LU[i * n + j] * X[j * columns + c];
-        for (idx c = 0; c < columns; ++c)
-            X[i * columns + c] /= LU[i * n + i];
-    }
-}
-
-/// @brief Solves \f$A^T x = b\f$ for several right-hand sides from an unpivoted LU factor.
-template <std::floating_point T>
-inline void lu_no_pivot_solve_transpose_multiple(T *X, const T *LU, idx n, idx columns) noexcept {
-    for (idx i = 0; i < n; ++i) {
-        for (idx j = 0; j < i; ++j)
-            for (idx c = 0; c < columns; ++c)
-                X[i * columns + c] -= LU[j * n + i] * X[j * columns + c];
-        for (idx c = 0; c < columns; ++c)
-            X[i * columns + c] /= LU[i * n + i];
-    }
-    for (idx i = n; i-- > 0;)
-        for (idx j = i + 1; j < n; ++j)
-            for (idx c = 0; c < columns; ++c)
-                X[i * columns + c] -= LU[j * n + i] * X[j * columns + c];
-}
-
 /// @brief Symmetric rank-k update of the lower triangle, `C <- alpha*A*A^T + beta*C`.
 ///
 /// `A` is `rows x columns` and `C` is row-major `rows x rows`; only `C(i,j)` with `j <= i`
@@ -566,27 +493,6 @@ inline void combine_columns(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT V, idx 
         const T sum = detail::reduce<T>(
             columns, [v_row, coefficients](idx j) { return v_row[j] * coefficients[j]; });
         y[r] = (alpha * sum) + (beta * y[r]);
-    }
-}
-
-/// @brief Modified Gram--Schmidt against row-major basis columns.
-///
-/// Keeps the sequential projection order; `project_columns` then `combine_columns` is the
-/// faster classical variant, with weaker stability.
-template <std::floating_point T>
-inline void mgs_columns(T *NUM_K_RESTRICT v, const T *NUM_K_RESTRICT basis, idx ldb, idx rows,
-                        idx columns, T *coefficients = nullptr) noexcept {
-    for (idx column = 0; column < columns; ++column) {
-        T projection = T(0);
-        for (idx row = 0; row < rows; ++row) {
-            projection += basis[(row * ldb) + column] * v[row];
-        }
-        if (coefficients != nullptr) {
-            coefficients[column] = projection;
-        }
-        for (idx row = 0; row < rows; ++row) {
-            v[row] -= projection * basis[(row * ldb) + column];
-        }
     }
 }
 
@@ -956,20 +862,6 @@ NUM_K_AINLINE void trsv_transpose_lower(T *NUM_K_RESTRICT x, const T *NUM_K_REST
             s -= L[(k * lda) + i] * x[k];
         }
         x[i] = s / L[(i * lda) + i];
-    }
-}
-
-/// @brief Solves transposed upper triangular system \f$U^T \mathbf{x} = \mathbf{b}\f$ (or in-place
-/// \f$\mathbf{x} \leftarrow U^{-T} \mathbf{x}\f$).
-template <std::floating_point T>
-NUM_K_AINLINE void trsv_transpose_upper(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT U, idx lda,
-                                        idx n) noexcept {
-    for (idx i = 0; i < n; ++i) {
-        T s = x[i];
-        for (idx k = 0; k < i; ++k) {
-            s -= U[(k * lda) + i] * x[k];
-        }
-        x[i] = s / U[(i * lda) + i];
     }
 }
 

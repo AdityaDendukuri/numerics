@@ -1,0 +1,6 @@
+LU            x = [1, 1, 1]  det 56  rcond 0.389
+A^-1 (0, 0)   0.267857  (exact 15/56 = 0.267857)
+no-pivot LU   x = [1, 1, 1]
+Cholesky      x = [1, 1, 1]
+Thomas        x = [1, 1, 1]
+QR fit        y = 1.100 + 1.960 t

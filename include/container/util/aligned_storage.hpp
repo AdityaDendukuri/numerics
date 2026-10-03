@@ -1,8 +1,7 @@
 /// @file container/util/aligned_storage.hpp
 /// @brief Over-aligned owning storage for the dense containers.
 ///
-/// The guarantee covers the base pointer only. Measurements and rationale are in the
-/// algorithm notes.
+/// The guarantee covers the base pointer only.
 #pragma once
 
 #include "core/types.hpp"

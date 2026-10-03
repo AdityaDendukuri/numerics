@@ -1,5 +1,5 @@
 /// @file linear/solvers/hessenberg_resolvent.hpp
-/// @brief O(n^2)-per-shift complex resolvent solver based on Hessenberg decomposition.
+/// @brief O(n^2)-per-shift complex resolvent solves from one Hessenberg decomposition.
 #pragma once
 
 #include "core/debug.hpp"
@@ -7,40 +7,71 @@
 #include "core/types.hpp"
 #include "container/vector.hpp"
 #include "linear/factorization/hessenberg.hpp"
+#include "linear/solve.hpp"
+#include "linear/sparse/sparse.hpp"
 #include <complex>
+#include <memory>
 #include <vector>
 
 namespace num {
 
-/// @brief High-performance resolvent solver (sI - A)^-1 b reusing a precomputed Hessenberg decomposition.
+struct hessenberg_shifted_lu;
+
+/// @brief \f$A\f$ reduced once to \f$A = QHQ^T\f$, ready to factor \f$sI - A\f$ for any shift.
 ///
-/// Preprocessing cost: O(n^3) once (Hessenberg reduction A = Q H Q^T).
-/// Per-shift solve cost: O(n^2) (Hessenberg-structured Gaussian elimination + Q back-projection).
-class hessenberg_resolvent_solver {
+/// The reduction costs \f$O(n^3)\f$ once; `shift(R, s)` then costs \f$O(n^2)\f$ per shift:
+///
+///     hessenberg_resolvent R(A);
+///     auto F = shift(R, s);     // sI - A, factored
+///     solve(F, b, x);           // x = (sI - A)^{-1} b, as many times as needed
+///
+/// Copies share the reduction, and each shifted factor keeps it alive.
+class hessenberg_resolvent {
   public:
-    /// Construct and decompose A into upper Hessenberg form.
-    explicit hessenberg_resolvent_solver(const mat<real> &A);
-    explicit hessenberg_resolvent_solver(hessenberg_decomposition decomp);
+    explicit hessenberg_resolvent(const mat<real> &A);
+    explicit hessenberg_resolvent(const spmat &A);
+    explicit hessenberg_resolvent(hessenberg_decomposition decomp);
 
-    [[nodiscard]] idx size() const noexcept { return decomp_.size(); }
-    [[nodiscard]] const hessenberg_decomposition &decomposition() const noexcept { return decomp_; }
-
-    /// Solve (sI - A) x = b for a single shift and real RHS in O(n^2).
-    [[nodiscard]] array<cplx> solve(cplx shift, const vec<real> &b) const;
-
-    /// Solve (sI - A) x = b for a single shift and complex RHS in O(n^2).
-    [[nodiscard]] array<cplx> solve(cplx shift, const array<cplx> &b) const;
-
-    /// Solve for multiple shifts and a single RHS in parallel O(n^3 + k * n^2).
-    [[nodiscard]] array<array<cplx>>
-    solve_batch(const array<cplx> &shifts, const vec<real> &b) const;
-
-    /// Solve for multiple shifts and multiple RHS vectors in parallel.
-    [[nodiscard]] array<array<array<cplx>>>
-    solve_batch(const array<cplx> &shifts, const array<vec<real>> &rhs_list) const;
+    [[nodiscard]] idx size() const noexcept { return decomp_->size(); }
+    [[nodiscard]] const hessenberg_decomposition &decomposition() const noexcept {
+        return *decomp_;
+    }
 
   private:
-    hessenberg_decomposition decomp_;
+    std::shared_ptr<const hessenberg_decomposition> decomp_;
+    friend hessenberg_shifted_lu shift(const hessenberg_resolvent &R, cplx s);
 };
+
+/// @brief \f$sI - A\f$ for one shift \f$s\f$, factored as \f$sI - H\f$ in Hessenberg coordinates.
+struct hessenberg_shifted_lu {
+    std::shared_ptr<const hessenberg_decomposition> decomp;
+    cplx s;
+    array<cplx> factor;
+    array<idx> pivots;
+
+    [[nodiscard]] idx size() const noexcept { return decomp->size(); }
+};
+
+/// @brief Factor \f$sI - A\f$ in \f$O(n^2)\f$.
+[[nodiscard]] hessenberg_shifted_lu shift(const hessenberg_resolvent &R, cplx s);
+
+/// @brief Solve \f$(sI - A)x = b\f$. `x` may be `b`.
+void solve(const hessenberg_shifted_lu &F, const vec<cplx> &b, vec<cplx> &x);
+
+/// @brief Solve \f$(sI - A)x = b\f$ for a real \f$b\f$; the solution is complex.
+void solve(const hessenberg_shifted_lu &F, const vec<real> &b, vec<cplx> &x);
+[[nodiscard]] vec<cplx> solve(const hessenberg_shifted_lu &F, const vec<real> &b);
+
+/// @brief Solve one right-hand side at many shifts, in parallel over the shifts.
+///
+/// The same as `solve(shift(R, s), b)` for each `s`, with the projection of `b` shared and
+/// one factor buffer per thread.
+[[nodiscard]] array<vec<cplx>> solve_batch(const hessenberg_resolvent &R,
+                                           const array<cplx> &shifts, const vec<real> &b);
+
+/// @brief Solve several right-hand sides at many shifts: `result[shift][rhs]`.
+[[nodiscard]] array<array<vec<cplx>>> solve_batch(const hessenberg_resolvent &R,
+                                                  const array<cplx> &shifts,
+                                                  const array<vec<real>> &rhs_list);
 
 } // namespace num

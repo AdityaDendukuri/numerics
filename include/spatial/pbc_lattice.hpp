@@ -8,6 +8,7 @@
 /// Flat layout: i = row * N + col,  row and col in [0, N).
 #pragma once
 
+#include "core/index_space.hpp"
 #include "core/types.hpp"
 #include <vector>
 
@@ -32,4 +33,5 @@ struct pbc_lattice_2d {
     }
 };
 
+static_assert(periodic_neighbourhood_2d<pbc_lattice_2d>);
 } // namespace num

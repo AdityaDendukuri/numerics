@@ -259,7 +259,7 @@ void generate_talbot_convergence_plot(const std::string &out_dir) {
     operators::dense_op Q_op(Q);
     vec<real> p_exact = expv(t, Q_op, p0, 50, 1e-15);
 
-    hessenberg_resolvent_solver solver(Q);
+    hessenberg_resolvent solver(Q);
 
     const std::vector<idx> node_counts = {4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 28, 32};
     std::vector<double> nodes_dbl;
@@ -269,7 +269,7 @@ void generate_talbot_convergence_plot(const std::string &out_dir) {
     for (idx M : node_counts) {
         std::vector<cplx> density(N, cplx(0.0, 0.0));
         for (const auto &[shift, weight] : talbot_contour(t, M)) {
-            auto sol = solver.solve(shift, p0);
+            auto sol = solve(num::shift(solver, shift), p0);
             for (idx i = 0; i < N; ++i) density[i] += weight * sol[i];
         }
 

@@ -16,7 +16,9 @@ namespace num {
 /// `f` has the signature `void(real t, const State& y, State& dy)`, and `p` supplies `t0`, `tf`
 /// and `dt`.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
-inline basic_euler_steps<RHS, State> euler(RHS f, State y0, ode_params p = {}) {
+requires vector_space<State> &&
+    std::invocable<RHS &, real, const State &, State &> inline basic_euler_steps<RHS, State>
+    euler(RHS f, State y0, ode_params p = {}) {
     return basic_euler_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
@@ -25,7 +27,9 @@ inline basic_euler_steps<RHS, State> euler(RHS f, State y0, ode_params p = {}) {
 /// `f` has the signature `void(real t, const State& y, State& dy)`, and `p` supplies `t0`, `tf`
 /// and `dt`.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
-inline basic_rk4_steps<RHS, State> rk4(RHS f, State y0, ode_params p = {}) {
+requires vector_space<State> &&
+    std::invocable<RHS &, real, const State &, State &> inline basic_rk4_steps<RHS, State>
+    rk4(RHS f, State y0, ode_params p = {}) {
     return basic_rk4_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
@@ -34,7 +38,9 @@ inline basic_rk4_steps<RHS, State> rk4(RHS f, State y0, ode_params p = {}) {
 /// The embedded pair estimates the local error and sets the step to meet `rtol` and `atol`.
 /// `p` supplies `t0`, `tf`, `rtol`, `atol` and `max_steps`.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
-inline basic_rk45_steps<RHS, State> rk45(RHS f, State y0, ode_params p = {}) {
+requires vector_space<State> &&
+    std::invocable<RHS &, real, const State &, State &> inline basic_rk45_steps<RHS, State>
+    rk45(RHS f, State y0, ode_params p = {}) {
     return basic_rk45_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
@@ -43,7 +49,9 @@ inline basic_rk45_steps<RHS, State> rk45(RHS f, State y0, ode_params p = {}) {
 /// Symplectic, so energy drift stays bounded over long runs. `accel` has the signature
 /// `void(const State& q, State& a)`.
 template <typename Accel = accel_fn, typename State = vec<real>>
-inline basic_verlet_steps<Accel, State> verlet(Accel accel, State q0, State v0, ode_params p = {}) {
+requires vector_space<State> &&
+    std::invocable<Accel &, const State &, State &> inline basic_verlet_steps<Accel, State>
+    verlet(Accel accel, State q0, State v0, ode_params p = {}) {
     return basic_verlet_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
@@ -51,13 +59,17 @@ inline basic_verlet_steps<Accel, State> verlet(Accel accel, State q0, State v0, 
 ///
 /// A symmetric composition of three velocity-Verlet substeps, so it stays symplectic.
 template <typename Accel = accel_fn, typename State = vec<real>>
-inline basic_yoshida4_steps<Accel, State> yoshida4(Accel accel, State q0, State v0, ode_params p = {}) {
+requires vector_space<State> &&
+    std::invocable<Accel &, const State &, State &> inline basic_yoshida4_steps<Accel, State>
+    yoshida4(Accel accel, State q0, State v0, ode_params p = {}) {
     return basic_yoshida4_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
 /// @brief Lazy fourth-order Nystrom trajectory for \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
-inline basic_rk4_2nd_steps<Accel, State> rk4_2nd(Accel accel, State q0, State v0, ode_params p = {}) {
+requires vector_space<State> &&
+    std::invocable<Accel &, const State &, State &> inline basic_rk4_2nd_steps<Accel, State>
+    rk4_2nd(Accel accel, State q0, State v0, ode_params p = {}) {
     return basic_rk4_2nd_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
@@ -65,7 +77,8 @@ inline basic_rk4_2nd_steps<Accel, State> rk4_2nd(Accel accel, State q0, State v0
 ///
 /// `observer`, if given, is called as `observer(t, u)` after each step.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
-inline ode_result ode_euler(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
+requires vector_space<State> &&std::invocable<RHS &, real, const State &, State &> inline ode_result
+ode_euler(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
     auto s = euler(std::move(f), std::move(y0), p);
     if (!observer) {
         return s.run();
@@ -80,7 +93,8 @@ inline ode_result ode_euler(RHS f, State y0, ode_params p = {}, const observer_f
 ///
 /// `observer`, if given, is called as `observer(t, u)` after each step.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
-inline ode_result ode_rk4(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
+requires vector_space<State> &&std::invocable<RHS &, real, const State &, State &> inline ode_result
+ode_rk4(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
     auto s = rk4(std::move(f), std::move(y0), p);
     if (!observer) {
         return s.run();
@@ -95,7 +109,8 @@ inline ode_result ode_rk4(RHS f, State y0, ode_params p = {}, const observer_fn 
 ///
 /// `observer`, if given, is called as `observer(t, u)` after each accepted step.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
-inline ode_result ode_rk45(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
+requires vector_space<State> &&std::invocable<RHS &, real, const State &, State &> inline ode_result
+ode_rk45(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
     auto s = rk45(std::move(f), std::move(y0), p);
     if (!observer) {
         return s.run();
@@ -110,8 +125,10 @@ inline ode_result ode_rk45(RHS f, State y0, ode_params p = {}, const observer_fn
 ///
 /// `observer`, if given, is called as `observer(t, q, v)` after each step.
 template <typename Accel = accel_fn, typename State = vec<real>>
-inline symplectic_result ode_verlet(Accel accel, State q0, State v0, ode_params p = {},
-                                   const symp_observer_fn &observer = {}) {
+requires vector_space<State> &&
+    std::invocable<Accel &, const State &, State &> inline symplectic_result
+    ode_verlet(Accel accel, State q0, State v0, ode_params p = {},
+               const symp_observer_fn &observer = {}) {
     auto s = verlet(std::move(accel), std::move(q0), std::move(v0), p);
     if (!observer) {
         return s.run();
@@ -126,8 +143,10 @@ inline symplectic_result ode_verlet(Accel accel, State q0, State v0, ode_params 
 ///
 /// `observer`, if given, is called as `observer(t, q, v)` after each step.
 template <typename Accel = accel_fn, typename State = vec<real>>
-inline symplectic_result ode_yoshida4(Accel accel, State q0, State v0, ode_params p = {},
-                                     const symp_observer_fn &observer = {}) {
+requires vector_space<State> &&
+    std::invocable<Accel &, const State &, State &> inline symplectic_result
+    ode_yoshida4(Accel accel, State q0, State v0, ode_params p = {},
+                 const symp_observer_fn &observer = {}) {
     auto s = yoshida4(std::move(accel), std::move(q0), std::move(v0), p);
     if (!observer) {
         return s.run();
@@ -142,8 +161,10 @@ inline symplectic_result ode_yoshida4(Accel accel, State q0, State v0, ode_param
 ///
 /// `observer`, if given, is called as `observer(t, q, v)` after each step.
 template <typename Accel = accel_fn, typename State = vec<real>>
-inline symplectic_result ode_rk4_2nd(Accel accel, State q0, State v0, ode_params p = {},
-                                    const symp_observer_fn &observer = {}) {
+requires vector_space<State> &&
+    std::invocable<Accel &, const State &, State &> inline symplectic_result
+    ode_rk4_2nd(Accel accel, State q0, State v0, ode_params p = {},
+                const symp_observer_fn &observer = {}) {
     auto s = rk4_2nd(std::move(accel), std::move(q0), std::move(v0), p);
     if (!observer) {
         return s.run();

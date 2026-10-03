@@ -55,7 +55,7 @@ TEST(KLU, SparseFactorAndBlockSolve) {
     klu_factorization factor(A);
     vec<real> b{15.0, 10.0, 10.0};
     vec<real> x;
-    factor.solve(b, x);
+    solve(factor, b, x);
     EXPECT_NEAR(x[0], 5.0, 1e-12);
     EXPECT_NEAR(x[1], 5.0, 1e-12);
     EXPECT_NEAR(x[2], 5.0, 1e-12);
@@ -66,7 +66,7 @@ TEST(KLU, SparseFactorAndBlockSolve) {
         B(row, 1) = 2.0 * b[row];
     }
     mat<real> X;
-    factor.solve(B, X);
+    solve(factor, B, X);
     for (idx row = 0; row < 3; ++row) {
         EXPECT_NEAR(X(row, 0), 5.0, 1e-12);
         EXPECT_NEAR(X(row, 1), 10.0, 1e-12);
@@ -104,11 +104,11 @@ TEST(AutoLinear, SolveTransposeAndInverseDiagonal) {
     auto_linear_solver factor(matrix, {.dense_limit = 0});
 
     vec<real> solution(2, 0.0);
-    factor.solve(vec<real>{6.0, 8.0}, solution);
+    solve(factor, vec<real>{6.0, 8.0}, solution);
     EXPECT_NEAR(solution[0], 1.0, 1e-12);
     EXPECT_NEAR(solution[1], 2.0, 1e-12);
 
-    factor.solve_transpose(vec<real>{8.0, 7.0}, solution);
+    solve_transpose(factor, vec<real>{8.0, 7.0}, solution);
     EXPECT_NEAR(solution[0], 1.0, 1e-12);
     EXPECT_NEAR(solution[1], 2.0, 1e-12);
 
@@ -147,18 +147,18 @@ TEST(AutoLinear, ConvenienceOverloadsMatchOutParameterForm) {
     B(1, 1) = 5.0;
 
     vec<real> expected_vector(2, 0.0);
-    factor.solve(b, expected_vector);
+    solve(factor, b, expected_vector);
     const vec<real> actual_vector = solve(factor, b);
     EXPECT_DOUBLE_EQ(actual_vector[0], expected_vector[0]);
     EXPECT_DOUBLE_EQ(actual_vector[1], expected_vector[1]);
 
-    factor.solve_transpose(b, expected_vector);
+    solve_transpose(factor, b, expected_vector);
     const vec<real> actual_transpose = solve_transpose(factor, b);
     EXPECT_DOUBLE_EQ(actual_transpose[0], expected_vector[0]);
     EXPECT_DOUBLE_EQ(actual_transpose[1], expected_vector[1]);
 
     mat<real> expected_matrix;
-    factor.solve(B, expected_matrix);
+    solve(factor, B, expected_matrix);
     const mat<real> actual_matrix = solve(factor, B);
     ASSERT_EQ(actual_matrix.rows(), expected_matrix.rows());
     ASSERT_EQ(actual_matrix.cols(), expected_matrix.cols());
@@ -168,7 +168,7 @@ TEST(AutoLinear, ConvenienceOverloadsMatchOutParameterForm) {
         }
     }
 
-    factor.solve_transpose(B, expected_matrix);
+    solve_transpose(factor, B, expected_matrix);
     const mat<real> actual_matrix_transpose = solve_transpose(factor, B);
     for (idx i = 0; i < expected_matrix.rows(); ++i) {
         for (idx j = 0; j < expected_matrix.cols(); ++j) {
@@ -208,7 +208,7 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
 
     const auto lu_factor = lu(matrix);
     const auto cholesky_factor = cholesky(assume_spd(matrix));
-    const mat<real> inverse = lu_inv(lu_factor);
+    const mat<real> A_inv = inverse(lu_factor);
     const std::vector<idx> indices{2, 0};
     inverse_diagonal_workspace workspace;
 
@@ -221,7 +221,7 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
         }
         for (idx row = 0; row < indices.size(); ++row) {
             for (idx column = 0; column < indices.size(); ++column) {
-                EXPECT_NEAR(principal(row, column), inverse(indices[row], indices[column]), 1e-12);
+                EXPECT_NEAR(principal(row, column), A_inv(indices[row], indices[column]), 1e-12);
             }
         }
     }
@@ -241,10 +241,23 @@ TEST(UMFPACK, SparseFactorAndSolve) {
                                         {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
     umfpack_factor factor(A);
     vec<real> x;
-    factor.solve(vec<real>{15.0, 10.0, 10.0}, x);
+    solve(factor, vec<real>{15.0, 10.0, 10.0}, x);
     EXPECT_NEAR(x[0], 5.0, 1e-12);
     EXPECT_NEAR(x[1], 5.0, 1e-12);
     EXPECT_NEAR(x[2], 5.0, 1e-12);
+
+    // In place: the solve must read b before overwriting it.
+    vec<real> in_place{15.0, 10.0, 10.0};
+    solve(factor, in_place, in_place);
+    mat<real> B(3, 2, 0.0);
+    B(0, 0) = 15.0, B(1, 0) = 10.0, B(2, 0) = 10.0;
+    B(0, 1) = 30.0, B(1, 1) = 20.0, B(2, 1) = 20.0;
+    solve(factor, B, B);
+    for (idx i = 0; i < 3; ++i) {
+        EXPECT_NEAR(in_place[i], 5.0, 1e-12);
+        EXPECT_NEAR(B(i, 0), 5.0, 1e-12);
+        EXPECT_NEAR(B(i, 1), 10.0, 1e-12);
+    }
 }
 
 TEST(LU, SolveSmall3x3) {
@@ -267,7 +280,7 @@ TEST(LU, SolveSmall3x3) {
     EXPECT_FALSE(f.singular);
 
     vec<real> x(3);
-    lu_solve(f, b, x);
+    solve(f, b, x);
 
     // Verify A*x = b
     EXPECT_NEAR(2 * x[0] + x[1], 1.0, 1e-12);
@@ -285,7 +298,7 @@ TEST(LU, SolveIdentitySystem) {
 
     auto f = lu(A);
     vec<real> x(n);
-    lu_solve(f, b, x);
+    solve(f, b, x);
 
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], b[i], 1e-12);
@@ -303,7 +316,7 @@ TEST(LU, SolveDiagonalSystem) {
 
     auto f = lu(A);
     vec<real> x(4);
-    lu_solve(f, b, x);
+    solve(f, b, x);
 
     EXPECT_NEAR(x[0], 1.0, 1e-12);
     EXPECT_NEAR(x[1], 2.0, 1e-12);
@@ -336,7 +349,7 @@ TEST(LU, SolveLargerSystem) {
 
     auto f = lu(A);
     vec<real> x(n);
-    lu_solve(f, b, x);
+    solve(f, b, x);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], 1.0, 1e-10);
     }
@@ -350,7 +363,7 @@ TEST(LU, Determinant2x2) {
     A(1, 0) = 4;
     A(1, 1) = 6;
     auto f = lu(A);
-    EXPECT_NEAR(lu_det(f), -14.0, 1e-10);
+    EXPECT_NEAR(det(f), -14.0, 1e-10);
 }
 
 TEST(LU, Determinant3x3) {
@@ -368,7 +381,7 @@ TEST(LU, Determinant3x3) {
     A(2, 1) = 9;
     A(2, 2) = 27;
     auto f = lu(A);
-    EXPECT_NEAR(lu_det(f), 12.0, 1e-9);
+    EXPECT_NEAR(det(f), 12.0, 1e-9);
 }
 
 TEST(LU, InverseTimesOriginal) {
@@ -385,7 +398,7 @@ TEST(LU, InverseTimesOriginal) {
     A(2, 2) = 2;
 
     auto f = lu(A);
-    mat<real> Ainv = lu_inv(f);
+    mat<real> Ainv = inverse(f);
 
     // Check A * Ainv ~= I
     for (idx i = 0; i < 3; ++i) {
@@ -423,7 +436,7 @@ TEST(LU, MultipleRHS) {
 
     for (const auto &factor : {seq::lu(A), lapack::lu(A)}) {
         mat<real> X;
-        lu_solve(factor, B, X);
+        solve(factor, B, X);
 
         for (idx column = 0; column < B.cols(); ++column) {
             for (idx row = 0; row < B.rows(); ++row) {
@@ -605,7 +618,7 @@ TEST(QR, SolveSquareExact) {
 
     auto f = qr(A);
     vec<real> x(3);
-    qr_solve(f, b, x);
+    solve(f, b, x);
 
     EXPECT_NEAR(x[0], 2.0, 1e-10);
     EXPECT_NEAR(x[1], 3.0, 1e-10);
@@ -629,7 +642,7 @@ TEST(QR, SolveLeastSquares) {
 
     auto f = qr(A);
     vec<real> x(2);
-    qr_solve(f, b, x);
+    solve(f, b, x);
 
     // Verify the normal equations A^T A x = A^T b hold
     // A^T A = [[4, 6],[6, 14]],  A^T b = [9.5, 18.5]
@@ -684,8 +697,8 @@ TEST(Cholesky, SPDSolve) {
     vec<real> b{1.0, 2.0, 3.0};
     vec<real> x(3, 0.0);
     auto f = cholesky(assume_spd(A));
-    ASSERT_TRUE(f.success);
-    cholesky_solve(f, b, x);
+    ASSERT_TRUE(f.positive_definite);
+    solve(f, b, x);
 
     vec<real> Ax(3);
     matvec(A, x, Ax);
@@ -707,8 +720,8 @@ TEST(Cholesky, MultipleRHS) {
     B(1, 1) = 1.0;
     mat<real> X;
     const auto factor = cholesky(assume_spd(A));
-    ASSERT_TRUE(factor.success);
-    cholesky_solve(factor, B, X);
+    ASSERT_TRUE(factor.positive_definite);
+    solve(factor, B, X);
 
     mat<real> product(3, 2, 0.0);
     matmul(A, X, product);
@@ -727,5 +740,33 @@ TEST(Cholesky, IndefiniteFails) {
     // Deliberately indefinite: assume_spd would reject it before the factorization
     // ever runs, which is the point of the opt-out.
     auto f = unsafe::cholesky(A);
-    EXPECT_FALSE(f.success);
+    EXPECT_FALSE(f.positive_definite);
+}
+
+TEST(Cholesky, SolveAcceptsAliasedAndUnsizedOutput) {
+    mat<real> A(3, 3, 0.0);
+    A(0, 0) = 4.0;
+    A(0, 1) = A(1, 0) = 1.0;
+    A(1, 1) = 3.0;
+    A(1, 2) = A(2, 1) = 1.0;
+    A(2, 2) = 2.0;
+    const auto f = cholesky(assume_spd(A));
+    const vec<real> b{1.0, 2.0, 3.0};
+
+    vec<real> x;
+    solve(f, b, x);
+    vec<real> aliased = b;
+    solve(f, aliased, aliased);
+    vec<real> transposed;
+    solve_transpose(f, b, transposed);
+    for (idx i = 0; i < 3; ++i) {
+        EXPECT_EQ(aliased[i], x[i]);
+        EXPECT_EQ(transposed[i], x[i]);
+    }
+
+    vec<real> Ax(3);
+    matvec(A, x, Ax);
+    for (idx i = 0; i < 3; ++i) {
+        EXPECT_NEAR(Ax[i], b[i], 1e-12);
+    }
 }

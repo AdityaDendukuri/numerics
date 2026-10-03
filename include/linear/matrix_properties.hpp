@@ -5,7 +5,6 @@
 #include "container/concepts.hpp"
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
-#include "kernel/factor.hpp"
 #include "operator/properties.hpp"
 #include <algorithm>
 #include <cmath>
@@ -63,17 +62,6 @@ namespace linear {
     return true;
 }
 
-/// Test symmetry and positive definiteness by a Cholesky factorization, which fails exactly
-/// when a pivot is not positive. The raw kernel is used because `num::cholesky` requires the
-/// invariant being tested.
-[[nodiscard]] inline bool is_spd(const mat<real> &A, real tol = 1e-12) {
-    if (!is_symmetric(A, tol)) {
-        return false;
-    }
-    mat<real> factor(A.rows(), A.cols(), 0.0);
-    return kernel::cholesky(factor.data(), A.data(), A.rows());
-}
-
 /// @brief Check symmetry \f$\max_{i,j} |A_{ij} - A_{ji}| \le \mathrm{tol}\f$ exhaustively, then
 /// attach it.
 /// @throws std::invalid_argument If `A` is not symmetric within `tol`.
@@ -86,21 +74,8 @@ make_symmetric(Mat A, real tol = 1e-12) {
     return with_law<Mat, law::self_adjoint>(std::move(A));
 }
 
-/// @brief Check symmetric positive definiteness exhaustively by a Cholesky factorization, then
-/// attach it.
-/// @throws std::invalid_argument If `A` is not symmetric within `tol`, or a pivot is not positive.
-template <class Mat = mat<real>>
-[[nodiscard]] inline with_law<Mat, law::spd>
-make_spd(Mat A, real tol = 1e-12) {
-    if (!is_spd(A, tol)) {
-        throw std::invalid_argument("make_spd: matrix is not symmetric positive definite");
-    }
-    return with_law<Mat, law::spd>(std::move(A));
-}
-
 } // namespace linear
 
-using linear::make_spd;
 using linear::make_symmetric;
 
 } // namespace num

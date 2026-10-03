@@ -3,6 +3,7 @@
 #pragma once
 
 #include "container/vector.hpp"
+#include "fields/concepts.hpp"
 #include "fields/grid2d.hpp"
 
 namespace num {
@@ -50,4 +51,5 @@ class scalar_field_2d {
     vec<real> data_;
 };
 
+static_assert(solvable_field<scalar_field_2d>);
 } // namespace num

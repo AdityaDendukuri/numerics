@@ -6,7 +6,7 @@ using namespace num;
 
 TEST(RandomMat, ApproxCholBasicGraphFactorizeSolve) {
     // 4-node cycle graph
-    graph G(4);
+    graph<double, idx> G(4);
     G.add_edge(0, 1, 2.0);
     G.add_edge(1, 2, 2.0);
     G.add_edge(2, 3, 2.0);
@@ -41,7 +41,7 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
     std::mt19937_64 rng(12345);
 
     // Connected path/cycle graph
-    graph G(n);
+    graph<double, idx> G(n);
     for (idx i = 0; i < n - 1; ++i) {
         G.add_edge(i, i + 1, 1.5);
     }
@@ -84,7 +84,7 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
 }
 
 TEST(RandomMat, SparseMatrixConversion) {
-    graph G(5);
+    graph<double, idx> G(5);
     G.add_edge(0, 1, 1.5);
     G.add_edge(1, 2, 2.5);
     G.add_edge(2, 3, 3.5);

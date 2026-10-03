@@ -31,7 +31,7 @@ num::ode_params good() {
     return num::ode_params{.t0 = 0.0, .tf = 1.0, .h = 1e-2, .rtol = 1e-8, .atol = 1e-10};
 }
 
-// --- a zero step used to spin forever ---------------------------------------
+// a zero step used to spin forever
 
 TEST(ODEGuards, ZeroStepIsRejectedByEveryIntegrator) {
     auto p = good();
@@ -57,7 +57,7 @@ TEST(ODEGuards, NegativeAndNonFiniteStepAreRejected) {
     EXPECT_THROW(num::ode_rk4(decay, y0, infinite), std::invalid_argument);
 }
 
-// --- backward integration used to succeed while doing nothing ---------------
+// backward integration used to succeed while doing nothing
 
 TEST(ODEGuards, BackwardIntervalIsRejectedRatherThanSilentlySkipped) {
     auto p = good();
@@ -84,7 +84,7 @@ TEST(ODEGuards, ZeroWorkLimitIsRejected) {
     EXPECT_THROW(num::ode_rk4(decay, num::vec<num::real>{1.0}, p), std::invalid_argument);
 }
 
-// --- fixed-step integrators used to always claim success --------------------
+// fixed-step integrators used to always claim success
 
 TEST(ODEGuards, ExhaustingTheWorkLimitReportsFailureRatherThanSuccess) {
     auto p = good();

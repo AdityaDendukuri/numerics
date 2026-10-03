@@ -29,14 +29,19 @@ class dense_base {
 
     [[nodiscard]] idx size() const { return n_; }
 
-    void solve(const vec<real> &rhs, vec<real> &out) const { lu_solve(factor_, rhs, out); }
-    void solve(const mat<real> &rhs, mat<real> &out) const { lu_solve(factor_, rhs, out); }
-    void solve_transpose(const vec<real> &rhs, vec<real> &out) const { lu_solve(transpose_factor_, rhs, out); }
-    void solve_transpose(const mat<real> &rhs, mat<real> &out) const { lu_solve(transpose_factor_, rhs, out); }
+    // Free functions found by argument-dependent lookup, as the library's own types do.
+    template <class RHS>
+    friend void solve(const dense_base &F, const RHS &rhs, RHS &out) {
+        num::solve(F.factor_, rhs, out);
+    }
+    template <class RHS>
+    friend void solve_transpose(const dense_base &F, const RHS &rhs, RHS &out) {
+        num::solve(F.transpose_factor_, rhs, out);
+    }
 
   private:
     idx n_;
-    lu_result factor_, transpose_factor_;
+    lu_result<real> factor_, transpose_factor_;
 };
 
 spmat sparse_of(const mat<real> &A) {
@@ -108,12 +113,12 @@ mat<real> birth_death_rate_matrix(idx n, real up, real down, real leak, vec<real
 /// diag(A^-1) by one solve per index, which is what the estimator replaces.
 vec<real> exact_inverse_diagonal(const mat<real> &A) {
     const idx n = A.rows();
-    const lu_result factor = lu(A);
+    const lu_result<real> factor = lu(A);
     vec<real> diagonal(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         const vec<real> e = unit_vector(n, i);
         vec<real> column(n, 0.0);
-        lu_solve(factor, e, column);
+        solve(factor, e, column);
         diagonal[i] = column[i];
     }
     return diagonal;

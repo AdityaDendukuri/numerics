@@ -1,0 +1,14 @@
+configured: blas 1, lapack 1, lapack default 1, openmp 1, simd 1
+LU switches to LAPACK above n = 768
+
+dot, default : 0.403545050804
+dot, seq     : 0.403545050804
+dot, blas    : 0.403545050804
+dot, omp     : 0.403545050804
+
+det, kernel LU : 6.1341200780e+60
+det, LAPACK LU : 6.1341200780e+60
+
+kernel matvec S b: 5.0 15.0 19.0, dot(b, b) = 14.0
+raw Cholesky solve: 0.289157 0.180723 0.518072
+raw CG: converged 1 in 500 iterations, u[k/2] = 125250.0000

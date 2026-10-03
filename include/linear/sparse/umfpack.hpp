@@ -4,6 +4,7 @@
 
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
+#include "linear/solve.hpp"
 #include "linear/sparse/sparse.hpp"
 #include <memory>
 
@@ -26,13 +27,17 @@ class umfpack_factor {
 
     /// Return the order of the factored matrix.
     [[nodiscard]] idx size() const noexcept;
-    /// Solve Ax=B for one or more dense right-hand sides.
-    void solve(const vec<real> &rhs, vec<real> &solution) const;
-    void solve(const mat<real> &rhs, mat<real> &solution) const;
 
   private:
+    friend void solve(const umfpack_factor &, const vec<real> &, vec<real> &);
+    friend void solve(const umfpack_factor &, const mat<real> &, mat<real> &);
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
+
+/// @brief Solve \f$Ax = b\f$. `x` may be `b`.
+void solve(const umfpack_factor &factor, const vec<real> &b, vec<real> &x);
+/// @brief Solve \f$AX = B\f$. `X` may be `B`.
+void solve(const umfpack_factor &factor, const mat<real> &B, mat<real> &X);
 
 } // namespace num

@@ -122,7 +122,7 @@ TEST(indexed_priority_queue, DiagnosticsErrors) {
 // graph and Algorithms Tests
 
 TEST(graph, AdjacencyAndDegrees) {
-    graph G(4);
+    graph<double, idx> G(4);
     G.add_edge(0, 1, 2.0);
     G.add_edge(1, 2, 3.0);
     G.add_edge(2, 3, 1.5);
@@ -137,7 +137,7 @@ TEST(graph, AdjacencyAndDegrees) {
 }
 
 TEST(graph, TemplatedFloatGraph) {
-    float_graph G(3);
+    graph<float, uint32_t> G(3);
     G.add_edge(0u, 1u, 1.5f);
     G.add_edge(1u, 2u, 2.5f);
 
@@ -148,7 +148,7 @@ TEST(graph, TemplatedFloatGraph) {
 }
 
 TEST(graph, LaplacianAndMarkovGeneratorConversion) {
-    graph G(3);
+    graph<double, idx> G(3);
     G.add_edge(0, 1, 1.0);
     G.add_edge(1, 2, 2.0);
 
@@ -170,7 +170,7 @@ TEST(graph, LaplacianAndMarkovGeneratorConversion) {
 }
 
 TEST(graph, ConnectivityAndDijkstra) {
-    graph G(5);
+    graph<double, idx> G(5);
     G.add_edge(0, 1, 4.0);
     G.add_edge(0, 2, 2.0);
     G.add_edge(1, 2, 1.0);
@@ -190,14 +190,14 @@ TEST(graph, ConnectivityAndDijkstra) {
 }
 
 TEST(graph, KruskalMST) {
-    graph G(4);
+    graph<double, idx> G(4);
     G.add_edge(0, 1, 1.0);
     G.add_edge(1, 2, 2.0);
     G.add_edge(2, 3, 3.0);
     G.add_edge(0, 3, 4.0);
     G.add_edge(0, 2, 5.0);
 
-    graph mst = structures::minimum_spanning_tree(G);
+    graph<double, idx> mst = structures::minimum_spanning_tree(G);
     EXPECT_EQ(mst.n_edges(), 3);
     EXPECT_TRUE(structures::is_connected(mst));
     EXPECT_TRUE(mst.has_edge(0, 1));
@@ -210,26 +210,26 @@ TEST(graph, GeneratorsSpanningTreeAndErdosRenyi) {
     std::mt19937_64 rng(123);
     const idx n = 30;
 
-    graph tree = structures::random_spanning_tree(n, rng, 0.5, 2.0);
+    graph<double, idx> tree = structures::random_spanning_tree(n, rng, 0.5, 2.0);
     EXPECT_EQ(tree.n_vertices(), n);
     EXPECT_EQ(tree.n_edges(), n - 1);
     EXPECT_TRUE(structures::is_connected(tree));
 
-    graph g_er = structures::erdos_renyi(n, 0.1, rng, true);
+    graph<double, idx> g_er = structures::erdos_renyi(n, 0.1, rng, true);
     EXPECT_EQ(g_er.n_vertices(), n);
     EXPECT_GE(g_er.n_edges(), n - 1);
     EXPECT_TRUE(structures::is_connected(g_er));
 }
 
 TEST(graph, CanonicalFamilies) {
-    graph path = structures::path_graph(5);
+    graph<double, idx> path = structures::path_graph(5);
     EXPECT_EQ(path.n_edges(), 4);
     EXPECT_TRUE(structures::is_connected(path));
 
-    graph cycle = structures::cycle_graph(5);
+    graph<double, idx> cycle = structures::cycle_graph(5);
     EXPECT_EQ(cycle.n_edges(), 5);
 
-    graph grid = structures::grid_2d(3, 4);
+    graph<double, idx> grid = structures::grid_2d(3, 4);
     EXPECT_EQ(grid.n_vertices(), 12);
     EXPECT_EQ(grid.n_edges(), 2 * 3 * 4 - 3 - 4); // 24 - 7 = 17
     EXPECT_TRUE(structures::is_connected(grid));
@@ -313,7 +313,7 @@ TEST(degree_queue, TemplatedDegreeQueue32) {
 // multigraph Tests (graph module)
 
 TEST(multigraph, ParallelEdgesAndLaplacian) {
-    multigraph mg(3);
+    multigraph<double, idx> mg(3);
     mg.add_edge(0, 1, 1.0, 2); // 2 parallel edges of weight 1.0
     mg.add_edge(1, 2, 3.0, 1);
 

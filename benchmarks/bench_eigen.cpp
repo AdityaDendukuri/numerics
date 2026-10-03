@@ -31,7 +31,7 @@ static mat<real> make_sym(idx n) {
     return A;
 }
 
-// ── Full symmetric eigendecomposition ────────────────────────────────────────
+// Full symmetric eigendecomposition
 
 static void BM_EigSym_Seq(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));

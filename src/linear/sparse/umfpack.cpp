@@ -88,18 +88,21 @@ idx umfpack_factor::size() const noexcept {
     return impl_ ? impl_->n : 0;
 }
 
-void umfpack_factor::solve(const vec<real> &rhs, vec<real> &solution) const {
+void solve(const umfpack_factor &factor, const vec<real> &rhs, vec<real> &solution) {
 #if defined(NUMERICS_HAS_UMFPACK)
-    if (rhs.size() != impl_->n) {
+    if (rhs.size() != factor.impl_->n) {
         throw std::invalid_argument("UMFPACK solve dimension mismatch");
     }
-    solution = vec<real>(impl_->n, 0.0);
-    const int status =
-        umfpack_di_solve(UMFPACK_A, impl_->ap.data(), impl_->ai.data(), impl_->ax.data(),
-                         solution.data(), rhs.data(), impl_->numeric, nullptr, nullptr);
+    // Into a fresh vector: UMFPACK reads rhs while writing x, so they cannot share storage.
+    vec<real> x(factor.impl_->n, 0.0);
+    const int status = umfpack_di_solve(UMFPACK_A, factor.impl_->ap.data(),
+                                        factor.impl_->ai.data(), factor.impl_->ax.data(),
+                                        x.data(), rhs.data(), factor.impl_->numeric, nullptr,
+                                        nullptr);
     if (status != UMFPACK_OK) {
         throw std::runtime_error("UMFPACK solve failed");
     }
+    solution = std::move(x);
 #else
     (void)rhs;
     (void)solution;
@@ -107,22 +110,23 @@ void umfpack_factor::solve(const vec<real> &rhs, vec<real> &solution) const {
 #endif
 }
 
-void umfpack_factor::solve(const mat<real> &rhs, mat<real> &solution) const {
+void solve(const umfpack_factor &factor, const mat<real> &rhs, mat<real> &solution) {
 #if defined(NUMERICS_HAS_UMFPACK)
-    if (rhs.rows() != impl_->n) {
+    if (rhs.rows() != factor.impl_->n) {
         throw std::invalid_argument("UMFPACK block solve dimension mismatch");
     }
-    solution = mat<real>(rhs.rows(), rhs.cols(), 0.0);
-    vec<real> b(impl_->n, 0.0), x(impl_->n, 0.0);
+    mat<real> result(rhs.rows(), rhs.cols(), 0.0);
+    vec<real> b(factor.impl_->n, 0.0), x;
     for (idx col = 0; col < rhs.cols(); ++col) {
         for (idx row = 0; row < rhs.rows(); ++row) {
             b[row] = rhs(row, col);
         }
-        solve(b, x);
+        solve(factor, b, x);
         for (idx row = 0; row < rhs.rows(); ++row) {
-            solution(row, col) = x[row];
+            result(row, col) = x[row];
         }
     }
+    solution = std::move(result);
 #else
     (void)rhs;
     (void)solution;

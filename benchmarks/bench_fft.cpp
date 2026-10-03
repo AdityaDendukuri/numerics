@@ -39,7 +39,7 @@ static void fill_real_signal(vec<real> &v) {
         v[j] = std::sin(TWO_PI * 7 * j / n) + 0.5 * std::cos(TWO_PI * 23 * j / n);
 }
 
-// -- BM_FFT: one-shot forward complex DFT ------------------------------------
+// BM_FFT: one-shot forward complex DFT
 
 template <fft_backend B>
 static void BM_FFT(benchmark::State &state) {
@@ -67,7 +67,7 @@ BENCHMARK_TEMPLATE(BM_FFT, fft_backend::stdsimd)
 BENCHMARK_TEMPLATE(BM_FFT, fft_backend::fftw)->RangeMultiplier(4)->Range(256, 1 << 20)->Complexity();
 #endif
 
-// -- BM_IFFT: one-shot inverse complex DFT -----------------------------------
+// BM_IFFT: one-shot inverse complex DFT
 
 template <fft_backend B>
 static void BM_IFFT(benchmark::State &state) {
@@ -101,7 +101,7 @@ BENCHMARK_TEMPLATE(BM_IFFT, fft_backend::fftw)
     ->Complexity();
 #endif
 
-// -- BM_RFFT: real-to-complex forward DFT ------------------------------------
+// BM_RFFT: real-to-complex forward DFT
 
 template <fft_backend B>
 static void BM_RFFT(benchmark::State &state) {
@@ -137,7 +137,7 @@ BENCHMARK_TEMPLATE(BM_RFFT, fft_backend::fftw)
     ->Complexity();
 #endif
 
-// -- BM_FFTPlan: reusable plan (plan creation excluded) ----------------------
+// BM_FFTPlan: reusable plan (plan creation excluded)
 
 template <fft_backend B>
 static void BM_FFTPlan(benchmark::State &state) {

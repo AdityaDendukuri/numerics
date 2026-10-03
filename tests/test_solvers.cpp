@@ -2,12 +2,13 @@
 #include "container/matrix_ops.hpp"
 #include "container/util/math.hpp"
 #include "container/vector_ops.hpp"
+#include "linear/eigen/jacobi_eig.hpp"
+#include "linear/factorization/cholesky.hpp"
 #include "quadrature/talbot.hpp"
 #ifdef NUMERICS_HAS_JSON
 #include "io/json.hpp"
 #endif
 #include "linear/factorization/thomas.hpp"
-#include "linear/solvers/dense_resolvent.hpp"
 #include "linear/solvers/solvers.hpp"
 #include "linear/solvers/sparse_resolvent.hpp"
 #include "linear/sparse/sparse.hpp"
@@ -43,7 +44,7 @@ TEST(Resolvent, DenseSolve) {
     vec<real> b{1.0, 2.0};
     cplx s(2.0, 1.0);
 
-    auto x = resolvent_solve(s, A, b);
+    auto x = solve(shift(hessenberg_resolvent(A), s), b);
     ASSERT_EQ(x.size(), 2);
 
     cplx res0 = (s - cplx(A(0, 0), 0)) * x[0] - cplx(A(0, 1), 0) * x[1];
@@ -732,14 +733,16 @@ TEST(Json, VectorAndMatrixConversion) {
 }
 #endif
 
-TEST(Resolvent, ReusableFactorAndBatch) {
+TEST(Resolvent, FactorizedShiftReusesFactor) {
     mat<real> A(2, 2);
     A(0, 0) = 1.0;
     A(0, 1) = 0.0;
     A(1, 0) = 0.0;
     A(1, 1) = 2.0;
-    resolvent_factor factor(cplx(3.0, 0.0), A);
-    const auto x = factor.solve(std::vector<cplx>{cplx(2.0), cplx(6.0)});
+    const hessenberg_resolvent R(A);
+    const auto F = shift(R, cplx(3.0, 0.0));
+    vec<cplx> x{cplx(2.0), cplx(6.0)};
+    solve(F, x, x);
     EXPECT_NEAR(x[0].real(), 1.0, 1e-12);
     EXPECT_NEAR(x[1].real(), 6.0, 1e-12);
 }
@@ -765,48 +768,51 @@ TEST(Talbot, OneFiniteNodePerMode) {
 
 TEST(AutoResolvent, DenseSelectionAndSolve) {
     const auto A = spmat::from_triplets(2, 2, {0, 1}, {0, 1}, {2.0, 3.0});
-    auto_resolvent_solver solver(A);
-    solver.factorize(cplx(4.0));
-    std::vector<cplx> solution;
-    solver.solve({cplx(2.0), cplx(1.0)}, solution);
+    const auto_resolvent R(A);
+    vec<cplx> solution;
+    solve(shift(R, cplx(4.0)), vec<cplx>{cplx(2.0), cplx(1.0)}, solution);
     EXPECT_NEAR(solution[0].real(), 1.0, 1e-12);
     EXPECT_NEAR(solution[1].real(), 1.0, 1e-12);
 }
 
 TEST(SparseResolvent, OptionalBackend) {
     spmat A = spmat::from_triplets(2, 2, {0, 1}, {0, 1}, {2.0, 3.0});
-    sparse_resolvent_solver solver(A);
+    const sparse_resolvent R(A);
     if (!sparse_resolvent_available()) {
-        EXPECT_THROW(solver.factorize(cplx(1.0)), std::runtime_error);
+        EXPECT_THROW(static_cast<void>(shift(R, cplx(1.0))), std::runtime_error);
         return;
     }
-    solver.factorize(cplx(1.0));
-    const auto x1 = solver.solve(std::vector<cplx>{cplx(1.0), cplx(2.0)});
+    // Two shifts factored side by side: each is its own value.
+    const sparse_shifted_lu F1 = shift(R, cplx(1.0));
+    const sparse_shifted_lu F4 = shift(R, cplx(4.0));
+    vec<cplx> x1;
+    solve(F1, vec<cplx>{cplx(1.0), cplx(2.0)}, x1);
     EXPECT_NEAR(x1[0].real(), -1.0, 1e-12);
     EXPECT_NEAR(x1[1].real(), -1.0, 1e-12);
-    solver.factorize(cplx(4.0));
-    const auto x2 = solver.solve(std::vector<cplx>{cplx(2.0), cplx(1.0)});
+    vec<cplx> x2{cplx(2.0), cplx(1.0)};
+    solve(F4, x2, x2);
     EXPECT_NEAR(x2[0].real(), 1.0, 1e-12);
     EXPECT_NEAR(x2[1].real(), 1.0, 1e-12);
 
-    sparse_resolvent_solver symmetric_solver(A, {.symmetric_pattern = true});
-    symmetric_solver.factorize(cplx(4.0));
-    const auto x3 = symmetric_solver.solve(std::vector<cplx>{cplx(2.0), cplx(1.0)});
+    const sparse_resolvent symmetric(A, {.symmetric_pattern = true});
+    vec<cplx> x3;
+    solve(shift(symmetric, cplx(4.0)), vec<cplx>{cplx(2.0), cplx(1.0)}, x3);
     EXPECT_NEAR(x3[0].real(), 1.0, 1e-12);
     EXPECT_NEAR(x3[1].real(), 1.0, 1e-12);
 }
 
-TEST(DenseResolvent, ReusableFactorization) {
+TEST(Resolvent, FactorizedShiftFromSparseMatrix) {
     const spmat matrix =
         spmat::from_triplets(2, 2, {0, 0, 1}, {0, 1, 1}, {2.0, 1.0, 3.0});
-    dense_resolvent_solver solver(matrix);
 
-    solver.factorize(cplx(4.0, 1.0));
-    const std::vector<cplx> expected{cplx(1.0, -0.5), cplx(-0.25, 0.75)};
-    std::vector<cplx> rhs(2);
+    const hessenberg_resolvent R(matrix);
+    const auto F = shift(R, cplx(4.0, 1.0));
+    const vec<cplx> expected{cplx(1.0, -0.5), cplx(-0.25, 0.75)};
+    vec<cplx> rhs(2);
     rhs[0] = (cplx(4.0, 1.0) - 2.0) * expected[0] - expected[1];
     rhs[1] = (cplx(4.0, 1.0) - 3.0) * expected[1];
-    const auto solution = solver.solve(rhs);
+    vec<cplx> solution;
+    solve(F, rhs, solution);
 
     EXPECT_NEAR(solution[0].real(), expected[0].real(), 1e-12);
     EXPECT_NEAR(solution[0].imag(), expected[0].imag(), 1e-12);
@@ -921,7 +927,7 @@ TEST(KernelRaw, HouseholderAndMicroKernels) {
     std::vector<double> x = {3.0, 4.0, 0.0, 0.0};
     std::vector<double> v(4);
     double beta = 0.0;
-    kernel::householder_vector(v.data(), beta, x.data(), 4);
+    num::householder_vector(v.data(), beta, x.data(), 4);
     EXPECT_GT(beta, 0.0);
     EXPECT_DOUBLE_EQ(v[0], 1.0);
 
@@ -939,7 +945,7 @@ TEST(KernelRaw, HouseholderAndMicroKernels) {
 
     // 2. Test jacobi_rotation
     double c = 0.0, s = 0.0;
-    kernel::jacobi_rotation(2.0, 2.0, 1.0, c, s);
+    num::jacobi_rotation(2.0, 2.0, 1.0, c, s);
     EXPECT_NEAR(c * c + s * s, 1.0, 1e-15);
     EXPECT_NEAR(std::abs(c), std::abs(s), 1e-15); // tau = 0 => 45 deg
 
@@ -981,12 +987,12 @@ TEST(HessenbergResolvent, AccuracyAndBatchEquivalence) {
     std::vector<cplx> shifts = {cplx(10.0, 1.0), cplx(8.0, -2.0), cplx(0.0, 5.0), cplx(-3.0, 4.0),
                                 cplx(12.0, 0.0)};
 
-    hessenberg_resolvent_solver solver(A);
-    const auto batch_results = solver.solve_batch(shifts, b);
+    const hessenberg_resolvent R(A);
+    const auto batch_results = solve_batch(R, shifts, b);
     ASSERT_EQ(batch_results.size(), shifts.size());
 
     for (std::size_t k = 0; k < shifts.size(); ++k) {
-        const auto single_x = solver.solve(shifts[k], b);
+        const auto single_x = solve(shift(R, shifts[k]), b);
         const auto &batch_x = batch_results[k];
 
         for (idx i = 0; i < n; ++i) {
@@ -1002,16 +1008,6 @@ TEST(HessenbergResolvent, AccuracyAndBatchEquivalence) {
             }
             cplx residual = shifts[k] * batch_x[i] - Ax - b[i];
             EXPECT_NEAR(std::abs(residual), 0.0, 1e-11);
-        }
-    }
-
-    // Test convenience wrapper resolvent_solve_batch
-    const auto wrapper_batch = resolvent_solve_batch(shifts, A, b);
-    ASSERT_EQ(wrapper_batch.size(), shifts.size());
-    for (std::size_t k = 0; k < shifts.size(); ++k) {
-        for (idx i = 0; i < n; ++i) {
-            EXPECT_NEAR(wrapper_batch[k][i].real(), batch_results[k][i].real(), 1e-13);
-            EXPECT_NEAR(wrapper_batch[k][i].imag(), batch_results[k][i].imag(), 1e-13);
         }
     }
 }

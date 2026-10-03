@@ -7,8 +7,10 @@
 #include <random>
 #include <vector>
 #include <numerics.hpp>
+#include <string_view>
 
-int main() {
+int main(int argc, char **argv) {
+    const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
     using namespace num;
 
     std::cout << "========================================================================\n";
@@ -44,7 +46,7 @@ int main() {
     p0[0] = 1.0; // Initial state at node 0
 
     // 2. Precompute Hessenberg decomposition of Q once in O(N^3)
-    hessenberg_resolvent_solver hess_solver(Q);
+    hessenberg_resolvent hess_solver(Q);
 
     const double t_eval = 1.0;
     std::cout << "Evaluating Markov diffusion at t = " << t_eval << " (N = " << N << " states)...\n";
@@ -73,7 +75,7 @@ int main() {
         std::vector<cplx> density(N, cplx(0.0, 0.0));
 
         for (const auto &[shift, weight] : talbot_contour(t_eval, M)) {
-            auto sol = hess_solver.solve(shift, p0);
+            auto sol = solve(num::shift(hess_solver, shift), p0);
             for (idx i = 0; i < N; ++i) {
                 density[i] += weight * sol[i];
             }
@@ -103,20 +105,17 @@ int main() {
                   << std::setw(18) << std::scientific << std::setprecision(3) << l_1 << "\n";
     }
 
-    // 5. Multi-panel Visualization
-    std::cout << "\nRendering ASCII convergence profile...\n";
-    plt::plot(modes_dbl, err_inf_list, "L_inf Error", "linespoints");
-    plt::plot(modes_dbl, err_l1_list, "L_1 Error", "linespoints");
-    plt::title("13 Talbot Spectral Convergence vs Modes M (t = 1.0)");
-    plt::xlabel("Talbot Quadrature Nodes M");
-    plt::ylabel("Absolute Error vs Arnoldi expv");
-    plt::semilogy();
-    plt::legend();
-    plt::show_dumb(120, 25);
-
-    plt::savefig("13_talbot_spectral_validation.png");
-    std::cout << "\nSaved high-resolution plot to 13_talbot_spectral_validation.png\n";
-    std::cout << "========================================================================\n";
+    // 5. Convergence plot, with --plot
+    if (plot) {
+        plt::plot(modes_dbl, err_inf_list, "L_inf Error", "linespoints");
+        plt::plot(modes_dbl, err_l1_list, "L_1 Error", "linespoints");
+        plt::title("13 Talbot Spectral Convergence vs Modes M (t = 1.0)");
+        plt::xlabel("Talbot Quadrature Nodes M");
+        plt::ylabel("Absolute Error vs Arnoldi expv");
+        plt::semilogy();
+        plt::legend();
+        plt::show();
+    }
 
     return 0;
 }

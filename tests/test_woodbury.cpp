@@ -18,7 +18,7 @@ using namespace num;
 
 namespace {
 
-/// A retained factorization satisfying `num::retained_factorization`, backed by
+/// A retained factorization satisfying `num::factorization`, backed by
 /// a dense pivoted LU. The concept asks only for the four out-parameter solves.
 class dense_base {
   public:
@@ -29,14 +29,19 @@ class dense_base {
 
     [[nodiscard]] idx size() const { return n_; }
 
-    void solve(const vec<real> &rhs, vec<real> &out) const { lu_solve(factor_, rhs, out); }
-    void solve(const mat<real> &rhs, mat<real> &out) const { lu_solve(factor_, rhs, out); }
-    void solve_transpose(const vec<real> &rhs, vec<real> &out) const { lu_solve(transpose_factor_, rhs, out); }
-    void solve_transpose(const mat<real> &rhs, mat<real> &out) const { lu_solve(transpose_factor_, rhs, out); }
+    // Free functions found by argument-dependent lookup, as the library's own types do.
+    template <class RHS>
+    friend void solve(const dense_base &F, const RHS &rhs, RHS &out) {
+        num::solve(F.factor_, rhs, out);
+    }
+    template <class RHS>
+    friend void solve_transpose(const dense_base &F, const RHS &rhs, RHS &out) {
+        num::solve(F.transpose_factor_, rhs, out);
+    }
 
   private:
     idx n_;
-    lu_result factor_, transpose_factor_;
+    lu_result<real> factor_, transpose_factor_;
 };
 
 /// Strictly diagonally dominant, so every matrix below is nonsingular and the
@@ -162,10 +167,10 @@ TEST(WoodburySolver, MatchesAFreshFactorization) {
 
     const vec<real> b = random_vector(n, 43);
     vec<real> expected(n, 0.0);
-    const lu_result fresh = lu(current);
-    lu_solve(fresh, b, expected);
+    const lu_result<real> fresh = lu(current);
+    solve(fresh, b, expected);
 
-    const vec<real> corrected = correction.solve(b);
+    const vec<real> corrected = solve(correction, b);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(corrected[i], expected[i], tolerance) << "entry " << i;
     }
@@ -184,9 +189,9 @@ TEST(WoodburySolver, MatchesAFreshTransposeFactorization) {
     const vec<real> b = random_vector(n, 53);
     mat<real> transposed = transpose(current);
     vec<real> expected(n, 0.0);
-    lu_solve(lu(transposed), b, expected);
+    solve(lu(transposed), b, expected);
 
-    const vec<real> corrected = correction.solve_transpose(b);
+    const vec<real> corrected = solve_transpose(correction, b);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(corrected[i], expected[i], tolerance) << "entry " << i;
     }
@@ -210,9 +215,9 @@ TEST(WoodburySolver, CorrectsSeveralRightHandSidesAtOnce) {
         }
     }
     mat<real> expected(n, 3, 0.0);
-    lu_solve(lu(current), rhs, expected);
+    solve(lu(current), rhs, expected);
 
-    const mat<real> corrected = correction.solve(rhs);
+    const mat<real> corrected = solve(correction, rhs);
     for (idx i = 0; i < n; ++i) {
         for (idx column = 0; column < 3; ++column) {
             EXPECT_NEAR(corrected(i, column), expected(i, column), tolerance);
@@ -228,15 +233,15 @@ TEST(WoodburySolver, InverseDiagonalMatchesAFreshInverse) {
 
     // The base diagonal by explicit solves, which is what a caller retains.
     vec<real> base_diagonal(n, 0.0);
-    const lu_result base_factor = lu(base);
-    const lu_result current_factor = lu(current);
+    const lu_result<real> base_factor = lu(base);
+    const lu_result<real> current_factor = lu(current);
     vec<real> expected_diagonal(n, 0.0);
     for (idx i = 0; i < n; ++i) {
         const vec<real> e = unit_vector(n, i);
         vec<real> column(n, 0.0);
-        lu_solve(base_factor, e, column);
+        solve(base_factor, e, column);
         base_diagonal[i] = column[i];
-        lu_solve(current_factor, e, column);
+        solve(current_factor, e, column);
         expected_diagonal[i] = column[i];
     }
 
@@ -269,15 +274,15 @@ TEST(UpdateInverseRows, MatchesRowsOfAFreshInverseAndItsSquare) {
     const array<idx> carried{1, 4, 6};
 
     // Rows of the base inverse and its square, which the caller holds already.
-    const lu_result base_factor = lu(base);
+    const lu_result<real> base_factor = lu(base);
     mat<real> first(carried.size(), n, 0.0), second(carried.size(), n, 0.0);
     for (idx k = 0; k < carried.size(); ++k) {
         const vec<real> e = unit_vector(n, carried[k]);
         vec<real> row(n, 0.0), row_squared(n, 0.0);
         mat<real> transposed_base = transpose(base);
-        const lu_result transposed_factor = lu(transposed_base);
-        lu_solve(transposed_factor, e, row);
-        lu_solve(transposed_factor, row, row_squared);
+        const lu_result<real> transposed_factor = lu(transposed_base);
+        solve(transposed_factor, e, row);
+        solve(transposed_factor, row, row_squared);
         for (idx j = 0; j < n; ++j) {
             first(k, j) = row[j];
             second(k, j) = row_squared[j];
@@ -292,12 +297,12 @@ TEST(UpdateInverseRows, MatchesRowsOfAFreshInverseAndItsSquare) {
 
     // The same rows from a fresh factorization of the changed matrix.
     mat<real> transposed_current = transpose(current);
-    const lu_result fresh = lu(transposed_current);
+    const lu_result<real> fresh = lu(transposed_current);
     for (idx k = 0; k < carried.size(); ++k) {
         const vec<real> e = unit_vector(n, carried[k]);
         vec<real> row(n, 0.0), row_squared(n, 0.0);
-        lu_solve(fresh, e, row);
-        lu_solve(fresh, row, row_squared);
+        solve(fresh, e, row);
+        solve(fresh, row, row_squared);
         for (idx j = 0; j < n; ++j) {
             EXPECT_NEAR(first(k, j), row[j], tolerance) << "inverse row " << k << " entry " << j;
             EXPECT_NEAR(second(k, j), row_squared[j], tolerance)

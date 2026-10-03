@@ -14,8 +14,8 @@ namespace num {
 /// @brief Weighted directed or undirected graph represented as an adjacency list.
 /// @tparam Weight scalar type of edge weights (e.g. double, float, int).
 /// @tparam Index Integer type used for vertex indices (e.g. num::idx, uint32_t).
-template <typename Weight = double, std::integral Index = num::idx>
-class basic_graph {
+template <typename Weight, std::integral Index>
+class graph {
   public:
     using weight_type = Weight;
     using index_type = Index;
@@ -26,7 +26,7 @@ class basic_graph {
     };
 
     /// Construct a graph with n vertices.
-    explicit basic_graph(Index n = 0, bool directed = false)
+    explicit graph(Index n = 0, bool directed = false)
         : n_(n), m_(0), directed_(directed), adj_(n) {}
 
     /// Add an undirected edge between u and v with positive weight.
@@ -103,12 +103,6 @@ class basic_graph {
     /// Return whether the graph is directed.
     [[nodiscard]] bool is_directed() const noexcept { return directed_; }
 
-
-
-
-
-
-
   private:
     Index n_ = 0;
     Index m_ = 0;
@@ -116,13 +110,11 @@ class basic_graph {
     array<array<graph_edge>> adj_;
 };
 
-/// Default double-precision 64-bit graph alias
-using graph = basic_graph<double, num::idx>;
+static_assert(concepts::incidence_structure<graph<double, num::idx>, num::idx>,
+              "graph must satisfy incidence_structure concept");
+static_assert(concepts::incidence_structure<graph<float, uint32_t>, uint32_t>,
+              "graph must satisfy incidence_structure concept");
 
-/// Lightweight single-precision 32-bit graph alias (50% memory reduction)
-using float_graph = basic_graph<float, uint32_t>;
-
-static_assert(concepts::incidence_structure<graph, num::idx>, "graph must satisfy incidence_structure concept");
-static_assert(concepts::incidence_structure<float_graph, uint32_t>, "float_graph must satisfy incidence_structure concept");
-
+static_assert(incidence_structure<graph<real, idx>>);
+static_assert(weighted_incidence<graph<real, idx>::graph_edge>);
 } // namespace num

@@ -1,0 +1,9 @@
+(sI - A)z = p0 at s = 1+2i:  z[0] = 0.23377-0.26651i  residual 5.7e-17
+64 shifts solved from one Hessenberg reduction; |z[0]| at s = 1+15.75i: 0.06284
+
+   t    sum p(t)    mean state
+  0.5  1.00000000     0.4410
+  1.0  1.00000000     0.8058
+  2.0  1.00000000     1.4264
+  5.0  1.00000000     2.9681
+ 10.0  1.00000000     5.2139

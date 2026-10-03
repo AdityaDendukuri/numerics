@@ -22,7 +22,7 @@
 
 namespace fs = std::filesystem;
 
-// --- Minimal JSON helpers ----------------------------------------------------
+// Minimal JSON helpers
 
 /// Read entire file into string. Returns "" on error.
 static std::string read_file(const std::string& path) {
@@ -134,7 +134,6 @@ static bool jbool(const std::string& obj, const std::string& key) {
 }
 
 // --- Test result types
-// --------------------------------------------------------
 
 struct TestSuite {
   std::string name;
@@ -166,7 +165,6 @@ static std::vector<TestSuite> parse_gtest_json(const std::string& path) {
 }
 
 // --- Benchmark result types
-// ---------------------------------------------------
 
 struct BenchRun {
   std::string name, run_type, time_unit;
@@ -204,7 +202,6 @@ static std::vector<BenchRun> parse_bench_json(const std::string& path) {
 }
 
 // --- Build info types
-// ---------------------------------------------------------
 
 struct BuildInfo {
   std::string date, compiler, build_type;
@@ -235,7 +232,6 @@ static BuildInfo parse_build_info(const std::string& path) {
 }
 
 // --- Markdown generators
-// ------------------------------------------------------
 
 static std::string system_info_table(const BuildInfo& b) {
   auto ram_str = [&]() -> std::string {
@@ -456,7 +452,6 @@ static std::string figure(const std::string& plots_dir,
 }
 
 // --- Substitution map builder
-// -------------------------------------------------
 
 static std::map<std::string, std::string> build_subs(const BuildInfo& info,
                                                      const std::vector<TestSuite>& tests,
@@ -464,14 +459,14 @@ static std::map<std::string, std::string> build_subs(const BuildInfo& info,
                                                      const std::string& plots_dir) {
   std::map<std::string, std::string> s;
 
-  // --- Build metadata ---
+  // Build metadata
   s["BUILD_DATE"] = info.date;
   s["COMPILER"] = info.compiler;
   s["BUILD_TYPE"] = info.build_type;
   s["SYSTEM_INFO"] = system_info_table(info);
   s["BACKENDS_TABLE"] = backends_table(info);
 
-  // --- Test tables ---
+  // Test tables
   s["TESTS_SUMMARY"] = tests_table(tests);
   s["TESTS_CORE"] = tests_table(tests, {"vec", "mat"});
   s["TESTS_FACTORIZATION"] = tests_table(tests, {"LU", "QR", "Thomas", "TriDiag"});
@@ -483,7 +478,7 @@ static std::map<std::string, std::string> build_subs(const BuildInfo& info,
   s["TESTS_EIGEN"] = tests_table(tests, {"EigSym", "PowerIteration", "Lanczos"});
   s["TESTS_SVD"] = tests_table(tests, {"SVD"});
 
-  // --- Benchmark tables ---
+  // Benchmark tables
   // Core
   s["BENCH_MATMUL_TABLE"] =
     bench_table(bench, "BM_Matmul", false, "*Time in us. Lower is better.*");
@@ -534,7 +529,7 @@ static std::map<std::string, std::string> build_subs(const BuildInfo& info,
   s["BENCH_RFFT_TABLE"] =
     bench_table(bench, "BM_RFFT", true, "*Throughput in GB/s. Higher is better.*");
 
-  // --- Figures (PNG) ---
+  // Figures (PNG)
   auto fig =
     [&](const std::string& key, const std::string& file, const std::string& alt) {
       s[key] = figure(plots_dir, file, alt);
@@ -558,7 +553,6 @@ static std::map<std::string, std::string> build_subs(const BuildInfo& info,
 }
 
 // --- HTML generator
-// -----------------------------------------------------------
 
 /// JSON-encode a string for safe embedding inside a <script> tag.
 /// Escapes \, ", control chars, and / (to prevent </script> injection).
@@ -639,7 +633,6 @@ static std::string gen_html_report(const std::string& markdown,
 }
 
 // --- Template engine
-// ----------------------------------------------------------
 
 static std::string apply_template(const std::string& tmpl,
                                   const std::map<std::string, std::string>& subs) {
@@ -663,7 +656,6 @@ static std::string apply_template(const std::string& tmpl,
 }
 
 // --- main
-// ---------------------------------------------------------------------
 
 int main(int argc, char** argv) {
   if (argc < 7) {

@@ -59,7 +59,7 @@ eigen_result eig_sym(const mat<real> &A_in, real tol, idx max_sweeps) {
 
                 real app = A(p, p), aqq = A(q, q);
                 real c = 1.0, s = 0.0;
-                kernel::jacobi_rotation(app, aqq, apq, c, s);
+                num::jacobi_rotation(app, aqq, apq, c, s);
 
                 A(p, p) = (c * c * app) - (2.0 * c * s * apq) + (s * s * aqq);
                 A(q, q) = (s * s * app) + (2.0 * c * s * apq) + (c * c * aqq);

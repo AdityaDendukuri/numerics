@@ -1,0 +1,25 @@
+========================================================================
+  14: C++20 Linear Algebra Invariants & Loud Diagnostics Demonstration
+========================================================================
+
+--- [Case 1: Deliberate opt-out via num::unsafe::cholesky(A)] ---
+cholesky(assume_spd(A)) on a raw mat is a compile error: a raw matrix carries no SPD
+invariant, and Cholesky is undefined without one. Uncommenting the line below
+fails to build, rather than warning and continuing:
+
+    // auto bad = cholesky(assume_spd(A));  // error: static assertion failed
+
+To take the precondition on faith anyway, say so at the call site:
+unsafe:: Solution x = [3, 5, 5, 3]
+
+--- [Case 2: Tagged Invariant Input cholesky(assume_spd(A))] ---
+Wrapping with assume_spd(A) makes it an spd_operator and runs 100% warning-free:
+Tagged Solution x   = [3, 5, 5, 3]
+
+--- [Case 3: Dynamic Validation via make_spd(A)] ---
+make_spd(A) successfully validated positive definiteness.
+Testing make_spd on Indefinite mat [[1, 3], [3, 1]]...
+[Caught Expected Violation] make_spd: matrix is not symmetric positive definite
+
+
+[SUCCESS] Example 14 completed.

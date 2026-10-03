@@ -14,5 +14,4 @@
 #include "linear/solvers/minres.hpp"
 #include "linear/solvers/pcg.hpp"
 #include "linear/solvers/preconditioner.hpp"
-#include "linear/solvers/resolvent.hpp"
 #include "linear/solvers/solver_result.hpp"

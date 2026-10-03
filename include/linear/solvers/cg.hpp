@@ -11,7 +11,7 @@
 #include "container/vector_ops.hpp"
 #include "core/math/concepts.hpp"
 #include "core/policy.hpp"
-#include "kernel/krylov.hpp"
+#include "kernel/kernel.hpp"
 #include "linear/math_adapters.hpp"
 #include "linear/matrix_properties.hpp"
 #include "linear/solvers/solver_result.hpp"
@@ -25,6 +25,84 @@
 #if defined(NUMERICS_HAS_CUDA)
 #include "cuda/cuda_ops.hpp"
 #endif
+
+namespace num {
+
+/// @brief Iteration count, final residual norm, and convergence flag of the raw-pointer `cg`.
+template <std::floating_point T>
+struct krylov_result {
+    idx iterations = 0;
+    T residual = T(0);
+    bool converged = false;
+};
+
+/// @brief Conjugate gradients for symmetric positive definite \f$A\f$. Stops if some
+/// \f$p^T A p \leq 0\f$.
+///
+/// @param A        Callable `A(const T *x, T *y)` writing \f$y = Ax\f$.
+/// @param x        Solution, used as the initial guess on entry.
+/// @param b        Right-hand side, length n.
+/// @param n        System dimension.
+/// @param work     Caller-supplied scratch of length 3n.
+/// @param tol      Absolute tolerance on \f$\|r\|_2\f$.
+/// @param max_iter Iteration cap.
+/// @return `krylov_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
+template <std::floating_point T, class MatVec>
+[[nodiscard]] inline krylov_result<T> cg(MatVec &&A, T *NUM_K_RESTRICT x, const T *b, idx n,
+                                         T *NUM_K_RESTRICT work, T tol = T(1e-10),
+                                         idx max_iter = 1000) {
+    T *r = work;
+    T *p = work + n;
+    T *Ap = work + (2 * n);
+
+    A(x, r);
+    for (idx i = 0; i < n; ++i) {
+        r[i] = b[i] - r[i];
+        p[i] = r[i];
+    }
+
+    T rs_old = kernel::dot(r, r, n);
+    krylov_result<T> result{0, std::sqrt(rs_old), false};
+    if (result.residual < tol) {
+        result.converged = true;
+        return result;
+    }
+
+    for (idx iter = 0; iter < max_iter; ++iter) {
+        result.iterations = iter + 1;
+        A(p, Ap);
+
+        const T pAp = kernel::dot(p, Ap, n);
+        // Positive definiteness is what makes this quotient a valid step length.
+        if (!(pAp > T(0)) || !std::isfinite(pAp)) {
+            break;
+        }
+        const T alpha = rs_old / pAp;
+
+        // x <- x + alpha*p
+        kernel::axpy(x, p, alpha, n);
+
+        // r <- r - alpha*A*p; rs_new <- r^T*r
+        const T rs_new = kernel::axpy_norm_sq(r, Ap, -alpha, n);
+        result.residual = std::sqrt(rs_new);
+        if (result.residual < tol) {
+            result.converged = true;
+            break;
+        }
+
+        const T beta = rs_new / rs_old;
+        // p <- r + beta*p
+        kernel::axpby(p, r, T(1), beta, n);
+        rs_old = rs_new;
+    }
+    return result;
+}
+
+/// @brief Preconditioned conjugate gradients. \f$M\f$ must be symmetric positive definite,
+/// since PCG is CG in the \f$M^{-1}\f$ inner product.
+///
+
+} // namespace num
 
 namespace num {
 
@@ -132,8 +210,8 @@ inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg
         std::copy_n(out.data(), n, dst);
     };
 
-    const auto r = kernel::cg(apply, x.data(), b.data(), n, work.data(), options.tolerance,
-                              options.max_iterations);
+    const auto r = num::cg(apply, x.data(), b.data(), n, work.data(), options.tolerance,
+                           options.max_iterations);
     return solver_result{r.iterations, r.residual, r.converged};
 }
 

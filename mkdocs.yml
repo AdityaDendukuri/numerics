@@ -11,29 +11,35 @@ theme:
     - navigation.top
     - search.suggest
     - content.code.copy
+  # The colours come from the theme file under extra_css below.
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
+      primary: custom
+      accent: custom
       toggle: {icon: material/weather-night, name: Dark mode}
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      primary: custom
+      accent: custom
       toggle: {icon: material/weather-sunny, name: Light mode}
 
 nav:
   - Home: index.md
-  - Getting started: getting-started.md
-  - Concepts, laws and diagnostics: concepts.md
-  - Architecture: architecture.md
-  - Backends: backends.md
-  - num::kernel: kernel.md
-  - Performance: performance.md
-  - Algorithm notes: notes.md
+  - Examples: reference/examples/index.md
   - Reference:
-      - reference/index.md
-      - All containers: reference/containers.md
-      - All kernels: reference/kernel.md
-      - All concepts: reference/concepts.md
-      - Examples: reference/examples/index.md
+      - Containers: reference/containers.md
+      - Concepts: reference/concepts.md
+      - Kernels: reference/kernel.md
+      - Linear algebra: reference/linear_algebra.md
+      - ODEs: reference/odes.md
+      - PDEs and fields: reference/pdes_and_fields.md
+      - Spectral: reference/spectral_transforms.md
+      - Quadrature and roots: reference/quadrature_and_roots.md
+      - Statistics and sampling: reference/statistics.md
+      - Data structures: reference/data_structures.md
+      - Algorithms: reference/algorithms.md
+      - All names: reference/index.md
   - Benchmark report: report/REPORT.md
 
 # docs/indexes holds the sources refdoc turns into the grouped indexes.
@@ -61,6 +67,8 @@ markdown_extensions:
 
 extra_css:
   - assets/numerics.css
+  # Colour theme, one of three-bands, purple-lead or cardinal-lead.
+  - assets/themes/three-bands.css
 extra_javascript:
   - assets/mathjax.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

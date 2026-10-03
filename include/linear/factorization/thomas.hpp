@@ -102,7 +102,7 @@ inline void thomas(const vec<real> &a, const vec<real> &b, const vec<real> &c, c
 /// @param d Right-hand side vector (\f$n\f$ elements).
 /// @param x Output solution vector (\f$n\f$ elements).
 /// @throws std::invalid_argument If dimensions do not match (\f$a, c\f$ size \f$n-1\f$, \f$b, d, x\f$ size \f$n\f$).
-/// @see banded_solve, lu_solve
+/// @see lu, solve
 template <typename Float = double>
 inline void thomas(const vec<Float> &a, const vec<Float> &b,
                    const vec<Float> &c, const vec<Float> &d,

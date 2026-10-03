@@ -28,15 +28,51 @@ namespace num {
 
 namespace detail {
 
+// Returned by `first_changed_block` when no leading block can be kept.
+inline constexpr idx no_reusable_block = static_cast<idx>(-1);
+
+// The first block of the new ordering that `changed` touches, provided every block before
+// it has the same rows in the same order as in `Z`; else `no_reusable_block`.
+template <typename F>
+[[nodiscard]] inline idx first_changed_block(const F &Z, const block_layout &layout,
+                                             view<const idx> changed) {
+    array<idx> old_position(Z.size);
+    for (idx position = 0; position < Z.size; ++position) {
+        old_position[Z.order[position]] = position;
+    }
+
+    idx first = layout.offsets.size() - 1;
+    for (idx row : changed) {
+        first = std::min(first, layout.block_of[row]);
+        const auto boundary =
+            std::upper_bound(Z.offsets.begin(), Z.offsets.end(), old_position[row]);
+        first = std::min(first, static_cast<idx>(boundary - Z.offsets.begin() - 1));
+    }
+    if (first > Z.blocks() || first + 1 > layout.offsets.size()) {
+        return no_reusable_block;
+    }
+    for (idx k = 0; k <= first; ++k) {
+        if (Z.offsets[k] != layout.offsets[k]) {
+            return no_reusable_block;
+        }
+    }
+    for (idx position = 0; position < layout.offsets[first]; ++position) {
+        if (Z.order[position] != layout.order[position]) {
+            return no_reusable_block;
+        }
+    }
+    return first;
+}
+
 // Skeel's condition number || |A^{-1}| |A| ||_inf, or infinity for a singular A.
 // Unlike the plain condition number it ignores the scaling of the rows of A.
 inline real skeel_condition(const mat<real> &A) {
-    const lu_result factor = lu(A);
+    const lu_result<real> factor = lu(A);
     if (factor.singular) {
         return std::numeric_limits<real>::infinity();
     }
     mat<real> inverse;
-    lu_solve(factor, identity(A.rows()), inverse);
+    solve(factor, identity(A.rows()), inverse);
     real worst = 0.0;
     for (idx i = 0; i < A.rows(); ++i) {
         real row = 0.0;
@@ -64,20 +100,20 @@ class corrected_lu {
     [[nodiscard]] idx size() const { return base_->size(); }
 
     template <class RHS>
-    void solve(const RHS &rhs, RHS &out) const {
-        if (correction_) {
-            out = correction_->solve(rhs);
+    friend void solve(const corrected_lu &Z, const RHS &rhs, RHS &out) {
+        if (Z.correction_) {
+            solve(*Z.correction_, rhs, out);
         } else {
-            num::solve(*base_, rhs, out);
+            solve(*Z.base_, rhs, out);
         }
     }
 
     template <class RHS>
-    void solve_transpose(const RHS &rhs, RHS &out) const {
-        if (correction_) {
-            out = correction_->solve_transpose(rhs);
+    friend void solve_transpose(const corrected_lu &Z, const RHS &rhs, RHS &out) {
+        if (Z.correction_) {
+            solve_transpose(*Z.correction_, rhs, out);
         } else {
-            num::solve_transpose(*base_, rhs, out);
+            solve_transpose(*Z.base_, rhs, out);
         }
     }
 
@@ -107,10 +143,10 @@ class corrected_lu {
         return true;
     }
 
-    std::shared_ptr<const no_pivot_lu> base_;
+    std::shared_ptr<const lu_result<real>> base_;
     std::shared_ptr<const spmat> base_R_;
     array<idx> differing_;
-    std::optional<woodbury_solver<no_pivot_lu>> correction_;
+    std::optional<woodbury_solver<lu_result<real>>> correction_;
     bool reused_ = false;
 };
 
@@ -145,11 +181,11 @@ inline corrected_lu lu(const spmat &R, no_pivot_structure, const corrected_lu *p
             return next;
         }
     }
-    no_pivot_lu base = lu(R, no_pivot);
+    lu_result<real> base = lu(R, no_pivot);
     if (base.singular) {
         throw std::runtime_error("lu: no-pivot factorization is singular");
     }
-    next.base_ = std::make_shared<const no_pivot_lu>(std::move(base));
+    next.base_ = std::make_shared<const lu_result<real>>(std::move(base));
     next.base_R_ = std::make_shared<const spmat>(R);
     next.differing_.clear();
     next.correction_.reset();
@@ -169,23 +205,20 @@ struct suffix_block_lu {
 /// @brief Block LU of R, copying the unchanged prefix of `previous`.
 inline suffix_block_lu lu(const spmat &R, block_structure structure,
                           const suffix_block_lu *previous, view<const idx> changed) {
-    if (previous && previous->size() == R.n_rows()) {
-        suffix_reuse_report report;
-        if (auto updated = refactor_suffix(previous->factor, R, structure, changed, &report)) {
-            return {std::move(*updated), report.reused_blocks};
+    const idx n = R.n_rows();
+    if (previous && previous->size() == n && structure.levels.size() == n) {
+        const detail::block_layout layout = detail::build_block_order(structure.levels);
+        const idx first = detail::first_changed_block(previous->factor, layout, changed);
+        if (first != detail::no_reusable_block) {
+            try {
+                return {refactor_block_lu_suffix(R, structure.levels, previous->factor, first),
+                        first};
+            } catch (const std::exception &) {
+                // The kept prefix no longer factors cleanly; fall through to a fresh factor.
+            }
         }
     }
     return {lu(R, structure), 0};
-}
-
-template <class RHS>
-inline void solve(const corrected_lu &Z, const RHS &rhs, RHS &out) {
-    Z.solve(rhs, out);
-}
-
-template <class RHS>
-inline void solve_transpose(const corrected_lu &Z, const RHS &rhs, RHS &out) {
-    Z.solve_transpose(rhs, out);
 }
 
 template <class RHS>

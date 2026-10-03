@@ -11,6 +11,31 @@
 #include "kernel/kernel.hpp"
 #include <vector>
 
+namespace num {
+
+/// @brief Modified Gram--Schmidt against row-major basis columns.
+///
+/// Keeps the sequential projection order; `project_columns` then `combine_columns` is the
+/// faster classical variant, with weaker stability.
+template <std::floating_point T>
+inline void mgs_columns(T *NUM_K_RESTRICT v, const T *NUM_K_RESTRICT basis, idx ldb, idx rows,
+                        idx columns, T *coefficients = nullptr) noexcept {
+    for (idx column = 0; column < columns; ++column) {
+        T projection = T(0);
+        for (idx row = 0; row < rows; ++row) {
+            projection += basis[(row * ldb) + column] * v[row];
+        }
+        if (coefficients != nullptr) {
+            coefficients[column] = projection;
+        }
+        for (idx row = 0; row < rows; ++row) {
+            v[row] -= projection * basis[(row * ldb) + column];
+        }
+    }
+}
+
+} // namespace num
+
 namespace num::dispatch::subspace {
 
 /// @brief Modified Gram–Schmidt orthogonalization against basis vectors \f$\mathbf{v}_0, \dots,
@@ -59,7 +84,7 @@ inline real mgs_orthogonalize(const array<vec<real>> &basis, vec<real> &v, array
 inline real mgs_orthogonalize(const mat<real> &basis, idx k, vec<real> &v) {
     const idx n = basis.rows();
     // v <- (I - V_k*V_k^T)v, in modified Gram--Schmidt order
-    kernel::mgs_columns(v.data(), basis.data(), basis.cols(), n, k);
+    num::mgs_columns(v.data(), basis.data(), basis.cols(), n, k);
     return norm(v);
 }
 

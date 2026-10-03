@@ -2,21 +2,116 @@
 /// @brief banded matrix storage and solvers.
 #pragma once
 
-#include "kernel/factor.hpp"
 #include "kernel/kernel.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 #include "cuda/cuda_ops.hpp"
 
 #include "core/policy.hpp"
 #include "core/types.hpp"
+#include "container/matrix.hpp"
 #include "container/vector.hpp"
 #include <memory>
+
+namespace num {
+
+/// @brief banded LU factorization with partial pivoting over LAPACK-compatible band storage,
+/// as LAPACK `gbtf2`.
+///
+/// `ab` is column-major with `ldab >= 2*kl + ku + 1` rows; \f$A_{ij}\f$ sits at band row
+/// `kl + ku + i - j`. A row swap can bring in entries up to `kl + ku` past the diagonal, so
+/// \f$U\f$ has bandwidth `kl + ku` and fills the first `kl` band rows, which are zeroed
+/// here. The multipliers of \f$L\f$ stay where each column's elimination wrote them: later
+/// swaps are not applied to them, so `banded_solve` interleaves the swaps with the forward
+/// substitution. Returns false if a pivot column is entirely zero.
+template <std::floating_point T, class Index>
+[[nodiscard]] inline bool banded_factor(T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
+                                        Index *NUM_K_RESTRICT ipiv) noexcept {
+    const idx kv = ku + kl;
+    auto at = [&](idx i, idx j) -> T & { return ab[kv + i - j + (j * ldab)]; };
+    // Fill rows of column c hold rows above c - ku, which only columns past ku have. Zero
+    // each one as the elimination first reaches it, as `gbtf2` does.
+    auto zero_fill = [&](idx c) {
+        for (idx r = 0; r < kl; ++r) {
+            ab[r + (c * ldab)] = T(0);
+        }
+    };
+    for (idx c = ku + 1; c < std::min(kv, n); ++c) {
+        zero_fill(c);
+    }
+    idx ju = 0; // Last column the factored rows reach so far.
+    for (idx j = 0; j < n; ++j) {
+        if (j + kv < n) {
+            zero_fill(j + kv);
+        }
+        const idx km = std::min(kl, n - 1 - j);
+        idx pivot = j;
+        T max_val = std::abs(at(j, j));
+        for (idx i = j + 1; i <= j + km; ++i) {
+            if (std::abs(at(i, j)) > max_val) {
+                max_val = std::abs(at(i, j));
+                pivot = i;
+            }
+        }
+        ipiv[j] = static_cast<Index>(pivot);
+        if (max_val == T(0)) {
+            return false;
+        }
+        ju = std::max(ju, std::min(pivot + ku, n - 1));
+        if (pivot != j) {
+            for (idx c = j; c <= ju; ++c) {
+                std::swap(at(j, c), at(pivot, c));
+            }
+        }
+        const T inv_pivot = T(1) / at(j, j);
+        for (idx i = j + 1; i <= j + km; ++i) {
+            at(i, j) *= inv_pivot;
+        }
+        for (idx c = j + 1; c <= ju; ++c) {
+            const T ujc = at(j, c);
+            if (ujc != T(0)) {
+                for (idx i = j + 1; i <= j + km; ++i) {
+                    at(i, c) -= at(i, j) * ujc;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+/// @brief Solve \f$Ax = b\f$ in place from `banded_factor`, as LAPACK `gbtrs`.
+template <std::floating_point T, class Index>
+inline void banded_solve(T *x, const T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
+                         const Index *NUM_K_RESTRICT ipiv) noexcept {
+    const idx kv = ku + kl;
+    for (idx j = 0; j < n; ++j) {
+        const idx p = static_cast<idx>(ipiv[j]);
+        if (p != j) {
+            std::swap(x[j], x[p]);
+        }
+        const T xj = x[j];
+        if (xj != T(0)) {
+            const idx last = std::min(j + kl, n - 1);
+            for (idx i = j + 1; i <= last; ++i) {
+                x[i] -= ab[kv + i - j + (j * ldab)] * xj;
+            }
+        }
+    }
+    for (idx col = n; col-- > 0;) {
+        x[col] /= ab[kv + (col * ldab)];
+        const T xc = x[col];
+        if (xc != T(0)) {
+            const idx first = (col > kv) ? col - kv : 0;
+            for (idx i = first; i < col; ++i) {
+                x[i] -= ab[kv + i - col + (col * ldab)] * xc;
+            }
+        }
+    }
+}
+
+} // namespace num
 
 namespace num {
 
@@ -85,41 +180,33 @@ class band_mat {
     real *d_data_ = nullptr;
 };
 
-#include <ostream>
+/// @brief The banded factorization \f$PA = LU\f$.
+///
+/// `LU` holds both factors in band storage: \f$U\f$, with the fill pivoting adds, in the
+/// rows above the diagonal row, and the multipliers of \f$L\f$ below it. \f$L\f$ has a unit
+/// diagonal, which is not stored. Step `k` exchanged rows `k` and `swaps[k]`.
+struct banded_lu_result {
+    band_mat LU;
+    array<idx> swaps;
+    bool singular = false; ///< True when a pivot column was entirely zero.
 
-/// Status and diagnostics from a banded factorization or solve.
-struct banded_solver_result {
-    bool success = false;
-    idx pivot_row = 0;
-    real rcond = 0.0;
-
-    friend std::ostream &operator<<(std::ostream &os, const banded_solver_result &r) {
-        os << "banded_solver_result{ success: " << (r.success ? "true" : "false")
-           << ", rcond: " << r.rcond << " }";
-        return os;
-    }
+    [[nodiscard]] idx size() const { return LU.size(); }
 };
 
-/// @brief In-place banded \f$PA=LU\f$ factorization.
-banded_solver_result banded_lu(band_mat &A, idx *ipiv);
+/// @brief Factor \f$PA = LU\f$ with partial pivoting. Pass an rvalue to factor in place.
+banded_lu_result lu(band_mat A);
 
-/// @brief Solve \f$Ax=b\f$ using a precomputed banded LU factorization.
-void banded_lu_solve(const band_mat &A, const idx *ipiv, vec<real> &b);
+/// @brief Solve \f$Ax = b\f$. `x` may be `b`.
+void solve(const banded_lu_result &f, const vec<real> &b, vec<real> &x);
 
-/// @brief Solve \f$AX=B\f$ using a precomputed banded LU factorization.
-void banded_lu_solve_multi(const band_mat &A, const idx *ipiv, real *B, idx nrhs);
-
-/// @brief Factor and solve \f$Ax=b\f$.
-banded_solver_result banded_solve(const band_mat &A, const vec<real> &b, vec<real> &x);
+/// @brief Solve \f$AX = B\f$, one right-hand side per column. `X` may be `B`.
+void solve(const banded_lu_result &f, const mat<real> &B, mat<real> &X);
 
 /// @brief Compute \f$y=Ax\f$.
 void banded_matvec(const band_mat &A, const vec<real> &x, vec<real> &y);
 
 /// @brief Compute \f$y=\alpha Ax+\beta y\f$.
 void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y);
-
-/// @brief Estimate \f$1/\kappa_1(A)\f$.
-real banded_rcond(const band_mat &A, const idx *ipiv, real anorm);
 
 /// @brief Compute \f$\|A\|_1\f$.
 real banded_norm1(const band_mat &A);
@@ -229,88 +316,63 @@ inline void band_mat::to_cpu() {
 
 // LU Factorization with Partial Pivoting
 
-inline banded_solver_result banded_lu(band_mat &A, idx *ipiv) {
-    const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
-    real *ab = A.data();
-    banded_solver_result result{true, 0, 0.0};
-
-    const bool ok = kernel::banded_factor(ab, ldab, n, kl, ku, ipiv);
-    if (!ok) {
-        result.success = false;
-        return result;
-    }
-    return result;
-}
-
-// Solve Using LU Factorization
-
-inline void banded_lu_solve(const band_mat &A, const idx *ipiv, vec<real> &b) {
-    const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
-    const real *ab = A.data();
-    real *x = b.data();
-    if (b.size() != n) {
-        throw std::invalid_argument("banded_lu_solve: dimension mismatch");
-    }
-
-    kernel::banded_solve(x, ab, ldab, n, kl, ku, ipiv);
-}
-
-inline void banded_lu_solve_multi(const band_mat &A, const idx *ipiv, real *B, idx nrhs) {
-    const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
-    const real *ab = A.data();
-    const idx kv = ku + kl;
-
-#ifdef _OPENMP
-#pragma omp parallel for if (nrhs > 16)
-#endif
-    for (idx rhs = 0; rhs < nrhs; ++rhs) {
-        real *x = B + (rhs * n);
-        for (idx i = 0; i < n; ++i) {
-            if (ipiv[i] != i) {
-                std::swap(x[i], x[ipiv[i]]);
-            }
-        }
-        for (idx j = 0; j < n; ++j) {
-            if (x[j] != 0.0) {
-                const idx last = std::min(j + kl, n - 1);
-                real xj = x[j];
-                for (idx i = j + 1; i <= last; ++i) {
-                    x[i] -= ab[kv + i - j + (j * ldab)] * xj;
-                }
-            }
-        }
-        for (idx j = n; j > 0; --j) {
-            const idx col = j - 1;
-            x[col] /= ab[kv + (col * ldab)];
-            if (x[col] != 0.0) {
-                const idx first = (col > ku) ? col - ku : 0;
-                real xc = x[col];
-                for (idx i = first; i < col; ++i) {
-                    x[i] -= ab[kv + i - col + (col * ldab)] * xc;
-                }
-            }
-        }
-    }
-}
-
-inline banded_solver_result banded_solve(const band_mat &A, const vec<real> &b, vec<real> &x) {
+inline banded_lu_result lu(band_mat A) {
     const idx n = A.size();
-    if (b.size() != n || x.size() != n) {
-        throw std::invalid_argument("banded_solve: dimension mismatch");
-    }
+    banded_lu_result f{std::move(A), array<idx>(n), false};
+    f.singular =
+        !num::banded_factor(f.LU.data(), f.LU.ldab(), n, f.LU.kl(), f.LU.ku(), f.swaps.data());
+    return f;
+}
 
-    band_mat a_work = A;
-    auto ipiv = std::make_unique<idx[]>(n);
-    banded_solver_result result = banded_lu(a_work, ipiv.get());
-    if (!result.success) {
-        return result;
+inline void solve(const banded_lu_result &f, const vec<real> &b, vec<real> &x) {
+    if (b.size() != f.size()) {
+        throw std::invalid_argument("banded solve: dimension mismatch");
     }
+    x = b;
+    num::banded_solve(x.data(), f.LU.data(), f.LU.ldab(), f.size(), f.LU.kl(), f.LU.ku(),
+                      f.swaps.data());
+}
 
-    for (idx i = 0; i < n; ++i) {
-        x[i] = b[i];
+inline void solve(const banded_lu_result &f, const mat<real> &B, mat<real> &X) {
+    const idx n = f.size(), kl = f.LU.kl(), ku = f.LU.ku(), ldab = f.LU.ldab();
+    if (B.rows() != n) {
+        throw std::invalid_argument("banded solve: dimension mismatch");
     }
-    banded_lu_solve(a_work, ipiv.get(), x);
-    return result;
+    X = B;
+    const idx nrhs = X.cols();
+    const idx kv = ku + kl;
+    const real *ab = f.LU.data();
+    real *x = X.data();
+    // The vector solve, with each scalar update applied across a contiguous row of X.
+    for (idx j = 0; j < n; ++j) {
+        if (f.swaps[j] != j) {
+            kernel::swap_rows(x, nrhs, j, f.swaps[j], nrhs);
+        }
+        const real *xj = x + (j * nrhs);
+        const idx last = std::min(j + kl, n - 1);
+        for (idx i = j + 1; i <= last; ++i) {
+            const real l = ab[kv + i - j + (j * ldab)];
+            real *xi = x + (i * nrhs);
+            for (idx c = 0; c < nrhs; ++c) {
+                xi[c] -= l * xj[c];
+            }
+        }
+    }
+    for (idx col = n; col-- > 0;) {
+        real *xc = x + (col * nrhs);
+        const real inverse_pivot = 1.0 / ab[kv + (col * ldab)];
+        for (idx c = 0; c < nrhs; ++c) {
+            xc[c] *= inverse_pivot;
+        }
+        const idx first = (col > kv) ? col - kv : 0;
+        for (idx i = first; i < col; ++i) {
+            const real u = ab[kv + i - col + (col * ldab)];
+            real *xi = x + (i * nrhs);
+            for (idx c = 0; c < nrhs; ++c) {
+                xi[c] -= u * xc[c];
+            }
+        }
+    }
 }
 
 // mat-vec Products
@@ -333,7 +395,7 @@ inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real 
     kernel::gbmv(yp, alpha, ab, ldab, kl, ku, xp, beta, n);
 }
 
-// Condition Number Estimation
+// Norm
 
 inline real banded_norm1(const band_mat &A) {
     const idx n = A.size(), kl = A.kl(), ku = A.ku(), ldab = A.ldab();
@@ -350,21 +412,6 @@ inline real banded_norm1(const band_mat &A) {
         max_sum = std::max(max_sum, col_sum);
     }
     return max_sum;
-}
-
-inline real banded_rcond(const band_mat &A, const idx *ipiv, real anorm) {
-    const idx n = A.size();
-    if (n == 0 || anorm == 0.0) {
-        return 0.0;
-    }
-    vec<real> y(n, 1.0 / static_cast<real>(n));
-    const band_mat &a_copy = A;
-    banded_lu_solve(a_copy, ipiv, y);
-    real ainv_norm = 0.0;
-    for (idx i = 0; i < n; ++i) {
-        ainv_norm += std::abs(y[i]);
-    }
-    return 1.0 / (anorm * ainv_norm);
 }
 
 } // namespace num

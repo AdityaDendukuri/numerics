@@ -15,9 +15,7 @@
 
 namespace num {
 
-// =============================================================================
 // 2. Representation
-// =============================================================================
 
 /// @brief Storage-layout predicates describing contiguous memory layouts and sparse formats.
 ///

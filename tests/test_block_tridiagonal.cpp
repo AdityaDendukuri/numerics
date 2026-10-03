@@ -203,7 +203,7 @@ num::mat<num::real> make_rhs_matrix(num::idx n, num::idx columns, std::uint64_t 
 
 constexpr double tolerance = 1e-9;
 
-// --- 1, 2: factorization equals dense LU -----------------------------------
+// 1, 2: factorization equals dense LU
 
 TEST(BlockTridiagonal, SingleBlockMatchesDenseLU) {
     const auto problem = make_problem({6}, 11);
@@ -215,7 +215,7 @@ TEST(BlockTridiagonal, SingleBlockMatchesDenseLU) {
     const auto b = make_rhs(problem.size, 12);
     num::vec<num::real> expected(problem.size, 0.0);
     num::vec<num::real> actual(problem.size, 0.0);
-    num::lu_solve(reference, b, expected);
+    num::solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
         EXPECT_NEAR(actual[i], expected[i], tolerance) << "row " << i;
@@ -232,14 +232,14 @@ TEST(BlockTridiagonal, MultipleBlocksMatchDenseLU) {
     const auto b = make_rhs(problem.size, 22);
     num::vec<num::real> expected(problem.size, 0.0);
     num::vec<num::real> actual(problem.size, 0.0);
-    num::lu_solve(reference, b, expected);
+    num::solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
         EXPECT_NEAR(actual[i], expected[i], tolerance) << "row " << i;
     }
 }
 
-// --- 3, 5: matrix right-hand sides ------------------------------------------
+// 3, 5: matrix right-hand sides
 
 TEST(BlockTridiagonal, MatrixSolveMatchesDenseSolve) {
     const auto problem = make_problem({4, 3, 4}, 31);
@@ -249,7 +249,7 @@ TEST(BlockTridiagonal, MatrixSolveMatchesDenseSolve) {
     const auto B = make_rhs_matrix(problem.size, 3, 32);
     num::mat<num::real> expected;
     num::mat<num::real> actual;
-    num::lu_solve(reference, B, expected);
+    num::solve(reference, B, expected);
     num::solve(factor, B, actual);
 
     ASSERT_EQ(actual.rows(), problem.size);
@@ -283,7 +283,7 @@ TEST(BlockTridiagonal, ManyRightHandSidesAgreeColumnwiseWithSingleSolves) {
     }
 }
 
-// --- 4: transpose solve ------------------------------------------------------
+// 4: transpose solve
 
 TEST(BlockTridiagonal, TransposeSolveMatchesDenseTransposeSolve) {
     const auto problem = make_problem({3, 5, 2}, 51);
@@ -293,7 +293,7 @@ TEST(BlockTridiagonal, TransposeSolveMatchesDenseTransposeSolve) {
     const auto b = make_rhs(problem.size, 52);
     num::vec<num::real> expected(problem.size, 0.0);
     num::vec<num::real> actual(problem.size, 0.0);
-    num::lu_solve_transpose(reference, b, expected);
+    num::solve_transpose(reference, b, expected);
     num::solve_transpose(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
         EXPECT_NEAR(actual[i], expected[i], tolerance) << "row " << i;
@@ -302,7 +302,7 @@ TEST(BlockTridiagonal, TransposeSolveMatchesDenseTransposeSolve) {
     const auto B = make_rhs_matrix(problem.size, 4, 53);
     num::mat<num::real> expected_matrix;
     num::mat<num::real> actual_matrix;
-    num::lu_solve_transpose(reference, B, expected_matrix);
+    num::solve_transpose(reference, B, expected_matrix);
     num::solve_transpose(factor, B, actual_matrix);
     for (num::idx i = 0; i < problem.size; ++i) {
         for (num::idx c = 0; c < 4; ++c) {
@@ -334,7 +334,7 @@ TEST(BlockTridiagonal, TransposeSolveReusesTheFactorsWithoutRefactorizing) {
     }
 }
 
-// --- 6: Cholesky -------------------------------------------------------------
+// 6: Cholesky
 
 TEST(BlockTridiagonal, CholeskySolveMatchesDenseCholesky) {
     const auto problem = make_spd_problem({3, 4, 3}, 71);
@@ -343,12 +343,12 @@ TEST(BlockTridiagonal, CholeskySolveMatchesDenseCholesky) {
     ASSERT_FALSE(factor.failed());
 
     const auto reference = num::cholesky(num::assume_spd(problem.dense));
-    ASSERT_TRUE(reference.success);
+    ASSERT_TRUE(reference.positive_definite);
 
     const auto b = make_rhs(problem.size, 72);
     num::vec<num::real> expected(problem.size, 0.0);
     num::vec<num::real> actual(problem.size, 0.0);
-    num::cholesky_solve(reference, b, expected);
+    num::solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
         EXPECT_NEAR(actual[i], expected[i], tolerance) << "row " << i;
@@ -357,7 +357,7 @@ TEST(BlockTridiagonal, CholeskySolveMatchesDenseCholesky) {
     const auto B = make_rhs_matrix(problem.size, 3, 73);
     num::mat<num::real> expected_matrix;
     num::mat<num::real> actual_matrix;
-    num::cholesky_solve(reference, B, expected_matrix);
+    num::solve(reference, B, expected_matrix);
     num::solve(factor, B, actual_matrix);
     for (num::idx i = 0; i < problem.size; ++i) {
         for (num::idx c = 0; c < 3; ++c) {
@@ -367,7 +367,7 @@ TEST(BlockTridiagonal, CholeskySolveMatchesDenseCholesky) {
     }
 }
 
-// --- 7: structural rejection -------------------------------------------------
+// 7: structural rejection
 
 TEST(BlockTridiagonal, RejectsNonBlockTridiagonalSparsity) {
     Builder builder(6);
@@ -407,7 +407,7 @@ TEST(BlockTridiagonal, AcceptsAnExplicitZeroOutsideTheBand) {
     EXPECT_NO_THROW((void)num::factor_block_lu(builder.sparse(), levels));
 }
 
-// --- 8: unequal block sizes --------------------------------------------------
+// 8: unequal block sizes
 
 TEST(BlockTridiagonal, HandlesStronglyUnequalBlockSizes) {
     const auto problem = make_problem({1, 7, 2, 1, 6}, 81);
@@ -421,14 +421,14 @@ TEST(BlockTridiagonal, HandlesStronglyUnequalBlockSizes) {
     const auto b = make_rhs(problem.size, 82);
     num::vec<num::real> expected(problem.size, 0.0);
     num::vec<num::real> actual(problem.size, 0.0);
-    num::lu_solve(reference, b, expected);
+    num::solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < problem.size; ++i) {
         EXPECT_NEAR(actual[i], expected[i], tolerance) << "row " << i;
     }
 }
 
-// --- 9: arbitrary level labels -----------------------------------------------
+// 9: arbitrary level labels
 
 TEST(BlockTridiagonal, CompressesArbitraryNonContiguousLevelLabels) {
     // Labels 40, 17, 900 must compress to blocks 0, 1, 2 in sorted order and give
@@ -479,14 +479,14 @@ TEST(BlockTridiagonal, HandlesLevelsGivenOutOfOrder) {
     const auto b = make_rhs(6, 101);
     num::vec<num::real> expected(6, 0.0);
     num::vec<num::real> actual(6, 0.0);
-    num::lu_solve(reference, b, expected);
+    num::solve(reference, b, expected);
     num::solve(factor, b, actual);
     for (num::idx i = 0; i < 6; ++i) {
         EXPECT_NEAR(actual[i], expected[i], tolerance) << "row " << i;
     }
 }
 
-// --- 10: low-rank update preparation ----------------------------------------
+// 10: low-rank update preparation
 
 TEST(BlockTridiagonal, AppliedToATallBlockMatchesDenseSolveForWoodbury) {
     // What a block-Woodbury layer needs: A0^-1 U and A0^-T V from the stored
@@ -503,7 +503,7 @@ TEST(BlockTridiagonal, AppliedToATallBlockMatchesDenseSolveForWoodbury) {
     num::mat<num::real> applied;
     num::mat<num::real> expected;
     num::solve(factor, U, applied);
-    num::lu_solve(reference, U, expected);
+    num::solve(reference, U, expected);
     for (num::idx i = 0; i < problem.size; ++i) {
         for (num::idx c = 0; c < rank; ++c) {
             EXPECT_NEAR(applied(i, c), expected(i, c), tolerance)
@@ -514,7 +514,7 @@ TEST(BlockTridiagonal, AppliedToATallBlockMatchesDenseSolveForWoodbury) {
     num::mat<num::real> applied_transpose;
     num::mat<num::real> expected_transpose;
     num::solve_transpose(factor, V, applied_transpose);
-    num::lu_solve_transpose(reference, V, expected_transpose);
+    num::solve_transpose(reference, V, expected_transpose);
     for (num::idx i = 0; i < problem.size; ++i) {
         for (num::idx c = 0; c < rank; ++c) {
             EXPECT_NEAR(applied_transpose(i, c), expected_transpose(i, c), tolerance)
@@ -551,7 +551,7 @@ TEST(BlockTridiagonal, ExposesTheLayoutALowRankLayerNeeds) {
     EXPECT_EQ(factor.lower[0].cols(), 2u);
 }
 
-// --- 11: cross-step suffix refactorization ----------------------------------
+// 11: cross-step suffix refactorization
 
 TEST(BlockTridiagonal, LUSuffixRefactorReusesPrefixAndMatchesFreshFactor) {
     const auto original = make_problem({3, 4, 2, 5}, 131);
@@ -572,8 +572,8 @@ TEST(BlockTridiagonal, LUSuffixRefactorReusesPrefixAndMatchesFreshFactor) {
     const auto fresh = num::factor_block_lu(updated_problem.sparse, updated_problem.levels);
 
     // These factors are copied, not recomputed.
-    expect_exact_matrix(updated.diagonal[0].packed, previous.diagonal[0].packed);
-    expect_exact_matrix(updated.diagonal[1].packed, previous.diagonal[1].packed);
+    expect_exact_matrix(updated.diagonal[0].LU, previous.diagonal[0].LU);
+    expect_exact_matrix(updated.diagonal[1].LU, previous.diagonal[1].LU);
     expect_exact_matrix(updated.lower[0], previous.lower[0]);
 
     const auto b = make_rhs(updated_problem.size, 132);
@@ -645,8 +645,8 @@ TEST(BlockTridiagonal, LUSuffixRefactorAppendsANewLevel) {
     const auto fresh =
         num::factor_block_lu(enlarged_problem.sparse, enlarged_problem.levels);
 
-    expect_exact_matrix(updated.diagonal[0].packed, previous.diagonal[0].packed);
-    expect_exact_matrix(updated.diagonal[1].packed, previous.diagonal[1].packed);
+    expect_exact_matrix(updated.diagonal[0].LU, previous.diagonal[0].LU);
+    expect_exact_matrix(updated.diagonal[1].LU, previous.diagonal[1].LU);
     expect_exact_matrix(updated.lower[0], previous.lower[0]);
 
     const auto b = make_rhs(enlarged_problem.size, 147);

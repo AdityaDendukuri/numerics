@@ -19,19 +19,9 @@
 
 namespace num::linear {
 
-/// @brief graph from which a Laplacian can be assembled.
-///
-/// The Laplacian is symmetric positive semi-definite with \f$L\mathbf{1} = 0\f$,
-/// and its null space has one dimension per connected component. Algorithms rely
-/// on that, which is why the contract names the matrix rather than a method.
-template <typename G>
-concept laplacian_graph = concepts::incidence_structure<G> && requires(const G &g) {
-    {laplacian(g)};
-};
-
 /// @brief The weighted adjacency matrix of a graph, in CSR form.
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline spmat to_sparse_adjacency(const basic_graph<Weight, Index> &g) {
+[[nodiscard]] inline spmat to_sparse_adjacency(const graph<Weight, Index> &g) {
     array<idx> row_ptr(g.n_vertices() + 1, 0);
     array<idx> col_idx;
     array<double> values;
@@ -49,7 +39,7 @@ template <typename Weight = real, typename Index = idx>
 
 /// @brief The weighted adjacency matrix of a graph, dense.
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline mat<real> to_dense_adjacency(const basic_graph<Weight, Index> &g) {
+[[nodiscard]] inline mat<real> to_dense_adjacency(const graph<Weight, Index> &g) {
     mat<real> A(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     for (Index u = 0; u < g.n_vertices(); ++u) {
         for (const auto &e : g.neighbors(u)) {
@@ -60,7 +50,7 @@ template <typename Weight = real, typename Index = idx>
 }
 
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline spmat laplacian(const basic_graph<Weight, Index> &g) {
+[[nodiscard]] inline spmat laplacian(const graph<Weight, Index> &g) {
     array<idx> rows;
     array<idx> cols;
     array<double> vals;
@@ -112,7 +102,7 @@ template <std::size_t D, typename Weight, std::integral Index>
 
 /// @brief The graph Laplacian \f$L = D - W\f$, dense.
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline mat<real> dense_laplacian(const basic_graph<Weight, Index> &g) {
+[[nodiscard]] inline mat<real> dense_laplacian(const graph<Weight, Index> &g) {
     mat<real> L(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     for (Index u = 0; u < g.n_vertices(); ++u) {
         double deg = 0.0;
@@ -130,7 +120,7 @@ template <typename Weight = real, typename Index = idx>
 /// @brief The rate matrix of the Markov chain on a graph, whose off-diagonal entries are the
 /// edge weights.
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline spmat markov_generator(const basic_graph<Weight, Index> &g,
+[[nodiscard]] inline spmat markov_generator(const graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
     array<idx> rows;
     array<idx> cols;
@@ -161,7 +151,7 @@ template <typename Weight = real, typename Index = idx>
 
 /// @brief The rate matrix of the Markov chain on a graph, dense.
 template <typename Weight = real, typename Index = idx>
-[[nodiscard]] inline mat<real> dense_markov_generator(const basic_graph<Weight, Index> &g,
+[[nodiscard]] inline mat<real> dense_markov_generator(const graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
     mat<real> Q(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
     auto L = dense_laplacian(g);
@@ -174,7 +164,7 @@ template <typename Weight = real, typename Index = idx>
 }
 
 /// @brief Laplacian of a multigraph, summing parallel edge multiplicities.
-[[nodiscard]] inline spmat laplacian(const structures::multigraph &g) {
+[[nodiscard]] inline spmat laplacian(const structures::multigraph<real, idx> &g) {
     const idx n = g.n_vertices();
     array<idx> rows, cols;
     array<real> vals;
@@ -197,12 +187,12 @@ template <typename Weight = real, typename Index = idx>
 }
 
 /// @brief Recover a multigraph from a Laplacian.
-[[nodiscard]] inline structures::multigraph to_multigraph(const spmat &L) {
+[[nodiscard]] inline structures::multigraph<real, idx> to_multigraph(const spmat &L) {
     const idx n = L.n_rows();
     if (L.n_cols() != n) {
         throw std::invalid_argument("to_multigraph: matrix must be square");
     }
-    multigraph mg(n);
+    structures::multigraph<real, idx> mg(n);
     for (idx i = 0; i < n; ++i) {
         const idx row_start = L.row_ptr()[i];
         const idx row_end = L.row_ptr()[i + 1];

@@ -7,7 +7,7 @@
 #include "linear/factorization/hessenberg.hpp"
 #include "linear/factorization/inverse_diagonal.hpp"
 #include "linear/factorization/lu.hpp"
-#include "linear/factorization/lu_no_pivot.hpp"
+#include "linear/factorization/mixed_lu.hpp"
 #include "linear/factorization/qr.hpp"
 #include "linear/factorization/thomas.hpp"
 #include "linear/factorization/tridiag_complex.hpp"

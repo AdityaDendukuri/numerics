@@ -5,7 +5,8 @@
 #include "linear/factorization/block_tridiagonal.hpp"
 #include "linear/factorization/cholesky.hpp"
 #include "linear/factorization/inverse_diagonal.hpp"
-#include "linear/factorization/lu_no_pivot.hpp"
+#include "linear/factorization/lu.hpp"
+#include "linear/solve.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/solvers/auto_linear.hpp"
 #include "linear/sparse/sparse.hpp"
@@ -33,12 +34,6 @@ struct sparse_structure {};
 /// @brief Select sparse direct factorization.
 inline constexpr sparse_structure sparse{};
 
-/// @brief The tag type of `num::no_pivot`.
-struct no_pivot_structure {};
-/// @brief Select dense LU without pivoting, for matrices whose structure keeps the pivots
-/// nonzero.
-inline constexpr no_pivot_structure no_pivot{};
-
 /// @brief A factorization of the diagonal similarity of a matrix under the weights `h`, with
 /// the weights it used.
 template <class F>
@@ -46,17 +41,6 @@ struct similar_factor {
     F factor;
     vec<real> h;
 };
-
-/// @brief How many blocks a block factorization kept from the previous one, and how many rows
-/// they cover.
-struct suffix_reuse_report {
-    idx blocks = 0;
-    idx reused_blocks = 0;
-    idx reused_rows = 0;
-};
-
-/// @brief Returned when no leading block of a factorization can be kept.
-inline constexpr idx no_reusable_block = static_cast<idx>(-1);
 
 namespace detail {
 
@@ -94,60 +78,12 @@ inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
     }
 }
 
-template <typename F>
-[[nodiscard]] inline idx first_changed_block(const F &Z, const block_layout &layout,
-                                             view<const idx> changed) {
-    array<idx> old_position(Z.size);
-    for (idx position = 0; position < Z.size; ++position) {
-        old_position[Z.order[position]] = position;
-    }
-
-    idx first = layout.offsets.size() - 1;
-    for (idx row : changed) {
-        first = std::min(first, layout.block_of[row]);
-        const auto boundary =
-            std::upper_bound(Z.offsets.begin(), Z.offsets.end(), old_position[row]);
-        first = std::min(first, static_cast<idx>(boundary - Z.offsets.begin() - 1));
-    }
-    if (first > Z.blocks() || first + 1 > layout.offsets.size()) {
-        return no_reusable_block;
-    }
-    for (idx k = 0; k <= first; ++k) {
-        if (Z.offsets[k] != layout.offsets[k]) {
-            return no_reusable_block;
-        }
-    }
-    for (idx position = 0; position < layout.offsets[first]; ++position) {
-        if (Z.order[position] != layout.order[position]) {
-            return no_reusable_block;
-        }
-    }
-    return first;
-}
-
-inline void record_suffix_reuse(suffix_reuse_report *report, const block_layout &layout,
-                                idx first) {
-    if (report != nullptr) {
-        *report = {.blocks = static_cast<idx>(layout.offsets.size() - 1),
-                   .reused_blocks = first,
-                   .reused_rows = layout.offsets[first]};
-    }
-}
-
 } // namespace detail
 
-/// Factor a dense unstructured nonsingular M-matrix by no-pivot LU.
-[[nodiscard]] inline no_pivot_lu lu(const mat<real> &R, no_pivot_structure) {
-    no_pivot_lu Z = factor_no_pivot(R);
-    if (Z.singular) {
-        throw std::runtime_error("lu: matrix is singular");
-    }
-    return Z;
-}
-
 /// Factor a sparse unstructured nonsingular M-matrix by no-pivot LU.
-[[nodiscard]] inline no_pivot_lu lu(const spmat &R, no_pivot_structure) {
-    no_pivot_lu Z = factor_no_pivot(dense(R));
+/// @throws std::runtime_error If a pivot is zero.
+[[nodiscard]] inline lu_result<real> lu(const spmat &R, no_pivot_structure) {
+    lu_result<real> Z = lu(dense(R), no_pivot);
     if (Z.singular) {
         throw std::runtime_error("lu: matrix is singular");
     }
@@ -169,7 +105,7 @@ inline void record_suffix_reuse(suffix_reuse_report *report, const block_layout 
     vec<real> weights = detail::checked_weights(h);
     cholesky_result C =
         cholesky(assume_spd(dense(sparse_diagonal_similarity(R, detail::reciprocal(weights)))));
-    if (!C.success) {
+    if (!C.positive_definite) {
         throw std::runtime_error("cholesky: symmetrized matrix is not positive definite");
     }
     return {std::move(C), std::move(weights)};
@@ -182,82 +118,6 @@ cholesky(const spmat &R, block_structure structure, view<const real> h) {
     block_cholesky_factor C = factor_block_cholesky(
         sparse_diagonal_similarity(R, detail::reciprocal(weights)), structure.levels);
     return {std::move(C), std::move(weights)};
-}
-
-/// Compatibility wrappers for code written before the algorithm names were explicit.
-[[nodiscard]] inline no_pivot_lu factor(const spmat &R) {
-    return lu(R, no_pivot);
-}
-[[nodiscard]] inline block_lu_factor factor(const spmat &R, block_structure structure) {
-    return lu(R, structure);
-}
-[[nodiscard]] inline auto_linear_solver factor(const spmat &R, sparse_structure structure) {
-    return lu(R, structure);
-}
-[[nodiscard]] inline similar_factor<cholesky_result> factor(const spmat &R, view<const real> h) {
-    return cholesky(R, h);
-}
-[[nodiscard]] inline similar_factor<block_cholesky_factor>
-factor(const spmat &R, block_structure structure, view<const real> h) {
-    return cholesky(R, structure, h);
-}
-
-/// Refactor the affected suffix of a block LU factorization.
-[[nodiscard]] inline std::optional<block_lu_factor>
-refactor_suffix(const block_lu_factor &Z, const spmat &R, block_structure structure,
-                view<const idx> changed, suffix_reuse_report *report = nullptr) {
-    if (R.n_rows() != Z.size || structure.levels.size() != Z.size) {
-        return std::nullopt;
-    }
-    const detail::block_layout layout = detail::build_block_order(structure.levels);
-    const idx first = detail::first_changed_block(Z, layout, changed);
-    if (first == no_reusable_block) {
-        return std::nullopt;
-    }
-    detail::record_suffix_reuse(report, layout, first);
-    try {
-        return refactor_block_lu_suffix(R, structure.levels, Z, first);
-    } catch (const std::exception &) {
-        return std::nullopt;
-    }
-}
-
-/// Refactor the affected suffix of a diagonally similar block Cholesky factorization.
-[[nodiscard]] inline std::optional<similar_factor<block_cholesky_factor>>
-refactor_suffix(const similar_factor<block_cholesky_factor> &Z, const spmat &R,
-                block_structure structure, view<const real> h, view<const idx> changed,
-                suffix_reuse_report *report = nullptr) {
-    if (R.n_rows() != Z.factor.size || structure.levels.size() != Z.factor.size) {
-        return std::nullopt;
-    }
-    const detail::block_layout layout = detail::build_block_order(structure.levels);
-    const idx first = detail::first_changed_block(Z.factor, layout, changed);
-    if (first == no_reusable_block) {
-        return std::nullopt;
-    }
-    detail::record_suffix_reuse(report, layout, first);
-    try {
-        vec<real> weights = detail::checked_weights(h);
-        auto C = refactor_block_cholesky_suffix(
-            sparse_diagonal_similarity(R, detail::reciprocal(weights)), structure.levels, Z.factor,
-            first);
-        return similar_factor<block_cholesky_factor>{std::move(C), std::move(weights)};
-    } catch (const std::exception &) {
-        return std::nullopt;
-    }
-}
-
-inline void solve(const cholesky_result &Z, const vec<real> &b, vec<real> &x) {
-    cholesky_solve(Z, b, x);
-}
-inline void solve(const cholesky_result &Z, const mat<real> &B, mat<real> &X) {
-    cholesky_solve(Z, B, X);
-}
-inline void solve_transpose(const cholesky_result &Z, const vec<real> &b, vec<real> &x) {
-    cholesky_solve(Z, b, x);
-}
-inline void solve_transpose(const cholesky_result &Z, const mat<real> &B, mat<real> &X) {
-    cholesky_solve(Z, B, X);
 }
 
 inline void solve_transpose(const block_cholesky_factor &Z, const vec<real> &b, vec<real> &x) {
@@ -281,51 +141,6 @@ inline void solve_transpose(const similar_factor<F> &Z, const RHS &b, RHS &x) {
     detail::scale_rows(x, Z.h, true);
     solve(Z.factor, x, x);
     detail::scale_rows(x, Z.h, false);
-}
-
-namespace detail {
-
-template <class F>
-struct transposed_factor {
-    const F &base;
-};
-
-} // namespace detail
-
-/// Write a transposed solve with the same `solve` operation used otherwise.
-/// The view stores only a reference, so this does not transpose or copy the factors.
-template <class F>
-requires requires(const F &Z, const vec<real> &b, vec<real> &x) {
-    solve_transpose(Z, b, x);
-}
-[[nodiscard]] inline detail::transposed_factor<F> transpose(const F &Z) {
-    return {Z};
-}
-
-template <class F>
-requires(!std::is_lvalue_reference_v<F> &&
-         requires(const std::remove_reference_t<F> &Z, const vec<real> &b, vec<real> &x) {
-             solve_transpose(Z, b, x);
-         }) detail::transposed_factor<std::remove_reference_t<F>> transpose(F &&) = delete;
-
-template <class F>
-[[nodiscard]] inline const F &transpose(detail::transposed_factor<F> Z) {
-    return Z.base;
-}
-
-template <class F, class RHS>
-inline void solve(detail::transposed_factor<F> Z, const RHS &b, RHS &x) {
-    solve_transpose(Z.base, b, x);
-}
-
-template <class F, class RHS>
-[[nodiscard]] RHS solve(const F &Z, const RHS &b) requires requires(RHS &x) {
-    solve(Z, b, x);
-}
-{
-    RHS x;
-    solve(Z, b, x);
-    return x;
 }
 
 template <class F>

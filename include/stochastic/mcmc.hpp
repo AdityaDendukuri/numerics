@@ -32,4 +32,5 @@ struct umbrella_window {
 
 } // namespace num::markov
 
+#include "stochastic/concepts.hpp"
 #include "stochastic/detail/mcmc_impl.hpp"

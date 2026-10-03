@@ -1,0 +1,9 @@
+random, diagonally weighted (n = 1024)
+  rcond                1.1e-02
+  mixed precision      refined from float
+  backward error       double 2.6e-16, mixed 3.2e-16
+  factor + solve       double 26.4 ms, mixed 18.1 ms
+Hilbert (n = 12)
+  rcond                2.6e-17
+  mixed precision      fell back to double
+  backward error       double 3.3e-18, mixed 3.3e-18

@@ -1,0 +1,1 @@
+backward-Euler diffusion: 1 CG iterations, residual 1.97955e-15

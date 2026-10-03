@@ -1,63 +1,63 @@
 /// @file 06_pde_poisson_solver.cpp
-/// @brief 2D/3D scalar/vec Fields & Manufactured Poisson PDE Solvers.
-#include <algorithm>
+/// @brief A 3D Poisson problem on scalar fields, converging at second order.
+///
+/// `field_solver::solve_poisson(phi, s)` solves \f$\Delta\phi = s\f$ with zero Dirichlet
+/// boundaries. It runs CG on the 7-point Laplacian and uses the field's own storage as the solution
+/// vector. The manufactured solution \f$\phi = e^x\sin\pi x\sin\pi y\sin\pi z\f$ vanishes on the
+/// boundary, and halving the grid spacing divides the error by about four.
 #include <cmath>
-#include <iostream>
+#include <cstdio>
+#include <numbers>
 #include <numerics.hpp>
+#include <string_view>
+#include <vector>
 
-int main() {
-    using namespace num;
+using namespace num;
 
-    const idx nx = 16, ny = 16, nz = 16;
-    const real dx = 1.0 / (nx - 1), dy = 1.0 / (ny - 1), dz = 1.0 / (nz - 1);
-
-    // This mode vanishes on every boundary face.
-    scalar_field_3d exact(nx, ny, nz, dx, dy, dz);
-    for (idx i = 0; i < nx; ++i) {
-        for (idx j = 0; j < ny; ++j) {
-            for (idx k = 0; k < nz; ++k) {
-                exact(i, j, k) =
-                    std::sin(M_PI * i * dx) * std::sin(M_PI * j * dy) * std::sin(M_PI * k * dz);
+int main(int argc, char **argv) {
+    const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
+    constexpr real pi = std::numbers::pi;
+    std::printf("   n      h        CG iterations   max error   ratio\n");
+    real previous = 0.0;
+    std::vector<double> slice_x, slice_phi;
+    for (idx n : {9, 17, 33}) {
+        const real h = 1.0 / static_cast<real>(n - 1);
+        const int m = static_cast<int>(n);
+        const auto spacing = static_cast<float>(h);
+        scalar_field_3d exact(m, m, m, spacing), source(m, m, m, spacing), phi(m, m, m, spacing);
+        for (idx i = 0; i < n; ++i) {
+            for (idx j = 0; j < n; ++j) {
+                for (idx k = 0; k < n; ++k) {
+                    const real x = i * h, y = j * h, z = k * h;
+                    const real yz = std::sin(pi * y) * std::sin(pi * z);
+                    exact(i, j, k) = std::exp(x) * std::sin(pi * x) * yz;
+                    // Laplacian of the above, worked out by hand.
+                    source(i, j, k) = std::exp(x) * yz *
+                                      (((1.0 - (3.0 * pi * pi)) * std::sin(pi * x)) +
+                                       (2.0 * pi * std::cos(pi * x)));
+                }
+            }
+        }
+        const solver_result result = field_solver::solve_poisson(phi, source, 1e-12, 2000);
+        real error = 0.0;
+        for (idx s = 0; s < phi.size(); ++s) {
+            error = std::max(error, std::abs(phi.as_vec()[s] - exact.as_vec()[s]));
+        }
+        std::printf("%4zu  %7.4f  %10zu        %.2e   %s\n", static_cast<std::size_t>(n), h,
+                    static_cast<std::size_t>(result.iterations), error,
+                    previous > 0.0 ? std::to_string(previous / error).substr(0, 4).c_str() : "");
+        previous = error;
+        if (n == 33) {
+            for (idx i = 0; i < n; ++i) {
+                slice_x.push_back(i * h);
+                slice_phi.push_back(phi(i, n / 2, n / 2));
             }
         }
     }
 
-    // Apply the discrete Laplacian to manufacture a grid-exact source.
-    scalar_field_3d source(nx, ny, nz, dx, dy, dz);
-    for (idx i = 1; i < nx - 1; ++i) {
-        for (idx j = 1; j < ny - 1; ++j) {
-            for (idx k = 1; k < nz - 1; ++k) {
-                source(i, j, k) = (exact(i + 1, j, k) + exact(i - 1, j, k) + exact(i, j + 1, k) +
-                                   exact(i, j - 1, k) + exact(i, j, k + 1) + exact(i, j, k - 1) -
-                                   6.0 * exact(i, j, k)) /
-                                  (dx * dx);
-            }
-        }
+    if (plot) {
+        plt::plot(slice_x, slice_phi, "phi(x, 1/2, 1/2)", "lines");
+        plt::title("06 Poisson solution, centre slice");
+        plt::show();
     }
-
-    scalar_field_3d phi(nx, ny, nz, dx, dy, dz);
-    const solver_result result = field_solver::solve_poisson(phi, source, 1e-10, 500);
-
-    real max_error = 0.0;
-    for (idx state = 0; state < phi.size(); ++state) {
-        max_error = std::max(max_error, std::abs(phi.as_vec()[state] - exact.as_vec()[state]));
-    }
-
-    // Extract 1D middle slice phi(x, ny/2, nz/2)
-    std::vector<double> x_grid, phi_slice;
-    for (idx i = 0; i < nx; ++i) {
-        x_grid.push_back((i + 1) * dx);
-        phi_slice.push_back(phi(i, ny / 2, nz / 2));
-    }
-
-    std::cout << "Poisson converged: " << std::boolalpha << result.converged
-              << ", max error = " << max_error << '\n';
-
-    plt::plot(x_grid, phi_slice, "phi(x, y_mid, z_mid)", "lines");
-    plt::title("06 PDE field Solver: 1D Mid-Slice Potential Phi(x)");
-    plt::xlabel("Position x");
-    plt::ylabel("Potential Phi");
-    plt::show_dumb(140, 35);
-
-    return result.converged && max_error < 1e-6 ? 0 : 1;
 }

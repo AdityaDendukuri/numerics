@@ -1,3 +1,79 @@
+/* Layout, code colours and the symbol index. The palette is in one of the files in
+   assets/themes/, chosen by the second entry under extra_css in mkdocs.yml. Each theme sets the
+   variables below and the rule under the header. */
+:root {
+  --arkansas-cardinal: #9d2235;
+  --uca-purple: #582c83;
+  --uca-gray: #7c878e;
+  --ucsb-navy: #003660;
+  --ucsb-gold: #febc11;
+  --cardinal-tint: #e8899a;
+  --purple-tint: #b9a0dc;
+  --ucsb-mist: #9cbebe;
+  --ink: #1f2328;
+  --dark-text: #dce1e5;
+}
+
+[data-md-color-scheme="default"] {
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.7);
+  --md-typeset-color: var(--ink);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.7);
+  --md-typeset-color: var(--dark-text);
+  --md-footer-bg-color: #0b0e10;
+  --md-footer-bg-color--dark: #070909;
+}
+
+.md-header {
+  border-bottom: 4px solid;
+}
+.md-nav__link--active {
+  box-shadow: inset 3px 0 0 var(--num-marker);
+  padding-left: 0.5em;
+}
+
+/* Code highlighting in GitHub's standard light and dark syntax colours (Primer). */
+[data-md-color-scheme="default"] {
+  --md-code-bg-color: #f6f8fa;
+  --md-code-fg-color: #1f2328;
+  --num-hl-keyword: #cf222e;
+  --num-hl-string: #0a3069;
+  --num-hl-number: #0550ae;
+  --num-hl-definition: #8250df;
+  --num-hl-comment: #6e7781;
+}
+[data-md-color-scheme="slate"] {
+  --md-code-bg-color: #161b22;
+  --md-code-fg-color: #e6edf3;
+  --num-hl-keyword: #ff7b72;
+  --num-hl-string: #a5d6ff;
+  --num-hl-number: #79c0ff;
+  --num-hl-definition: #d2a8ff;
+  --num-hl-comment: #8b949e;
+}
+.md-typeset .highlight :is(.k, .kc, .kd, .kn, .kp, .kr, .kt, .o, .ow, .cp) {
+  color: var(--num-hl-keyword);
+}
+.md-typeset .highlight :is(.s, .s1, .s2, .sb, .sc, .sd, .sh, .si, .sx, .cpf) {
+  color: var(--num-hl-string);
+}
+.md-typeset .highlight :is(.m, .mb, .mf, .mh, .mi, .mo, .il, .se) {
+  color: var(--num-hl-number);
+}
+.md-typeset .highlight :is(.nf, .nc, .nn, .nb, .fm) {
+  color: var(--num-hl-definition);
+}
+.md-typeset .highlight :is(.c, .c1, .cm, .cs, .ch) {
+  color: var(--num-hl-comment);
+}
+.md-typeset .highlight :is(.n, .p, .w, .nv, .na) {
+  color: var(--md-code-fg-color);
+}
+
 /* The grouped index of names, as on cppreference: titled groups in columns. */
 .sym-index {
   column-count: 3;
@@ -15,7 +91,7 @@
 }
 .sym-index .kidx-title {
   font-weight: 600;
-  color: var(--md-primary-fg-color);
+  color: var(--num-heading-accent);
 }
 .sym-index .hdr {
   font-style: italic;
@@ -31,5 +107,5 @@
 .sym-index code {
   background: none;
   padding: 0;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }

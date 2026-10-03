@@ -96,14 +96,14 @@ idx klu_factorization::size() const noexcept {
     return impl_ ? impl_->n : 0;
 }
 
-void klu_factorization::solve(const vec<real> &rhs, vec<real> &solution) const {
+void solve(const klu_factorization &factor, const vec<real> &rhs, vec<real> &solution) {
 #if defined(NUMERICS_HAS_KLU)
-    if (rhs.size() != impl_->n) {
+    if (rhs.size() != factor.impl_->n) {
         throw std::invalid_argument("KLU solve dimension mismatch");
     }
     solution = rhs;
-    if (!klu_solve(impl_->symbolic, impl_->numeric, static_cast<int>(impl_->n), 1, solution.data(),
-                   &impl_->common)) {
+    if (!klu_solve(factor.impl_->symbolic, factor.impl_->numeric, static_cast<int>(factor.impl_->n), 1, solution.data(),
+                   &factor.impl_->common)) {
         throw std::runtime_error("KLU solve failed");
     }
 #else
@@ -113,9 +113,9 @@ void klu_factorization::solve(const vec<real> &rhs, vec<real> &solution) const {
 #endif
 }
 
-void klu_factorization::solve(const mat<real> &rhs, mat<real> &solution) const {
+void solve(const klu_factorization &factor, const mat<real> &rhs, mat<real> &solution) {
 #if defined(NUMERICS_HAS_KLU)
-    if (rhs.rows() != impl_->n) {
+    if (rhs.rows() != factor.impl_->n) {
         throw std::invalid_argument("KLU block solve dimension mismatch");
     }
     array<double> column_major(rhs.size());
@@ -124,8 +124,8 @@ void klu_factorization::solve(const mat<real> &rhs, mat<real> &solution) const {
             column_major[(column * rhs.rows()) + row] = rhs(row, column);
         }
     }
-    if (!klu_solve(impl_->symbolic, impl_->numeric, static_cast<int>(impl_->n),
-                   static_cast<int>(rhs.cols()), column_major.data(), &impl_->common)) {
+    if (!klu_solve(factor.impl_->symbolic, factor.impl_->numeric, static_cast<int>(factor.impl_->n),
+                   static_cast<int>(rhs.cols()), column_major.data(), &factor.impl_->common)) {
         throw std::runtime_error("KLU block solve failed");
     }
     solution = mat<real>(rhs.rows(), rhs.cols(), 0.0);
@@ -141,14 +141,14 @@ void klu_factorization::solve(const mat<real> &rhs, mat<real> &solution) const {
 #endif
 }
 
-void klu_factorization::solve_transpose(const vec<real> &rhs, vec<real> &solution) const {
+void solve_transpose(const klu_factorization &factor, const vec<real> &rhs, vec<real> &solution) {
 #if defined(NUMERICS_HAS_KLU)
-    if (rhs.size() != impl_->n) {
+    if (rhs.size() != factor.impl_->n) {
         throw std::invalid_argument("KLU transpose solve dimension mismatch");
     }
     solution = rhs;
-    if (!klu_tsolve(impl_->symbolic, impl_->numeric, static_cast<int>(impl_->n), 1, solution.data(),
-                    &impl_->common)) {
+    if (!klu_tsolve(factor.impl_->symbolic, factor.impl_->numeric, static_cast<int>(factor.impl_->n), 1, solution.data(),
+                    &factor.impl_->common)) {
         throw std::runtime_error("KLU transpose solve failed");
     }
 #else
@@ -158,9 +158,9 @@ void klu_factorization::solve_transpose(const vec<real> &rhs, vec<real> &solutio
 #endif
 }
 
-void klu_factorization::solve_transpose(const mat<real> &rhs, mat<real> &solution) const {
+void solve_transpose(const klu_factorization &factor, const mat<real> &rhs, mat<real> &solution) {
 #if defined(NUMERICS_HAS_KLU)
-    if (rhs.rows() != impl_->n) {
+    if (rhs.rows() != factor.impl_->n) {
         throw std::invalid_argument("KLU transpose block solve dimension mismatch");
     }
     array<double> column_major(rhs.size());
@@ -169,8 +169,8 @@ void klu_factorization::solve_transpose(const mat<real> &rhs, mat<real> &solutio
             column_major[(column * rhs.rows()) + row] = rhs(row, column);
         }
     }
-    if (!klu_tsolve(impl_->symbolic, impl_->numeric, static_cast<int>(impl_->n),
-                    static_cast<int>(rhs.cols()), column_major.data(), &impl_->common)) {
+    if (!klu_tsolve(factor.impl_->symbolic, factor.impl_->numeric, static_cast<int>(factor.impl_->n),
+                    static_cast<int>(rhs.cols()), column_major.data(), &factor.impl_->common)) {
         throw std::runtime_error("KLU transpose block solve failed");
     }
     solution = mat<real>(rhs.rows(), rhs.cols(), 0.0);
@@ -184,18 +184,6 @@ void klu_factorization::solve_transpose(const mat<real> &rhs, mat<real> &solutio
     (void)solution;
     throw std::runtime_error("Numerics was built without SuiteSparse KLU support");
 #endif
-}
-
-void klu_factorization::solve_in_place(vec<real> &right_hand_side) const {
-    vec<real> result(right_hand_side.size(), 0.0);
-    solve(right_hand_side, result);
-    right_hand_side = std::move(result);
-}
-
-void klu_factorization::solve_in_place(mat<real> &right_hand_sides) const {
-    mat<real> result;
-    solve(right_hand_sides, result);
-    right_hand_sides = std::move(result);
 }
 
 } // namespace num

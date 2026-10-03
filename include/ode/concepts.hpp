@@ -20,11 +20,4 @@ concept vec_field = vector_space<V> && requires(T &field) {
     { field.as_vec() } -> std::same_as<V &>;
 };
 
-/// @brief Stepper advancing a state from \f$t\f$ to \f$t + h\f$.
-template <typename Stepper, class State = vec<real>>
-concept is_ode_stepper = vector_space<State> &&
-    requires(Stepper &stepper, real t, real h, const State &y, State &y_next) {
-    stepper.step(t, h, y, y_next);
-};
-
 } // namespace num

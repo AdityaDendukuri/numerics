@@ -44,15 +44,14 @@ struct lanczos_result {
     }
 };
 
-/// Approximation of \f$A^{-1/2}b\f$ produced from a Lanczos projection.
-struct lanczos_inverse_sqrt_result {
+/// Approximation of \f$f(A)b\f$ produced from a Lanczos projection, for
+/// \f$f(A) = A^{-1/2}\f$ (`inverse_sqrt_lanczos`) or \f$A^{1/2}\f$ (`sqrt_lanczos`).
+struct lanczos_action_result {
     vec<real> value;
     idx steps = 0;
     real relative_change = 0.0;
     bool converged = false;
 };
-
-using lanczos_sqrt_result = lanczos_inverse_sqrt_result;
 
 namespace detail {
 
@@ -123,7 +122,7 @@ namespace detail {
 }
 
 template <class Op>
-requires linear_operator<Op, vec<real>, vec<real>> lanczos_inverse_sqrt_result
+requires linear_operator<Op, vec<real>, vec<real>> lanczos_action_result
 inverse_sqrt_lanczos_impl(const Op &A, const vec<real> &right_hand_side, real tolerance, idx max_steps) {
     const idx n = A.rows();
     if (A.cols() != n || right_hand_side.size() != n)
@@ -190,7 +189,7 @@ inverse_sqrt_lanczos_impl(const Op &A, const vec<real> &right_hand_side, real to
 }
 
 template <class Op>
-requires linear_operator<Op, vec<real>, vec<real>> lanczos_sqrt_result
+requires linear_operator<Op, vec<real>, vec<real>> lanczos_action_result
 sqrt_lanczos_impl(const Op &A, const vec<real> &right_hand_side, real tolerance, idx max_steps) {
     const idx n = A.rows();
     if (A.cols() != n || right_hand_side.size() != n)
@@ -368,7 +367,7 @@ requires linear_operator<Op, vec<real>, vec<real>>
 /// projected actions differ by at most `tolerance` in relative Euclidean norm,
 /// or when `max_steps` is reached.
 template <class Op>
-requires spd_operator<Op, vec<real>> [[nodiscard]] lanczos_inverse_sqrt_result
+requires spd_operator<Op, vec<real>> [[nodiscard]] lanczos_action_result
 inverse_sqrt_lanczos(const Op &A, const vec<real> &right_hand_side, real tolerance = 1e-8,
                      idx max_steps = 0) {
     return detail::inverse_sqrt_lanczos_impl(A, right_hand_side, tolerance, max_steps);
@@ -376,7 +375,7 @@ inverse_sqrt_lanczos(const Op &A, const vec<real> &right_hand_side, real toleran
 
 /// Approximate \f$A^{1/2}b\f$ for a symmetric positive-definite operator.
 template <class Op>
-requires spd_operator<Op, vec<real>> [[nodiscard]] lanczos_sqrt_result
+requires spd_operator<Op, vec<real>> [[nodiscard]] lanczos_action_result
 sqrt_lanczos(const Op &A, const vec<real> &right_hand_side, real tolerance = 1e-8, idx max_steps = 0) {
     return detail::sqrt_lanczos_impl(A, right_hand_side, tolerance, max_steps);
 }

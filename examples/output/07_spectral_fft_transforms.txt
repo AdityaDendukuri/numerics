@@ -1,0 +1,6 @@
+FFTW available 1, SIMD path available 1
+rfft: 33 bins; amplitudes 2|X(k)|/n above 0.01:
+  k =  3  amplitude 1.0000
+  k =  7  amplitude 0.5000
+irfft(rfft(x)) / n - x: 2.2e-16
+ifft(fft(z)) / n - z:   2.0e-15

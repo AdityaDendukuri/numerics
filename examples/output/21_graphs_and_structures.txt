@@ -1,0 +1,7 @@
+grid: 1600 vertices, connected 1
+shortest path from corner to corner: 78
+minimum spanning tree: weight 1599 (n - 1 = 1599)
+disjoint set: 0~3 1, 0~5 0
+
+Laplacian PCG with ApproxChol: converged 1 in 22 iterations
+effective resistance corner to corner: 4.7743

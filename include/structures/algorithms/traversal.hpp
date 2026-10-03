@@ -18,7 +18,7 @@ namespace num::structures {
 
 /// Check if graph is connected.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline bool is_connected(const basic_graph<Weight, Index> &G) {
+[[nodiscard]] inline bool is_connected(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
     if (n <= 1) return true;
 
@@ -33,7 +33,7 @@ template <typename Weight, std::integral Index>
 
 /// Compute connected components partition.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline array<array<Index>> connected_components(const basic_graph<Weight, Index> &G) {
+[[nodiscard]] inline array<array<Index>> connected_components(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
     basic_disjoint_set<Index> ds(n);
     for (Index u = 0; u < n; ++u) {
@@ -46,7 +46,7 @@ template <typename Weight, std::integral Index>
 
 /// Compute single-source shortest path distances using Dijkstra with an Indexed Priority Queue.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline array<Weight> dijkstra(const basic_graph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline array<Weight> dijkstra(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::dijkstra source");
@@ -77,7 +77,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
 
 /// Breadth-first search traversal order starting from source.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline array<Index> bfs(const basic_graph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline array<Index> bfs(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::bfs source");
@@ -107,7 +107,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
 
 /// Depth-first search traversal order starting from source.
 template <typename Weight, std::integral Index, std::integral Source = Index>
-[[nodiscard]] inline array<Index> dfs(const basic_graph<Weight, Index> &G, Source source_in) {
+[[nodiscard]] inline array<Index> dfs(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
     const Index source = static_cast<Index>(source_in);
     debug::check_vertex_bounds(source, n, "structures::dfs source");
@@ -137,7 +137,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
 
 /// Compute Minimum Spanning Tree (MST) using Kruskal's algorithm with disjoint_set.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline basic_graph<Weight, Index> minimum_spanning_tree(const basic_graph<Weight, Index> &G) {
+[[nodiscard]] inline graph<Weight, Index> minimum_spanning_tree(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
     struct kruskal_edge {
         Index u, v;
@@ -156,7 +156,7 @@ template <typename Weight, std::integral Index>
     std::sort(edges.begin(), edges.end());
 
     basic_disjoint_set<Index> ds(n);
-    basic_graph<Weight, Index> mst(n, G.is_directed());
+    graph<Weight, Index> mst(n, G.is_directed());
 
     for (const auto &e : edges) {
         if (ds.unite(e.u, e.v)) {

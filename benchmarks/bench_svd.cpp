@@ -23,7 +23,7 @@ static mat<real> make_rect(idx m, idx n) {
     return A;
 }
 
-// ── Full SVD ─────────────────────────────────────────────────────────────────
+// Full SVD
 
 static void BM_SVD_Seq(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));
@@ -56,10 +56,8 @@ static void BM_SVD_Lapack(benchmark::State &state) {
 BENCHMARK(BM_SVD_Lapack)->RangeMultiplier(2)->Range(32, 512)->Complexity();
 #endif
 
-// ── Randomized truncated SVD
-// ────────────────────────────────────────────────── Different algorithm:
-// targets top-k only, O(mnk). Not directly comparable for the same n, but shown
-// alongside for practical guidance.
+// Randomized truncated SVD. A different algorithm that targets the top k only, O(mnk), so it is
+// not directly comparable at the same n, but it is shown alongside for practical guidance.
 
 static void BM_SVD_Randomized(benchmark::State &state) {
     idx n = static_cast<idx>(state.range(0));

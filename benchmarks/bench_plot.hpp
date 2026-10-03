@@ -126,7 +126,6 @@ static std::string plot_cmd(const std::vector<std::pair<std::string, int>> &seri
 }
 
 // -- Individual plot functions
-// -------------------------------------------------
 
 /// matmul.pdf  -- GFLOP/s vs n for every matmul variant
 static void plot_matmul(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
@@ -322,7 +321,7 @@ static void plot_fft(gnuplot &gp, const std::vector<Run> &runs, const std::strin
         int ls;
     };
 
-    // -- forward FFT: one-shot -----------------------------------------------
+    // forward FFT: one-shot
     {
         std::vector<Variant> variants = {
             {"BM_FFT<fft_backend::seq", "seq (Cooley-Tukey)", 1},
@@ -364,7 +363,7 @@ static void plot_fft(gnuplot &gp, const std::vector<Run> &runs, const std::strin
         }
     }
 
-    // -- reusable plan: seq vs fftw ------------------------------------------
+    // reusable plan: seq vs fftw
     {
         std::vector<Variant> variants = {
             {"BM_FFTPlan<fft_backend::seq", "seq plan (Cooley-Tukey)", 1},
@@ -406,7 +405,7 @@ static void plot_fft(gnuplot &gp, const std::vector<Run> &runs, const std::strin
         }
     }
 
-    // -- rfft: seq vs fftw ---------------------------------------------------
+    // rfft: seq vs fftw
     {
         std::vector<Variant> variants = {
             {"BM_RFFT<fft_backend::seq", "seq (Cooley-Tukey)", 1},
@@ -624,7 +623,6 @@ static void plot_eigen(gnuplot &gp, const std::vector<Run> &runs, const std::str
 }
 
 // -- Entry point
-// ---------------------------------------------------------------
 
 /// Generate all plots for the collected benchmark results.
 /// @param runs    Results from CollectingReporter.
@@ -667,7 +665,7 @@ inline void plot_all_png(const std::vector<Run> &runs, const std::string &outdir
     plot_eigen(gp, runs, outdir, ".png");
 }
 
-// ─── ASCII / dumb-terminal plots ─────────────────────────────────────────────
+// ASCII / dumb-terminal plots
 //
 // GnuplotAscii builds a gnuplot script and runs it with "set terminal dumb",
 // writing ASCII art to a .txt file.  gen_report then reads those files and

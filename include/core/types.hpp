@@ -26,7 +26,7 @@ using cplx = std::complex<real>;
 ///
 /// Alias templates, not wrappers: `num::array<T>` is `std::vector<T>`. `array`, `static_array`
 /// and `view` free the words vector and span for mathematics; the associative containers keep
-/// their C++ names. See the algorithm notes, container vocabulary.
+/// their C++ names.
 ///
 /// Fixed and dynamic extent get two names because an alias selecting between them through a
 /// trait would make `template <class T> void f(array<T> &)` a non-deduced context.

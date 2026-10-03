@@ -1,0 +1,10 @@
+corrected no-pivot LU, n = 600
+  state  37: corrected   2.01 ms (fresh 18.10 ms)  error 2.7e-15
+  state 210: corrected   2.18 ms (fresh 16.29 ms)  error 2.7e-15
+  state  37: corrected   2.14 ms (fresh 16.27 ms)  error 2.7e-15
+  state 455: corrected   2.91 ms (fresh 16.25 ms)  error 2.7e-15
+  state 512: refactored  16.16 ms (fresh 16.16 ms)  error 2.7e-15
+block LU, 150 blocks
+  state 590: kept 147 of 150 blocks  error 1.8e-15
+  state 300: kept  75 of 150 blocks  error 1.8e-15
+  state   3: kept   0 of 150 blocks  error 1.8e-15

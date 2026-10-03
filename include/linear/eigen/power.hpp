@@ -125,7 +125,7 @@ inline power_result inverse_iteration(const mat<real> &A, real sigma, real tol, 
         M(i, i) -= sigma;
     }
     // M is A (rejected above unless square) shifted along its diagonal.
-    lu_result f = lu(M);
+    lu_result<real> f = lu(M);
 
     vec<real> v(n, 0.0);
     v[0] = 1.0;
@@ -137,7 +137,7 @@ inline power_result inverse_iteration(const mat<real> &A, real sigma, real tol, 
         result.iterations = iter + 1;
 
         vec<real> w(n);
-        lu_solve(f, v, w);
+        solve(f, v, w);
         detail::normalise(w);
 
         // Rayleigh quotient as eigenvalue estimate
@@ -188,14 +188,14 @@ inline power_result rayleigh_iteration(const mat<real> &A, const vec<real> &x0, 
             M(i, i) -= sigma;
         }
         // M is A (rejected above unless square) shifted along its diagonal.
-        lu_result f = lu(M);
+        lu_result<real> f = lu(M);
 
         if (f.singular) {
             break;
         }
 
         vec<real> w(n);
-        lu_solve(f, v, w);
+        solve(f, v, w);
         detail::normalise(w);
 
         matvec(A, w, av);

@@ -3,13 +3,15 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "stochastic/concepts.hpp"
+#include "stochastic/rng.hpp"
 #include <random>
 #include <span>
 #include <stdexcept>
 
 namespace num {
 
-template <typename RNG>
+template <std::uniform_random_bit_generator RNG>
 /// Draw an index from nonnegative unnormalized weights in one pass.
 [[nodiscard]] idx sample_categorical(view<const real> weights, RNG &rng) {
     real total = 0.0;
@@ -40,7 +42,7 @@ class categorical_sampler {
     explicit categorical_sampler(view<const real> weights)
         : distribution_(weights.begin(), weights.end()) {}
 
-    template <typename RNG>
+    template <std::uniform_random_bit_generator RNG>
     [[nodiscard]] idx operator()(RNG &rng) {
         return static_cast<idx>(distribution_(rng));
     }
@@ -49,4 +51,5 @@ class categorical_sampler {
     std::discrete_distribution<std::size_t> distribution_;
 };
 
+static_assert(categorical_sampling<categorical_sampler, rng>);
 } // namespace num

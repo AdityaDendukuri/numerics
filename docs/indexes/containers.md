@@ -6,10 +6,10 @@ Grouped by what each does. Types own their storage and are over-aligned; the fre
 num::real num::idx num::cplx num::array num::static_array num::view num::unordered_map num::map num::unordered_set num::set num::append num::scalar_fn num::vector_fn num::to_idx
 
 ## Dense vectors <container/vector.hpp>
-num::vec<num::real> num::vec<num::real> num::vec<num::cplx> num::vec2_view num::copy_to
+num::vec num::vec2_view num::copy_to
 
 ## Dense matrices <container/matrix.hpp>
-num::mat<num::real> num::mat<num::real>
+num::mat
 
 ## Vector arithmetic <container/vector_ops.hpp>
 num::scale num::axpy num::axpby num::axpbyz num::add num::dot num::norm

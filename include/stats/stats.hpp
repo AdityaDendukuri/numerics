@@ -5,6 +5,7 @@
 #include "stats/selection.hpp"
 
 #include "core/types.hpp"
+#include "stats/concepts.hpp"
 #include <algorithm>
 #include <cmath>
 #include <concepts>
@@ -150,4 +151,5 @@ inline Float autocorr_time(const Float *data, Index n, Float c = Float{6.0}) {
     return (tau < Float{0.5}) ? Float{0.5} : tau;
 }
 
+static_assert(moment_accumulator<running_stats>);
 } // namespace num

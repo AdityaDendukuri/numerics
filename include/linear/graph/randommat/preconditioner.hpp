@@ -159,39 +159,39 @@ class grounded_approx_chol_factor final {
 
 static_assert(linear_operator<approx_chol_preconditioner, vec<real>, vec<real>>);
 
-/// Convert num::basic_graph to randommat::graph.
+/// Convert num::graph to randommat::adjacency_list.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline graph<real, idx> to_approxchol_graph(const basic_graph<Weight, Index> &G) {
+[[nodiscard]] inline adjacency_list<real, idx> to_approxchol_graph(const graph<Weight, Index> &G) {
     const auto mg = structures::to_multigraph(G);
     return mg.adjacency();
 }
 
-/// Convert num::basic_multigraph to randommat::graph.
+/// Convert num::multigraph to randommat::adjacency_list.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline graph<real, idx>
-to_approxchol_graph(const structures::basic_multigraph<Weight, Index> &mg) {
+[[nodiscard]] inline adjacency_list<real, idx>
+to_approxchol_graph(const structures::multigraph<Weight, Index> &mg) {
     return mg.adjacency();
 }
 
-/// Convert Laplacian spmat (CSR) to randommat::graph.
-[[nodiscard]] inline graph<real, idx> to_approxchol_graph(const spmat &L) {
+/// Convert Laplacian spmat (CSR) to randommat::adjacency_list.
+[[nodiscard]] inline adjacency_list<real, idx> to_approxchol_graph(const spmat &L) {
     const auto mg = num::linear::to_multigraph(L);
     return mg.adjacency();
 }
 
-/// Construct ApproxChol preconditioner from a randommat::graph.
+/// Construct ApproxChol preconditioner from a randommat::adjacency_list.
 template <detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const graph<real, idx> &G, Algorithm algorithm, std::uint64_t seed = 42) {
+approxchol_preconditioner(const adjacency_list<real, idx> &G, Algorithm algorithm, std::uint64_t seed = 42) {
     rng64 rng(seed);
     auto factor = factorize<real, idx>(G, algorithm, &rng);
     return approx_chol_preconditioner(std::move(factor));
 }
 
-/// Construct ApproxChol preconditioner from a num::basic_graph.
+/// Construct ApproxChol preconditioner from a num::graph.
 template <typename Weight, std::integral Index, detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const basic_graph<Weight, Index> &G, Algorithm algorithm,
+approxchol_preconditioner(const graph<Weight, Index> &G, Algorithm algorithm,
                           std::uint64_t seed = 42) {
     auto ac_G = to_approxchol_graph(G);
     return approxchol_preconditioner(ac_G, algorithm, seed);
@@ -200,7 +200,7 @@ approxchol_preconditioner(const basic_graph<Weight, Index> &G, Algorithm algorit
 /// Construct ApproxChol preconditioner from a num::multigraph.
 template <typename Weight, std::integral Index, detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const structures::basic_multigraph<Weight, Index> &mg,
+approxchol_preconditioner(const structures::multigraph<Weight, Index> &mg,
                           Algorithm algorithm, std::uint64_t seed = 42) {
     return approxchol_preconditioner(mg.adjacency(), algorithm, seed);
 }
@@ -222,7 +222,7 @@ grounded_approxchol_factor(const spmat &A, Algorithm algorithm, std::uint64_t se
     if (A.n_cols() != n)
         throw std::invalid_argument("grounded_approxchol_factor: matrix must be square");
 
-    structures::multigraph graph_with_ground(n + 1);
+    structures::multigraph<real, idx> graph_with_ground(n + 1);
     bool has_ground_edge = false;
     for (idx row = 0; row < n; ++row) {
         real diagonal = 0.0;

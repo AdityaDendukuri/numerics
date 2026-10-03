@@ -185,4 +185,5 @@ using max_indexed_pq = indexed_priority_queue<Key, Index, std::greater<Key>>;
 static_assert(concepts::addressable_priority_queue<min_indexed_pq<double, num::idx>, double, num::idx>,
               "min_indexed_pq must satisfy addressable_priority_queue");
 
+static_assert(addressable_priority_queue<min_indexed_pq<real, idx>, real>);
 } // namespace num

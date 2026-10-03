@@ -6,6 +6,7 @@
 /// and no boundary conditions -- those belong to the operator and the field.
 #pragma once
 
+#include "core/index_space.hpp"
 #include "core/types.hpp"
 
 namespace num {
@@ -21,4 +22,5 @@ struct grid2d {
     [[nodiscard]] int size() const { return N * N; }
 };
 
+static_assert(cartesian_index_space_2d<grid2d>);
 } // namespace num

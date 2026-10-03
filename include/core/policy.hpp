@@ -14,9 +14,7 @@
 
 namespace num {
 
-// -----------------------------------------------------------------------------
 // Build capabilities
-// -----------------------------------------------------------------------------
 
 /// @brief True when the build links a BLAS.
 inline constexpr bool has_blas =
@@ -78,9 +76,7 @@ inline constexpr bool has_cuda =
     false;
 #endif
 
-// -----------------------------------------------------------------------------
 // The one compile-time default
-// -----------------------------------------------------------------------------
 
 // forward-declare every backend so `accel` can name whichever is available; each backend's
 // headers reopen its namespace. `num::seq` is the fallback, since `num::kernel` knows only

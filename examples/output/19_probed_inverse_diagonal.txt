@@ -1,0 +1,4 @@
+n = 1000
+  50 probes: mean relative error 0.158, worst 0.746, sqrt(2/probes) = 0.200
+ 200 probes: mean relative error 0.079, worst 0.381, sqrt(2/probes) = 0.100
+ 800 probes: mean relative error 0.041, worst 0.170, sqrt(2/probes) = 0.050

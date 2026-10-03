@@ -1,0 +1,6 @@
+CG, sparse                     converged 1  iterations   75  residual 6.06e-11
+PCG, Jacobi                    converged 1  iterations   31  residual 6.11e-11
+MINRES                         converged 1  iterations   74  residual 8.23e-11
+GMRES(30), nonsymmetric        converged 1  iterations  123  residual 9.70e-11
+CG, matrix-free                converged 1  iterations   75  residual 6.06e-11
+max |x_sparse - x_matrix_free| = 5.5e-12

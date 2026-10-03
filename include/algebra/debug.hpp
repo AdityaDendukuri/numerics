@@ -18,9 +18,7 @@
 
 namespace num::debug {
 
-// ---------------------------------------------------------------------------
 // Randomized probing for sampled property tests
-// ---------------------------------------------------------------------------
 
 /// @brief Number of random probe vectors drawn per sampled property test.
 inline idx g_probe_count = 6;
@@ -99,9 +97,7 @@ template <class VectorType>
     return s == 0 ? idx(1) : s;
 }
 
-// ---------------------------------------------------------------------------
 // Operator property sampling
-// ---------------------------------------------------------------------------
 //
 // Generic over anything exposing `apply(x, y)` and `cols()`.
 

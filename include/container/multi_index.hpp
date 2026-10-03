@@ -95,7 +95,7 @@ struct multi_index {
 
 } // namespace num
 
-// --- std::hash specialization for num::multi_index using Boost hash_combine ---
+// std::hash specialization for num::multi_index using Boost hash_combine
 namespace std {
 template <>
 struct hash<num::multi_index> {

@@ -142,4 +142,5 @@ static_assert(concepts::equivalence_relation<disjoint_set, num::idx>,
 static_assert(concepts::equivalence_relation<disjoint_set_32, uint32_t>,
               "disjoint_set_32 must satisfy equivalence_relation concept");
 
+static_assert(equivalence_relation<disjoint_set>);
 } // namespace num

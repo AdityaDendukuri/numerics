@@ -8,7 +8,7 @@ namespace num {
 
 struct auto_linear_solver::Impl {
     idx n = 0;
-    std::optional<lu_result> dense_factor;
+    std::optional<lu_result<real>> dense_factor;
     std::unique_ptr<klu_factorization> sparse_factor;
 };
 
@@ -37,48 +37,36 @@ idx auto_linear_solver::size() const noexcept {
     return impl_ ? impl_->n : 0;
 }
 
-void auto_linear_solver::solve(const vec<real> &rhs, vec<real> &solution) const {
-    if (impl_->sparse_factor) {
-        impl_->sparse_factor->solve(rhs, solution);
+void solve(const auto_linear_solver &factor, const vec<real> &rhs, vec<real> &solution) {
+    if (factor.impl_->sparse_factor) {
+        solve(*factor.impl_->sparse_factor, rhs, solution);
     } else {
-        lu_solve(*impl_->dense_factor, rhs, solution);
+        solve(*factor.impl_->dense_factor, rhs, solution);
     }
 }
 
-void auto_linear_solver::solve(const mat<real> &rhs, mat<real> &solution) const {
-    if (impl_->sparse_factor) {
-        impl_->sparse_factor->solve(rhs, solution);
+void solve(const auto_linear_solver &factor, const mat<real> &rhs, mat<real> &solution) {
+    if (factor.impl_->sparse_factor) {
+        solve(*factor.impl_->sparse_factor, rhs, solution);
     } else {
-        lu_solve(*impl_->dense_factor, rhs, solution);
+        solve(*factor.impl_->dense_factor, rhs, solution);
     }
 }
 
-void auto_linear_solver::solve_transpose(const vec<real> &rhs, vec<real> &solution) const {
-    if (impl_->sparse_factor) {
-        impl_->sparse_factor->solve_transpose(rhs, solution);
+void solve_transpose(const auto_linear_solver &factor, const vec<real> &rhs, vec<real> &solution) {
+    if (factor.impl_->sparse_factor) {
+        solve_transpose(*factor.impl_->sparse_factor, rhs, solution);
     } else {
-        lu_solve_transpose(*impl_->dense_factor, rhs, solution);
+        solve_transpose(*factor.impl_->dense_factor, rhs, solution);
     }
 }
 
-void auto_linear_solver::solve_transpose(const mat<real> &rhs, mat<real> &solution) const {
-    if (impl_->sparse_factor) {
-        impl_->sparse_factor->solve_transpose(rhs, solution);
+void solve_transpose(const auto_linear_solver &factor, const mat<real> &rhs, mat<real> &solution) {
+    if (factor.impl_->sparse_factor) {
+        solve_transpose(*factor.impl_->sparse_factor, rhs, solution);
     } else {
-        lu_solve_transpose(*impl_->dense_factor, rhs, solution);
+        solve_transpose(*factor.impl_->dense_factor, rhs, solution);
     }
-}
-
-void auto_linear_solver::solve_in_place(vec<real> &right_hand_side) const {
-    vec<real> solution(right_hand_side.size(), 0.0);
-    solve(right_hand_side, solution);
-    right_hand_side = std::move(solution);
-}
-
-void auto_linear_solver::solve_in_place(mat<real> &right_hand_sides) const {
-    mat<real> solution;
-    solve(right_hand_sides, solution);
-    right_hand_sides = std::move(solution);
 }
 
 } // namespace num

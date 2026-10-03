@@ -3,6 +3,7 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "quadrature/concepts.hpp"
 #include <cmath>
 #include <complex>
 #include <stdexcept>
@@ -60,4 +61,5 @@ inline array<contour_node> talbot_contour(real t, idx modes = 16) {
     return talbot_quadrature{modes}.nodes(t);
 }
 
+static_assert(contour_rule<talbot_quadrature>);
 } // namespace num

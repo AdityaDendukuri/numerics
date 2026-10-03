@@ -1,7 +1,7 @@
 #include "container/matrix.hpp"
 #include "container/matrix_expr.hpp"
 #include "container/matrix_ops.hpp"
-#include "kernel/factor.hpp"
+#include "linear/factorization/cholesky.hpp"
 #include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
 #include "omp/matrix_ops.hpp"
@@ -317,7 +317,7 @@ TEST(Gemm, OmpMatmulMatchesSequential) {
 }
 
 // The four triangular solves are blocked over the packed gemm: each diagonal
-// block by substitution, the rest by a rank-`trsm_block` update. Shapes here
+// block by substitution, the rest by a rank-`kernel::detail::trsm_block` update. Shapes here
 // straddle the block boundary and every right-hand-side count the row batch
 // in the right-side solve can leave over.
 TEST(Trsm, AllVariantsInvertTheirProducts) {
@@ -423,7 +423,7 @@ TEST(Trsm, BlockedCholeskyReconstructsAndZeroesUpperTriangle) {
                 A(i, j) =
                     i == j ? static_cast<real>(n) + 1.0 : 1.0 / (1.0 + static_cast<real>(i + j));
         mat<real> L = A;
-        ASSERT_TRUE(kernel::cholesky_blocked(L.data(), n)) << "n=" << n;
+        ASSERT_TRUE(num::cholesky_blocked(L.data(), n)) << "n=" << n;
         for (idx i = 0; i < n; ++i) {
             for (idx j = 0; j < n; ++j) {
                 if (j > i) {

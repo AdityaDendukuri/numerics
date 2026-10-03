@@ -21,7 +21,7 @@ claims with_law law::self_adjoint law::psd law::spd law::diagonally_dominant
 contiguous dense_row_major csr banded tridiagonal
 
 ## Discrete structures
-equivalence_relation incidence_structure weighted_incidence addressable_priority_queue laplacian_graph
+equivalence_relation incidence_structure weighted_incidence addressable_priority_queue
 
 ## Index spaces
 square_extent_2d cartesian_index_space_2d periodic_neighbourhood_2d
@@ -30,10 +30,10 @@ square_extent_2d cartesian_index_space_2d periodic_neighbourhood_2d
 scalar_field_like solvable_field
 
 ## Ordinary differential equations
-vec_field is_ode_stepper
+vec_field
 
 ## Partial differential equations
-grid_stencil assemblable_grid_operator field_stepper
+assemblable_grid_operator
 
 ## Spatial acceleration
 position_accessor_2d neighbor_query_2d smoothing_kernel
@@ -42,7 +42,7 @@ position_accessor_2d neighbor_query_2d smoothing_kernel
 categorical_sampling energy_difference
 
 ## Quadrature
-quadrature_rule contour_rule
+contour_rule
 
 ## Spectral
 transform_plan

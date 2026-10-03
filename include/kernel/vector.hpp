@@ -1,5 +1,5 @@
 /// @file kernel/vector.hpp
-/// @brief Raw-pointer kernels: BLAS-1 vector ops and fused reductions.
+/// @brief Raw-pointer kernels: BLAS-1 vector ops, Givens rotations and fused reductions.
 ///
 /// SPDX-License-Identifier: MIT
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
@@ -574,6 +574,42 @@ template <std::floating_point T>
         }
     }
     return best_idx;
+}
+
+/// @brief Constructs Givens rotation parameters \f$(c, s)\f$ such that:
+/// \f[
+/// \begin{bmatrix} c & s \\ -s & c \end{bmatrix} \begin{bmatrix} a \\ b \end{bmatrix} =
+/// \begin{bmatrix} r \\ 0 \end{bmatrix}, \qquad c^2 + s^2 = 1
+/// \f]
+template <std::floating_point T>
+NUM_K_AINLINE void rotg(T a, T b, T &c, T &s) noexcept {
+    if (b == T(0)) {
+        c = T(1);
+        s = T(0);
+    } else if (a == T(0)) {
+        c = T(0);
+        s = T(1);
+    } else {
+        T r = std::hypot(a, b);
+        c = a / r;
+        s = b / r;
+    }
+}
+
+/// @brief Applies Givens plane rotation in-place:
+/// \f[
+/// \begin{bmatrix} x_i \\ y_i \end{bmatrix} \leftarrow \begin{bmatrix} c & s \\ -s & c
+/// \end{bmatrix} \begin{bmatrix} x_i \\ y_i \end{bmatrix}
+/// \f]
+template <std::floating_point T>
+NUM_K_AINLINE void rot(T *NUM_K_RESTRICT x, T *NUM_K_RESTRICT y, T c, T s, idx n) noexcept {
+    NUM_K_IVDEP
+    for (idx i = 0; i < n; ++i) {
+        T xi = x[i];
+        T yi = y[i];
+        x[i] = (c * xi) + (s * yi);
+        y[i] = (-s * xi) + (c * yi);
+    }
 }
 
 } // namespace num::kernel

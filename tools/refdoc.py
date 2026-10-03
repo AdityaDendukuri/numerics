@@ -747,11 +747,16 @@ def render_examples():
     for source in sorted(EXAMPLES.glob("*.cpp")):
         text = source.read_text(errors="replace")
         head = re.match(r"(\s*///[^\n]*\n)+", text)
-        brief = plain(parse_comment(head.group(0))["brief"]) if head else ""
+        doc = parse_comment(head.group(0)) if head else None
+        brief = plain(doc["brief"]) if doc else ""
+        details = "".join(f"{plain(paragraph)}\n\n" for paragraph in doc["details"]) if doc else ""
         rows.append(f"| [`{source.name}`]({source.stem}.md) | {table_cell(brief)} |")
         body = text[head.end():] if head else text
+        recorded = EXAMPLES / "output" / f"{source.stem}.txt"
+        output = (f"\nPossible output:\n\n```text\n{recorded.read_text().rstrip()}\n```\n"
+                  if recorded.exists() else "")
         (directory / f"{source.stem}.md").write_text(
-            f"# {source.name}\n\n{brief}\n\n```cpp\n{body.strip()}\n```\n")
+            f"# {source.name}\n\n{brief}\n\n{details}```cpp\n{body.strip()}\n```\n{output}")
     (directory / "index.md").write_text("\n".join(rows) + "\n")
 
 

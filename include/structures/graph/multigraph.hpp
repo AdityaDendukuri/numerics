@@ -21,15 +21,15 @@ struct multi_edge {
 };
 
 /// @brief Weighted multigraph representation supporting parallel edges and integer counts.
-template <typename Weight = double, std::integral Index = num::idx>
-class basic_multigraph {
+template <typename Weight, std::integral Index>
+class multigraph {
   public:
     using weight_type = Weight;
     using index_type = Index;
     using edge_type = multi_edge<Weight, Index>;
 
     /// Construct an empty multigraph with n vertices.
-    explicit basic_multigraph(Index n = 0) : adj_(n) {}
+    explicit multigraph(Index n = 0) : adj_(n) {}
 
     /// Number of vertices.
     [[nodiscard]] Index n_vertices() const noexcept {
@@ -39,7 +39,7 @@ class basic_multigraph {
     /// Add an undirected multi-edge between u and v.
     void add_edge(Index u, Index v, Weight weight = Weight{1}, std::uint8_t count = 1) {
         if (u >= adj_.size() || v >= adj_.size()) {
-            throw std::out_of_range("basic_multigraph::add_edge: vertex index out of range");
+            throw std::out_of_range("multigraph::add_edge: vertex index out of range");
         }
         adj_[u].push_back({v, weight, count});
         adj_[v].push_back({u, weight, count});
@@ -48,7 +48,7 @@ class basic_multigraph {
     /// Add a directed multi-edge from u to v.
     void add_directed_edge(Index u, Index v, Weight weight = Weight{1}, std::uint8_t count = 1) {
         if (u >= adj_.size() || v >= adj_.size()) {
-            throw std::out_of_range("basic_multigraph::add_directed_edge: vertex index out of range");
+            throw std::out_of_range("multigraph::add_directed_edge: vertex index out of range");
         }
         adj_[u].push_back({v, weight, count});
     }
@@ -56,7 +56,7 @@ class basic_multigraph {
     /// Const access to neighbor list of vertex u.
     [[nodiscard]] const array<edge_type> &neighbors(Index u) const {
         if (u >= adj_.size()) {
-            throw std::out_of_range("basic_multigraph::neighbors: vertex index out of range");
+            throw std::out_of_range("multigraph::neighbors: vertex index out of range");
         }
         return adj_[u];
     }
@@ -64,7 +64,7 @@ class basic_multigraph {
     /// Mutable access to neighbor list of vertex u.
     [[nodiscard]] array<edge_type> &neighbors(Index u) {
         if (u >= adj_.size()) {
-            throw std::out_of_range("basic_multigraph::neighbors: vertex index out of range");
+            throw std::out_of_range("multigraph::neighbors: vertex index out of range");
         }
         return adj_[u];
     }
@@ -87,10 +87,10 @@ class basic_multigraph {
         return adj_[u];
     }
 
-    /// Convert to simple basic_graph (consolidating parallel edges).
-    [[nodiscard]] basic_graph<Weight, Index> to_simple_graph() const {
+    /// Convert to simple graph (consolidating parallel edges).
+    [[nodiscard]] graph<Weight, Index> to_simple_graph() const {
         const Index n = n_vertices();
-        basic_graph<Weight, Index> G(n);
+        graph<Weight, Index> G(n);
         for (Index u = 0; u < n; ++u) {
             for (const auto &e : adj_[u]) {
                 if (u < e.to) {
@@ -106,15 +106,12 @@ class basic_multigraph {
     array<array<edge_type>> adj_;
 };
 
-using multigraph = basic_multigraph<double, num::idx>;
-using float_multigraph = basic_multigraph<float, std::uint32_t>;
-
-/// Convert a basic_graph to a basic_multigraph.
+/// Convert a graph to a multigraph.
 template <typename Weight, std::integral Index>
-[[nodiscard]] inline basic_multigraph<Weight, Index>
-to_multigraph(const basic_graph<Weight, Index> &G) {
+[[nodiscard]] inline multigraph<Weight, Index>
+to_multigraph(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
-    basic_multigraph<Weight, Index> mg(n);
+    multigraph<Weight, Index> mg(n);
     for (Index u = 0; u < n; ++u) {
         for (const auto &e : G.neighbors(u)) {
             if (u < e.to) {
@@ -130,8 +127,6 @@ to_multigraph(const basic_graph<Weight, Index> &G) {
 } // namespace num::structures
 
 namespace num {
-using structures::basic_multigraph;
-using structures::float_multigraph;
 using structures::multi_edge;
 using structures::multigraph;
 } // namespace num

@@ -5,11 +5,11 @@
 #include "blas/matrix_ops.hpp"
 #include "container/matrix.hpp"
 #include "container/matrix_expr.hpp"
-#include "kernel/factor.hpp"
 #include "linear/matrix_properties.hpp"
 #include "linear/solvers/solver_result.hpp"
 #include "operator/concepts.hpp"
 #include "linear/factorization/lu.hpp"
+#include "linear/solve.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/sparse/sparse.hpp"
 #include <concepts>
@@ -24,48 +24,6 @@ struct low_rank_update {
     mat<real> left;  ///< P, of shape n by p.
     mat<real> right; ///< Q, of shape n by p.
 };
-
-/// @brief A reusable factorization that applies \f$A^{-1}\f$ and \f$A^{-T}\f$.
-///
-/// Woodbury needs the transpose, which `direct_factorization` does not promise,
-/// and it needs out-of-place solves so a corrected result can be formed without
-/// destroying the right-hand side. The out-parameter forms may alias their input.
-template <class F, class Vec = vec<real>, class Mat = mat<real>>
-concept retained_factorization =
-    vector_space<Vec> &&
-    (requires(const F &factor, const Vec &v, const Mat &m, Vec &vout, Mat &mout) {
-        solve(factor, v, vout);
-        solve(factor, m, mout);
-        solve_transpose(factor, v, vout);
-        solve_transpose(factor, m, mout);
-    } || requires(const F &factor, const Vec &v, const Mat &m, Vec &vout, Mat &mout) {
-        factor.solve(v, vout);
-        factor.solve(m, mout);
-        factor.solve_transpose(v, vout);
-        factor.solve_transpose(m, mout);
-    });
-
-namespace detail {
-
-template <class F, class RHS>
-void apply_solve(const F &factor, const RHS &rhs, RHS &out) {
-    if constexpr (requires { solve(factor, rhs, out); }) {
-        solve(factor, rhs, out);
-    } else {
-        factor.solve(rhs, out);
-    }
-}
-
-template <class F, class RHS>
-void apply_solve_transpose(const F &factor, const RHS &rhs, RHS &out) {
-    if constexpr (requires { solve_transpose(factor, rhs, out); }) {
-        solve_transpose(factor, rhs, out);
-    } else {
-        factor.solve_transpose(rhs, out);
-    }
-}
-
-} // namespace detail
 
 /// @brief Express \f$B - A\f$ as \f$PQ^{T}\f$ when the two differ only in the
 /// listed rows and columns.
@@ -123,13 +81,13 @@ void apply_solve_transpose(const F &factor, const RHS &rhs, RHS &out) {
 /// first use, so a caller that only solves transposes never pays for them.
 ///
 /// The base factorization is referenced, not copied, and must outlive this object.
-template <retained_factorization F>
+template <factorization F>
 class woodbury_solver {
   public:
     woodbury_solver(const F &base, low_rank_update update)
         : base_(&base), left_(std::move(update.left)), right_(std::move(update.right)) {
         using namespace ops;
-        detail::apply_solve_transpose(*base_, right_, transpose_right_);
+        solve_transpose(*base_, right_, transpose_right_);
         mat<real> reduced_transpose = identity(rank()) + transpose(left_) * transpose_right_;
         reduced_transpose_ = lu(reduced_transpose);
         reduced_ = lu(transpose(reduced_transpose));
@@ -152,7 +110,7 @@ class woodbury_solver {
     [[nodiscard]] const mat<real> &inverse_left() const {
         if (!inverse_left_) {
             inverse_left_.emplace();
-            detail::apply_solve(*base_, left_, *inverse_left_);
+            solve(*base_, left_, *inverse_left_);
         }
         return *inverse_left_;
     }
@@ -161,7 +119,7 @@ class woodbury_solver {
     [[nodiscard]] const mat<real> &transpose_right_squared() const {
         if (!transpose_right_squared_) {
             transpose_right_squared_.emplace();
-            detail::apply_solve_transpose(*base_, transpose_right_, *transpose_right_squared_);
+            solve_transpose(*base_, transpose_right_, *transpose_right_squared_);
         }
         return *transpose_right_squared_;
     }
@@ -177,31 +135,31 @@ class woodbury_solver {
             for (idx j = 0; j < p; ++j) {
                 scratch[j] = row[j];
             }
-            kernel::lu_solve(row, reduced_transpose_.LU.data(), reduced_transpose_.piv.data(),
-                             scratch.data(), p);
+            num::lu_solve(row, reduced_transpose_.LU.data(), reduced_transpose_.swaps.data(),
+                          scratch.data(), p);
         }
     }
 
-    /// Solve \f$(A_{base} + PQ^{T})^{T}x = b\f$.
-    template <class RightHandSide>
-    [[nodiscard]] RightHandSide solve_transpose(const RightHandSide &rhs) const {
+    /// Solve \f$(A_{base} + PQ^{T})x = b\f$. `x` may be `b`.
+    template <class RHS>
+    friend void solve(const woodbury_solver &W, const RHS &b, RHS &x) {
         using namespace ops;
-        RightHandSide y;
-        detail::apply_solve_transpose(*base_, rhs, y);
-        RightHandSide coefficients;
-        lu_solve(reduced_transpose_, transpose(left_) * y, coefficients);
-        return y - transpose_right_ * coefficients;
+        RHS y;
+        solve(*W.base_, b, y);
+        RHS coefficients;
+        solve(W.reduced_, transpose(W.right_) * y, coefficients);
+        x = y - W.inverse_left() * coefficients;
     }
 
-    /// Solve \f$(A_{base} + PQ^{T})x = b\f$.
-    template <class RightHandSide>
-    [[nodiscard]] RightHandSide solve(const RightHandSide &rhs) const {
+    /// Solve \f$(A_{base} + PQ^{T})^{T}x = b\f$. `x` may be `b`.
+    template <class RHS>
+    friend void solve_transpose(const woodbury_solver &W, const RHS &b, RHS &x) {
         using namespace ops;
-        RightHandSide y;
-        detail::apply_solve(*base_, rhs, y);
-        RightHandSide coefficients;
-        lu_solve(reduced_, transpose(right_) * y, coefficients);
-        return y - inverse_left() * coefficients;
+        RHS y;
+        solve_transpose(*W.base_, b, y);
+        RHS coefficients;
+        solve(W.reduced_transpose_, transpose(W.left_) * y, coefficients);
+        x = y - W.transpose_right_ * coefficients;
     }
 
     /// @brief \f$diag(A_{new}^{-1})\f$ from the base diagonal.
@@ -214,7 +172,7 @@ class woodbury_solver {
             throw std::invalid_argument("the base diagonal has the wrong size");
         }
         mat<real> coefficients;
-        lu_solve(reduced_, transpose(transpose_right_), coefficients);
+        solve(reduced_, transpose(transpose_right_), coefficients);
         const mat<real> &left_columns = inverse_left();
         vec<real> diagonal(size(), 0.0);
         for (idx i = 0; i < size(); ++i) {
@@ -230,11 +188,11 @@ class woodbury_solver {
   private:
     const F *base_;
     mat<real> left_, right_, transpose_right_;
-    lu_result reduced_, reduced_transpose_;
+    lu_result<real> reduced_, reduced_transpose_;
     mutable std::optional<mat<real>> inverse_left_, transpose_right_squared_;
 };
 
-template <retained_factorization F>
+template <factorization F>
 woodbury_solver(const F &, low_rank_update) -> woodbury_solver<F>;
 
 /// Reusable blocks for `update_inverse_rows`, resized on demand.
@@ -249,7 +207,7 @@ struct inverse_rows_workspace {
 /// leaves the corresponding rows of the corrected inverse and its square in
 /// `first` and `second`. Both updates are rank-p, so the cost does not grow with
 /// the number of rows carried.
-template <retained_factorization F>
+template <factorization F>
 void update_inverse_rows(const woodbury_solver<F> &correction, mat<real> &first, mat<real> &second,
                          inverse_rows_workspace &work) {
     const idx rows = first.rows(), p = correction.rank();

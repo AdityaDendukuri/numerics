@@ -90,35 +90,35 @@ void compute_principal_block(idx n, view<const idx> indices, mat<real> &result,
 
 } // namespace
 
-void inverse_diagonal(const lu_result &factor, vec<real> &result, inverse_diagonal_workspace &workspace,
+void inverse_diagonal(const lu_result<real> &factor, vec<real> &result, inverse_diagonal_workspace &workspace,
                       idx block_size) {
     compute(factor.LU.rows(), result, workspace, block_size,
-            [&](const mat<real> &rhs, mat<real> &solution) { lu_solve(factor, rhs, solution); });
+            [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void inverse_diagonal(const cholesky_result &factor, vec<real> &result,
                       inverse_diagonal_workspace &workspace, idx block_size) {
     compute(factor.L.rows(), result, workspace, block_size,
-            [&](const mat<real> &rhs, mat<real> &solution) { cholesky_solve(factor, rhs, solution); });
+            [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void inverse_diagonal(const klu_factorization &factor, vec<real> &result, inverse_diagonal_workspace &workspace,
                       idx block_size) {
     compute(factor.size(), result, workspace, block_size,
-            [&](const mat<real> &rhs, mat<real> &solution) { factor.solve(rhs, solution); });
+            [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void inverse_diagonal(const auto_linear_solver &factor, vec<real> &result,
                       inverse_diagonal_workspace &workspace, idx block_size) {
     compute(factor.size(), result, workspace, block_size,
-            [&](const mat<real> &rhs, mat<real> &solution) { factor.solve(rhs, solution); });
+            [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
-void selected_inverse(const lu_result &factor, view<const idx> rows,
+void selected_inverse(const lu_result<real> &factor, view<const idx> rows,
                       view<const idx> columns, vec<real> &result,
                       inverse_diagonal_workspace &workspace) {
     compute_selected(factor.LU.rows(), rows, columns, result, workspace,
-                     [&](const mat<real> &rhs, mat<real> &solution) { lu_solve(factor, rhs, solution); });
+                     [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void selected_inverse(const cholesky_result &factor, view<const idx> rows,
@@ -126,49 +126,49 @@ void selected_inverse(const cholesky_result &factor, view<const idx> rows,
                       inverse_diagonal_workspace &workspace) {
     compute_selected(
         factor.L.rows(), rows, columns, result, workspace,
-        [&](const mat<real> &rhs, mat<real> &solution) { cholesky_solve(factor, rhs, solution); });
+        [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void selected_inverse(const klu_factorization &factor, view<const idx> rows,
                       view<const idx> columns, vec<real> &result,
                       inverse_diagonal_workspace &workspace) {
     compute_selected(factor.size(), rows, columns, result, workspace,
-                     [&](const mat<real> &rhs, mat<real> &solution) { factor.solve(rhs, solution); });
+                     [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void selected_inverse(const auto_linear_solver &factor, view<const idx> rows,
                       view<const idx> columns, vec<real> &result,
                       inverse_diagonal_workspace &workspace) {
     compute_selected(factor.size(), rows, columns, result, workspace,
-                     [&](const mat<real> &rhs, mat<real> &solution) { factor.solve(rhs, solution); });
+                     [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
-void inverse_principal_block(const lu_result &factor, view<const idx> indices, mat<real> &result,
+void inverse_principal_block(const lu_result<real> &factor, view<const idx> indices, mat<real> &result,
                              inverse_diagonal_workspace &workspace) {
     compute_principal_block(
         factor.LU.rows(), indices, result, workspace,
-        [&](const mat<real> &rhs, mat<real> &solution) { lu_solve(factor, rhs, solution); });
+        [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void inverse_principal_block(const cholesky_result &factor, view<const idx> indices,
                              mat<real> &result, inverse_diagonal_workspace &workspace) {
     compute_principal_block(
         factor.L.rows(), indices, result, workspace,
-        [&](const mat<real> &rhs, mat<real> &solution) { cholesky_solve(factor, rhs, solution); });
+        [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void inverse_principal_block(const klu_factorization &factor, view<const idx> indices, mat<real> &result,
                              inverse_diagonal_workspace &workspace) {
     compute_principal_block(
         factor.size(), indices, result, workspace,
-        [&](const mat<real> &rhs, mat<real> &solution) { factor.solve(rhs, solution); });
+        [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 void inverse_principal_block(const auto_linear_solver &factor, view<const idx> indices,
                              mat<real> &result, inverse_diagonal_workspace &workspace) {
     compute_principal_block(
         factor.size(), indices, result, workspace,
-        [&](const mat<real> &rhs, mat<real> &solution) { factor.solve(rhs, solution); });
+        [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
 } // namespace num

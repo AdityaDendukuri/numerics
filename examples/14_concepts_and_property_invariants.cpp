@@ -3,17 +3,17 @@
 #include <iomanip>
 #include <iostream>
 #include <numerics.hpp>
+#include <string_view>
 
-int main() {
+int main(int argc, char **argv) {
+    const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
     using namespace num;
 
     std::cout << "========================================================================\n";
     std::cout << "  14: C++20 Linear Algebra Invariants & Loud Diagnostics Demonstration  \n";
     std::cout << "========================================================================\n\n";
 
-    // -------------------------------------------------------------------------
     // 1. Construct a 4x4 Symmetric Positive-Definite (SPD) 1D Laplace mat
-    // -------------------------------------------------------------------------
     mat<real> A(4, 4, 0.0);
     A(0, 0) = 2.0; A(0, 1) = -1.0;
     A(1, 0) = -1.0; A(1, 1) = 2.0; A(1, 2) = -1.0;
@@ -22,9 +22,7 @@ int main() {
 
     vec<real> b{1.0, 2.0, 2.0, 1.0};
 
-    // -------------------------------------------------------------------------
     // 2. Untagged input does not compile; the escape hatch is explicit
-    // -------------------------------------------------------------------------
     std::cout << "--- [Case 1: Deliberate opt-out via num::unsafe::cholesky(A)] ---\n";
     std::cout << "cholesky(assume_spd(A)) on a raw mat is a compile error: a raw matrix carries no SPD\n"
                  "invariant, and Cholesky is undefined without one. Uncommenting the line below\n"
@@ -34,13 +32,11 @@ int main() {
 
     auto chol_untagged = unsafe::cholesky(A); // opt-out, greppable, no verification
     vec<real> x_untagged(4, 0.0);
-    cholesky_solve(chol_untagged, b, x_untagged);
+    solve(chol_untagged, b, x_untagged);
     std::cout << "unsafe:: Solution x = [" << x_untagged[0] << ", " << x_untagged[1] << ", "
               << x_untagged[2] << ", " << x_untagged[3] << "]\n\n";
 
-    // -------------------------------------------------------------------------
     // 3. Demonstration of Tagged Input via assume_spd(A) -> 100% Warning-Free
-    // -------------------------------------------------------------------------
     std::cout << "--- [Case 2: Tagged Invariant Input cholesky(assume_spd(A))] ---\n";
     std::cout << "Wrapping with assume_spd(A) makes it an spd_operator and runs 100% warning-free:\n";
 
@@ -52,13 +48,11 @@ int main() {
 
     auto chol_tagged = cholesky(spd_matrix);
     vec<real> x_tagged(4, 0.0);
-    cholesky_solve(chol_tagged, b, x_tagged);
+    solve(chol_tagged, b, x_tagged);
     std::cout << "Tagged Solution x   = [" << x_tagged[0] << ", " << x_tagged[1] << ", "
               << x_tagged[2] << ", " << x_tagged[3] << "]\n\n";
 
-    // -------------------------------------------------------------------------
     // 4. Demonstration of Dynamic Invariant Validation via make_spd(A)
-    // -------------------------------------------------------------------------
     std::cout << "--- [Case 3: Dynamic Validation via make_spd(A)] ---\n";
     try {
         auto validated = make_spd(A);
@@ -78,17 +72,17 @@ int main() {
         std::cout << "[Caught Expected Violation] " << e.what() << "\n\n";
     }
 
-    // -------------------------------------------------------------------------
     // 5. In-Terminal Solution Visualization
-    // -------------------------------------------------------------------------
     std::vector<double> grid{0.0, 1.0, 2.0, 3.0};
     std::vector<double> sol{x_tagged[0], x_tagged[1], x_tagged[2], x_tagged[3]};
 
-    plt::plot(grid, sol, "x_solution", "linespoints");
-    plt::title("14 Concepts & Property Invariants: 1D Poisson Solution");
-    plt::xlabel("Grid Node i");
-    plt::ylabel("Solution x_i");
-    plt::show_dumb(120, 25);
+    if (plot) {
+        plt::plot(grid, sol, "x_solution", "linespoints");
+        plt::title("14 Concepts & Property Invariants: 1D Poisson Solution");
+        plt::xlabel("Grid Node i");
+        plt::ylabel("Solution x_i");
+        plt::show();
+    }
 
     std::cout << "\n[SUCCESS] Example 14 completed.\n";
     return 0;

@@ -1,105 +1,92 @@
 /// @file 00_core_storage_and_helpers.cpp
-/// @brief Core vector, matrix, sparse, selection, and construction helpers.
+/// @brief Vectors, matrices, sparse matrices, expressions and the helpers around them.
+///
+/// `vec<T>` and `mat<T>` own aligned, contiguous storage, and `mat` is row-major. Arithmetic comes
+/// in two forms. Expressions under `num::ops` return new values and suit formulas. Functions with
+/// an output parameter, such as `matvec` and `axpy`, allocate nothing and suit loops. `spmat`
+/// stores a sparse matrix in CSR form and is built from triplets.
 #include <array>
-#include "container/matrix_ops.hpp"
-#include "container/vector_ops.hpp"
-#include <iostream>
+#include <cstdio>
 #include <numerics.hpp>
 #include <span>
 #include <vector>
 
+using namespace num;
+
+namespace {
+
+void print(const char *name, const vec<real> &v) {
+    std::printf("%-27s[", name);
+    for (idx i = 0; i < v.size(); ++i) {
+        std::printf(i ? ", %g" : "%g", v[i]);
+    }
+    std::printf("]\n");
+}
+
+void print(const char *name, const mat<real> &M) {
+    for (idx i = 0; i < M.rows(); ++i) {
+        std::printf("%-27s[", i ? "" : name);
+        for (idx j = 0; j < M.cols(); ++j) {
+            std::printf(j ? " %5g" : "%5g", M(i, j));
+        }
+        std::printf("]\n");
+    }
+}
+
+} // namespace
+
 int main() {
-    using namespace num;
-
-    // Dense vectors own contiguous storage.
+    // Construction and the in-place forms: nothing below allocates.
     vec<real> x{1.0, 2.0, 3.0};
-    vec<real> y(3, 2.0);
-    vec<real> z(3, 0.0);
-
+    vec<real> y(3, 2.0), z(3, 0.0);
     scale(y, 0.5);    // y <- 0.5 y
-    add(x, y, z);     // z <- x+y
-    axpy(-1.0, x, z); // z <- z-x
-    const real xy = dot(x, y);
-    const real length = norm(x);
+    add(x, y, z);     // z <- x + y
+    axpy(-1.0, x, z); // z <- z - x
+    print("x", x);
+    print("z = (x + 0.5 y) - x", z);
+    std::printf("%-27s%g, %g\n", "dot(x, y), norm(x)", dot(x, y), norm(x));
 
-    // Spans use the same scalar helpers without owning memory.
-    const real span_dot =
-        dot(std::span<const real>(x.data(), x.size()), std::span<const real>(y.data(), y.size()));
-    std::vector<real> host(x.size());
-    copy_to(x, host);
-
-    // Interleaved coordinate views avoid copying particle data.
-    vec<real> coordinates{1.0, 2.0, 3.0, 4.0};
-    vec2_view points{coordinates};
-    points.x(1) = 5.0;
-
-    // Dense matrices are row-major and dispatch arithmetic by backend.
     mat<real> A(3, 3, 0.0);
     set_diagonal(A, std::array<real, 3>{4.0, 5.0, 6.0});
-    A(0, 1) = 1.0;
-    A(1, 0) = 1.0;
+    A(0, 1) = A(1, 0) = 1.0;
+    vec<real> ax(3);
+    matvec(A, x, ax);
+    print("A", A);
+    print("A x", ax);
 
-    vec<real> Ax(3, 0.0);
-    matvec(A, x, Ax);
-    mat<real> At = transpose(A);
-    mat<real> product(3, 3, 0.0);
-    matmul(A, At, product);
-    mat<real> sum(3, 3, 0.0);
-    matadd(1.0, A, 1.0, At, sum);
+    // The same arithmetic as expressions, for formulas.
+    {
+        using namespace num::ops;
+        const mat<real> C = A * transpose(A) + 2.0 * identity(3);
+        const vec<real> w = A * x - x / 2.0;
+        print("A A^T + 2 I", C);
+        print("A x - x / 2", w);
+    }
 
-    // mat constructors cover common right-hand sides and scalings.
-    const vec<real> e1 = unit_vector(3, 1);
-    const mat<real> I = identity(3);
-    const mat<real> rhs = identity_columns(3, 1, 2);
-    const vec<real> diag = diagonal(A);
-    const mat<real> D = diagonal_matrix(std::span<const real>(diag.data(), diag.size()));
+    // Constructors for common shapes, and the diagonal.
+    print("unit_vector(3, 1)", unit_vector(3, 1));
+    print("diagonal(A)", diagonal(A));
+    print("linspace(0, 1, 5)", linspace(0.0, 1.0, 5));
+    std::printf("%-27s%g\n", "accu(A) (sum of entries)", accu(A));
 
-    vec<real> weighted = x;
-    const std::array<real, 3> weights{1.0, 2.0, 4.0};
-    scale_elements(weighted, weights);
-    divide_elements(weighted, weights);
-    scale_rows(A, weights);
-    divide_rows(A, weights);
+    // CSR from triplets; duplicates are summed.
+    const spmat S = spmat::from_triplets(3, 3, std::vector<idx>{0, 0, 1, 2, 2},
+                                         std::vector<idx>{0, 1, 1, 2, 2},
+                                         std::vector<real>{2.0, 1.0, 3.0, 4.0, 0.5});
+    vec<real> sx(3);
+    sparse_matvec(S, x, sx);
+    std::printf("%-27s%zu stored entries\n", "S", static_cast<std::size_t>(S.nnz()));
+    print("S x", sx);
+    print("dense(transpose(S))", dense(transpose(S)));
 
-    // Gather and scatter move selected entries by index.
-    const std::array<idx, 2> indices{2, 0};
-    const auto selected = gather<real>(host, indices);
-    std::vector<real> scattered(3, 0.0);
-    scatter<real>(selected, indices, scattered);
-
-    // Triplets are sorted and duplicate entries are summed into csr storage.
-    const spmat sparse = spmat::from_triplets(3, 3, std::vector<idx>{0, 0, 1, 2},
-                                                            std::vector<idx>{0, 1, 1, 2},
-                                                            std::vector<real>{2.0, 1.0, 3.0, 4.0});
-    vec<real> sparse_x(3, 0.0);
-    sparse_matvec(sparse, x, sparse_x);
-    const spmat sparse_t = transpose(sparse);
-    const spmat half = scaled(sparse, 0.5);
-    const mat<real> sparse_dense = dense(sparse);
-    const vec<real> sparse_diag = diagonal(sparse);
-    const mat<real> similar = diagonal_similarity(sparse, weights);
-
-    // Property wrappers distinguish checked and construction-guaranteed claims.
-    const bool symmetric = linear::is_symmetric(A);
-    const bool positive_definite = linear::is_spd(A);
-    const auto checked_spd = linear::make_spd(A);
-    const auto assumed_spd = num::assume_spd(A);
-
-    // Selection and probability helpers replace common application loops.
-    const idx largest = argmax(std::span<const real>(diag.data(), diag.size()));
-    const auto smallest = smallest_indices(std::span<const real>(diag.data(), diag.size()), 2);
-    vec<real> probability{0.2, -0.1, 0.8};
-    const real clipped_mass =
-        clip_and_normalize_nonnegative(std::span<real>(probability.data(), probability.size()));
-    const real expectation =
-        weighted_sum(std::span<const real>(probability.data(), probability.size()),
-                     [&](idx index) { return static_cast<real>(index); });
-
-    std::cout << xy + span_dot + length + points.x(1) + Ax[0] + product(0, 0) + sum(0, 0) + e1[1] +
-                     I(0, 0) + rhs(1, 0) + D(0, 0) + scattered[2] + sparse_x[0] + sparse_t(0, 0) +
-                     half(0, 0) + sparse_dense(0, 0) + sparse_diag[0] + similar(0, 0) +
-                     static_cast<real>(symmetric) + static_cast<real>(positive_definite) +
-                     checked_spd.base()(0, 0) + assumed_spd.base()(0, 0) +
-                     static_cast<real>(largest + smallest.front()) + clipped_mass + expectation
-              << '\n';
+    // Properties checked exactly, and selection helpers.
+    std::printf("%-27ssymmetric %d, SPD %d\n", "A", linear::is_symmetric(A), linear::is_spd(A));
+    const vec<real> d = diagonal(A);
+    const auto smallest = smallest_indices(std::span<const real>(d.data(), d.size()), 2);
+    std::printf("%-27sargmax %zu, two smallest %zu %zu\n", "diagonal(A)",
+                static_cast<std::size_t>(argmax(std::span<const real>(d.data(), d.size()))),
+                static_cast<std::size_t>(smallest[0]), static_cast<std::size_t>(smallest[1]));
+    vec<real> p{0.2, -0.1, 0.8};
+    clip_and_normalize_nonnegative(std::span<real>(p.data(), p.size()));
+    print("clip and normalize", p);
 }

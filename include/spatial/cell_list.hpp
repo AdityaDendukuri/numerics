@@ -160,4 +160,5 @@ class cell_list_2d {
     }
 };
 
+static_assert(neighbor_query_2d<cell_list_2d<real>>);
 } // namespace num

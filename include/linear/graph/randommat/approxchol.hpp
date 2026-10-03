@@ -89,7 +89,7 @@ enum class clique_sampler : std::uint8_t {
 /// Factorize a multigraph Laplacian into approximate or exact Cholesky factor \f$L L^T\f$.
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64,
           typename Queue = structures::basic_degree_queue<Index>>
-inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &input_G,
+inline cholesky_factor<Float, Index> factorize(const adjacency_list<Float, Index> &input_G,
                                                std::type_identity_t<Index> samples = 1,
                                                bool exact_mode = false, Rng *rng = nullptr,
                                                clique_sampler sampler = clique_sampler::gks_2023,
@@ -101,7 +101,7 @@ inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &input_
     if (pinned_vertex && *pinned_vertex >= n) {
         throw std::out_of_range("factorize: pinned vertex is outside the graph");
     }
-    graph<Float, Index> G = input_G;
+    adjacency_list<Float, Index> G = input_G;
 
     if (samples > 1 && !exact_mode) {
         for (auto &row : G) {
@@ -182,7 +182,7 @@ inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &input_
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64,
           typename Queue = structures::basic_degree_queue<Index>,
           detail::gks_2023_algorithm Algorithm = gao_kyng_spielman_2023::ac_t>
-inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &G, Algorithm,
+inline cholesky_factor<Float, Index> factorize(const adjacency_list<Float, Index> &G, Algorithm,
                                                Rng *rng = nullptr,
                                                std::optional<Index> pinned_vertex = std::nullopt) {
     return factorize<Float, Index, Rng, Queue>(
@@ -193,26 +193,26 @@ inline cholesky_factor<Float, Index> factorize(const graph<Float, Index> &G, Alg
 /// Gao--Kyng--Spielman AC factorizer with one sample per original entry.
 /// @return `cholesky_factor`: the sparse approximate factor, consumed by `randommat::solve`.
 template <typename Float = double, std::integral Index = num::idx>
-inline cholesky_factor<Float, Index> ac1(const graph<Float, Index> &G, std::uint64_t seed = 42) {
+inline cholesky_factor<Float, Index> ac1(const adjacency_list<Float, Index> &G, std::uint64_t seed = 42) {
     rng64 rng(seed);
     return factorize<Float, Index, rng64>(G, gao_kyng_spielman_2023::ac, &rng);
 }
 
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64>
-inline cholesky_factor<Float, Index> ac1(const graph<Float, Index> &G, Rng &rng) {
+inline cholesky_factor<Float, Index> ac1(const adjacency_list<Float, Index> &G, Rng &rng) {
     return factorize<Float, Index, Rng>(G, gao_kyng_spielman_2023::ac, &rng);
 }
 
 /// Gao--Kyng--Spielman AC2 factorizer with two samples per original entry.
 /// @return `cholesky_factor`: the sparse approximate factor, consumed by `randommat::solve`.
 template <typename Float = double, std::integral Index = num::idx>
-inline cholesky_factor<Float, Index> ac2(const graph<Float, Index> &G, std::uint64_t seed = 42) {
+inline cholesky_factor<Float, Index> ac2(const adjacency_list<Float, Index> &G, std::uint64_t seed = 42) {
     rng64 rng(seed);
     return factorize<Float, Index, rng64>(G, gao_kyng_spielman_2023::ac2, &rng);
 }
 
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64>
-inline cholesky_factor<Float, Index> ac2(const graph<Float, Index> &G, Rng &rng) {
+inline cholesky_factor<Float, Index> ac2(const adjacency_list<Float, Index> &G, Rng &rng) {
     return factorize<Float, Index, Rng>(G, gao_kyng_spielman_2023::ac2, &rng);
 }
 
@@ -224,7 +224,7 @@ inline cholesky_factor<Float, Index> ac2(const graph<Float, Index> &G, Rng &rng)
 /// effective-resistance solve.
 /// @return `cholesky_factor`: the sparse approximate factor, consumed by `randommat::solve`.
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64>
-inline cholesky_factor<Float, Index> act(const graph<Float, Index> &G, Rng &rng,
+inline cholesky_factor<Float, Index> act(const adjacency_list<Float, Index> &G, Rng &rng,
                                          std::type_identity_t<Index> trees = 1) {
     return factorize<Float, Index, Rng>(G, trees, false, &rng, clique_sampler::tree);
 }
@@ -232,7 +232,7 @@ inline cholesky_factor<Float, Index> act(const graph<Float, Index> &G, Rng &rng,
 /// Exact sparse Cholesky factorization via full star-mesh elimination.
 /// @return `cholesky_factor`: the sparse approximate factor, consumed by `randommat::solve`.
 template <typename Float = double, std::integral Index = num::idx>
-inline cholesky_factor<Float, Index> exact(const graph<Float, Index> &G) {
+inline cholesky_factor<Float, Index> exact(const adjacency_list<Float, Index> &G) {
     return factorize<Float, Index, rng64>(G, 1, true, nullptr);
 }
 

@@ -28,7 +28,6 @@
 #include "kernel/kernel.hpp"
 #include "linear/factorization/cholesky.hpp"
 #include "linear/factorization/lu.hpp"
-#include "linear/factorization/lu_no_pivot.hpp"
 #include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/sparse/sparse.hpp"
@@ -49,7 +48,7 @@ struct block_lu_factor {
     idx size = 0;                  ///< Order of the original matrix.
     array<idx> offsets;      ///< `nb + 1` block boundaries in reordered indexing.
     array<idx> order;        ///< `order[p]` is the original row at reordered position `p`.
-    array<no_pivot_lu> diagonal; ///< No-pivot factors of the diagonal Schur blocks.
+    array<lu_result<real>> diagonal; ///< No-pivot factors of the diagonal Schur blocks.
     array<mat<real>> upper;     ///< `upper[k]`: block (k, k+1). Size `nb - 1`.
     array<mat<real>> lower;     ///< `lower[k]`: block (k+1, k), already scaled. Size `nb - 1`.
 
@@ -62,7 +61,7 @@ struct block_lu_factor {
     /// @brief True when some diagonal block was singular.
     [[nodiscard]] bool singular() const noexcept {
         return std::any_of(diagonal.begin(), diagonal.end(),
-                           [](const no_pivot_lu &f) { return f.singular; });
+                           [](const lu_result<real> &f) { return f.singular; });
     }
 };
 
@@ -86,7 +85,7 @@ struct block_cholesky_factor {
     /// @brief True when some diagonal block was not positive definite.
     [[nodiscard]] bool failed() const noexcept {
         return std::any_of(diagonal.begin(), diagonal.end(),
-                           [](const cholesky_result &f) { return !f.success; });
+                           [](const cholesky_result &f) { return !f.positive_definite; });
     }
 };
 
@@ -404,9 +403,7 @@ inline void validate_reusable_prefix(const block_layout &layout, const Factor &p
 
 } // namespace detail
 
-// =============================================================================
 // In-place solves
-// =============================================================================
 
 namespace detail {
 
@@ -436,8 +433,7 @@ inline void solve_in_place(const block_lu_factor &f, real *X, idx nrhs, real *wo
                    false, 1.0, rows(k), nrhs, f.block_size(k), nrhs, f.block_size(k - 1));
     // X_k = D_k^{-1} Y_k ; Y_{k-1} -= upper[k-1] X_k
     for (idx k = count; k-- > 0;) {
-        kernel::lu_no_pivot_solve_multiple(rows(k), f.diagonal[k].packed.data(), f.block_size(k),
-                                           nrhs);
+        num::lu_no_pivot_solve_multiple(rows(k), f.diagonal[k].LU.data(), f.block_size(k), nrhs);
         if (k > 0)
             blas::gemm(-1.0, f.upper[k - 1].data(), f.block_size(k), false, rows(k), nrhs, false,
                        1.0, rows(k - 1), nrhs, f.block_size(k - 1), nrhs, f.block_size(k));
@@ -455,8 +451,8 @@ inline void solve_transpose_in_place(const block_lu_factor &f, real *X, idx nrhs
         if (k > 0)
             blas::gemm(-1.0, f.upper[k - 1].data(), f.block_size(k), true, rows(k - 1), nrhs,
                        false, 1.0, rows(k), nrhs, f.block_size(k), nrhs, f.block_size(k - 1));
-        kernel::lu_no_pivot_solve_transpose_multiple(rows(k), f.diagonal[k].packed.data(),
-                                                     f.block_size(k), nrhs);
+        num::lu_no_pivot_solve_transpose_multiple(rows(k), f.diagonal[k].LU.data(), f.block_size(k),
+                                                  nrhs);
     }
     // X_k = Z_k - lower[k]^T X_{k+1}
     for (idx k = count - 1; k-- > 0;)
@@ -488,11 +484,7 @@ inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, re
     detail::scatter(work, nrhs, f.order, X);
 }
 
-
-
-// =============================================================================
 // Block LU
-// =============================================================================
 
 /// @brief Factor a block-tridiagonal matrix by block LU without row pivoting.
 ///
@@ -521,7 +513,7 @@ inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, re
     factor.diagonal.reserve(count);
 
     for (idx k = 0; k < count; ++k) {
-        factor.diagonal.push_back(factor_no_pivot(blocks.diagonal[k]));
+        factor.diagonal.push_back(lu(blocks.diagonal[k], no_pivot));
         if (factor.diagonal.back().singular) {
             throw std::runtime_error("block_tridiagonal: zero pivot in diagonal block " +
                                      std::to_string(k));
@@ -589,7 +581,7 @@ refactor_block_lu_suffix(const spmat &A, view<const idx> levels,
     }
 
     for (idx k = first_changed_block; k < count; ++k) {
-        factor.diagonal.push_back(factor_no_pivot(blocks.diagonal[k]));
+        factor.diagonal.push_back(lu(blocks.diagonal[k], no_pivot));
         if (factor.diagonal.back().singular) {
             throw std::runtime_error("block_tridiagonal: zero pivot in diagonal block " +
                                      std::to_string(k));
@@ -653,9 +645,7 @@ inline void solve_transpose(const block_lu_factor &factor, const vec<real> &b, v
     solve_transpose_in_place(factor, x.data(), 1, work.data());
 }
 
-// =============================================================================
 // Block Cholesky
-// =============================================================================
 
 /// @brief Factor a symmetric positive-definite block-tridiagonal matrix.
 ///
@@ -681,7 +671,7 @@ inline void solve_transpose(const block_lu_factor &factor, const vec<real> &b, v
 
     for (idx k = 0; k < count; ++k) {
         auto result = cholesky(assume_spd(blocks.diagonal[k]));
-        if (!result.success) {
+        if (!result.positive_definite) {
             throw std::runtime_error("block_tridiagonal: diagonal block " + std::to_string(k) +
                                      " is not positive definite");
         }
@@ -740,7 +730,7 @@ refactor_block_cholesky_suffix(const spmat &A, view<const idx> levels,
 
     for (idx k = first_changed_block; k < count; ++k) {
         auto result = cholesky(assume_spd(blocks.diagonal[k]));
-        if (!result.success) {
+        if (!result.positive_definite) {
             throw std::runtime_error("block_tridiagonal: diagonal block " +
                                      std::to_string(k) + " is not positive definite");
         }

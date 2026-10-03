@@ -1,0 +1,5 @@
+rank of the update: 6
+Woodbury solve: 2.90 ms, fresh LU: 11.07 ms
+|x_woodbury - x_fresh|   = 2.2e-16
+|x^T_woodbury - x^T_fresh| = 3.8e-15
+|diag(B^-1) updated - exact| = 1.1e-16

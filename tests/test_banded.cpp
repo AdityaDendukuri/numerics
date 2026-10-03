@@ -2,6 +2,7 @@
 /// @brief Tests for banded matrix solver
 
 #include "linear/banded/banded.hpp"
+#include "linear/factorization/lu.hpp"
 #include <cmath>
 #include <cstring>
 #include <gtest/gtest.h>
@@ -139,9 +140,10 @@ TEST(BandedSolver, Tridiagonal4x4) {
     vec<real> b{1.0, 0.0, 0.0, 1.0};
     vec<real> x(4, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
     EXPECT_NEAR(x[0], 1.0, 1e-10);
     EXPECT_NEAR(x[1], 1.0, 1e-10);
     EXPECT_NEAR(x[2], 1.0, 1e-10);
@@ -167,9 +169,10 @@ TEST(BandedSolver, Tridiagonal1DLaplacian) {
     vec<real> b(n, 1.0); // Constant RHS
     vec<real> x(n, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
 
     // Verify solution by computing residual
     vec<real> r(n);
@@ -214,9 +217,10 @@ TEST(BandedSolver, Pentadiagonal) {
     vec<real> b(n, 1.0);
     vec<real> x(n, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
 
     // Verify residual
     vec<real> r(n);
@@ -257,9 +261,10 @@ TEST(BandedSolver, GeneralBanded) {
 
     vec<real> x(n, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
 
     // Verify residual
     vec<real> r(n);
@@ -295,9 +300,8 @@ TEST(BandedSolver, LUFactorizationReuse) {
     band_mat A_orig = A;
 
     // Factor
-    std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
-    banded_solver_result result = banded_lu(A, ipiv.get());
-    EXPECT_TRUE(result.success);
+    const banded_lu_result factor = lu(A);
+    EXPECT_FALSE(factor.singular);
 
     // Solve with different RHS vectors
     for (int trial = 0; trial < 5; ++trial) {
@@ -306,8 +310,8 @@ TEST(BandedSolver, LUFactorizationReuse) {
             b[i] = static_cast<real>((trial + 1) * (i + 1));
         }
 
-        vec<real> x = b; // Copy RHS
-        banded_lu_solve(A, ipiv.get(), x);
+        vec<real> x;
+        solve(factor, b, x);
 
         // Verify with original matrix
         vec<real> r(n);
@@ -340,32 +344,27 @@ TEST(BandedSolver, MultipleRHS) {
     band_mat A_orig = A;
 
     // Factor
-    std::unique_ptr<idx[]> ipiv = std::make_unique<idx[]>(n);
-    banded_solver_result result = banded_lu(A, ipiv.get());
-    EXPECT_TRUE(result.success);
+    const banded_lu_result factor = lu(A);
+    EXPECT_FALSE(factor.singular);
 
-    // Multiple RHS (column-major)
-    std::unique_ptr<real[]> B = std::make_unique<real[]>(n * nrhs);
+    // One right-hand side per column.
+    mat<real> B(n, nrhs, 0.0);
     for (idx rhs = 0; rhs < nrhs; ++rhs) {
         for (idx i = 0; i < n; ++i) {
-            B[i + (rhs * n)] = static_cast<real>((rhs + 1) * (i + 1));
+            B(i, rhs) = static_cast<real>((rhs + 1) * (i + 1));
         }
     }
 
-    // Keep copy for verification
-    std::unique_ptr<real[]> B_orig = std::make_unique<real[]>(n * nrhs);
-    std::memcpy(B_orig.get(), B.get(), n * nrhs * sizeof(real));
-
-    // Solve all at once
-    banded_lu_solve_multi(A, ipiv.get(), B.get(), nrhs);
+    mat<real> X;
+    solve(factor, B, X);
 
     // Verify each solution
     for (idx rhs = 0; rhs < nrhs; ++rhs) {
         vec<real> x(n);
         vec<real> b(n);
         for (idx i = 0; i < n; ++i) {
-            x[i] = B[i + (rhs * n)];
-            b[i] = B_orig[i + (rhs * n)];
+            x[i] = X(i, rhs);
+            b[i] = B(i, rhs);
         }
 
         vec<real> r(n);
@@ -454,9 +453,10 @@ TEST(BandedSolver, LargeTridiagonal) {
     vec<real> b(n, 1.0);
     vec<real> x(n, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
 
     // Spot check residual at several points
     // Tolerance relaxed for large systems due to floating-point accumulation
@@ -495,9 +495,10 @@ TEST(BandedSolver, LargePentadiagonal) {
     vec<real> b(n, 1.0);
     vec<real> x(n, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
 
     // Verify residual
     vec<real> r(n);
@@ -539,9 +540,10 @@ TEST(BandedSolver, Size1) {
     vec<real> b{10.0};
     vec<real> x(1, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
     EXPECT_NEAR(x[0], 2.0, 1e-10);
 }
 
@@ -557,9 +559,10 @@ TEST(BandedSolver, Size2) {
     vec<real> b{5.0, 6.0};
     vec<real> x(2, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
     EXPECT_NEAR(x[0], 1.4, 1e-10);
     EXPECT_NEAR(x[1], 0.8, 1e-10);
 }
@@ -576,10 +579,94 @@ TEST(BandedSolver, DiagonalMatrix) {
     vec<real> b{1.0, 2.0, 3.0, 4.0, 5.0};
     vec<real> x(n, 0.0);
 
-    banded_solver_result result = banded_solve(A, b, x);
+    const banded_lu_result factor = lu(A);
 
-    EXPECT_TRUE(result.success);
+    EXPECT_FALSE(factor.singular);
+    solve(factor, b, x);
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], 1.0, 1e-10); // Solution is all ones
+    }
+}
+
+// A band matrix with small diagonal entries, so partial pivoting swaps rows and the swapped
+// rows carry fill beyond the upper bandwidth. Partial pivoting is backward stable, so both
+// solves must leave a residual at rounding level relative to |A| |x|. Some of these matrices
+// are too ill-conditioned for a forward-error comparison against dense LU to be meaningful.
+TEST(BandedSolver, PivotingIsBackwardStable) {
+    for (idx kl : {1, 2, 3}) {
+        for (idx ku : {0, 1, 2}) {
+            const idx n = 12;
+            band_mat A(n, kl, ku, 0.0);
+            std::mt19937 rng(static_cast<unsigned>(17 + 5 * kl + ku));
+            std::uniform_real_distribution<real> entry(0.5, 2.0);
+            real norm_A = 0.0;
+            for (idx i = 0; i < n; ++i) {
+                real row = 0.0;
+                for (idx j = (i > kl ? i - kl : 0); j <= std::min(i + ku, n - 1); ++j) {
+                    A(i, j) = (i == j) ? 1e-3 * entry(rng) : entry(rng);
+                    row += std::abs(A(i, j));
+                }
+                norm_A = std::max(norm_A, row);
+            }
+            vec<real> b(n);
+            mat<real> B(n, 1, 0.0);
+            for (idx i = 0; i < n; ++i) {
+                b[i] = B(i, 0) = static_cast<real>(i) - 4.0;
+            }
+
+            const banded_lu_result factor = lu(A);
+            ASSERT_FALSE(factor.singular) << "kl=" << kl << " ku=" << ku;
+            vec<real> x;
+            mat<real> X;
+            solve(factor, b, x);
+            solve(factor, B, X);
+
+            vec<real> X_column(n);
+            for (idx i = 0; i < n; ++i) {
+                X_column[i] = X(i, 0);
+            }
+            for (const vec<real> *solution : {&x, &X_column}) {
+                vec<real> Ax(n);
+                banded_matvec(A, *solution, Ax);
+                real residual = 0.0, norm_x = 0.0, norm_b = 0.0;
+                for (idx i = 0; i < n; ++i) {
+                    residual = std::max(residual, std::abs(b[i] - Ax[i]));
+                    norm_x = std::max(norm_x, std::abs((*solution)[i]));
+                    norm_b = std::max(norm_b, std::abs(b[i]));
+                }
+                EXPECT_LT(residual / (norm_A * norm_x + norm_b), 1e-13)
+                    << "kl=" << kl << " ku=" << ku;
+            }
+        }
+    }
+}
+
+// Well-conditioned but still pivoting: the band and dense solutions agree.
+TEST(BandedSolver, PivotingMatchesDenseLU) {
+    const idx n = 10, kl = 2, ku = 1;
+    band_mat A(n, kl, ku, 0.0);
+    mat<real> dense(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = (i > kl ? i - kl : 0); j <= std::min(i + ku, n - 1); ++j) {
+            // The largest entry of each column sits below the diagonal, forcing a swap.
+            const real value = (i == j + 1) ? 4.0 : (i == j ? 1.0 : 0.5);
+            A(i, j) = dense(i, j) = value;
+        }
+    }
+    vec<real> b(n), x, expected;
+    for (idx i = 0; i < n; ++i) {
+        b[i] = static_cast<real>(i + 1);
+    }
+    const banded_lu_result factor = lu(A);
+    ASSERT_FALSE(factor.singular);
+    idx swaps = 0;
+    for (idx k = 0; k < n; ++k) {
+        swaps += factor.swaps[k] != k ? 1 : 0;
+    }
+    EXPECT_GT(swaps, 0);
+    solve(factor, b, x);
+    solve(lu(dense), b, expected);
+    for (idx i = 0; i < n; ++i) {
+        EXPECT_NEAR(x[i], expected[i], 1e-10 * (1.0 + std::abs(expected[i])));
     }
 }

@@ -52,9 +52,7 @@ inline constexpr diagnostic_preset production = diagnostic_preset::production;
 
 } // namespace num::debug
 
-// -----------------------------------------------------------------------------
 // The compile-time ceiling
-// -----------------------------------------------------------------------------
 //
 // `NUMERICS_DIAGNOSTICS` decides what checks exist; the runtime preset decides which run.
 //

@@ -5,6 +5,7 @@
 /// \f$\sum_{i\ne j} A_{ij}^2 < \mathrm{tol}^2\f$.
 #pragma once
 
+#include "kernel/kernel.hpp"
 #include "linear/matrix_properties.hpp"
 #include "linear/solvers/solver_result.hpp"
 #include "operator/concepts.hpp"
@@ -14,6 +15,27 @@
 #include "container/vector.hpp"
 
 #include <ostream>
+
+namespace num {
+
+// Jacobi Rotations
+
+/// @brief Computes Jacobi rotation parameters \f$(c, s)\f$ annihilating off-diagonal entry
+/// \f$A_{pq}\f$ in a symmetric \f$2 \times 2\f$ block.
+template <std::floating_point T>
+NUM_K_AINLINE void jacobi_rotation(T app, T aqq, T apq, T &c, T &s) noexcept {
+    if (std::abs(apq) < T(1e-15)) {
+        c = T(1);
+        s = T(0);
+        return;
+    }
+    const T tau = (aqq - app) / (T(2) * apq);
+    const T t = std::copysign(T(1), tau) / (std::abs(tau) + std::sqrt(T(1) + (tau * tau)));
+    c = T(1) / std::sqrt(T(1) + (t * t));
+    s = c * t;
+}
+
+} // namespace num
 
 namespace num {
 

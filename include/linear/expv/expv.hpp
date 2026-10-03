@@ -158,9 +158,9 @@ inline mat<real> dense_expm_pade6(const mat<real> &A) {
     kernel::axpbyz(vm_u.data(), v_mat.data(), U.data(), real(1), real(-1), m * m);
 
     // vm_u is constructed m-by-m.
-    lu_result fac = lu(vm_u);
+    lu_result<real> fac = lu(vm_u);
     mat<real> E(m, m, 0.0);
-    lu_solve(fac, vp_u, E);
+    solve(fac, vp_u, E);
 
     for (int i = 0; i < s; i++) {
         mat<real> E2(m, m, 0.0);

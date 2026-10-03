@@ -17,9 +17,7 @@
 #include <new>
 #include <string>
 
-// ---------------------------------------------------------------------------
 // Atomic counters (defined here, declared extern in the header)
-// ---------------------------------------------------------------------------
 namespace mem::detail {
 std::atomic<int64_t> g_allocs{0};
 std::atomic<int64_t> g_bytes{0};
@@ -35,9 +33,7 @@ void reset() noexcept {
 }
 } // namespace mem::detail
 
-// ---------------------------------------------------------------------------
 // Global operator new / delete replacements
-// ---------------------------------------------------------------------------
 // These are the standard replacement forms (C++17 §21.6.2).
 // They run for every heap allocation in the process, so the g_active gate
 // ensures we only count during the benchmark window.
@@ -88,9 +84,7 @@ void operator delete[](void *p) noexcept {
     std::free(p);
 }
 
-// ---------------------------------------------------------------------------
 // MemoryManager — called by Google Benchmark around each benchmark function
-// ---------------------------------------------------------------------------
 namespace {
 
 class HeapTracker : public benchmark::MemoryManager {
@@ -115,9 +109,7 @@ std::unique_ptr<HeapTracker> g_tracker;
 
 } // anonymous namespace
 
-// ---------------------------------------------------------------------------
 // Public API
-// ---------------------------------------------------------------------------
 void mem::install() {
     if (g_tracker)
         return; // idempotent
@@ -125,9 +117,7 @@ void mem::install() {
     benchmark::RegisterMemoryManager(g_tracker.get());
 }
 
-// ---------------------------------------------------------------------------
 // Memory report formatter
-// ---------------------------------------------------------------------------
 namespace {
 
 /// Format a byte count as a human-readable string (B / KB / MB).

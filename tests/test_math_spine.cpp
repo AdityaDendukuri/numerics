@@ -4,6 +4,7 @@
 
 #include "core/math/math.hpp"
 #include "linear/eigen/jacobi_eig.hpp"
+#include "linear/factorization/cholesky.hpp"
 #include "linear/math_adapters.hpp"
 #include "linear/matrix_properties.hpp"
 #include "linear/solvers/cg.hpp"

@@ -8,6 +8,6 @@ tags
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-output/
+/output/
 docs/reference/
 __pycache__/

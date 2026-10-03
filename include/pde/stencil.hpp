@@ -142,7 +142,7 @@ inline real sample_2d_periodic(const vec<real> &field, idx N, real h, real px, r
 }
 
 /// @brief Apply a mutable 1D operation to each column fiber.
-template <typename T, typename F>
+template <typename T, std::invocable<array<T> &> F>
 void col_fiber_sweep(vec<T> &data, int N, F &&f) {
     array<T> fiber(N);
     for (int j = 0; j < N; ++j) {
@@ -157,7 +157,7 @@ void col_fiber_sweep(vec<T> &data, int N, F &&f) {
 }
 
 /// @brief Apply a mutable 1D operation to each row fiber.
-template <typename T, typename F>
+template <typename T, std::invocable<array<T> &> F>
 void row_fiber_sweep(vec<T> &data, int N, F &&f) {
     array<T> fiber(N);
     for (int i = 0; i < N; ++i) {
@@ -172,7 +172,7 @@ void row_fiber_sweep(vec<T> &data, int N, F &&f) {
 }
 
 /// @brief Fill grid values at \f$x_i=(i+1)h,\ y_j=(j+1)h\f$.
-template <typename F>
+template <std::invocable<double, double> F>
 void fill_grid(vec<real> &u, int N, double h, F &&f) {
     for (int i = 0; i < N; ++i) {
         double xi = (i + 1) * h;
@@ -182,7 +182,7 @@ void fill_grid(vec<real> &u, int N, double h, F &&f) {
     }
 }
 
-template <typename F>
+template <std::invocable<double, double> F>
 void fill_grid(scalar_field_2d &g, F &&f) {
     fill_grid(g.as_vec(), g.N(), g.h(), std::forward<F>(f));
 }

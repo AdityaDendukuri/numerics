@@ -12,15 +12,6 @@
 
 namespace num {
 
-/// @brief Rule approximating \f$\int_a^b f\f$ on a finite interval.
-///
-/// A rule reports one value for a bounded interval. Adaptive rules satisfy this
-/// too, since the refinement is internal to the call.
-template <class R, class F, class T = real>
-concept quadrature_rule = scalar_function<F, T> && requires(const R &rule, F f, T a, T b) {
-    { rule(f, a, b) } -> std::convertible_to<T>;
-};
-
 /// @brief Rule supplying nodes \f$s_k\f$ and weights \f$w_k\f$ on a complex contour.
 ///
 /// Used for inverse Laplace transforms, where the integral runs along a contour

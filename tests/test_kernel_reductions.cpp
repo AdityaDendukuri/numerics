@@ -110,7 +110,7 @@ TEST(KernelReductions, FusedDualReductionsMatchSeparateOnes) {
     }
 }
 
-// --- the overflow-safe norm -------------------------------------------------
+// the overflow-safe norm
 
 TEST(KernelNorm, MatchesTheDirectFormInTheOrdinaryRange) {
     const std::vector<double> v{3.0, 4.0};
@@ -153,7 +153,7 @@ TEST(KernelNorm, PropagatesNonFiniteInput) {
     EXPECT_TRUE(std::isinf(kern::norm(with_inf.data(), with_inf.size())));
 }
 
-// --- sparse kernels, whose loop structure changed ---------------------------
+// sparse kernels, whose loop structure changed
 
 TEST(KernelSparse, SpmvHandlesEmptyAndRaggedRows) {
     // Rows of length 0, 1, and > lanes in one matrix: the row loop now derives a

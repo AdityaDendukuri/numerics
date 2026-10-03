@@ -39,7 +39,7 @@ inline vec<real> minres_projected_solve(const array<real> &alpha, const array<re
     rhs[0] = beta0;
     const qr_result factor = qr(H);
     vec<real> y(m, 0.0);
-    qr_solve(factor, rhs, y);
+    solve(factor, rhs, y);
     return y;
 }
 

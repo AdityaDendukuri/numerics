@@ -9,6 +9,7 @@
 #include "core/math/laws.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "operator/concepts.hpp"
+#include "pde/concepts.hpp"
 #include <stdexcept>
 #include <vector>
 
@@ -212,5 +213,7 @@ static_assert(linear_operator<backward_euler_2d>);
 static_assert(spd_operator<backward_euler_2d>);
 static_assert(sparse_convertible<backward_euler_2d>);
 
+static_assert(assemblable_grid_operator<operators::laplacian_2d>);
+static_assert(assemblable_grid_operator<operators::backward_euler_2d>);
 } // namespace num::operators
 

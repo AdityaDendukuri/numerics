@@ -29,7 +29,7 @@ inline bool safe_add(T &x, T &err, T y, T tolerance = 1e-6) {
 }
 
 /// Compute diag(A^-1) through blocked identity solves.
-void inverse_diagonal(const lu_result &factor, vec<real> &result, inverse_diagonal_workspace &workspace,
+void inverse_diagonal(const lu_result<real> &factor, vec<real> &result, inverse_diagonal_workspace &workspace,
                       idx block_size = 64);
 /// Compute diag(A^-1) from a Cholesky factor using blocked identity solves.
 void inverse_diagonal(const cholesky_result &factor, vec<real> &result,
@@ -42,7 +42,7 @@ void inverse_diagonal(const auto_linear_solver &factor, vec<real> &result,
                       inverse_diagonal_workspace &workspace, idx block_size = 64);
 
 /// Compute A^-1(rows[i], columns[i]) using only the requested inverse columns.
-void selected_inverse(const lu_result &factor, view<const idx> rows,
+void selected_inverse(const lu_result<real> &factor, view<const idx> rows,
                       view<const idx> columns, vec<real> &result,
                       inverse_diagonal_workspace &workspace);
 /// Compute selected inverse entries from a Cholesky factor.
@@ -59,7 +59,7 @@ void selected_inverse(const auto_linear_solver &factor, view<const idx> rows,
                       inverse_diagonal_workspace &workspace);
 
 /// Extract A^-1(indices, indices), preserving the requested index order.
-void inverse_principal_block(const lu_result &factor, view<const idx> indices, mat<real> &result,
+void inverse_principal_block(const lu_result<real> &factor, view<const idx> indices, mat<real> &result,
                              inverse_diagonal_workspace &workspace);
 /// Extract a principal inverse block from a Cholesky factor.
 void inverse_principal_block(const cholesky_result &factor, view<const idx> indices,

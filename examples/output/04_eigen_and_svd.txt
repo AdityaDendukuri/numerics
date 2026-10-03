@@ -1,0 +1,6 @@
+eig_sym     smallest 0.00096744  largest 3.99903256  (exact 0.00096744, 3.99903256)
+lanczos     3 largest 3.90211303 3.61803399 3.17557050    9 steps, converged 0
+lanczos     3 largest 3.99903256 3.99613119 3.99129870  100 steps, converged 1
+            exact     3.99903256 3.99613119 3.99129870
+power       dominant 3.99903229  in 7337 iterations
+svd         singular values 2.644853 0.259121 0.010318

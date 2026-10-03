@@ -2,16 +2,18 @@
 /// @brief Automatic dense/sparse shifted-resolvent selection.
 #pragma once
 
-#include "linear/solvers/dense_resolvent.hpp"
-#include <stdexcept>
-
 #include "core/types.hpp"
+#include "linear/solve.hpp"
+#include "linear/solvers/hessenberg_resolvent.hpp"
 #include "linear/solvers/sparse_resolvent.hpp"
 #include "linear/sparse/sparse.hpp"
-#include <memory>
-#include <vector>
+#include <optional>
+#include <stdexcept>
+#include <variant>
 
 namespace num {
+
+struct auto_shifted_lu;
 
 /// Dense/sparse cutoff and optional sparse symbolic symmetry hint.
 struct auto_resolvent_options {
@@ -19,78 +21,49 @@ struct auto_resolvent_options {
     bool symmetric_pattern = false;
 };
 
-/// Reusable solver for shifted systems (zI-A)x=b with automatic backend choice.
-class auto_resolvent_solver {
+/// @brief \f$A\f$ prepared for shifted solves \f$(sI - A)x = b\f$, by Hessenberg reduction at
+/// or below `dense_limit` and by sparse analysis above it.
+class auto_resolvent {
   public:
-    /// Store A and select the dense or sparse shifted-system implementation.
-    explicit auto_resolvent_solver(const spmat &matrix, auto_resolvent_options options = {});
-    ~auto_resolvent_solver();
-    auto_resolvent_solver(auto_resolvent_solver &&) noexcept;
-    auto_resolvent_solver &operator=(auto_resolvent_solver &&) noexcept;
-    auto_resolvent_solver(const auto_resolvent_solver &) = delete;
-    auto_resolvent_solver &operator=(const auto_resolvent_solver &) = delete;
+    explicit auto_resolvent(const spmat &A, auto_resolvent_options options = {}) {
+        if (A.n_rows() <= options.dense_limit) {
+            dense_.emplace(A);
+            return;
+        }
+        if (!sparse_resolvent_available()) {
+            throw std::runtime_error("large shifted systems require the sparse complex backend");
+        }
+        sparse_.emplace(A, sparse_resolvent_options{.symmetric_pattern = options.symmetric_pattern});
+    }
 
-    /// Return the order of A.
-    [[nodiscard]] idx size() const noexcept;
-    /// Factor the shifted matrix zI-A for subsequent solves.
-    void factorize(cplx shift);
-    /// Solve the currently factored shifted system.
-    void solve(const array<cplx> &rhs, array<cplx> &result) const;
-    /// Solve several right-hand sides against the current shift.
-    [[nodiscard]] array<array<cplx>>
-    solve(const array<array<cplx>> &right_hand_sides) const;
+    [[nodiscard]] idx size() const noexcept { return dense_ ? dense_->size() : sparse_->size(); }
 
   private:
-    struct Impl;
-    std::unique_ptr<Impl> impl_;
+    std::optional<hessenberg_resolvent> dense_;
+    std::optional<sparse_resolvent> sparse_;
+    friend auto_shifted_lu shift(const auto_resolvent &R, cplx s);
 };
 
-struct auto_resolvent_solver::Impl {
-    std::unique_ptr<dense_resolvent_solver> dense;
-    std::unique_ptr<sparse_resolvent_solver> sparse;
+/// @brief \f$sI - A\f$ for one shift, factored by whichever method `auto_resolvent` chose.
+struct auto_shifted_lu {
+    std::variant<hessenberg_shifted_lu, sparse_shifted_lu> factor;
+
+    [[nodiscard]] idx size() const noexcept {
+        return std::visit([](const auto &F) { return F.size(); }, factor);
+    }
 };
 
-inline auto_resolvent_solver::auto_resolvent_solver(const spmat &matrix, auto_resolvent_options options)
-    : impl_(std::make_unique<Impl>()) {
-    if (matrix.n_rows() <= options.dense_limit) {
-        impl_->dense = std::make_unique<dense_resolvent_solver>(matrix);
-        return;
+/// @brief Factor \f$sI - A\f$.
+[[nodiscard]] inline auto_shifted_lu shift(const auto_resolvent &R, cplx s) {
+    if (R.dense_) {
+        return {shift(*R.dense_, s)};
     }
-    if (!sparse_resolvent_available()) {
-        throw std::runtime_error("large shifted systems require the sparse complex backend");
-    }
-    impl_->sparse = std::make_unique<sparse_resolvent_solver>(
-        matrix, sparse_resolvent_options{.symmetric_pattern = options.symmetric_pattern});
+    return {shift(*R.sparse_, s)};
 }
 
-inline auto_resolvent_solver::~auto_resolvent_solver() = default;
-inline auto_resolvent_solver::auto_resolvent_solver(auto_resolvent_solver &&) noexcept = default;
-inline auto_resolvent_solver &auto_resolvent_solver::operator=(auto_resolvent_solver &&) noexcept = default;
-
-inline idx auto_resolvent_solver::size() const noexcept {
-    return impl_->dense ? impl_->dense->size() : impl_->sparse->size();
-}
-
-inline void auto_resolvent_solver::factorize(cplx shift) {
-    if (impl_->dense) {
-        impl_->dense->factorize(shift);
-    } else {
-        impl_->sparse->factorize(shift);
-    }
-}
-
-inline void auto_resolvent_solver::solve(const array<cplx> &rhs, array<cplx> &result) const {
-    if (impl_->dense) {
-        impl_->dense->solve(rhs, result);
-    } else {
-        impl_->sparse->solve(rhs, result);
-    }
-}
-
-inline array<array<cplx>>
-auto_resolvent_solver::solve(const array<array<cplx>> &right_hand_sides) const {
-    return impl_->dense ? impl_->dense->solve(right_hand_sides)
-                        : impl_->sparse->solve(right_hand_sides);
+/// @brief Solve \f$(sI - A)x = b\f$. `x` may be `b`.
+inline void solve(const auto_shifted_lu &F, const vec<cplx> &b, vec<cplx> &x) {
+    std::visit([&](const auto &factor) { solve(factor, b, x); }, F.factor);
 }
 
 } // namespace num

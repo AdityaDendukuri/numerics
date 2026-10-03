@@ -3,6 +3,7 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "spatial/concepts.hpp"
 #include <array>
 #include <cmath>
 
@@ -118,4 +119,6 @@ struct sph_kernel {
     }
 };
 
+static_assert(smoothing_kernel<sph_kernel<2>, float>);
+static_assert(smoothing_kernel<sph_kernel<3>, float>);
 } // namespace num

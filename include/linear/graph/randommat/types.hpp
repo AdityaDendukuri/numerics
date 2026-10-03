@@ -17,7 +17,7 @@ using graph_edge = num::structures::multi_edge<Float, Index>;
 
 /// @brief A weighted multigraph as adjacency lists.
 template <typename Float = double, std::integral Index = num::idx>
-using graph = std::vector<std::vector<graph_edge<Float, Index>>>;
+using adjacency_list = std::vector<std::vector<graph_edge<Float, Index>>>;
 
 template <typename Float = double, std::integral Index = num::idx>
 using neighbor = num::structures::multi_edge<Float, Index>;

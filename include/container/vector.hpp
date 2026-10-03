@@ -2,13 +2,14 @@
 /// @brief Dense vector storage and operations.
 #pragma once
 
-#include "cuda/cuda_ops.hpp"
+#include "container/concepts.hpp"
 #include "container/util/aligned_storage.hpp"
-#include "omp/parallel_ops.hpp"
 #include "core/math/laws.hpp"
 #include "core/math/operations.hpp"
 #include "core/types.hpp"
+#include "cuda/cuda_ops.hpp"
 #include "kernel/kernel.hpp"
+#include "omp/parallel_ops.hpp"
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -304,5 +305,5 @@ template <std::floating_point T>
     return kernel::norm(data, n);
 }
 
-
+static_assert(repr::contiguous<vec<real>>);
 } // namespace num

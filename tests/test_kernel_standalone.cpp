@@ -8,8 +8,6 @@
 ///
 /// Everything below uses the consumer's own storage, never num::vec<real>.
 
-#include "kernel/factor.hpp"
-#include "kernel/krylov.hpp"
 #include "kernel/kernel.hpp"
 
 #include <cmath>
@@ -98,12 +96,6 @@ void block_kernels() {
               std::abs(combination[2] - 13.0) < 1e-12,
           "block linear combination computes V times coefficients");
 
-    const std::vector<double> orthogonal_basis{1, 0, 0, 1, 0, 0};
-    std::vector<double> orthogonalized{2, 3, 4};
-    num::kernel::mgs_columns(orthogonalized.data(), orthogonal_basis.data(), 2, 3, 2);
-    check(std::abs(orthogonalized[0]) < 1e-12 && std::abs(orthogonalized[1]) < 1e-12 &&
-              std::abs(orthogonalized[2] - 4.0) < 1e-12,
-          "matrix-column modified Gram-Schmidt");
 
     std::vector<double> transpose_product(4);
     num::kernel::gemm_transpose_left(transpose_product.data(), 2, basis.data(), 2,
@@ -121,127 +113,29 @@ void block_kernels() {
           "linear-combination norm avoids materialization");
 }
 
-void factorizations() {
+void triangular_products() {
+    // L L^T for a hand-written lower factor, rebuilt by syrk and undone by trsv.
     const num::idx n = 3;
-    std::vector<double> A{4, 1, 0, 1, 3, 1, 0, 1, 5}, L(n * n), b{1, 2, 3}, x(n);
-    check(num::kernel::cholesky(L.data(), A.data(), n), "cholesky succeeds on SPD input");
-    num::kernel::cholesky_solve(x.data(), L.data(), b.data(), n);
-
-    std::vector<double> residual(n);
-    num::kernel::matvec(residual.data(), A.data(), x.data(), n, n);
+    const std::vector<double> L{2, 0, 0, 0.5, 1.5, 0, 0, 1, 2}, b{1, 2, 3};
+    std::vector<double> A(n * n, 0.0);
+    num::kernel::syrk_lower(A.data(), n, L.data(), n, 1.0, 0.0, n, n);
+    const std::vector<double> expected_lower{4, 0, 0, 1, 2.5, 0, 0, 1.5, 5};
     double worst = 0.0;
     for (num::idx i = 0; i < n; ++i) {
-        worst = std::max(worst, std::abs(residual[i] - b[i]));
-    }
-    check(worst < 1e-12, "cholesky solve reproduces the right-hand side");
-
-    std::vector<double> syrk_c(3 * 3, 0.0);
-    num::kernel::syrk_lower(syrk_c.data(), 3, L.data(), 3, 1.0, 0.0, 3, 3);
-    worst = 0.0;
-    for (num::idx i = 0; i < 3; ++i) {
         for (num::idx j = 0; j <= i; ++j) {
-            worst = std::max(worst, std::abs(syrk_c[(i * 3) + j] - A[(i * 3) + j]));
+            worst = std::max(worst, std::abs(A[(i * n) + j] - expected_lower[(i * n) + j]));
         }
     }
-    check(worst < 1e-12, "syrk lower reconstructs the SPD lower triangle");
+    check(worst < 1e-12, "syrk lower forms L L^T");
 
-    std::vector<double> blocked = A;
-    check(num::kernel::cholesky_blocked(blocked.data(), 3, 2),
-          "blocked cholesky succeeds on SPD input");
-    worst = 0.0;
-    for (num::idx i = 0; i < 3; ++i) {
-        for (num::idx j = 0; j <= i; ++j) {
-            worst = std::max(worst, std::abs(blocked[(i * 3) + j] - L[(i * 3) + j]));
-        }
-    }
-    check(worst < 1e-12, "blocked cholesky agrees with unblocked factorization");
-
-    std::vector<double> LU = A, xlu(n);
-    std::vector<num::idx> piv(n);
-    check(num::kernel::lu_factor(LU.data(), piv.data(), n), "lu factor is nonsingular");
-    num::kernel::lu_solve(xlu.data(), LU.data(), piv.data(), b.data(), n);
+    std::vector<double> y(n), Ly(n);
+    num::kernel::trsv_lower(y.data(), L.data(), b.data(), n);
+    num::kernel::matvec(Ly.data(), L.data(), y.data(), n, n);
     worst = 0.0;
     for (num::idx i = 0; i < n; ++i) {
-        worst = std::max(worst, std::abs(xlu[i] - x[i]));
+        worst = std::max(worst, std::abs(Ly[i] - b[i]));
     }
-    check(worst < 1e-12, "lu and cholesky agree on an SPD system");
-
-    // Exercise the documented alias-safe contracts directly.
-    std::vector<double> inplace_factor = A;
-    check(num::kernel::cholesky(inplace_factor.data(), inplace_factor.data(), n),
-          "cholesky factorization may overwrite its input");
-    std::vector<double> inplace_rhs = b;
-    num::kernel::cholesky_solve(inplace_rhs.data(), inplace_factor.data(), inplace_rhs.data(),
-                                     n);
-    worst = 0.0;
-    for (num::idx i = 0; i < n; ++i) {
-        worst = std::max(worst, std::abs(inplace_rhs[i] - x[i]));
-    }
-    check(worst < 1e-12, "cholesky solve supports an in-place right-hand side");
-
-    std::vector<double> inplace_lu_rhs = b;
-    num::kernel::lu_solve(inplace_lu_rhs.data(), LU.data(), piv.data(), inplace_lu_rhs.data(),
-                               n);
-    worst = 0.0;
-    for (num::idx i = 0; i < n; ++i) {
-        worst = std::max(worst, std::abs(inplace_lu_rhs[i] - x[i]));
-    }
-    check(worst < 1e-12, "lu solve supports an in-place right-hand side");
-
-    std::vector<double> blocked_lu = A;
-    std::vector<num::idx> blocked_piv(n);
-    check(num::kernel::lu_factor_blocked(blocked_lu.data(), blocked_piv.data(), n, 2),
-          "blocked lu is nonsingular");
-    std::vector<double> blocked_x(n);
-    num::kernel::lu_solve(blocked_x.data(), blocked_lu.data(), blocked_piv.data(), b.data(), n);
-    worst = 0.0;
-    for (num::idx i = 0; i < n; ++i) {
-        worst = std::max(worst, std::abs(blocked_x[i] - x[i]));
-    }
-    check(worst < 1e-12, "blocked lu solve agrees with unblocked factorization");
-
-    std::vector<double> batch_A;
-    batch_A.insert(batch_A.end(), A.begin(), A.end());
-    batch_A.insert(batch_A.end(), A.begin(), A.end());
-    bool status[2]{};
-    check(num::kernel::cholesky_batched(batch_A.data(), batch_A.data(), n, 2, n * n, status),
-          "batched small cholesky succeeds");
-    check(status[0] && status[1], "batched cholesky reports per-system status");
-}
-
-void krylov() {
-    const num::idx n = 64;
-    // 1D Laplacian with a shift: SPD, tridiagonal, applied matrix-free.
-    auto A = [&](const double *v, double *out) {
-        for (num::idx i = 0; i < n; ++i) {
-            double s = 2.1 * v[i];
-            if (i > 0) {
-                s -= v[i - 1];
-            }
-            if (i + 1 < n) {
-                s -= v[i + 1];
-            }
-            out[i] = s;
-        }
-    };
-    std::vector<double> b(n, 1.0), x(n, 0.0), work(3 * n);
-    const auto r = num::kernel::cg(A, x.data(), b.data(), n, work.data(), 1e-12, 500);
-    check(r.converged, "cg converges");
-
-    auto M = [&](const double *res, double *z) {
-        for (num::idx i = 0; i < n; ++i) {
-            z[i] = res[i] / 2.1;
-        }
-    };
-    std::vector<double> xp(n, 0.0), workp(4 * n);
-    const auto rp = num::kernel::pcg(A, M, xp.data(), b.data(), n, workp.data(), 1e-12, 500);
-    check(rp.converged, "pcg converges");
-
-    double worst = 0.0;
-    for (num::idx i = 0; i < n; ++i) {
-        worst = std::max(worst, std::abs(x[i] - xp[i]));
-    }
-    check(worst < 1e-8, "cg and pcg reach the same solution");
+    check(worst < 1e-12, "lower triangular solve inverts matvec");
 }
 
 } // namespace
@@ -249,8 +143,7 @@ void krylov() {
 int main() {
     level1();
     block_kernels();
-    factorizations();
-    krylov();
+    triangular_products();
     if (failures == 0) {
         std::printf("kernel standalone: all checks passed\n");
     }

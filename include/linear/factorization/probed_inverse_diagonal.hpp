@@ -56,8 +56,7 @@ class preconditioned_symmetric_operator final {
 /// of Gaussian probes, without one solve per entry.
 ///
 /// A diagonal similarity makes the symmetric part positive definite, so each entry is a
-/// squared row norm, estimated without bias by the probe mean square. The derivation is in the
-/// algorithm notes.
+/// squared row norm, estimated without bias by the probe mean square.
 ///
 /// @param factor A retained factorization of `matrix`.
 /// @param matrix The nonsingular M-matrix A, in CSR form.
@@ -67,7 +66,7 @@ class preconditioned_symmetric_operator final {
 /// @param options Probe count, Krylov depth, tolerance, and seed.
 /// @throws std::invalid_argument If no probes are requested.
 /// @throws std::runtime_error If `matrix` is not a nonsingular M-matrix.
-template <retained_factorization F>
+template <factorization F>
 [[nodiscard]] vec<real> inverse_diagonal(const F &factor, const spmat &matrix,
                                    view<const real> symmetrizer = {},
                                    inverse_diagonal_options options = {}) {
@@ -94,8 +93,8 @@ template <retained_factorization F>
     } else {
         const vec<real> ones(n, 1.0);
         vec<real> q(n, 0.0), r(n, 0.0);
-        detail::apply_solve(factor, ones, q);
-        detail::apply_solve_transpose(factor, ones, r);
+        solve(factor, ones, q);
+        solve_transpose(factor, ones, r);
         for (idx j = 0; j < n; ++j) {
             if (!(q[j] > 0.0) || !(r[j] > 0.0)) {
                 throw std::runtime_error("inverse_diagonal: matrix is not a nonsingular M-matrix");

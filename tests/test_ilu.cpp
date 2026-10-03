@@ -44,13 +44,13 @@ num::spmat tridiagonal(num::idx n, double lower = -1.0, double upper = -2.0,
     return num::spmat::from_triplets(n, n, rows, cols, values);
 }
 
-// --- kernel tier ------------------------------------------------------------
+// kernel tier
 
 TEST(ILUKernel, FindsDiagonalPositionsAndReportsAMissingOne) {
     const auto A = tridiagonal(5);
     std::vector<num::idx> diagonal(5, 0);
-    ASSERT_TRUE(num::kernel::csr_diagonal_positions(diagonal.data(), A.row_ptr(), A.col_idx(),
-                                                         num::idx{5}));
+    ASSERT_TRUE(
+        num::csr_diagonal_positions(diagonal.data(), A.row_ptr(), A.col_idx(), num::idx{5}));
     for (num::idx i = 0; i < 5; ++i) {
         EXPECT_EQ(A.col_idx()[diagonal[i]], i) << "row " << i;
     }
@@ -61,8 +61,7 @@ TEST(ILUKernel, FindsDiagonalPositionsAndReportsAMissingOne) {
     const std::vector<double> values{1.0, 1.0};
     const auto gap = num::spmat::from_triplets(2, 2, rows, cols, values);
     std::vector<num::idx> d2(2, 0);
-    EXPECT_FALSE(num::kernel::csr_diagonal_positions(d2.data(), gap.row_ptr(), gap.col_idx(),
-                                                          num::idx{2}));
+    EXPECT_FALSE(num::csr_diagonal_positions(d2.data(), gap.row_ptr(), gap.col_idx(), num::idx{2}));
 }
 
 TEST(ILUKernel, FactorizationIsExactWhenNoFillInIsDiscarded) {
@@ -95,7 +94,7 @@ TEST(ILUKernel, ReportsAZeroPivotRatherThanProducingGarbage) {
     EXPECT_THROW((void)num::make_ilu0_preconditioner(A), std::runtime_error);
 }
 
-// --- preconditioner ---------------------------------------------------------
+// preconditioner
 
 TEST(ILU0, RejectsAMatrixItCannotFactor) {
     const std::vector<num::idx> rows{0, 1};
@@ -132,7 +131,7 @@ TEST(ILU0, ApplicationIsRepeatable) {
     }
 }
 
-// --- right-preconditioned GMRES --------------------------------------------
+// right-preconditioned GMRES
 
 TEST(PreconditionedGMRES, ConvergesInOneStepWhenTheFactorizationIsExact) {
     const num::idx n = 60;

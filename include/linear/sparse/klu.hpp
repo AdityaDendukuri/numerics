@@ -4,6 +4,7 @@
 
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
+#include "linear/solve.hpp"
 #include "linear/sparse/sparse.hpp"
 #include <memory>
 
@@ -25,20 +26,22 @@ class klu_factorization {
 
     /// Return the order of the factored matrix.
     [[nodiscard]] idx size() const noexcept;
-    /// Solve Ax=B for one or more dense right-hand sides.
-    void solve(const vec<real> &rhs, vec<real> &solution) const;
-    void solve(const mat<real> &rhs, mat<real> &solution) const;
-    /// Solve A^T x=b.
-    void solve_transpose(const vec<real> &rhs, vec<real> &solution) const;
-    /// Solve A^T X=B for several dense right-hand sides.
-    void solve_transpose(const mat<real> &rhs, mat<real> &solution) const;
-    /// Replace one or more right-hand sides with their solutions.
-    void solve_in_place(vec<real> &right_hand_side) const;
-    void solve_in_place(mat<real> &right_hand_sides) const;
 
   private:
+    friend void solve(const klu_factorization &, const vec<real> &, vec<real> &);
+    friend void solve(const klu_factorization &, const mat<real> &, mat<real> &);
+    friend void solve_transpose(const klu_factorization &, const vec<real> &, vec<real> &);
+    friend void solve_transpose(const klu_factorization &, const mat<real> &, mat<real> &);
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
+
+/// @brief Solve \f$Ax = b\f$. `x` may be `b`.
+void solve(const klu_factorization &factor, const vec<real> &b, vec<real> &x);
+/// @brief Solve \f$AX = B\f$. `X` may be `B`.
+void solve(const klu_factorization &factor, const mat<real> &B, mat<real> &X);
+/// @brief Solve \f$A^Tx = b\f$. `x` may be `b`.
+void solve_transpose(const klu_factorization &factor, const vec<real> &b, vec<real> &x);
+void solve_transpose(const klu_factorization &factor, const mat<real> &B, mat<real> &X);
 
 } // namespace num

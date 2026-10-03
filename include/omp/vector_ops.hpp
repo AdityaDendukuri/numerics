@@ -13,9 +13,7 @@
 
 namespace num::omp {
 
-// -----------------------------------------------------------------------------
 // Level-1 vector operations
-// -----------------------------------------------------------------------------
 
 inline void scale(vec<real> &v, real alpha) noexcept {
     real *d = v.data();

@@ -24,9 +24,7 @@ set(NUMERICS_CORE_SOURCES
     src/linear/eigen/eig.cpp
     src/linear/factorization/inverse_diagonal.cpp
     src/linear/solvers/auto_linear.cpp
-    src/linear/solvers/dense_resolvent.cpp
     src/linear/solvers/hessenberg_resolvent.cpp
-    src/linear/solvers/resolvent.cpp
     src/linear/solvers/sparse_resolvent.cpp
     src/pde/poisson.cpp
 )

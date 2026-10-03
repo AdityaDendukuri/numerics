@@ -106,7 +106,7 @@ inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<r
 #endif
 }
 
-// -- complex level-1 -----------------------------------------------------------
+// complex level-1
 
 inline void scale(vec<cplx> &v, cplx alpha) noexcept {
     const idx n = v.size();

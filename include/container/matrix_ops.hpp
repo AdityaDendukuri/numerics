@@ -70,10 +70,7 @@ inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B
     }
 }
 
-
-// -----------------------------------------------------------------------------
 // mat::apply implementation
-// -----------------------------------------------------------------------------
 
 template <std::floating_point T>
 template <class X, class Y>

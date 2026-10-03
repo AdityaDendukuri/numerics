@@ -24,6 +24,8 @@ add_executable(numerics_tests
     test_clique_tree.cpp
     test_ilu.cpp
     test_lu_no_pivot.cpp
+    test_condition.cpp
+    test_mixed_lu.cpp
     test_kernel_reductions.cpp
     test_ode_guards.cpp
     test_diagnostics.cpp
