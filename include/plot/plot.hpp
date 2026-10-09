@@ -35,11 +35,12 @@ struct heatmap_entry {
 struct plot_panel {
     array<series_entry> series;
     array<heatmap_entry> heatmaps;
-    std::string title_, xlabel_, ylabel_;
+    std::string title_, panel_label_, xlabel_, ylabel_;
     std::string xrange_, yrange_;
     std::string palette_; // gnuplot palette string; empty = cividis
     bool legend_ = false;
     std::string legend_pos_ = "top right";
+    int legend_font_size_ = 11;
     bool logx_ = false;
     bool logy_ = false;
 };
@@ -50,6 +51,7 @@ struct plot_state {
     int mp_rows_ = 0, mp_cols_ = 0;  // 0 = single-plot mode
     std::string term_override_ = ""; // "dumb", "qt", "pngcairo"
     int term_w_ = 140, term_h_ = 35;
+    int figure_w_ = 0, figure_h_ = 0, figure_font_size_ = 11;
 
     void reset() { *this = plot_state{}; }
 };
@@ -70,6 +72,12 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
         fprintf(pipe, "set title '%s'\n", p.title_.c_str());
     } else {
         fputs("unset title\n", pipe);
+    }
+    fputs("unset label 1000\n", pipe);
+    if (!p.panel_label_.empty()) {
+        fprintf(pipe,
+                "set label 1000 '%s' at graph 0.03,0.95 front font ',%d'\n",
+                p.panel_label_.c_str(), state().figure_font_size_);
     }
     if (!p.xlabel_.empty()) {
         fprintf(pipe, "set xlabel '%s'\n", p.xlabel_.c_str());
@@ -134,9 +142,9 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
         }
 
         if (p.legend_) {
-            fprintf(pipe, "set key %s Left reverse samplen 3 spacing 1.2\n"
+            fprintf(pipe, "set key %s Left reverse samplen 3 spacing 1.2 font ',%d'\n"
                           "set key box lt 1 lw 0.5\n",
-                    p.legend_pos_.c_str());
+                    p.legend_pos_.c_str(), p.legend_font_size_);
         } else {
             fputs("unset key\n", pipe);
         }
@@ -186,9 +194,11 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
             double h = multiplot ? 3.0 * s.mp_rows_ : 4.0;
             fprintf(pipe, "set terminal pdfcairo size 6,%.0f font 'Arial,11'\n", h);
         } else {
-            int w = multiplot ? std::max(900, 300 * s.mp_cols_) : 900;
-            int h = multiplot ? 350 * s.mp_rows_ : 600;
-            fprintf(pipe, "set terminal pngcairo size %d,%d enhanced font 'Arial,11'\n", w, h);
+            int w = s.figure_w_ > 0 ? s.figure_w_
+                                    : (multiplot ? std::max(900, 300 * s.mp_cols_) : 900);
+            int h = s.figure_h_ > 0 ? s.figure_h_ : (multiplot ? 350 * s.mp_rows_ : 600);
+            fprintf(pipe, "set terminal pngcairo size %d,%d enhanced font 'Arial,%d'\n", w, h,
+                    s.figure_font_size_);
         }
         fprintf(pipe, "set output '%s'\n", outfile.c_str());
     }
@@ -276,6 +286,10 @@ inline void plot(const ContainerX &x, const ContainerY &y, const std::string &la
 inline void title(const std::string &t) {
     detail::state().current.title_ = t;
 }
+/// Place a compact panel label in the upper-left corner of the current axes.
+inline void panel_label(const std::string &label) {
+    detail::state().current.panel_label_ = label;
+}
 /// Set the current panel x-axis label.
 inline void xlabel(const std::string &l) {
     detail::state().current.xlabel_ = l;
@@ -295,9 +309,10 @@ inline void ylim(double lo, double hi) {
 }
 
 /// Enable the legend for the current panel.
-inline void legend(const std::string &pos = "top right") {
+inline void legend(const std::string &pos = "top right", int font_size = 11) {
     detail::state().current.legend_ = true;
     detail::state().current.legend_pos_ = pos;
+    detail::state().current.legend_font_size_ = font_size;
 }
 
 /// Plot component-wise available-path means and their min-max envelope.
@@ -415,6 +430,13 @@ inline void subplot(int rows, int cols = 1) {
     detail::state().reset();
     detail::state().mp_rows_ = rows;
     detail::state().mp_cols_ = cols;
+}
+
+/// Set PNG output dimensions and the global font size for the current figure.
+inline void figure(int width, int height, int font_size = 16) {
+    detail::state().figure_w_ = width;
+    detail::state().figure_h_ = height;
+    detail::state().figure_font_size_ = font_size;
 }
 
 /// @brief Advance to the next panel.
