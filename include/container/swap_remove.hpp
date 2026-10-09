@@ -81,7 +81,10 @@ template <typename T> void remove_indices(array<T> &values, view<const idx> remo
     idx kept = 0;
     for (idx index = 0; index < values.size(); ++index) {
         if (!gone[index]) {
-            values[kept++] = std::move(values[index]);
+            if (kept != index) {
+                values[kept] = std::move(values[index]);
+            }
+            ++kept;
         }
     }
     values.resize(kept);
