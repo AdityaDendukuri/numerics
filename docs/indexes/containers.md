@@ -41,8 +41,8 @@ num::spmat num::spmat::from_triplets num::spmat::from_csc num::sparse_matvec num
 ## Small fixed-size <container/small_matrix.hpp>
 num::small_vec num::small_matrix num::givens_rotation
 
-## Discrete indices <container/multi_index.hpp>
-num::multi_index
+## Lattice points <container/lattice_point.hpp>
+num::lattice_point
 
 ## Over-aligned storage <container/util/aligned_storage.hpp>
 num::aligned_array num::make_aligned num::make_aligned_for_overwrite num::is_storage_aligned num::storage_alignment num::assume_storage_aligned

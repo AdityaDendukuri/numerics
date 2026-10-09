@@ -29,7 +29,7 @@
 #include "container/matrix.hpp"
 #include "container/matrix_expr.hpp"
 #include "container/matrix_ops.hpp"
-#include "container/multi_index.hpp"
+#include "container/lattice_point.hpp"
 #include "container/swap_remove.hpp"
 #include "cuda/cuda_ops.hpp"
 #include "mpi/mpi_ops.hpp"
@@ -53,3 +53,4 @@
 #include "spectral/fft.hpp"
 #include "stats/stats.hpp"
 #include "stochastic/markov.hpp"
+#include "stochastic/multinomial.hpp"

@@ -1,7 +1,9 @@
 #include "container/vector.hpp"
+#include "container/lattice_point.hpp"
 #include "container/vector_ops.hpp"
 #include "kernel/kernel.hpp"
 #include <gtest/gtest.h>
+#include <unordered_map>
 
 using namespace num;
 
@@ -147,4 +149,15 @@ TEST(RawKernel, SpMVAndTranspose) {
     EXPECT_DOUBLE_EQ(y3[0], 9.0);  // 1*1 + 4*2 = 9
     EXPECT_DOUBLE_EQ(y3[1], 12.0); // 2*1 + 5*2 = 12
     EXPECT_DOUBLE_EQ(y3[2], 15.0); // 3*1 + 6*2 = 15
+}
+
+TEST(LatticePoint, ArithmeticOrderAndHash) {
+    using point = lattice_point<3>;
+    static_assert(sizeof(point) == 3 * sizeof(int));
+    constexpr point x{1, -2, 3}, y{0, 1, 1};
+    static_assert(x + y == point{1, -1, 4} && x - y == point{1, -3, 2});
+    static_assert(y < x && point{1, -2, 2} < x);
+    std::unordered_map<point, int> seen{{x, 1}};
+    EXPECT_EQ(seen.at(point{1, -2, 3}), 1);
+    EXPECT_FALSE(seen.contains(y));
 }

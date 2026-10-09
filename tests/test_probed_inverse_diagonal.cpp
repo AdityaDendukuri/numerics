@@ -12,8 +12,8 @@
 #include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/sparse/sparse.hpp"
-#include <gtest/gtest.h>
 #include <cmath>
+#include <gtest/gtest.h>
 
 using namespace num;
 
@@ -140,8 +140,8 @@ TEST(ProbedInverseDiagonal, ApproximatesTheExactDiagonalOnANonReversibleChain) {
     const vec<real> exact = exact_inverse_diagonal(A);
 
     const dense_base retained(A);
-    const vec<real> estimate = inverse_diagonal(retained, sparse_of(A), {},
-                                                 {.probes = 600, .seed = 7});
+    const vec<real> estimate =
+        inverse_diagonal(retained, sparse_of(A), {}, {.probes = 600, .seed = 7});
 
     ASSERT_EQ(estimate.size(), n);
     // The estimate is a chi-square mean over 600 probes, so its relative
@@ -160,9 +160,8 @@ TEST(ProbedInverseDiagonal, ApproximatesTheExactDiagonalOnAReversibleChain) {
         symmetrizer[i] = std::sqrt(stationary[i]);
     }
 
-    const dense_base retained(A);
-    const vec<real> estimate = inverse_diagonal(retained, sparse_of(A), symmetrizer,
-                                                 {.probes = 600, .seed = 11});
+    const vec<real> estimate =
+        inverse_diagonal(sparse_of(A), symmetrizer, {.probes = 600, .seed = 11});
 
     ASSERT_EQ(estimate.size(), n);
     EXPECT_LT(worst_relative_error(estimate, exact), 0.25);
@@ -188,6 +187,22 @@ TEST(ProbedInverseDiagonal, ReversibleAndGeneralPathsAgreeOnAReversibleChain) {
     const vec<real> exact = exact_inverse_diagonal(A);
     EXPECT_LT(worst_relative_error(with_measure, exact), 0.25);
     EXPECT_LT(worst_relative_error(without_measure, exact), 0.25);
+}
+
+TEST(ProbedInverseDiagonal, ReusesTheSuppliedAC2Factor) {
+    constexpr idx n = 16;
+    const spmat A = sparse_of(path_rate_matrix(n, 1.0, 0.3));
+    const vec<real> symmetrizer(n, 1.0);
+    const inverse_diagonal_options options{
+        .preconditioner = ac2, .probes = 40, .lanczos_steps = 24, .seed = 13};
+    const auto approximate =
+        grounded_approxchol_factor(A, options.preconditioner, options.seed ^ 0x9e3779b9U);
+
+    const vec<real> automatic = inverse_diagonal(A, symmetrizer, options);
+    const vec<real> reused = inverse_diagonal(A, symmetrizer, approximate, options);
+    for (idx i = 0; i < n; ++i) {
+        EXPECT_DOUBLE_EQ(reused[i], automatic[i]);
+    }
 }
 
 TEST(ProbedInverseDiagonal, EveryEstimateIsPositive) {
@@ -227,6 +242,5 @@ TEST(ProbedInverseDiagonal, RejectsAMismatchedSymmetrizer) {
     const mat<real> A = path_rate_matrix(6, 1.0, 0.5);
     const dense_base retained(A);
     const vec<real> wrong(3, 1.0);
-    EXPECT_THROW((void)inverse_diagonal(retained, sparse_of(A), wrong),
-                 std::invalid_argument);
+    EXPECT_THROW((void)inverse_diagonal(retained, sparse_of(A), wrong), std::invalid_argument);
 }

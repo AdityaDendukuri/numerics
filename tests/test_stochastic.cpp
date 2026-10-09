@@ -1,4 +1,5 @@
 #include "stochastic/categorical.hpp"
+#include "stochastic/multinomial.hpp"
 #include "stochastic/probe.hpp"
 #include "stochastic/rng.hpp"
 #include <gtest/gtest.h>
@@ -45,4 +46,26 @@ TEST(probe, HutchinsonRecoversDiagonalOfDiagonalMatrix) {
     for (idx j = 0; j < 3; ++j)
         EXPECT_NEAR(estimate[j], d[j] * d[j], 1e-14);
     EXPECT_THROW(hutchinson_row_mean_square(mat<real>(3, 0, 0.0)), std::invalid_argument);
+}
+
+TEST(multinomial, CountsSumToTheRequestedNumberOfDraws) {
+    rng generator(13);
+    const vec<real> weights{1.0, 2.0, 3.0, 4.0};
+    const array<idx> count = sample_multinomial(weights, 1000, generator);
+    EXPECT_EQ(count.size(), weights.size());
+    EXPECT_EQ(count[0] + count[1] + count[2] + count[3], 1000);
+}
+
+TEST(multinomial, HandlesUnnormalizedAndDegenerateWeights) {
+    rng generator(17);
+    const vec<real> certain{0.0, 7.0, 0.0};
+    EXPECT_EQ(sample_multinomial(certain, 23, generator), (array<idx>{0, 23, 0}));
+    EXPECT_EQ(sample_multinomial(certain, 0, generator), (array<idx>{0, 0, 0}));
+
+    const vec<real> negative{1.0, -1.0};
+    const vec<real> zero{0.0, 0.0};
+    const vec<real> empty;
+    EXPECT_THROW(sample_multinomial(negative, 1, generator), std::invalid_argument);
+    EXPECT_THROW(sample_multinomial(zero, 1, generator), std::invalid_argument);
+    EXPECT_THROW(sample_multinomial(empty, 1, generator), std::invalid_argument);
 }

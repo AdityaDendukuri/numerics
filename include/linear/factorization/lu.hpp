@@ -400,6 +400,49 @@ inline lu_result<T> lu(const mat<T> &A, no_pivot_structure) {
     return f;
 }
 
+/// @brief Derivative of the packed factors in \f$A+sI=L_sU_s\f$ at \f$s=0\f$.
+///
+/// The returned matrix uses the same packed layout as `lu_result`: entries on and above
+/// the diagonal contain \f$\dot U\f$, and entries below it contain \f$\dot L\f$. Since
+/// \f$L_s\f$ is unit lower triangular, its diagonal derivative is zero and is not stored.
+/// This differentiates the Doolittle recurrence directly and costs one additional dense
+/// factorization pass; it does not form an inverse or refactor a shifted matrix.
+///
+/// @throws std::invalid_argument If `f` is singular or was computed with row pivoting.
+template <std::floating_point T>
+[[nodiscard]] inline mat<T> lu_diagonal_shift_derivative(const lu_result<T> &f) {
+    if (f.singular || f.LU.rows() != f.LU.cols()) {
+        throw std::invalid_argument("LU shift derivative requires a nonsingular square factor");
+    }
+    if (!f.swaps.empty()) {
+        throw std::invalid_argument("LU shift derivative requires a no-pivot factorization");
+    }
+
+    const idx n = f.size();
+    mat<T> derivative(n, n, T(0));
+    for (idx k = 0; k < n; ++k) {
+        // U_kj = A_kj - sum_{p<k} L_kp U_pj.
+        for (idx j = k; j < n; ++j) {
+            T value = (j == k) ? T(1) : T(0);
+            for (idx p = 0; p < k; ++p) {
+                value -= derivative(k, p) * f.LU(p, j) + f.LU(k, p) * derivative(p, j);
+            }
+            derivative(k, j) = value;
+        }
+
+        // L_ik = (A_ik - sum_{p<k} L_ip U_pk) / U_kk.
+        for (idx i = k + 1; i < n; ++i) {
+            T value = T(0);
+            for (idx p = 0; p < k; ++p) {
+                value -= derivative(i, p) * f.LU(p, k) + f.LU(i, p) * derivative(p, k);
+            }
+            value -= f.LU(i, k) * derivative(k, k);
+            derivative(i, k) = value / f.LU(k, k);
+        }
+    }
+    return derivative;
+}
+
 namespace detail {
 
 // X <- P X, applying the swaps in the order the factorization made them.

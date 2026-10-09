@@ -7,12 +7,12 @@
 #pragma once
 
 #include "container/vector.hpp"
-#include "linear/matrix_properties.hpp"
-#include "linear/solvers/solver_result.hpp"
-#include "operator/concepts.hpp"
 #include "linear/graph/laplacian.hpp"
 #include "linear/graph/randommat/approxchol.hpp"
+#include "linear/matrix_properties.hpp"
+#include "linear/solvers/solver_result.hpp"
 #include "linear/sparse/sparse.hpp"
+#include "operator/concepts.hpp"
 #include "stochastic/rng.hpp"
 #include <cmath>
 #include <stdexcept>
@@ -66,6 +66,10 @@ class approx_chol_preconditioner final {
 /// pinned last and omitted from all vector actions below.
 class grounded_approx_chol_factor final {
   public:
+    using domain_type = vec<real>;
+    using codomain_type = vec<real>;
+    using laws = law::list<law::spd>;
+
     explicit grounded_approx_chol_factor(cholesky_factor<real, idx> factor)
         : factor_(std::move(factor)),
           n_(factor_.order.empty() ? 0 : static_cast<idx>(factor_.order.size() - 1)) {
@@ -124,6 +128,9 @@ class grounded_approx_chol_factor final {
         return inverse_permute(solution);
     }
 
+    /// Apply the approximate inverse C^{-T} C^{-1} as an SPD preconditioner.
+    void apply(const vec<real> &b, vec<real> &x) const { x = solve_upper(solve_lower(b)); }
+
     [[nodiscard]] const cholesky_factor<real, idx> &factor() const noexcept { return factor_; }
 
   private:
@@ -158,6 +165,7 @@ class grounded_approx_chol_factor final {
 };
 
 static_assert(linear_operator<approx_chol_preconditioner, vec<real>, vec<real>>);
+static_assert(math::spd_operator<grounded_approx_chol_factor, vec<real>>);
 
 /// Convert num::graph to randommat::adjacency_list.
 template <typename Weight, std::integral Index>
@@ -182,7 +190,8 @@ to_approxchol_graph(const structures::multigraph<Weight, Index> &mg) {
 /// Construct ApproxChol preconditioner from a randommat::adjacency_list.
 template <detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const adjacency_list<real, idx> &G, Algorithm algorithm, std::uint64_t seed = 42) {
+approxchol_preconditioner(const adjacency_list<real, idx> &G, Algorithm algorithm,
+                          std::uint64_t seed = 42) {
     rng64 rng(seed);
     auto factor = factorize<real, idx>(G, algorithm, &rng);
     return approx_chol_preconditioner(std::move(factor));
@@ -200,8 +209,8 @@ approxchol_preconditioner(const graph<Weight, Index> &G, Algorithm algorithm,
 /// Construct ApproxChol preconditioner from a num::multigraph.
 template <typename Weight, std::integral Index, detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
-approxchol_preconditioner(const structures::multigraph<Weight, Index> &mg,
-                          Algorithm algorithm, std::uint64_t seed = 42) {
+approxchol_preconditioner(const structures::multigraph<Weight, Index> &mg, Algorithm algorithm,
+                          std::uint64_t seed = 42) {
     return approxchol_preconditioner(mg.adjacency(), algorithm, seed);
 }
 
@@ -261,7 +270,6 @@ grounded_approxchol_factor(const spmat &A, Algorithm algorithm, std::uint64_t se
 }
 
 } // namespace randommat
-
 
 // Convenience top-level num:: aliases
 using approx_chol_preconditioner = randommat::approx_chol_preconditioner;
