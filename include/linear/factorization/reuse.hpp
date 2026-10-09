@@ -231,4 +231,55 @@ inline void solve_transpose(const suffix_block_lu &Z, const RHS &rhs, RHS &out) 
     solve_transpose(Z.factor, rhs, out);
 }
 
+/// Block Cholesky of a diagonal similarity of R and the number of leading blocks reused.
+struct suffix_block_cholesky {
+    similar_factor<block_cholesky_factor> factor;
+    idx reused_blocks = 0;
+
+    [[nodiscard]] bool reused() const { return reused_blocks > 0; }
+    [[nodiscard]] idx size() const { return factor.factor.size; }
+};
+
+/// @brief Block Cholesky of H R H^-1, copying the unchanged prefix of `previous`.
+inline suffix_block_cholesky cholesky(const spmat &R, block_structure structure, view<const real> h,
+                                      const suffix_block_cholesky *previous,
+                                      view<const idx> changed) {
+    vec<real> weights = detail::checked_weights(h);
+    const spmat symmetric = sparse_diagonal_similarity(R, detail::reciprocal(weights));
+    const idx n = R.n_rows();
+    if (previous && previous->size() == n && structure.levels.size() == n) {
+        const detail::block_layout layout = detail::build_block_order(structure.levels);
+        const idx first = detail::first_changed_block(previous->factor.factor, layout, changed);
+        bool same_weights = first != detail::no_reusable_block;
+        if (same_weights) {
+            for (idx position = 0; position < layout.offsets[first]; ++position) {
+                const idx row = layout.order[position];
+                same_weights = same_weights && previous->factor.h[row] == weights[row];
+            }
+        }
+        if (same_weights) {
+            try {
+                similar_factor<block_cholesky_factor> factor{
+                    refactor_block_cholesky_suffix(symmetric, structure.levels,
+                                                   previous->factor.factor, first),
+                    std::move(weights)};
+                return {std::move(factor), first};
+            } catch (const std::exception &) {
+                // The retained prefix is unusable; factor the complete matrix below.
+            }
+        }
+    }
+    return {cholesky(R, structure, weights), 0};
+}
+
+template <class RHS>
+inline void solve(const suffix_block_cholesky &Z, const RHS &rhs, RHS &out) {
+    solve(Z.factor, rhs, out);
+}
+
+template <class RHS>
+inline void solve_transpose(const suffix_block_cholesky &Z, const RHS &rhs, RHS &out) {
+    solve_transpose(Z.factor, rhs, out);
+}
+
 } // namespace num

@@ -231,6 +231,28 @@ TEST(Factor, RefactoringASuffixMatchesAFreshFactorization) {
     expect_solves(updated.factor, R, ramp(n, 8));
 }
 
+TEST(Factor, ReusableBlockCholeskyMatchesTheNonsymmetricSystem) {
+    constexpr idx n = 12;
+    constexpr real up = 1.2, down = 0.8;
+    const array<idx> levels = natural_levels(n);
+    vec<real> h(n, 1.0);
+    for (idx i = 1; i < n; ++i) {
+        h[i] = h[i - 1] * std::sqrt(up / down);
+    }
+
+    const mat<real> old_R = path_rate_matrix(n, up, down, 0.4);
+    const suffix_block_cholesky Z = cholesky(sparse_of(old_R), blocks(levels), h, nullptr, {});
+
+    mat<real> R = old_R;
+    R(9, 9) += 0.75;
+    const array<idx> changed{9};
+    const suffix_block_cholesky updated = cholesky(sparse_of(R), blocks(levels), h, &Z, changed);
+
+    EXPECT_TRUE(updated.reused());
+    EXPECT_GT(updated.reused_blocks, 0);
+    expect_solves(updated, R, ramp(n, 8));
+}
+
 TEST(Factor, ConcreteFactorsAreCorrectableByWoodbury) {
     constexpr idx n = 10;
     const mat<real> old_R = path_rate_matrix(n, 1.0, 1.0, 0.4);
@@ -277,6 +299,7 @@ static_assert(factorization<auto_linear_solver>);
 static_assert(factorization<klu_factorization>);
 static_assert(factorization<corrected_lu>);
 static_assert(factorization<suffix_block_lu>);
+static_assert(factorization<suffix_block_cholesky>);
 static_assert(factorization<woodbury_solver<lu_result<real>>>);
 static_assert(factorization<detail::transposed_factor<lu_result<real>>>);
 
