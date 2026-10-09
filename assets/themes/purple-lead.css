@@ -1,0 +1,29 @@
+/* Purple lead. UCA purple carries the header over a UCSB gold rule (gold on purple is 5.9:1).
+   Links are UCSB navy, and the current page and hovered links are Arkansas cardinal. In dark mode
+   the header deepens and links and markers use light tints. */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--uca-purple);
+  --md-primary-fg-color--light: #73489c;
+  --md-primary-fg-color--dark: #3d1f5c;
+  --md-accent-fg-color: var(--arkansas-cardinal);
+  --md-accent-fg-color--transparent: rgba(157, 34, 53, 0.1);
+  --md-typeset-a-color: var(--ucsb-navy);
+  --num-marker: var(--arkansas-cardinal);
+  --num-heading-accent: var(--uca-purple);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #121016;
+  --md-primary-fg-color: #3d1f5c;
+  --md-primary-fg-color--light: #582c83;
+  --md-primary-fg-color--dark: #2b1541;
+  --md-accent-fg-color: var(--cardinal-tint);
+  --md-accent-fg-color--transparent: rgba(232, 137, 154, 0.12);
+  --md-typeset-a-color: var(--ucsb-mist);
+  --num-marker: var(--cardinal-tint);
+  --num-heading-accent: var(--purple-tint);
+}
+
+.md-header {
+  border-image: linear-gradient(90deg, var(--ucsb-gold) 0 100%) 1;
+}
