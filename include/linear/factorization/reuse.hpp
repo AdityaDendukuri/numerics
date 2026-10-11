@@ -8,6 +8,8 @@
 ///   while at most `corrected_lu::max_changed` slots differ from it and the
 ///   correction's condition number times machine epsilon stays below
 ///   `corrected_lu::tolerance`.
+/// - dense Cholesky: the same Woodbury policy against a retained factorization
+///   of a symmetric diagonal similarity.
 /// - `blocks(levels)`: the unchanged block prefix is copied and the suffix
 ///   refactored.
 ///
@@ -88,19 +90,20 @@ inline real skeel_condition(const mat<real> &A) {
 
 } // namespace detail
 
-/// A no-pivot LU of R, held as the last complete factorization and a Woodbury
-/// correction for the slots that changed since.
-class corrected_lu {
+/// A factor of R, held as the last complete factorization and corrected by
+/// Woodbury for the slots that changed since.
+template <factorization Base>
+class corrected_factor {
   public:
     static constexpr idx max_changed = 3;
     static constexpr real tolerance = 1e-8;
 
     /// True when R was not factored from scratch.
     [[nodiscard]] bool reused() const { return reused_; }
-    [[nodiscard]] idx size() const { return base_->size(); }
+    [[nodiscard]] idx size() const { return base_R_->n_rows(); }
 
     template <class RHS>
-    friend void solve(const corrected_lu &Z, const RHS &rhs, RHS &out) {
+    friend void solve(const corrected_factor &Z, const RHS &rhs, RHS &out) {
         if (Z.correction_) {
             solve(*Z.correction_, rhs, out);
         } else {
@@ -109,7 +112,7 @@ class corrected_lu {
     }
 
     template <class RHS>
-    friend void solve_transpose(const corrected_lu &Z, const RHS &rhs, RHS &out) {
+    friend void solve_transpose(const corrected_factor &Z, const RHS &rhs, RHS &out) {
         if (Z.correction_) {
             solve_transpose(*Z.correction_, rhs, out);
         } else {
@@ -117,14 +120,50 @@ class corrected_lu {
         }
     }
 
-  private:
-    friend corrected_lu lu(const spmat &R, no_pivot_structure, const corrected_lu *previous,
-                           view<const idx> changed);
+    template <class Fresh>
+    static corrected_factor update(const spmat &R, const corrected_factor *previous,
+                                   view<const idx> changed, Fresh &&fresh) {
+        const idx n = R.n_rows();
+        corrected_factor next;
+        if (previous && previous->size() == n) {
+            next.base_ = previous->base_;
+            next.base_R_ = previous->base_R_;
+            array<bool> differs(n, false);
+            for (idx slot : previous->differing_) {
+                differs[slot] = true;
+            }
+            next.differing_ = previous->differing_;
+            for (idx slot : changed) {
+                if (slot >= n) {
+                    throw std::out_of_range("factor reuse: changed slot is outside R");
+                }
+                if (!differs[slot]) {
+                    differs[slot] = true;
+                    next.differing_.push_back(slot);
+                }
+            }
+            if (next.differing_.empty()) {
+                next.reused_ = true;
+                return next;
+            }
+            if (next.differing_.size() <= max_changed && next.correct(R)) {
+                next.reused_ = true;
+                return next;
+            }
+        }
+        next.base_ = std::make_shared<const Base>(fresh());
+        next.base_R_ = std::make_shared<const spmat>(R);
+        next.differing_.clear();
+        next.correction_.reset();
+        next.reused_ = false;
+        return next;
+    }
 
+  private:
     // A Woodbury correction for R, kept only if it is accurate. With
     // R^T = R_b^T + Q P^T and G = I + P^T W, the corrected solve of R^T x = b
     // has residual Q (P^T y - G c), so its accuracy is that of the p-by-p solve
-    // with G. The base is a no-pivot LU of an M-matrix, which is stable.
+    // with G.
     bool correct(const spmat &R) {
         try {
             correction_.emplace(*base_, low_rank_difference(*base_R_, R, differing_));
@@ -143,54 +182,34 @@ class corrected_lu {
         return true;
     }
 
-    std::shared_ptr<const lu_result<real>> base_;
+    std::shared_ptr<const Base> base_;
     std::shared_ptr<const spmat> base_R_;
     array<idx> differing_;
-    std::optional<woodbury_solver<lu_result<real>>> correction_;
+    std::optional<woodbury_solver<Base>> correction_;
     bool reused_ = false;
 };
+
+using corrected_lu = corrected_factor<lu_result<real>>;
+using corrected_cholesky = corrected_factor<similar_factor<cholesky_result>>;
 
 /// @brief No-pivot LU of R, corrected from `previous` when few slots differ.
 inline corrected_lu lu(const spmat &R, no_pivot_structure, const corrected_lu *previous,
                        view<const idx> changed) {
-    const idx n = R.n_rows();
-    corrected_lu next;
-    if (previous && previous->size() == n) {
-        next.base_ = previous->base_;
-        next.base_R_ = previous->base_R_;
-        array<bool> differs(n, false);
-        for (idx slot : previous->differing_) {
-            differs[slot] = true;
+    return corrected_lu::update(R, previous, changed, [&] {
+        lu_result<real> base = lu(R, no_pivot);
+        if (base.singular) {
+            throw std::runtime_error("lu: no-pivot factorization is singular");
         }
-        next.differing_ = previous->differing_;
-        for (idx slot : changed) {
-            if (slot >= n) {
-                throw std::out_of_range("lu: changed slot is outside R");
-            }
-            if (!differs[slot]) {
-                differs[slot] = true;
-                next.differing_.push_back(slot);
-            }
-        }
-        if (next.differing_.empty()) {
-            next.reused_ = true;
-            return next;
-        }
-        if (next.differing_.size() <= corrected_lu::max_changed && next.correct(R)) {
-            next.reused_ = true;
-            return next;
-        }
-    }
-    lu_result<real> base = lu(R, no_pivot);
-    if (base.singular) {
-        throw std::runtime_error("lu: no-pivot factorization is singular");
-    }
-    next.base_ = std::make_shared<const lu_result<real>>(std::move(base));
-    next.base_R_ = std::make_shared<const spmat>(R);
-    next.differing_.clear();
-    next.correction_.reset();
-    next.reused_ = false;
-    return next;
+        return base;
+    });
+}
+
+/// @brief Dense Cholesky of a symmetric similarity of R, corrected from
+/// `previous` when only a few slots differ.
+inline corrected_cholesky cholesky(const spmat &R, view<const real> h,
+                                   const corrected_cholesky *previous,
+                                   view<const idx> changed) {
+    return corrected_cholesky::update(R, previous, changed, [&] { return cholesky(R, h); });
 }
 
 /// A block LU of R and the number of leading blocks copied from the previous factor.

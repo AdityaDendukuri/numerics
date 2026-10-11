@@ -36,6 +36,18 @@ mat<real> path(const array<idx> &label) {
     return R;
 }
 
+mat<real> symmetric_path(const array<idx> &label) {
+    const idx n = label.size();
+    mat<real> R(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        R(i, i) = 3.0 + (0.1 * static_cast<real>(label[i] % 5));
+        if (i + 1 < n) {
+            R(i, i + 1) = R(i + 1, i) = -0.5;
+        }
+    }
+    return R;
+}
+
 spmat sparse_of(const mat<real> &A) {
     array<idx> rows, columns;
     array<real> values;
@@ -121,6 +133,26 @@ TEST(Reuse, DenseWithNothingChangedKeepsTheFactor) {
     const corrected_lu second = lu(sparse_of(path(label)), no_pivot, &first, {});
     EXPECT_TRUE(second.reused());
     expect_solves(second, path(label));
+}
+
+TEST(Reuse, DenseCholeskyCorrectsUntilTheCutoffThenRefactors) {
+    array<idx> label = labels(12);
+    const vec<real> h(12, 1.0);
+    corrected_cholesky Z = cholesky(sparse_of(symmetric_path(label)), h, nullptr, {});
+    EXPECT_FALSE(Z.reused());
+
+    for (idx slot : {3, 8, 3}) {
+        label[slot] += 101;
+        Z = cholesky(sparse_of(symmetric_path(label)), h, &Z, array<idx>{slot});
+        EXPECT_TRUE(Z.reused());
+        expect_solves(Z, symmetric_path(label));
+    }
+
+    label[0] += 101;
+    label[11] += 101;
+    Z = cholesky(sparse_of(symmetric_path(label)), h, &Z, array<idx>{0, 11});
+    EXPECT_FALSE(Z.reused());
+    expect_solves(Z, symmetric_path(label));
 }
 
 TEST(Reuse, TheBlockFactorKeepsThePrefixBeforeTheFirstChange) {
