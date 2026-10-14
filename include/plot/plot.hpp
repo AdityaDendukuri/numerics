@@ -43,6 +43,8 @@ struct plot_panel {
     int legend_font_size_ = 11;
     bool logx_ = false;
     bool logy_ = false;
+    bool square_ = false;
+    bool equal_axes_ = false;
 };
 
 struct plot_state {
@@ -76,7 +78,7 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
     fputs("unset label 1000\n", pipe);
     if (!p.panel_label_.empty()) {
         fprintf(pipe,
-                "set label 1000 '%s' at graph 0.03,0.95 front font ',%d'\n",
+                "set label 1000 '%s' at graph -0.06,1.10 front font ',%d'\n",
                 p.panel_label_.c_str(), state().figure_font_size_);
     }
     if (!p.xlabel_.empty()) {
@@ -120,6 +122,13 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
     } else {
         // Line-plot panel
         fputs("unset pm3d\n", pipe);
+        if (p.equal_axes_) {
+            fputs("set size ratio -1\n", pipe);
+        } else if (p.square_) {
+            fputs("set size square\n", pipe);
+        } else {
+            fputs("set size noratio\n", pipe);
+        }
         if (!p.xrange_.empty()) {
             fprintf(pipe, "set xrange %s\n", p.xrange_.c_str());
         } else {
@@ -297,6 +306,14 @@ inline void xlabel(const std::string &l) {
 /// Set the current panel y-axis label.
 inline void ylabel(const std::string &l) {
     detail::state().current.ylabel_ = l;
+}
+/// Draw the current axes in a square plotting area.
+inline void square() {
+    detail::state().current.square_ = true;
+}
+/// Use the same physical scale on the horizontal and vertical axes.
+inline void equal_axes() {
+    detail::state().current.equal_axes_ = true;
 }
 
 /// Set the current panel x-axis limits.
