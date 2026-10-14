@@ -1,0 +1,27 @@
+/* Three bands: navy header over a purple, cardinal and gold rule. */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--ucsb-navy);
+  --md-primary-fg-color--light: #1d4c75;
+  --md-primary-fg-color--dark: #00284a;
+  --md-accent-fg-color: var(--uca-purple);
+  --md-accent-fg-color--transparent: rgba(88, 44, 131, 0.1);
+  --md-typeset-a-color: var(--arkansas-cardinal);
+  --num-marker: var(--uca-purple);
+  --num-heading-accent: var(--ucsb-navy);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #111517;
+  --md-primary-fg-color: var(--ucsb-navy);
+  --md-primary-fg-color--light: #1d4c75;
+  --md-primary-fg-color--dark: #00284a;
+  --md-accent-fg-color: var(--purple-tint);
+  --md-accent-fg-color--transparent: rgba(185, 160, 220, 0.12);
+  --md-typeset-a-color: var(--cardinal-tint);
+  --num-marker: var(--purple-tint);
+  --num-heading-accent: var(--ucsb-mist);
+}
+
+.md-header {
+  border-image: linear-gradient(90deg, var(--uca-purple) 0 33.34%, var(--arkansas-cardinal) 33.34% 66.67%, var(--ucsb-gold) 66.67% 100%) 1;
+}
