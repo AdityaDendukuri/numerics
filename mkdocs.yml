@@ -41,6 +41,7 @@ nav:
       - Algorithms: reference/algorithms.md
       - All names: reference/index.md
   - Benchmark report: report/REPORT.md
+  - markovkit: markovkit/index.md
 
 # docs/indexes holds the sources refdoc turns into the grouped indexes.
 exclude_docs: |
