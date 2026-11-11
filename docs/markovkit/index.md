@@ -20,42 +20,82 @@ cmake --build build -j8
 ctest --test-dir build --output-on-failure
 ```
 
-`#include <markovkit.hpp>` includes FSP, SSA and RDME. `#include <subsweep.hpp>` includes
-subnetwork sweeping.
+`markovkit` is header-only. `#include <markovkit.hpp>` includes FSP, SSA and RDME.
+`#include <subsweep.hpp>` includes subnetwork sweeping.
 
-## What it has
+## Concepts
 
-| Module | Contents |
+Every solver is written against two concepts. A model lists the jumps out of a state; a
+state space numbers a finite set of states.
+
+```cpp
+template <typename Model>
+concept markov_model = requires(const Model &model, const state &x) {
+    { model.transitions(x) } -> std::convertible_to<array<transition>>; // {to, rate}
+};
+
+template <typename Space>
+concept state_space = requires(const Space &space, const state &x, idx i) {
+    { space.size() } -> std::convertible_to<idx>;
+    { space[i] } -> std::convertible_to<const state &>;
+    { space.find(x) } -> std::convertible_to<std::optional<idx>>;
+};
+```
+
+| Models | Spaces |
 | :--- | :--- |
-| `cme/` | Reaction systems, finite state spaces, and the generator on a state space |
-| `fsp/` | `solve_adaptive_fsp`, flux-controlled state-space growth; `solve_krylov_fsp`, Krylov propagation with the Vo--Sidje mass-loss criterion |
-| `ssa/` | `gillespie`, the exact direct method; `tau_leaping`, approximate Poisson leaping |
-| `rdme/` | Reaction-diffusion master equation on structured or unstructured voxel meshes, with population multigrid preconditioners for GMRES |
-| `subsweep/` | Subnetwork sweeping: eliminate a subnetwork of states, then sample where and when the chain leaves it |
+| `reaction_network` | `distribution`: growable, hashed, with probabilities |
+| `reaction_diffusion<Graph>` | `population_sector`: fixed species totals, ranked |
+| | `population_box`: every sector up to maximum totals |
+
+Any model on any space gives a `generator`, a matrix-free operator for `expv` and Krylov
+solvers. `solve_adaptive_fsp` and `solve_krylov_fsp` run the FSP, `gillespie` and
+`tau_leaping` sample paths, and `sector_multigrid` preconditions RDME resolvent solves.
 
 ## A first model
 
 A birth-death process, simulated exactly and by tau leaping:
 
 ```cpp
-#include "markovkit.hpp"
+#include <markovkit.hpp>
+using namespace markovkit;
 
 int main() {
-    markovkit::reaction_system model;
-    model.changes = {{1}, {-1}};
-    model.propensities = {
-        [](const markovkit::state &, const num::array<double> &r, double) { return r[0]; },
-        [](const markovkit::state &x, const num::array<double> &r, double) { return r[1] * x[0]; }};
+    const reaction_network model{{
+        {{1}, [](const state &) { return 5.0; }},
+        {{-1}, [](const state &x) { return 0.1 * x[0]; }},
+    }};
 
-    const num::array<double> rates = {5.0, 0.1};
-    const markovkit::state initial{0};
-
-    const auto exact = ssa::gillespie(model, rates, initial, 0.0, 20.0, 42);
-    const auto approximate = ssa::tau_leaping(model, rates, initial, 0.0, 20.0, {}, 42);
+    num::rng random(42);
+    const auto exact = gillespie(model, {0}, 20.0, random);
+    const auto approximate = tau_leaping(model, {0}, 20.0, random);
 }
 ```
 
 ![Gillespie and tau-leaping paths of a birth-death process](ssa_birth_death.png)
+
+The same model gives its distribution by FSP:
+
+```cpp
+const auto solution = solve_adaptive_fsp(model, {0}, 2.0, {.inside = box(100)});
+solution.means();                        // means(k, s) at solution.times[k]
+solution.snapshots.back().marginal(0);
+```
+
+An RDME is also a `markov_model`, so SSA and FSP accept it unchanged:
+
+```cpp
+const reaction_diffusion rdme{
+    voxel_domain(grid<1>({16}, {1.0 / 16}), {1.0}),
+    {{{1}, [](view<const int>, real volume) { return 0.05 * volume; }},
+     {{-1}, [](view<const int> n, real) { return 0.02 * n[0]; }}}};
+
+const population_box box(rdme.n_voxels(), {3});
+const generator Q(box, rdme);
+const shifted_generator A(Q, 0.5);                // 0.5 I - Q
+const sector_multigrid M(rdme.domain, box, 0.5);
+num::gmres(A, M, b, x);
+```
 
 ## Subnetwork sweeping
 
