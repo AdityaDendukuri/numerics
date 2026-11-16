@@ -40,6 +40,7 @@ add_executable(numerics_tests
     test_fft.cpp
     test_ode.cpp
     test_eigen.cpp
+    test_expv.cpp
     test_svd.cpp
     test_fields.cpp
     test_stochastic.cpp
