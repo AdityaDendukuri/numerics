@@ -11,6 +11,7 @@ at configuration time and dynamically linked when available.
 - BTF and SuiteSparse_config: see the licenses shipped with the installed
   SuiteSparse distribution
 
+KLU serves both real sparse LU and the complex shifted factorizations of `sparse_resolvent`.
 The KLU backend can be disabled with `-DNUMERICS_USE_SUITESPARSE=OFF`. Numerics
 does not enable or link ParU, METIS, or the complete SuiteSparse distribution.
 Redistributors of binaries with KLU enabled must preserve the applicable

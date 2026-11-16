@@ -273,7 +273,7 @@ TEST(PCG, jacobi_preconditioner) {
     vec<real> b{1.0, 2.0, 3.0, 4.0};
     vec<real> x(4, 0.0);
 
-    solver_result r = pcg(num::assume_spd(op), M, b, x, {.tolerance = 1e-10, .max_iterations = 100});
+    solver_result r = pcg(num::assume_spd(op), M, b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 100});
     EXPECT_TRUE(r.converged);
 
     vec<real> Ax(4);
@@ -766,6 +766,24 @@ TEST(Talbot, OneFiniteNodePerMode) {
     }
 }
 
+// For real inverse transforms, conjugate symmetry reduces the Talbot rule to one half-contour.
+TEST(Talbot, RealHalfContourAgreesWithFullContour) {
+    for (real t : {0.1, 1.0, 5.0}) {
+        const auto full = talbot_contour(t, 16);
+        const auto half = real_talbot_contour(t, 16);
+        EXPECT_EQ(half.size(), 8u);
+        auto invert = [](const array<contour_node> &nodes) {
+            cplx sum = 0.0;
+            for (const auto &[s, w] : nodes) {
+                sum += w / (s + 1.0);
+            }
+            return sum.real();
+        };
+        EXPECT_NEAR(invert(half), invert(full), 1e-15);
+        EXPECT_NEAR(invert(half), std::exp(-t), 1e-9) << "t = " << t; // 16-mode Talbot error
+    }
+}
+
 TEST(AutoResolvent, DenseSelectionAndSolve) {
     const auto A = spmat::from_triplets(2, 2, {0, 1}, {0, 1}, {2.0, 3.0});
     const auto_resolvent R(A);
@@ -793,12 +811,86 @@ TEST(SparseResolvent, OptionalBackend) {
     solve(F4, x2, x2);
     EXPECT_NEAR(x2[0].real(), 1.0, 1e-12);
     EXPECT_NEAR(x2[1].real(), 1.0, 1e-12);
+}
 
-    const sparse_resolvent symmetric(A, {.symmetric_pattern = true});
-    vec<cplx> x3;
-    solve(shift(symmetric, cplx(4.0)), vec<cplx>{cplx(2.0), cplx(1.0)}, x3);
-    EXPECT_NEAR(x3[0].real(), 1.0, 1e-12);
-    EXPECT_NEAR(x3[1].real(), 1.0, 1e-12);
+namespace {
+
+// A 20 x 20 two-species birth-death-conversion generator as A = Q^T: nonsymmetric, n = 400.
+spmat two_species_generator() {
+    constexpr idx N = 20;
+    array<idx> rows, cols;
+    array<real> vals;
+    auto id = [](idx x, idx y) { return (x * N) + y; };
+    array<real> out(N * N, 0.0);
+    auto rate = [&](idx from, idx to, real r) {
+        rows.push_back(to), cols.push_back(from), vals.push_back(r);
+        out[from] += r;
+    };
+    for (idx x = 0; x < N; ++x) {
+        for (idx y = 0; y < N; ++y) {
+            if (x + 1 < N) rate(id(x, y), id(x + 1, y), 8.0);
+            if (x > 0) rate(id(x, y), id(x - 1, y), 1.0 * static_cast<real>(x));
+            if (x > 0 && y + 1 < N) rate(id(x, y), id(x - 1, y + 1), 0.5 * static_cast<real>(x));
+            if (y > 0) rate(id(x, y), id(x, y - 1), 0.8 * static_cast<real>(y));
+        }
+    }
+    for (idx k = 0; k < N * N; ++k) {
+        rows.push_back(k), cols.push_back(k), vals.push_back(-out[k]);
+    }
+    return spmat::from_triplets(N * N, N * N, rows, cols, vals);
+}
+
+} // namespace
+
+TEST(SparseResolvent, MatchesTheDenseResolventOnAComplexShiftedGenerator) {
+    if (!sparse_resolvent_available()) {
+        GTEST_SKIP() << "no sparse complex backend";
+    }
+    const spmat A = two_species_generator();
+    const sparse_resolvent sparse(A);
+    const hessenberg_resolvent dense(A);
+    vec<cplx> b(A.n_rows());
+    for (idx i = 0; i < b.size(); ++i) {
+        b[i] = cplx(1.0 + (0.1 * std::sin(static_cast<real>(i))), 0.0);
+    }
+    for (const auto &[s, weight] : talbot_contour(1.0, 12)) {
+        vec<cplx> x_sparse, x_dense;
+        solve(shift(sparse, s), b, x_sparse);
+        solve(shift(dense, s), b, x_dense);
+        real error = 0, scale = 0;
+        for (idx i = 0; i < b.size(); ++i) {
+            error = num::max(error, std::abs(x_sparse[i] - x_dense[i]));
+            scale = num::max(scale, std::abs(x_dense[i]));
+        }
+        EXPECT_LE(error, 1e-10 * scale) << "s = " << s;
+    }
+}
+
+// Independent shifts factored concurrently from one analysis must give exactly the sequential
+// result: the backend may keep no state outside its arguments.
+TEST(SparseResolvent, ShiftsFactorConcurrentlyFromOneAnalysis) {
+    if (!sparse_resolvent_available()) {
+        GTEST_SKIP() << "no sparse complex backend";
+    }
+    const spmat A = two_species_generator();
+    const sparse_resolvent R(A);
+    const auto contour = talbot_contour(1.0, 24);
+    const vec<cplx> b(A.n_rows(), cplx(1.0, 0.0));
+    array<vec<cplx>> sequential(contour.size()), concurrent(contour.size());
+    for (idx k = 0; k < contour.size(); ++k) {
+        solve(shift(R, contour[k].shift), b, sequential[k]);
+    }
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic)
+#endif
+    for (idx k = 0; k < contour.size(); ++k) {
+        solve(shift(R, contour[k].shift), b, concurrent[k]);
+    }
+    for (idx k = 0; k < contour.size(); ++k) {
+        for (idx i = 0; i < b.size(); ++i) {
+            ASSERT_EQ(concurrent[k][i], sequential[k][i]) << "node " << k << ", entry " << i;
+        }
+    }
 }
 
 TEST(Resolvent, FactorizedShiftFromSparseMatrix) {

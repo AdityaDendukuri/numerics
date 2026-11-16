@@ -1,5 +1,5 @@
 /// @file linear/linear.hpp
-/// @brief Umbrella include for linear algebra routines.
+/// @brief Factorizations, iterative solvers, eigenvalues, the SVD and sparse matrices.
 #pragma once
 
 #include "linear/banded/banded.hpp"
@@ -25,5 +25,4 @@
 #include "linear/solvers/sparse_resolvent.hpp"
 #include "linear/sparse/klu.hpp"
 #include "linear/sparse/sparse.hpp"
-#include "linear/sparse/umfpack.hpp"
 #include "linear/svd/svd.hpp"

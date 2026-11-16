@@ -1,5 +1,5 @@
 /// @file sparse_resolvent.hpp
-/// @brief Shifted sparse resolvent plans with optional SuiteSparse backend.
+/// @brief Shifted sparse solves through an available direct backend.
 #pragma once
 
 #include "container/vector.hpp"
@@ -11,25 +11,22 @@
 
 namespace num {
 
-/// True when a sparse complex factorization backend is available.
+/// True when numerics was built with SuiteSparse KLU, which factors the shifted systems.
 [[nodiscard]] bool sparse_resolvent_available() noexcept;
 
 class sparse_shifted_lu;
 
-/// Symbolic-analysis hints for sparse shifted systems.
-struct sparse_resolvent_options {
-    bool symmetric_pattern = false;
-};
-
 /// @brief The sparsity of \f$sI - A\f$ analyzed once, ready to factor it for any shift.
 ///
-/// With SuiteSparse UMFPACK the symbolic analysis is kept and each `shift(R, s)` does only the
-/// numeric factorization. Without it, `shift` reports that no sparse complex backend is
-/// available rather than silently densifying a large matrix. Copies share the analysis.
+/// Factored by KLU's complex interface: the symbolic analysis (block triangular form and AMD
+/// ordering) is computed once, and each `shift` does only the numeric factorization. `shift` may
+/// be called concurrently on one analysis, so independent shifts (Talbot nodes, say) factor in
+/// parallel; one factor serves one thread at a time. Without KLU, `shift` throws rather than
+/// silently densifying a large matrix. Copies share the analysis.
 class sparse_resolvent {
   public:
     /// Analyze A's sparsity pattern. A must store its diagonal explicitly.
-    explicit sparse_resolvent(const spmat &A, sparse_resolvent_options options = {});
+    explicit sparse_resolvent(const spmat &A);
 
     [[nodiscard]] idx size() const noexcept;
 
@@ -41,7 +38,7 @@ class sparse_resolvent {
     friend sparse_shifted_lu shift(const sparse_resolvent &R, cplx s);
 };
 
-/// @brief \f$sI - A\f$ for one shift \f$s\f$, factored by UMFPACK.
+/// @brief \f$sI - A\f$ for one shift \f$s\f$, factored by the available sparse backend.
 class sparse_shifted_lu {
   public:
     ~sparse_shifted_lu();

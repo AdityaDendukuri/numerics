@@ -129,7 +129,7 @@ TEST(Chebyshev, CutsKrylovIterationsRoughlyByTheDegree) {
     auto spd_precond = num::assume_spd(M);
     num::vec<num::real> x_prec(n, 0.0);
     const auto preconditioned = num::pcg(
-        A, spd_precond, b, x_prec, num::pcg_options{.tolerance = 1e-10, .max_iterations = 20000});
+        A, spd_precond, b, x_prec, num::pcg_options{.tolerance = {.rtol = 1e-10}, .max_iterations = 20000});
     ASSERT_TRUE(preconditioned.converged);
 
     // A degree-m polynomial buys about a factor of m; allow generous slack.

@@ -2,7 +2,7 @@
 #
 # numerics is header-only apart from what is listed here. A file earns a place
 # in this list for one of two reasons: it binds an external library whose
-# headers should not reach every consumer (KLU, UMFPACK, MPI, CUDA), or it is a
+# headers should not reach every consumer (KLU, MPI, CUDA), or it is a
 # translation unit whose file-local helpers are specific enough to the algorithm
 # that inlining them into a header would export detail without buying anything.
 #
@@ -18,7 +18,6 @@ set(NUMERICS_CORE_SOURCES
     # External bindings.
     src/linear/sparse/klu.cpp
     src/spectral/fft.cpp
-    src/linear/sparse/umfpack.cpp
 
     # Algorithm-local translation units.
     src/linear/eigen/eig.cpp

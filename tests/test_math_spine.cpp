@@ -196,7 +196,7 @@ TEST(MathSpine, GenericKrylovFamilySupportsForeignTypes) {
 
     std::vector<double> x_pcg(3, 0.0);
     const auto pcg_result =
-        num::pcg(A, inverse, b, x_pcg, {.tolerance = 1e-12, .max_iterations = 20});
+        num::pcg(A, inverse, b, x_pcg, {.tolerance = {.rtol = 1e-12}, .max_iterations = 20});
     EXPECT_TRUE(pcg_result.converged);
 
     std::vector<double> x_minres(3, 0.0);
@@ -242,7 +242,7 @@ TEST(MathSpine, RestrictedPcgSolvesOnTheSubspace) {
     num::vec<num::real> b{1.0, -1.0};
     num::vec<num::real> x(2, 0.0);
     const auto result = num::pcg(restricted_A, restricted_M, b, x, num::space::zero_sum{},
-                                 {.tolerance = 1e-12, .max_iterations = 10});
+                                 {.tolerance = {.rtol = 1e-12}, .max_iterations = 10});
 
     EXPECT_TRUE(result.converged);
     EXPECT_NEAR(x[0], 0.5, 1e-12);
@@ -286,3 +286,38 @@ TEST(MathSpine, PdeConstructionRejectsUnsupportedSpdClaim) {
 }
 
 } // namespace
+
+namespace core_vocabulary_test {
+
+using namespace num;
+
+TEST(FloatingPointVocabulary, MaxAndMinPropagateNaNFromEitherSide) {
+    EXPECT_TRUE(std::isnan(num::max(1.0, num::nan)));
+    EXPECT_TRUE(std::isnan(num::max(num::nan, 1.0)));
+    EXPECT_TRUE(std::isnan(num::min(1.0, num::nan)));
+    EXPECT_TRUE(std::isnan(num::min(num::nan, 1.0)));
+    EXPECT_EQ(num::max(-num::inf, 3.0), 3.0);
+    EXPECT_EQ(num::min(2, 5), 2);
+    // The running-max pattern every norm uses.
+    real m = 0;
+    for (real v : {1.0, num::nan, 2.0}) {
+        m = num::max(m, v);
+    }
+    EXPECT_TRUE(std::isnan(m));
+}
+
+TEST(Tolerance, BoundIsTheLargerOfRelativeAndAbsolute) {
+    const num::tolerance t{.rtol = 1e-8, .atol = 1e-12};
+    EXPECT_EQ(t.bound(1.0), 1e-8);
+    EXPECT_EQ(t.bound(-1.0), 1e-8);
+    EXPECT_EQ(t.bound(0.0), 1e-12);
+    EXPECT_TRUE(t.met(1e-8, 1.0));
+    EXPECT_FALSE(t.met(num::nan, 1.0));
+    EXPECT_TRUE(t.valid());
+    EXPECT_FALSE(num::tolerance{}.valid());
+    EXPECT_FALSE((num::tolerance{.rtol = -1.0}.valid()));
+    EXPECT_FALSE((num::tolerance{.rtol = num::nan}.valid()));
+    EXPECT_FALSE((num::tolerance{.atol = num::inf}.valid()));
+}
+
+} // namespace core_vocabulary_test

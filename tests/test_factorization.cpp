@@ -3,7 +3,6 @@
 #include "linear/matrix_utils.hpp"
 #include "linear/sparse/klu.hpp"
 #include "linear/sparse/sparse.hpp"
-#include "linear/sparse/umfpack.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
 
@@ -231,33 +230,6 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
                  std::invalid_argument);
     EXPECT_THROW(inverse_principal_block(lu_factor, std::vector<idx>{3}, principal, workspace),
                  std::out_of_range);
-}
-
-TEST(UMFPACK, SparseFactorAndSolve) {
-    if (!umfpack_available()) {
-        GTEST_SKIP() << "SuiteSparse UMFPACK is not available";
-    }
-    const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
-                                        {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
-    umfpack_factor factor(A);
-    vec<real> x;
-    solve(factor, vec<real>{15.0, 10.0, 10.0}, x);
-    EXPECT_NEAR(x[0], 5.0, 1e-12);
-    EXPECT_NEAR(x[1], 5.0, 1e-12);
-    EXPECT_NEAR(x[2], 5.0, 1e-12);
-
-    // In place: the solve must read b before overwriting it.
-    vec<real> in_place{15.0, 10.0, 10.0};
-    solve(factor, in_place, in_place);
-    mat<real> B(3, 2, 0.0);
-    B(0, 0) = 15.0, B(1, 0) = 10.0, B(2, 0) = 10.0;
-    B(0, 1) = 30.0, B(1, 1) = 20.0, B(2, 1) = 20.0;
-    solve(factor, B, B);
-    for (idx i = 0; i < 3; ++i) {
-        EXPECT_NEAR(in_place[i], 5.0, 1e-12);
-        EXPECT_NEAR(B(i, 0), 5.0, 1e-12);
-        EXPECT_NEAR(B(i, 1), 10.0, 1e-12);
-    }
 }
 
 TEST(LU, SolveSmall3x3) {

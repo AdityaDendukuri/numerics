@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     }
     const jacobi_preconditioner jacobi(inverse_diagonal);
     report("PCG, Jacobi",
-           pcg(assume_spd(op), jacobi, b, x, {.tolerance = 1e-10, .max_iterations = 2000}));
+           pcg(assume_spd(op), jacobi, b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 2000}));
 
     x = vec<real>(n, 0.0);
     report("MINRES", minres(assume_symmetric(op), b, x, {.tolerance = 1e-10, .max_iterations = 2000}));

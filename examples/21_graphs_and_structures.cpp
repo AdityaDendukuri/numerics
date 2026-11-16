@@ -50,7 +50,7 @@ int main() {
     const auto preconditioner =
         assume<law::spd_on<space::zero_sum>>(operators::projected(approxchol, zero_sum));
     const auto result = pcg(laplacian, preconditioner, b, x, zero_sum,
-                            {.tolerance = 1e-8, .max_iterations = 200});
+                            {.tolerance = {.rtol = 1e-8}, .max_iterations = 200});
     std::printf("Laplacian PCG with ApproxChol: converged %d in %zu iterations\n",
                 result.converged, static_cast<std::size_t>(result.iterations));
     std::printf("effective resistance corner to corner: %.4f\n", x[0] - x[n - 1]);

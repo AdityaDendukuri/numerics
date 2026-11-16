@@ -107,9 +107,6 @@ num::expv
 ## KLU <linear/sparse/klu.hpp>
 num::klu_factorization num::klu_available
 
-## UMFPACK <linear/sparse/umfpack.hpp>
-num::umfpack_factor num::umfpack_available
-
 ## Sparse operator <linear/sparse/sparse_op.hpp>
 num::operators::sparse_op
 

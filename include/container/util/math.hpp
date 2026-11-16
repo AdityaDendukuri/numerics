@@ -17,22 +17,6 @@
 
 namespace num {
 
-// Mathematical constants
-/// @brief \f$\pi\f$.
-constexpr real pi = 3.14159265358979323846;
-/// @brief Euler's number \f$e\f$.
-constexpr real e = 2.71828182845904523536;
-constexpr real phi = 1.61803398874989484820; ///< Golden ratio
-/// @brief \f$\sqrt{2}\f$.
-constexpr real sqrt2 = 1.41421356237309504880;
-/// @brief \f$\sqrt{3}\f$.
-constexpr real sqrt3 = 1.73205080756887729353;
-/// @brief \f$\ln 2\f$.
-constexpr real ln2 = 0.69314718055994530942;
-constexpr real inv_pi = 0.31830988618379067154;  ///< 1/pi
-constexpr real two_pi = 6.28318530717958647692;  ///< 2pi
-constexpr real half_pi = 1.57079632679489661923; ///< pi/2
-
 // Cylindrical Bessel functions (POSIX / C99 / exact series)
 
 /// @brief J_nu(x) -- Bessel function of the first kind
@@ -54,7 +38,7 @@ inline real bessel_j(real nu, real x) {
     for (int k = 0; k < 30; ++k) {
         sum += term;
         term *= x2_4 / ((k + 1.0) * (nu + k + 1.0));
-        if (std::abs(term) < 1e-16 * std::abs(sum)) {
+        if (std::abs(term) < num::eps * std::abs(sum)) {
             break;
         }
     }
@@ -81,7 +65,7 @@ inline real bessel_i(real nu, real x) {
     for (int k = 0; k < 40; ++k) {
         sum += term;
         term *= x2_4 / ((k + 1.0) * (nu + k + 1.0));
-        if (std::abs(term) < 1e-16 * std::abs(sum)) {
+        if (std::abs(term) < num::eps * std::abs(sum)) {
             break;
         }
     }

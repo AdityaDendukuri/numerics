@@ -14,7 +14,8 @@ if("numerics" IN_LIST _numerics_components OR "backends" IN_LIST _numerics_compo
     set(_numerics_need_full TRUE)
 endif()
 
-foreach(_component kernel core raw_kernel numerics backends blas lapack openmp fftw suitesparse mpi cuda)
+foreach(_component kernel core raw_kernel numerics backends blas lapack openmp fftw suitesparse
+                   mpi cuda)
     set(numerics_${_component}_FOUND TRUE)
 endforeach()
 
@@ -51,14 +52,9 @@ if("mpi" IN_LIST _numerics_components)
 endif()
 
 if(_numerics_need_full OR "suitesparse" IN_LIST _numerics_components)
-    if(@NUMERICS_HAS_KLU@ OR @NUMERICS_HAS_UMFPACK@)
+    if(@NUMERICS_HAS_KLU@)
         find_dependency(PkgConfig)
-        if(@NUMERICS_HAS_KLU@)
-            pkg_check_modules(KLU REQUIRED IMPORTED_TARGET klu)
-        endif()
-        if(@NUMERICS_HAS_UMFPACK@)
-            pkg_check_modules(UMFPACK REQUIRED IMPORTED_TARGET umfpack)
-        endif()
+        pkg_check_modules(KLU REQUIRED IMPORTED_TARGET klu)
     else()
         set(numerics_suitesparse_FOUND FALSE)
     endif()

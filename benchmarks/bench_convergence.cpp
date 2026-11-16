@@ -82,7 +82,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         res_pcg.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
             vec<real> x(n, 0.0);
-            auto res = pcg(spd_op, jacobi, b, x, {.tolerance = 1e-15, .max_iterations = k});
+            auto res = pcg(spd_op, jacobi, b, x, {.tolerance = {.rtol = 1e-15}, .max_iterations = k});
             iters_pcg.push_back(static_cast<double>(k));
             res_pcg.push_back(std::max(1e-16, res.residual / b_norm));
             if (res.residual / b_norm < 1e-15) break;

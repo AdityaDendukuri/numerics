@@ -1,5 +1,5 @@
 /// @file linear/solvers/pcg.hpp
-/// @brief Evidence-constrained preconditioned conjugate gradient.
+/// @brief Preconditioned conjugate gradients for SPD operators.
 #pragma once
 
 #include "container/vector.hpp"
@@ -15,7 +15,7 @@ namespace num {
 
 /// @brief Convergence options of `num::pcg`: tolerance and iteration limit.
 struct pcg_options {
-    real tolerance = 1e-10;
+    num::tolerance tolerance{.rtol = 1e-10}; ///< On \f$\|b - Ax\|_2\f$ against \f$\|b\|_2\f$.
     idx max_iterations = 1000;
 };
 
@@ -33,9 +33,10 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::
         throw std::invalid_argument(
             "pcg: incompatible operator, preconditioner, and vector dimensions");
     }
-    if (!(options.tolerance > 0.0)) {
+    if (!options.tolerance.valid()) {
         throw std::invalid_argument("pcg: invalid convergence options");
     }
+    const real b_norm = static_cast<real>(math::norm(b));
     V residual = math::zero_like(b);
     V preconditioned = math::zero_like(b);
     V direction = math::zero_like(b);
@@ -48,7 +49,7 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::
     check_invariant(residual, "pcg: residual left the certified subspace");
 
     solver_result result{0, static_cast<real>(math::norm(residual)), false};
-    if (result.residual < options.tolerance) {
+    if (options.tolerance.met(result.residual, b_norm)) {
         result.converged = true;
         return result;
     }
@@ -81,7 +82,7 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::
         if (!std::isfinite(result.residual)) {
             throw std::runtime_error("pcg: inner-product norm invariant was violated");
         }
-        if (result.residual < options.tolerance) {
+        if (options.tolerance.met(result.residual, b_norm)) {
             result.converged = true;
             break;
         }

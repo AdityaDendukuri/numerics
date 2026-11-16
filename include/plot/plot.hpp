@@ -1,5 +1,5 @@
 /// @file plot/plot.hpp
-/// @brief Matplotlib-style plotting via a gnuplot pipe with ASCII terminal support.
+/// @brief Matplotlib-style plots drawn by gnuplot, in a window or as text.
 #pragma once
 
 #include "core/types.hpp"
@@ -41,6 +41,7 @@ struct plot_panel {
     bool legend_ = false;
     std::string legend_pos_ = "top right";
     int legend_font_size_ = 11;
+    int legend_rows_ = 0;
     bool logx_ = false;
     bool logy_ = false;
     bool square_ = false;
@@ -51,6 +52,7 @@ struct plot_state {
     plot_panel current;
     array<plot_panel> panels;       // accumulated panels in multiplot mode
     int mp_rows_ = 0, mp_cols_ = 0;  // 0 = single-plot mode
+    double mp_spacing_x_ = 0.08, mp_spacing_y_ = 0.12;
     std::string term_override_ = ""; // "dumb", "qt", "pngcairo"
     int term_w_ = 140, term_h_ = 35;
     int figure_w_ = 0, figure_h_ = 0, figure_font_size_ = 11;
@@ -151,9 +153,14 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
         }
 
         if (p.legend_) {
-            fprintf(pipe, "set key %s Left reverse samplen 3 spacing 1.2 font ',%d'\n"
-                          "set key box lt 1 lw 0.5\n",
+            fprintf(pipe, "set key %s Left reverse samplen 2 spacing 1.15 font ',%d' opaque "
+                          "nobox\n",
                     p.legend_pos_.c_str(), p.legend_font_size_);
+            if (p.legend_rows_ > 0) {
+                fprintf(pipe, "set key maxrows %d\n", p.legend_rows_);
+            } else {
+                fputs("set key maxrows 0\n", pipe);
+            }
         } else {
             fputs("unset key\n", pipe);
         }
@@ -214,17 +221,19 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
 
     // Global theme
     if (s.term_override_ != "dumb") {
-        // UCSB navy, Arkansas cardinal, UCA purple, UCA gray and UCSB aqua. Gold is too light
-        // for a line on white.
-        fputs("set style line 1 lt 1 lw 2 pt 7  ps 0.7 lc rgb '#003660'\n", pipe);
-        fputs("set style line 2 lt 2 lw 2 pt 5  ps 0.7 lc rgb '#9d2235'\n", pipe);
-        fputs("set style line 3 lt 3 lw 2 pt 9  ps 0.7 lc rgb '#582c83'\n", pipe);
-        fputs("set style line 4 lt 4 lw 2 pt 13 ps 0.7 lc rgb '#7c878e'\n", pipe);
-        fputs("set style line 5 lt 5 lw 2 pt 11 ps 0.7 lc rgb '#047c91'\n", pipe);
-        fputs("set style line 100 lt 1 lw 0.5 lc rgb '#cccccc'\n", pipe);
-        fputs("set grid back ls 100\n", pipe);
-        fputs("set border 3 lw 1.5\n", pipe);
-        fputs("set tics nomirror\n", pipe);
+        // A dark, color-blind-safe palette with quiet axes and grid lines keeps the data dominant.
+        fputs("set style line 1 lt 1 lw 2.4 pt 7  ps 0.7 lc rgb '#0072b2'\n", pipe);
+        fputs("set style line 2 lt 2 lw 2.4 pt 5  ps 0.7 lc rgb '#d55e00'\n", pipe);
+        fputs("set style line 3 lt 3 lw 2.4 pt 9  ps 0.7 lc rgb '#009e73'\n", pipe);
+        fputs("set style line 4 lt 4 lw 2.4 pt 13 ps 0.7 lc rgb '#7b4ab5'\n", pipe);
+        fputs("set style line 5 lt 5 lw 2.4 pt 11 ps 0.7 lc rgb '#c77c00'\n", pipe);
+        fputs("set style line 100 lt 1 lw 0.6 lc rgb '#d9dee3'\n", pipe);
+        fputs("set grid xtics ytics back ls 100\n", pipe);
+        fputs("set border 3 front lw 1.2 lc rgb '#263238'\n", pipe);
+        fputs("set tics out nomirror scale 0.65 textcolor rgb '#263238'\n", pipe);
+        fputs("set xlabel textcolor rgb '#263238'\n", pipe);
+        fputs("set ylabel textcolor rgb '#263238'\n", pipe);
+        fputs("set title textcolor rgb '#263238' offset 0,0.4\n", pipe);
     }
 
     // Write datablocks
@@ -252,7 +261,8 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
     }
 
     if (multiplot) {
-        fprintf(pipe, "set multiplot layout %d,%d spacing 0.08,0.12\n", s.mp_rows_, s.mp_cols_);
+        fprintf(pipe, "set multiplot layout %d,%d spacing %.3f,%.3f\n", s.mp_rows_, s.mp_cols_,
+                s.mp_spacing_x_, s.mp_spacing_y_);
         int off = 0;
         for (const auto &p : all) {
             write_panel(pipe, p, off);
@@ -330,6 +340,11 @@ inline void legend(const std::string &pos = "top right", int font_size = 11) {
     detail::state().current.legend_ = true;
     detail::state().current.legend_pos_ = pos;
     detail::state().current.legend_font_size_ = font_size;
+}
+
+/// Arrange the legend in at most this many rows; one row gives a compact horizontal legend.
+inline void legend_rows(int rows) {
+    detail::state().current.legend_rows_ = rows;
 }
 
 /// Plot component-wise available-path means and their min-max envelope.
@@ -447,6 +462,12 @@ inline void subplot(int rows, int cols = 1) {
     detail::state().reset();
     detail::state().mp_rows_ = rows;
     detail::state().mp_cols_ = cols;
+}
+
+/// Set horizontal and vertical spacing between subplot axes.
+inline void subplot_spacing(double horizontal, double vertical = 0.12) {
+    detail::state().mp_spacing_x_ = horizontal;
+    detail::state().mp_spacing_y_ = vertical;
 }
 
 /// Set PNG output dimensions and the global font size for the current figure.

@@ -4,52 +4,56 @@
 #include <stdexcept>
 #include <utility>
 
-#if defined(NUMERICS_HAS_UMFPACK)
-#include <umfpack.h>
+#if defined(NUMERICS_HAS_KLU)
+#include <klu.h>
 #endif
 
 namespace num {
 
 bool sparse_resolvent_available() noexcept {
-#if defined(NUMERICS_HAS_UMFPACK)
+#if defined(NUMERICS_HAS_KLU)
     return true;
 #else
     return false;
 #endif
 }
 
-// The pattern of sI - A in compressed columns, -A's values, and UMFPACK's symbolic analysis.
+// The pattern of sI - A in compressed columns, -A's values, and KLU's symbolic analysis. The
+// analysis depends only on the pattern, so every shift reuses it; KLU's numeric factorization
+// only reads it, so shifts may be factored concurrently.
 struct sparse_resolvent::analysis {
     idx n = 0;
-#if defined(NUMERICS_HAS_UMFPACK)
+#if defined(NUMERICS_HAS_KLU)
     array<int> ap, ai;
     array<double> minus_a;
     array<int> diagonal;
-    void *symbolic = nullptr;
+    klu_symbolic *symbolic = nullptr;
     ~analysis() {
         if (symbolic) {
-            umfpack_zi_free_symbolic(&symbolic);
+            klu_common common;
+            klu_defaults(&common);
+            klu_free_symbolic(&symbolic, &common);
         }
     }
 #endif
 };
 
-// The numeric factor of sI - A, with the values it was computed from: UMFPACK's solve reads
-// them again.
+// The numeric factor of sI - A. A solve writes into the factor's workspace, so one factor
+// serves one thread at a time.
 struct sparse_shifted_lu::numeric {
     std::shared_ptr<const sparse_resolvent::analysis> pattern;
-#if defined(NUMERICS_HAS_UMFPACK)
-    array<double> ar, az;
-    void *factor = nullptr;
+#if defined(NUMERICS_HAS_KLU)
+    klu_numeric *factor = nullptr;
+    mutable klu_common common{};
     ~numeric() {
         if (factor) {
-            umfpack_zi_free_numeric(&factor);
+            klu_z_free_numeric(&factor, &common);
         }
     }
 #endif
 };
 
-sparse_resolvent::sparse_resolvent(const spmat &A, sparse_resolvent_options options) {
+sparse_resolvent::sparse_resolvent(const spmat &A) {
     if (A.n_rows() != A.n_cols()) {
         throw std::invalid_argument("sparse_resolvent requires a square matrix");
     }
@@ -58,43 +62,23 @@ sparse_resolvent::sparse_resolvent(const spmat &A, sparse_resolvent_options opti
     }
     auto pattern = std::make_shared<analysis>();
     pattern->n = A.n_rows();
-#if defined(NUMERICS_HAS_UMFPACK)
+#if defined(NUMERICS_HAS_KLU)
     const int n = static_cast<int>(pattern->n);
-    pattern->ap.assign(n + 1, 0);
-    for (idx i = 0; i < pattern->n; ++i) {
-        for (idx k = A.row_ptr()[i]; k < A.row_ptr()[i + 1]; ++k) {
-            ++pattern->ap[A.col_idx()[k] + 1];
-        }
-    }
-    for (int j = 0; j < n; ++j) {
-        pattern->ap[j + 1] += pattern->ap[j];
-    }
+    const spmat columns = transpose(A);
+    pattern->ap.resize(n + 1);
     pattern->ai.resize(A.nnz());
     pattern->minus_a.resize(A.nnz());
-    array<int> next = pattern->ap;
-    for (idx i = 0; i < pattern->n; ++i) {
-        for (idx k = A.row_ptr()[i]; k < A.row_ptr()[i + 1]; ++k) {
-            const int p = next[A.col_idx()[k]]++;
-            pattern->ai[p] = static_cast<int>(i);
-            pattern->minus_a[p] = -A.values()[k];
-        }
+    for (idx j = 0; j <= pattern->n; ++j) {
+        pattern->ap[j] = static_cast<int>(columns.row_ptr()[j]);
     }
     pattern->diagonal.assign(A.n_cols(), -1);
-    for (int col = 0; col < n; ++col) {
-        const int begin = pattern->ap[col];
-        const int end = pattern->ap[col + 1];
-        array<std::pair<int, double>> entries;
-        entries.reserve(static_cast<std::size_t>(end - begin));
-        for (int p = begin; p < end; ++p) {
-            entries.emplace_back(pattern->ai[p], pattern->minus_a[p]);
-        }
-        std::sort(entries.begin(), entries.end(),
-                  [](const auto &lhs, const auto &rhs) { return lhs.first < rhs.first; });
-        for (int offset = 0; offset < end - begin; ++offset) {
-            pattern->ai[begin + offset] = entries[offset].first;
-            pattern->minus_a[begin + offset] = entries[offset].second;
-            if (entries[offset].first == col) {
-                pattern->diagonal[col] = begin + offset;
+    for (idx col = 0; col < pattern->n; ++col) {
+        for (idx p = columns.row_ptr()[col]; p < columns.row_ptr()[col + 1]; ++p) {
+            const idx row = columns.col_idx()[p];
+            pattern->ai[p] = static_cast<int>(row);
+            pattern->minus_a[p] = -columns.values()[p];
+            if (row == col) {
+                pattern->diagonal[col] = static_cast<int>(p);
             }
         }
     }
@@ -103,19 +87,12 @@ sparse_resolvent::sparse_resolvent(const spmat &A, sparse_resolvent_options opti
             throw std::invalid_argument("sparse_resolvent requires an explicit diagonal");
         }
     }
-    const array<double> zero(A.nnz(), 0.0);
-    double control[UMFPACK_CONTROL], info[UMFPACK_INFO];
-    umfpack_zi_defaults(control);
-    if (options.symmetric_pattern) {
-        control[UMFPACK_STRATEGY] = UMFPACK_STRATEGY_SYMMETRIC;
+    klu_common common;
+    klu_defaults(&common);
+    pattern->symbolic = klu_analyze(n, pattern->ap.data(), pattern->ai.data(), &common);
+    if (!pattern->symbolic) {
+        throw std::runtime_error("KLU symbolic analysis failed");
     }
-    if (umfpack_zi_symbolic(n, n, pattern->ap.data(), pattern->ai.data(),
-                            pattern->minus_a.data(), zero.data(), &pattern->symbolic, control,
-                            info) != UMFPACK_OK) {
-        throw std::runtime_error("UMFPACK complex symbolic analysis failed");
-    }
-#else
-    (void)options;
 #endif
     analysis_ = std::move(pattern);
 }
@@ -134,58 +111,53 @@ idx sparse_shifted_lu::size() const noexcept {
 }
 
 sparse_shifted_lu shift(const sparse_resolvent &R, cplx s) {
-#if defined(NUMERICS_HAS_UMFPACK)
+#if defined(NUMERICS_HAS_KLU)
     auto F = std::make_unique<sparse_shifted_lu::numeric>();
     F->pattern = R.analysis_;
-    const sparse_resolvent::analysis &pattern = *F->pattern;
-    // sI - A, built from -A for this shift alone.
-    F->ar = pattern.minus_a;
-    F->az.assign(pattern.minus_a.size(), 0.0);
-    for (idx j = 0; j < pattern.n; ++j) {
-        F->ar[pattern.diagonal[j]] += s.real();
-        F->az[pattern.diagonal[j]] = s.imag();
+    const auto &pattern = *F->pattern;
+    // sI - A from -A, as interleaved (real, imaginary) pairs; std::complex has that layout.
+    array<cplx> values(pattern.minus_a.size());
+    for (idx p = 0; p < values.size(); ++p) {
+        values[p] = cplx(pattern.minus_a[p], 0.0);
     }
-    double control[UMFPACK_CONTROL], info[UMFPACK_INFO];
-    umfpack_zi_defaults(control);
-    if (umfpack_zi_numeric(pattern.ap.data(), pattern.ai.data(), F->ar.data(), F->az.data(),
-                           pattern.symbolic, &F->factor, control, info) != UMFPACK_OK) {
-        throw std::runtime_error("UMFPACK complex numeric factorization failed");
+    for (idx j = 0; j < pattern.n; ++j) {
+        values[pattern.diagonal[j]] += s;
+    }
+    klu_defaults(&F->common);
+    F->factor = klu_z_factor(const_cast<int *>(pattern.ap.data()), const_cast<int *>(pattern.ai.data()),
+                             reinterpret_cast<double *>(values.data()), pattern.symbolic, &F->common);
+    if (!F->factor) {
+        throw std::runtime_error(F->common.status == KLU_SINGULAR
+                                     ? "KLU complex factorization: sI - A is singular"
+                                     : "KLU complex factorization failed");
     }
     return sparse_shifted_lu(std::move(F));
 #else
     (void)R;
     (void)s;
-    throw std::runtime_error("sparse_resolvent requires SuiteSparse UMFPACK complex support");
+    throw std::runtime_error("sparse_resolvent requires SuiteSparse KLU");
 #endif
 }
 
 void solve(const sparse_shifted_lu &F, const vec<cplx> &b, vec<cplx> &x) {
-#if defined(NUMERICS_HAS_UMFPACK)
-    const sparse_resolvent::analysis &pattern = *F.impl_->pattern;
+#if defined(NUMERICS_HAS_KLU)
+    const auto &pattern = *F.impl_->pattern;
     const idx n = pattern.n;
     if (b.size() != n) {
         throw std::invalid_argument("sparse_resolvent solve: dimension mismatch");
     }
-    array<double> br(n), bz(n), xr(n), xz(n);
-    for (idx i = 0; i < n; ++i) {
-        br[i] = b[i].real(), bz[i] = b[i].imag();
+    if (&x != &b) {
+        x = b;
     }
-    if (umfpack_zi_solve(UMFPACK_A, pattern.ap.data(), pattern.ai.data(), F.impl_->ar.data(),
-                         F.impl_->az.data(), xr.data(), xz.data(), br.data(), bz.data(),
-                         F.impl_->factor, nullptr, nullptr) != UMFPACK_OK) {
-        throw std::runtime_error("UMFPACK complex solve failed");
-    }
-    if (x.size() != n) {
-        x = vec<cplx>(n);
-    }
-    for (idx i = 0; i < n; ++i) {
-        x[i] = {xr[i], xz[i]};
+    if (!klu_z_solve(pattern.symbolic, F.impl_->factor, static_cast<int>(n), 1,
+                     reinterpret_cast<double *>(x.data()), &F.impl_->common)) {
+        throw std::runtime_error("KLU complex solve failed");
     }
 #else
     (void)F;
     (void)b;
     (void)x;
-    throw std::runtime_error("sparse_resolvent requires SuiteSparse UMFPACK complex support");
+    throw std::runtime_error("sparse_resolvent requires SuiteSparse KLU");
 #endif
 }
 

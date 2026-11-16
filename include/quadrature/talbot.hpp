@@ -61,5 +61,23 @@ inline array<contour_node> talbot_contour(real t, idx modes = 16) {
     return talbot_quadrature{modes}.nodes(t);
 }
 
+/// @brief Half-contour Talbot quadrature for the inverse transform of real data.
+///
+/// Since \f$F(\bar s)=\overline{F(s)}\f$, each upper-half-plane node represents its conjugate
+/// partner and has twice the full-contour weight.
+inline array<contour_node> real_talbot_contour(real t, idx modes = 16) {
+    if (modes % 2 != 0) {
+        throw std::invalid_argument("real_talbot_contour requires an even mode count");
+    }
+    array<contour_node> nodes = talbot_contour(t, modes);
+    array<contour_node> half;
+    half.reserve(modes / 2);
+    for (idx k = modes / 2; k < modes; ++k) {
+        nodes[k].weight *= 2.0;
+        half.push_back(nodes[k]);
+    }
+    return half;
+}
+
 static_assert(contour_rule<talbot_quadrature>);
 } // namespace num

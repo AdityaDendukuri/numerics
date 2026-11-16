@@ -66,7 +66,7 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
 
     vec<real> x_exact(n, 0.0);
     auto res_exact = pcg(laplacian_on_zero_sum, exact_prec_on_zero_sum, b, x_exact, zero_sum_space,
-                         {.tolerance = 1e-12, .max_iterations = 10});
+                         {.tolerance = {.rtol = 1e-12}, .max_iterations = 10});
     EXPECT_TRUE(res_exact.converged);
     EXPECT_LE(res_exact.iterations, 2u);
     EXPECT_LT(res_exact.residual, 1e-11);
@@ -78,7 +78,7 @@ TEST(RandomMat, ApproxCholPreconditionerWithPCG) {
         num::assume<law::spd_on<space::zero_sum>>(projected_sampled_prec);
     vec<real> x_sampled(n, 0.0);
     auto res_sampled = pcg(laplacian_on_zero_sum, sampled_prec_on_zero_sum, b, x_sampled,
-                           zero_sum_space, {.tolerance = 1e-8, .max_iterations = 50});
+                           zero_sum_space, {.tolerance = {.rtol = 1e-8}, .max_iterations = 50});
     EXPECT_TRUE(res_sampled.converged);
     EXPECT_LT(res_sampled.residual, 1e-7);
 }

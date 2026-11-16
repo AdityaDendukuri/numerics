@@ -23,7 +23,7 @@ using namespace num;
 
 namespace {
 
-constexpr real tolerance = 1e-9;
+constexpr real check_tol = 1e-9;
 
 spmat sparse_of(const mat<real> &A) {
     array<idx> rows, columns;
@@ -109,8 +109,8 @@ void expect_solves(const F &Z, const mat<real> &R, const vec<real> &b) {
     const vec<real> expected_x = reference_solve(R, b, false);
     const vec<real> expected_y = reference_solve(R, b, true);
     for (idx i = 0; i < b.size(); ++i) {
-        EXPECT_NEAR(x[i], expected_x[i], tolerance) << "forward entry " << i;
-        EXPECT_NEAR(y[i], expected_y[i], tolerance) << "transposed entry " << i;
+        EXPECT_NEAR(x[i], expected_x[i], check_tol) << "forward entry " << i;
+        EXPECT_NEAR(y[i], expected_y[i], check_tol) << "transposed entry " << i;
     }
 }
 
@@ -167,7 +167,7 @@ TEST(Factor, SolvesSeveralRightHandSidesAndAcceptsAnOutputBuffer) {
         }
         const vec<real> expected = reference_solve(R, b, false);
         for (idx i = 0; i < n; ++i) {
-            EXPECT_NEAR(X(i, column), expected[i], tolerance);
+            EXPECT_NEAR(X(i, column), expected[i], check_tol);
         }
     }
 }
@@ -183,7 +183,7 @@ TEST(Factor, ExactInverseDiagonalUsesTheStoredFactor) {
     const auto Z_block = lu(S, blocks(levels));
     for (const vec<real> diagonal : {inverse_diagonal(Z_dense, n), inverse_diagonal(Z_block, n)}) {
         for (idx i = 0; i < n; ++i) {
-            EXPECT_NEAR(diagonal[i], expected[i], tolerance) << "entry " << i;
+            EXPECT_NEAR(diagonal[i], expected[i], check_tol) << "entry " << i;
         }
     }
 }
@@ -268,13 +268,13 @@ TEST(Factor, ConcreteFactorsAreCorrectableByWoodbury) {
     const vec<real> x = solve(correction, b);
     const vec<real> expected = reference_solve(R, b, false);
     for (idx i = 0; i < n; ++i) {
-        EXPECT_NEAR(x[i], expected[i], tolerance);
+        EXPECT_NEAR(x[i], expected[i], check_tol);
     }
 
     const vec<real> corrected = correction.inverse_diagonal(inverse_diagonal(Z, n));
     const vec<real> expected_diagonal = exact_inverse_diagonal(R);
     for (idx i = 0; i < n; ++i) {
-        EXPECT_NEAR(corrected[i], expected_diagonal[i], tolerance);
+        EXPECT_NEAR(corrected[i], expected_diagonal[i], check_tol);
     }
 }
 

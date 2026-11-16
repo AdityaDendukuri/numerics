@@ -1,5 +1,5 @@
 /// @file linear/solvers/auto_resolvent.hpp
-/// @brief Automatic dense/sparse shifted-resolvent selection.
+/// @brief Shifted solves that choose a dense or sparse method by size.
 #pragma once
 
 #include "core/types.hpp"
@@ -18,7 +18,6 @@ struct auto_shifted_lu;
 /// Dense/sparse cutoff and optional sparse symbolic symmetry hint.
 struct auto_resolvent_options {
     idx dense_limit = 128;
-    bool symmetric_pattern = false;
 };
 
 /// @brief \f$A\f$ prepared for shifted solves \f$(sI - A)x = b\f$, by Hessenberg reduction at
@@ -33,7 +32,7 @@ class auto_resolvent {
         if (!sparse_resolvent_available()) {
             throw std::runtime_error("large shifted systems require the sparse complex backend");
         }
-        sparse_.emplace(A, sparse_resolvent_options{.symmetric_pattern = options.symmetric_pattern});
+        sparse_.emplace(A);
     }
 
     [[nodiscard]] idx size() const noexcept { return dense_ ? dense_->size() : sparse_->size(); }

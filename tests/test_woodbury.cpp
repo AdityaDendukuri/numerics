@@ -114,7 +114,7 @@ vec<real> random_vector(idx n, unsigned seed) {
     return b;
 }
 
-constexpr real tolerance = 1e-9;
+constexpr real check_tol = 1e-9;
 
 } // namespace
 
@@ -134,7 +134,7 @@ TEST(LowRankDifference, ReproducesTheChangedMatrix) {
             for (idx column = 0; column < update.left.cols(); ++column) {
                 correction += update.left(i, column) * update.right(j, column);
             }
-            EXPECT_NEAR(base(i, j) + correction, current(i, j), tolerance)
+            EXPECT_NEAR(base(i, j) + correction, current(i, j), check_tol)
                 << "entry (" << i << ", " << j << ")";
         }
     }
@@ -172,7 +172,7 @@ TEST(WoodburySolver, MatchesAFreshFactorization) {
 
     const vec<real> corrected = solve(correction, b);
     for (idx i = 0; i < n; ++i) {
-        EXPECT_NEAR(corrected[i], expected[i], tolerance) << "entry " << i;
+        EXPECT_NEAR(corrected[i], expected[i], check_tol) << "entry " << i;
     }
 }
 
@@ -193,7 +193,7 @@ TEST(WoodburySolver, MatchesAFreshTransposeFactorization) {
 
     const vec<real> corrected = solve_transpose(correction, b);
     for (idx i = 0; i < n; ++i) {
-        EXPECT_NEAR(corrected[i], expected[i], tolerance) << "entry " << i;
+        EXPECT_NEAR(corrected[i], expected[i], check_tol) << "entry " << i;
     }
 }
 
@@ -220,7 +220,7 @@ TEST(WoodburySolver, CorrectsSeveralRightHandSidesAtOnce) {
     const mat<real> corrected = solve(correction, rhs);
     for (idx i = 0; i < n; ++i) {
         for (idx column = 0; column < 3; ++column) {
-            EXPECT_NEAR(corrected(i, column), expected(i, column), tolerance);
+            EXPECT_NEAR(corrected(i, column), expected(i, column), check_tol);
         }
     }
 }
@@ -251,7 +251,7 @@ TEST(WoodburySolver, InverseDiagonalMatchesAFreshInverse) {
     const vec<real> corrected = correction.inverse_diagonal(base_diagonal);
 
     for (idx i = 0; i < n; ++i) {
-        EXPECT_NEAR(corrected[i], expected_diagonal[i], tolerance) << "entry " << i;
+        EXPECT_NEAR(corrected[i], expected_diagonal[i], check_tol) << "entry " << i;
     }
 }
 
@@ -304,8 +304,8 @@ TEST(UpdateInverseRows, MatchesRowsOfAFreshInverseAndItsSquare) {
         solve(fresh, e, row);
         solve(fresh, row, row_squared);
         for (idx j = 0; j < n; ++j) {
-            EXPECT_NEAR(first(k, j), row[j], tolerance) << "inverse row " << k << " entry " << j;
-            EXPECT_NEAR(second(k, j), row_squared[j], tolerance)
+            EXPECT_NEAR(first(k, j), row[j], check_tol) << "inverse row " << k << " entry " << j;
+            EXPECT_NEAR(second(k, j), row_squared[j], check_tol)
                 << "squared row " << k << " entry " << j;
         }
     }
@@ -326,7 +326,7 @@ TEST(SparseDiagonalSimilarity, AgreesWithTheDenseFormAndKeepsThePattern) {
     const mat<real> densified = dense(scaled);
     for (idx i = 0; i < 7; ++i) {
         for (idx j = 0; j < 7; ++j) {
-            EXPECT_NEAR(densified(i, j), reference(i, j), tolerance);
+            EXPECT_NEAR(densified(i, j), reference(i, j), check_tol);
         }
     }
 }
@@ -345,7 +345,7 @@ TEST(SparseDiagonalSimilarity, PreservesTheSpectrumOnASymmetrizableMatrix) {
         original += A(i, i);
         transformed += scaled(i, i);
     }
-    EXPECT_NEAR(original, transformed, tolerance);
+    EXPECT_NEAR(original, transformed, check_tol);
 }
 
 TEST(SparseDiagonalSimilarity, RejectsNonPositiveWeights) {
