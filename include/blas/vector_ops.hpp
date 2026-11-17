@@ -9,7 +9,10 @@
 #include <cstdio>
 
 #if defined(NUMERICS_HAS_BLAS)
-#include <cblas.h>
+#ifndef NUMERICS_CBLAS_HEADER
+#define NUMERICS_CBLAS_HEADER <cblas.h>
+#endif
+#include NUMERICS_CBLAS_HEADER
 #endif
 
 namespace num::blas {

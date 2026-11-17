@@ -12,9 +12,11 @@ if(NOT BLAS_FOUND)
     return()
 endif()
 
-find_path(CBLAS_INCLUDE_DIR cblas.h
+find_path(CBLAS_INCLUDE_DIR NAMES cblas.h mkl_cblas.h
     PATH_SUFFIXES openblas blis
     HINTS
+        ${CBLAS_INCLUDE_DIRS}
+        $ENV{MKLROOT}/include
         /usr/include/openblas
         /usr/local/include/openblas
         /usr/include
@@ -30,8 +32,12 @@ target_compile_definitions(numerics_backend_blas INTERFACE NUMERICS_HAS_BLAS)
 
 if(CBLAS_INCLUDE_DIR)
     target_include_directories(numerics_backend_blas INTERFACE ${CBLAS_INCLUDE_DIR})
+    if(NOT EXISTS "${CBLAS_INCLUDE_DIR}/cblas.h")
+        target_compile_definitions(numerics_backend_blas INTERFACE
+            NUMERICS_CBLAS_HEADER=<mkl_cblas.h>)
+    endif()
     message(STATUS "BLAS:  found  (${BLAS_LIBRARIES})")
-    message(STATUS "cblas.h: ${CBLAS_INCLUDE_DIR}/cblas.h")
+    message(STATUS "CBLAS headers: ${CBLAS_INCLUDE_DIR}")
 else()
     message(STATUS "BLAS:  found  (${BLAS_LIBRARIES})")
     message(STATUS "cblas.h: not found — add its directory to CMAKE_PREFIX_PATH")
