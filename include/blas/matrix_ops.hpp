@@ -44,22 +44,52 @@ inline void gemm(real alpha, const real *A, idx lda, bool transA, const real *B,
     warn_unavailable();
     const kernel::detail::gemm_scratch<real> scratch;
     kernel::detail::gemm_strided(C, ldc, A, transA ? idx{1} : lda, transA ? lda : idx{1}, B,
-                                 transB ? idx{1} : ldb, transB ? ldb : idx{1}, alpha, beta, m, n,
-                                 k, scratch.get());
+                                 transB ? idx{1} : ldb, transB ? ldb : idx{1}, alpha, beta, m, n, k,
+                                 scratch.get());
 #endif
 }
 
 /// @brief `C <- alpha op(A) op(B) + beta C` for matrices; C must already be `m x n`.
-inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B, bool transB, real beta,
-                 mat<real> &C) {
+inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B, bool transB,
+                 real beta, mat<real> &C) {
     const idx m = transA ? A.cols() : A.rows();
     const idx k = transA ? A.rows() : A.cols();
     const idx n = transB ? B.rows() : B.cols();
     if ((transB ? B.cols() : B.rows()) != k || C.rows() != m || C.cols() != n) {
         throw std::invalid_argument("gemm: dimensions do not agree");
     }
-    gemm(alpha, A.data(), A.cols(), transA, B.data(), B.cols(), transB, beta, C.data(), C.cols(),
-         m, n, k);
+    gemm(alpha, A.data(), A.cols(), transA, B.data(), B.cols(), transB, beta, C.data(), C.cols(), m,
+         n, k);
+}
+
+/// @brief Solve `op(T) X = B` in place for a triangular `T` and row-major `X`.
+///
+/// This is the explicit external-BLAS alternative to the in-tree triangular kernels.
+inline void trsm_left(const real *T, idx ldt, real *X, idx ldx, idx n, idx nrhs, bool upper,
+                      bool transpose, bool unit_diagonal) {
+#if defined(NUMERICS_HAS_BLAS)
+    cblas_dtrsm(CblasRowMajor, CblasLeft, upper ? CblasUpper : CblasLower,
+                transpose ? CblasTrans : CblasNoTrans, unit_diagonal ? CblasUnit : CblasNonUnit,
+                static_cast<int>(n), static_cast<int>(nrhs), 1.0, T, static_cast<int>(ldt), X,
+                static_cast<int>(ldx));
+#else
+    warn_unavailable();
+    if (upper) {
+        if (transpose)
+            kernel::trsm_upper_transpose_inplace(X, ldx, T, ldt, n, nrhs, unit_diagonal);
+        else
+            kernel::trsm_upper_inplace(X, ldx, T, ldt, n, nrhs, unit_diagonal);
+    } else if (transpose) {
+        if (unit_diagonal)
+            kernel::trsm_unit_lower_transpose_inplace(X, ldx, T, ldt, n, nrhs);
+        else
+            kernel::trsm_lower_transpose_inplace(X, ldx, T, n, nrhs);
+    } else if (unit_diagonal) {
+        kernel::trsm_unit_lower_inplace(X, ldx, T, ldt, n, nrhs);
+    } else {
+        kernel::trsm_lower_inplace(X, ldx, T, n, nrhs);
+    }
+#endif
 }
 
 inline void matvec(const mat<real> &A, const vec<real> &x, vec<real> &y) {

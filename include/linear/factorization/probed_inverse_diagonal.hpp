@@ -78,6 +78,9 @@ inline vec<real> reversible_inverse_diagonal(const spmat &matrix, view<const rea
 
     const mat<real> probe = gaussian_probe(n, options.probes, options.seed);
     mat<real> probed(n, options.probes, 0.0);
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(static) if (options.probes > 1)
+#endif
     for (idx column = 0; column < options.probes; ++column) {
         vec<real> direction(n, 0.0);
         for (idx j = 0; j < n; ++j) {
@@ -196,7 +199,10 @@ template <factorization F>
     const auto_linear_solver scaled_factor(scaled);
 
     const mat<real> probe = gaussian_probe(n, options.probes, options.seed);
-    mat<real> probed(n, options.probes, 0.0);
+    mat<real> rhs(n, options.probes, 0.0);
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(static) if (options.probes > 1)
+#endif
     for (idx column = 0; column < options.probes; ++column) {
         vec<real> direction(n, 0.0);
         for (idx j = 0; j < n; ++j) {
@@ -205,15 +211,14 @@ template <factorization F>
         const auto action =
             sqrt_lanczos(preconditioned, direction, options.tolerance, options.lanczos_steps);
         const vec<real> factored = approximate.apply_lower(action.value);
-        vec<real> rhs(n, 0.0);
         for (idx j = 0; j < n; ++j) {
-            rhs[j] = factored[j] / congruence[j];
-        }
-        const vec<real> value = solve(scaled_factor, rhs);
-        for (idx j = 0; j < n; ++j) {
-            probed(j, column) = value[j];
+            rhs(j, column) = factored[j] / congruence[j];
         }
     }
+    // One block solve, outside the parallel loop: a sparse factor's solve writes into workspace
+    // it owns (KLU's Numeric->Xwork), so concurrent solves against one factor race.
+    mat<real> probed(n, options.probes, 0.0);
+    solve(scaled_factor, rhs, probed);
     return hutchinson_row_mean_square(probed);
 }
 

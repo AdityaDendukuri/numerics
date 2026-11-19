@@ -39,6 +39,8 @@ template <std::uniform_random_bit_generator RNG>
 /// Reusable categorical distribution for repeated draws from fixed weights.
 class categorical_sampler {
   public:
+    categorical_sampler() = default;
+
     explicit categorical_sampler(view<const real> weights)
         : distribution_(weights.begin(), weights.end()) {}
 

@@ -1,3 +1,4 @@
+#include "blas/matrix_ops.hpp"
 #include "container/matrix.hpp"
 #include "container/matrix_expr.hpp"
 #include "container/matrix_ops.hpp"
@@ -411,6 +412,40 @@ TEST(Trsm, AllVariantsInvertTheirProducts) {
             expect_equal(Y, X, "trsm_unit_lower_transpose_inplace");
         }
     }
+}
+
+TEST(Trsm, ExternalBlasMatchesTriangularSystems) {
+    if constexpr (!has_blas)
+        GTEST_SKIP() << "BLAS is unavailable";
+
+    constexpr idx n = 65, nrhs = 37;
+    mat<real> L(n, n, 0.0), U(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        L(i, i) = 1.0;
+        U(i, i) = 2.0 + static_cast<real>(i % 3);
+        for (idx j = 0; j < i; ++j) {
+            L(i, j) = 0.01 * std::sin(1.0 + static_cast<real>(i * j));
+            U(j, i) = 0.01 * std::cos(1.0 + static_cast<real>(i * j));
+        }
+    }
+    const mat<real> reference = make_test_matrix(n, nrhs);
+    mat<real> intermediate(n, nrhs, 0.0);
+    for (idx i = 0; i < n; ++i)
+        for (idx r = 0; r < nrhs; ++r)
+            for (idx k = i; k < n; ++k)
+                intermediate(i, r) += L(k, i) * reference(k, r);
+    mat<real> right_hand_side(n, nrhs, 0.0);
+    for (idx i = 0; i < n; ++i)
+        for (idx r = 0; r < nrhs; ++r)
+            for (idx k = 0; k <= i; ++k)
+                right_hand_side(i, r) += U(k, i) * intermediate(k, r);
+
+    blas::trsm_left(U.data(), n, right_hand_side.data(), nrhs, n, nrhs, true, true, false);
+    blas::trsm_left(L.data(), n, right_hand_side.data(), nrhs, n, nrhs, false, true, true);
+
+    for (idx i = 0; i < n; ++i)
+        for (idx r = 0; r < nrhs; ++r)
+            EXPECT_NEAR(right_hand_side(i, r), reference(i, r), 1e-10);
 }
 
 // Blocked Cholesky recurses on diagonal blocks wider than the trsm block;

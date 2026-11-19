@@ -183,13 +183,12 @@ inline void lu_invert(T *NUM_K_RESTRICT inverse, const T *NUM_K_RESTRICT LU,
 }
 
 /// @brief In-place LU without row pivoting, for matrices such as M-matrices whose pivots
-/// stay nonzero. Returns false if a pivot fell below tolerance.
+/// stay nonzero. Returns false if a pivot is exactly zero.
 template <std::floating_point T>
 [[nodiscard]] inline bool lu_no_pivot(T *A, idx n) noexcept {
-    constexpr T tolerance = T(1e-15);
     bool nonsingular = true;
     for (idx k = 0; k < n; ++k) {
-        if (std::abs(A[k * n + k]) < tolerance) {
+        if (A[k * n + k] == T(0)) {
             nonsingular = false;
             continue;
         }
@@ -199,6 +198,50 @@ template <std::floating_point T>
             const T multiplier = A[i * n + k];
             for (idx j = k + 1; j < n; ++j)
                 A[i * n + j] -= multiplier * A[k * n + j];
+        }
+    }
+    return nonsingular;
+}
+
+/// @brief Blocked in-place LU without row pivoting.
+///
+/// The diagonal panel uses ordinary elimination. The remaining panel and trailing matrix use
+/// triangular solve and matrix multiplication, respectively.
+template <std::floating_point T>
+[[nodiscard]] inline bool lu_no_pivot_blocked(T *A, idx n, idx block_size = 64) noexcept {
+    if (block_size == 0)
+        block_size = 1;
+    bool nonsingular = true;
+    for (idx kk = 0; kk < n; kk += block_size) {
+        const idx kb = std::min(block_size, n - kk);
+        const idx panel_end = kk + kb;
+        for (idx k = kk; k < panel_end; ++k) {
+            if (A[k * n + k] == T(0)) {
+                nonsingular = false;
+                continue;
+            }
+            const T inverse_pivot = T(1) / A[k * n + k];
+            for (idx i = k + 1; i < n; ++i) {
+                A[i * n + k] *= inverse_pivot;
+                const T multiplier = A[i * n + k];
+                for (idx j = k + 1; j < panel_end; ++j)
+                    A[i * n + j] -= multiplier * A[k * n + j];
+            }
+        }
+        const idx trailing = n - panel_end;
+        if (trailing == 0)
+            continue;
+        kernel::trsm_unit_lower_inplace(A + (kk * n) + panel_end, n, A + (kk * n) + kk, n, kb,
+                                        trailing);
+        constexpr idx row_block = 128;
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(static) if (trailing >= 2 * row_block)
+#endif
+        for (idx row = 0; row < trailing; row += row_block) {
+            const idx rows = std::min(row_block, trailing - row);
+            kernel::gemm(A + ((panel_end + row) * n) + panel_end, n,
+                         A + ((panel_end + row) * n) + kk, n, A + (kk * n) + panel_end, n, T(-1),
+                         T(1), rows, trailing, kb);
         }
     }
     return nonsingular;
@@ -221,16 +264,23 @@ inline void lu_no_pivot_solve_multiple(T *X, const T *LU, idx n, idx columns) no
         }
         return;
     }
-    for (idx i = 0; i < n; ++i)
-        for (idx j = 0; j < i; ++j)
-            for (idx c = 0; c < columns; ++c)
-                X[i * columns + c] -= LU[i * n + j] * X[j * columns + c];
-    for (idx i = n; i-- > 0;) {
-        for (idx j = i + 1; j < n; ++j)
-            for (idx c = 0; c < columns; ++c)
-                X[i * columns + c] -= LU[i * n + j] * X[j * columns + c];
-        for (idx c = 0; c < columns; ++c)
-            X[i * columns + c] /= LU[i * n + i];
+    constexpr idx rhs_block = 16;
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(static) if (columns >= 2 * rhs_block)
+#endif
+    for (idx c0 = 0; c0 < columns; c0 += rhs_block) {
+        const idx c1 = std::min(columns, c0 + rhs_block);
+        for (idx i = 0; i < n; ++i)
+            for (idx j = 0; j < i; ++j)
+                for (idx c = c0; c < c1; ++c)
+                    X[i * columns + c] -= LU[i * n + j] * X[j * columns + c];
+        for (idx i = n; i-- > 0;) {
+            for (idx j = i + 1; j < n; ++j)
+                for (idx c = c0; c < c1; ++c)
+                    X[i * columns + c] -= LU[i * n + j] * X[j * columns + c];
+            for (idx c = c0; c < c1; ++c)
+                X[i * columns + c] /= LU[i * n + i];
+        }
     }
 }
 
@@ -263,17 +313,24 @@ inline void lu_no_pivot_solve_transpose_multiple(T *X, const T *LU, idx n, idx c
         }
         return;
     }
-    for (idx i = 0; i < n; ++i) {
-        for (idx j = 0; j < i; ++j)
-            for (idx c = 0; c < columns; ++c)
-                X[i * columns + c] -= LU[j * n + i] * X[j * columns + c];
-        for (idx c = 0; c < columns; ++c)
-            X[i * columns + c] /= LU[i * n + i];
+    constexpr idx rhs_block = 16;
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(static) if (columns >= 2 * rhs_block)
+#endif
+    for (idx c0 = 0; c0 < columns; c0 += rhs_block) {
+        const idx c1 = std::min(columns, c0 + rhs_block);
+        for (idx i = 0; i < n; ++i) {
+            for (idx j = 0; j < i; ++j)
+                for (idx c = c0; c < c1; ++c)
+                    X[i * columns + c] -= LU[j * n + i] * X[j * columns + c];
+            for (idx c = c0; c < c1; ++c)
+                X[i * columns + c] /= LU[i * n + i];
+        }
+        for (idx i = n; i-- > 0;)
+            for (idx j = i + 1; j < n; ++j)
+                for (idx c = c0; c < c1; ++c)
+                    X[i * columns + c] -= LU[j * n + i] * X[j * columns + c];
     }
-    for (idx i = n; i-- > 0;)
-        for (idx j = i + 1; j < n; ++j)
-            for (idx c = 0; c < columns; ++c)
-                X[i * columns + c] -= LU[j * n + i] * X[j * columns + c];
 }
 
 } // namespace num
@@ -396,7 +453,7 @@ inline lu_result<T> lu(const mat<T> &A, no_pivot_structure) {
     }
     lu_result<T> f;
     f.LU = A;
-    f.singular = !num::lu_no_pivot(f.LU.data(), f.LU.rows());
+    f.singular = !num::lu_no_pivot_blocked(f.LU.data(), f.LU.rows());
     return f;
 }
 
