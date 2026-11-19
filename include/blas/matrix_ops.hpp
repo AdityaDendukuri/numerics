@@ -92,6 +92,32 @@ inline void trsm_left(const real *T, idx ldt, real *X, idx ldx, idx n, idx nrhs,
 #endif
 }
 
+/// @brief Solve `X L^T = B` in place for a row-major panel and lower-triangular `L`.
+inline void trsm_right_lower_transpose(const real *L, idx ldl, real *X, idx ldx, idx rows,
+                                       idx n) {
+#if defined(NUMERICS_HAS_BLAS)
+    cblas_dtrsm(CblasRowMajor, CblasRight, CblasLower, CblasTrans, CblasNonUnit,
+                static_cast<int>(rows), static_cast<int>(n), 1.0, L, static_cast<int>(ldl), X,
+                static_cast<int>(ldx));
+#else
+    warn_unavailable();
+    kernel::trsm_lower_transpose_right_inplace(X, ldx, L, ldl, rows, n);
+#endif
+}
+
+/// @brief Update the lower triangle, `C <- alpha A A^T + beta C`.
+inline void syrk_lower(real alpha, const real *A, idx lda, real beta, real *C, idx ldc, idx rows,
+                       idx columns) {
+#if defined(NUMERICS_HAS_BLAS)
+    cblas_dsyrk(CblasRowMajor, CblasLower, CblasNoTrans, static_cast<int>(rows),
+                static_cast<int>(columns), alpha, A, static_cast<int>(lda), beta, C,
+                static_cast<int>(ldc));
+#else
+    warn_unavailable();
+    kernel::syrk_lower(C, ldc, A, lda, alpha, beta, rows, columns);
+#endif
+}
+
 inline void matvec(const mat<real> &A, const vec<real> &x, vec<real> &y) {
 #if defined(NUMERICS_HAS_BLAS)
     cblas_dgemv(CblasRowMajor, CblasNoTrans, static_cast<int>(A.rows()), static_cast<int>(A.cols()),

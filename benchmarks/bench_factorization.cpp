@@ -66,6 +66,28 @@ static void BM_LU_Seq_Float(benchmark::State &state) {
 }
 BENCHMARK(BM_LU_Seq_Float)->RangeMultiplier(2)->Range(128, 2048);
 
+static void BM_Cholesky_Internal(benchmark::State &state) {
+    const idx n = static_cast<idx>(state.range(0));
+    const mat<real> A = make_spd(n);
+    for (auto _ : state) {
+        mat<real> L = A;
+        benchmark::DoNotOptimize(cholesky_blocked(L.data(), n));
+        benchmark::DoNotOptimize(L.data());
+    }
+}
+BENCHMARK(BM_Cholesky_Internal)->RangeMultiplier(2)->Range(256, 4096);
+
+static void BM_Cholesky_BLAS(benchmark::State &state) {
+    const idx n = static_cast<idx>(state.range(0));
+    const mat<real> A = make_spd(n);
+    for (auto _ : state) {
+        mat<real> L = A;
+        benchmark::DoNotOptimize(cholesky_blocked_blas(L.data(), n, n));
+        benchmark::DoNotOptimize(L.data());
+    }
+}
+BENCHMARK(BM_Cholesky_BLAS)->RangeMultiplier(2)->Range(256, 4096);
+
 // Factor and solve one right-hand side to double accuracy: double LU against float LU with
 // iterative refinement, both through the in-tree kernel.
 static void BM_Solve_DoubleLU(benchmark::State &state) {

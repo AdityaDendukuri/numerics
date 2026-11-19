@@ -2,6 +2,7 @@
 /// @brief Dense Cholesky factorization for SPD matrices.
 #pragma once
 
+#include "blas/matrix_ops.hpp"
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
 #include "core/debug.hpp"
@@ -107,6 +108,52 @@ template <std::floating_point T>
         // A22 <- A22 - L21*L21^T (lower triangle only).
         kernel::syrk_lower(A + (((kk + kb) * lda) + (kk + kb)), lda, A + (((kk + kb) * lda) + kk),
                            lda, T(-1), T(1), trailing, kb);
+    }
+    return true;
+}
+
+/// @brief Blocked double-precision Cholesky using level-3 BLAS for panels and trailing updates.
+[[nodiscard]] inline bool cholesky_blocked_blas(real *A, idx lda, idx n,
+                                                idx block_size = 256) noexcept {
+    if (block_size == 0)
+        block_size = 1;
+    for (idx kk = 0; kk < n; kk += block_size) {
+        const idx kb = std::min(block_size, n - kk);
+        real *diagonal = A + (kk * lda) + kk;
+        if (!cholesky_blocked(diagonal, lda, kb, kernel::detail::trsm_block))
+            return false;
+
+        const idx trailing = n - kk - kb;
+        if (trailing == 0)
+            continue;
+
+        real *panel = A + ((kk + kb) * lda) + kk;
+        constexpr idx row_block = 256;
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(static) if (trailing >= 2 * row_block)
+#endif
+        for (idx row = 0; row < trailing; row += row_block) {
+            const idx rows = std::min(row_block, trailing - row);
+            blas::trsm_right_lower_transpose(diagonal, lda, panel + (row * lda), lda, rows, kb);
+        }
+
+        real *trailing_matrix = A + ((kk + kb) * lda) + kk + kb;
+        constexpr idx column_block = 256;
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1) if (trailing >= 2 * column_block)
+#endif
+        for (idx column = 0; column < trailing; column += column_block) {
+            const idx columns = std::min(column_block, trailing - column);
+            blas::syrk_lower(-1.0, panel + (column * lda), lda, 1.0,
+                             trailing_matrix + (column * lda) + column, lda, columns, kb);
+            const idx below = trailing - column - columns;
+            if (below > 0) {
+                blas::gemm(-1.0, panel + ((column + columns) * lda), lda, false,
+                           panel + (column * lda), lda, true, 1.0,
+                           trailing_matrix + ((column + columns) * lda) + column, lda, below,
+                           columns, kb);
+            }
+        }
     }
     return true;
 }
@@ -278,11 +325,14 @@ inline cholesky_result cholesky_impl(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("cholesky: matrix must be square");
     }
-    // The blocked raw-pointer Cholesky above: panel solve and trailing update
-    // through the packed trsm/syrk, faster than dpotrf through LAPACKE at every
-    // size measured.
     mat<real> L = A;
-    const bool ok = num::cholesky_blocked(L.data(), A.rows());
+    constexpr idx blas_threshold = 256;
+    const bool ok = A.rows() >= blas_threshold
+                        ? num::cholesky_blocked_blas(L.data(), A.rows(), A.rows())
+                        : num::cholesky_blocked(L.data(), A.rows());
+    for (idx i = 0; i < A.rows(); ++i)
+        for (idx j = i + 1; j < A.rows(); ++j)
+            L(i, j) = 0.0;
     return {std::move(L), ok};
 }
 
@@ -324,11 +374,23 @@ inline void solve(const cholesky_result &f, const mat<real> &B, mat<real> &X) {
     const idx n = f.L.rows();
 
     X = B;
-    // Y <- L^{-1}B, then X <- L^{-T}Y, both blocked over gemm. Never dpotrs:
-    // the kernel solve is faster at every size, and on a threaded BLAS the
-    // LAPACK call pays a thread wake-up per solve.
-    kernel::trsm_lower_inplace(X.data(), B.cols(), f.L.data(), n, B.cols());
-    kernel::trsm_lower_transpose_inplace(X.data(), B.cols(), f.L.data(), n, B.cols());
+    constexpr idx blas_threshold = 256;
+    if (n < blas_threshold) {
+        kernel::trsm_lower_inplace(X.data(), B.cols(), f.L.data(), n, B.cols());
+        kernel::trsm_lower_transpose_inplace(X.data(), B.cols(), f.L.data(), n, B.cols());
+        return;
+    }
+    constexpr idx rhs_block = 32;
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(static) if (B.cols() >= 2 * rhs_block)
+#endif
+    for (idx column = 0; column < B.cols(); column += rhs_block) {
+        const idx columns = std::min(rhs_block, B.cols() - column);
+        blas::trsm_left(f.L.data(), n, X.data() + column, B.cols(), n, columns, false, false,
+                        false);
+        blas::trsm_left(f.L.data(), n, X.data() + column, B.cols(), n, columns, false, true,
+                        false);
+    }
 }
 
 inline void solve_transpose(const cholesky_result &f, const vec<real> &b, vec<real> &x) {
