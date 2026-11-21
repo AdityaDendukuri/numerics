@@ -5,14 +5,17 @@
 #include "blas/matrix_ops.hpp"
 #include "container/matrix.hpp"
 #include "container/matrix_expr.hpp"
-#include "linear/matrix_properties.hpp"
-#include "linear/solvers/solver_result.hpp"
-#include "operator/concepts.hpp"
 #include "linear/factorization/lu.hpp"
-#include "linear/solve.hpp"
+#include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
+#include "linear/solve.hpp"
+#include "linear/solvers/solver_result.hpp"
 #include "linear/sparse/sparse.hpp"
+#include "operator/concepts.hpp"
+#include <algorithm>
+#include <cmath>
 #include <concepts>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 #include <utility>
@@ -24,6 +27,51 @@ struct low_rank_update {
     mat<real> left;  ///< P, of shape n by p.
     mat<real> right; ///< Q, of shape n by p.
 };
+
+namespace detail {
+
+struct thin_qr_blocks {
+    mat<real> Q;
+    mat<real> R;
+};
+
+[[nodiscard]] inline thin_qr_blocks thin_modified_gram_schmidt(const mat<real> &A) {
+    const idx rows = A.rows(), columns = A.cols();
+    mat<real> Q(rows, columns, 0.0), R(columns, columns, 0.0);
+    vec<real> column(rows, 0.0);
+    idx rank = 0;
+    for (idx j = 0; j < columns; ++j) {
+        real original_norm = 0.0;
+        for (idx i = 0; i < rows; ++i) {
+            column[i] = A(i, j);
+            original_norm += column[i] * column[i];
+        }
+        original_norm = std::sqrt(original_norm);
+        for (idx pass = 0; pass < 2; ++pass) {
+            for (idx q = 0; q < rank; ++q) {
+                real coefficient = 0.0;
+                for (idx i = 0; i < rows; ++i)
+                    coefficient += Q(i, q) * column[i];
+                R(q, j) += coefficient;
+                for (idx i = 0; i < rows; ++i)
+                    column[i] -= coefficient * Q(i, q);
+            }
+        }
+        real norm = 0.0;
+        for (real value : column)
+            norm += value * value;
+        norm = std::sqrt(norm);
+        if (norm <= 64.0 * std::numeric_limits<real>::epsilon() * std::max(real(1), original_norm))
+            continue;
+        R(rank, j) = norm;
+        for (idx i = 0; i < rows; ++i)
+            Q(i, rank) = column[i] / norm;
+        ++rank;
+    }
+    return {std::move(Q), std::move(R)};
+}
+
+} // namespace detail
 
 /// @brief Express \f$B - A\f$ as \f$PQ^{T}\f$ when the two differ only in the
 /// listed rows and columns.
@@ -69,6 +117,19 @@ struct low_rank_update {
     accumulate(current, 1.0);
     accumulate(base, -1.0);
     return {std::move(left), std::move(right)};
+}
+
+/// Orthogonalize both column spaces of a sparse row-and-column change. This
+/// preserves P Q^T while balancing the reduced Woodbury system.
+[[nodiscard]] inline low_rank_update orthogonalized_low_rank_difference(const spmat &base,
+                                                                        const spmat &current,
+                                                                        view<const idx> changed) {
+    using namespace ops;
+    low_rank_update raw = low_rank_difference(base, current, changed);
+    auto left = detail::thin_modified_gram_schmidt(raw.left);
+    auto right = detail::thin_modified_gram_schmidt(raw.right);
+    mat<real> core = left.R * transpose(right.R);
+    return {left.Q * core, std::move(right.Q)};
 }
 
 /// @brief Solves with \f$A_{base} + PQ^{T}\f$ through the retained factor of

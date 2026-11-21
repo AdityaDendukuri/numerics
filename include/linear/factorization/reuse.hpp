@@ -83,7 +83,7 @@ inline real skeel_condition(const mat<real> &A) {
                 row += std::abs(inverse(i, k)) * std::abs(A(k, j));
             }
         }
-        worst = std::max(worst, row);
+        worst = num::max(worst, row);
     }
     return worst;
 }
@@ -95,7 +95,7 @@ inline real skeel_condition(const mat<real> &A) {
 template <factorization Base>
 class corrected_factor {
   public:
-    static constexpr idx max_changed = 3;
+    static constexpr idx max_changed = 64;
     static constexpr real tolerance = 1e-8;
 
     /// True when R was not factored from scratch.
@@ -120,6 +120,16 @@ class corrected_factor {
         }
     }
 
+    friend vec<real> inverse_diagonal(const corrected_factor &Z, idx n) {
+        if (n != Z.size())
+            throw std::invalid_argument("inverse diagonal size does not match the factor");
+        if (!Z.base_diagonal_)
+            Z.base_diagonal_ = std::make_shared<const vec<real>>(inverse_diagonal(*Z.base_, n));
+        if (Z.correction_)
+            return Z.correction_->inverse_diagonal(*Z.base_diagonal_);
+        return *Z.base_diagonal_;
+    }
+
     template <class Fresh>
     static corrected_factor update(const spmat &R, const corrected_factor *previous,
                                    view<const idx> changed, Fresh &&fresh) {
@@ -128,6 +138,7 @@ class corrected_factor {
         if (previous && previous->size() == n) {
             next.base_ = previous->base_;
             next.base_R_ = previous->base_R_;
+            next.base_diagonal_ = previous->base_diagonal_;
             array<bool> differs(n, false);
             for (idx slot : previous->differing_) {
                 differs[slot] = true;
@@ -155,6 +166,7 @@ class corrected_factor {
         next.base_R_ = std::make_shared<const spmat>(R);
         next.differing_.clear();
         next.correction_.reset();
+        next.base_diagonal_.reset();
         next.reused_ = false;
         return next;
     }
@@ -166,7 +178,8 @@ class corrected_factor {
     // with G.
     bool correct(const spmat &R) {
         try {
-            correction_.emplace(*base_, low_rank_difference(*base_R_, R, differing_));
+            correction_.emplace(*base_,
+                                orthogonalized_low_rank_difference(*base_R_, R, differing_));
         } catch (const std::runtime_error &) {
             correction_.reset();
             return false;
@@ -184,6 +197,7 @@ class corrected_factor {
 
     std::shared_ptr<const Base> base_;
     std::shared_ptr<const spmat> base_R_;
+    mutable std::shared_ptr<const vec<real>> base_diagonal_;
     array<idx> differing_;
     std::optional<woodbury_solver<Base>> correction_;
     bool reused_ = false;
@@ -207,8 +221,7 @@ inline corrected_lu lu(const spmat &R, no_pivot_structure, const corrected_lu *p
 /// @brief Dense Cholesky of a symmetric similarity of R, corrected from
 /// `previous` when only a few slots differ.
 inline corrected_cholesky cholesky(const spmat &R, view<const real> h,
-                                   const corrected_cholesky *previous,
-                                   view<const idx> changed) {
+                                   const corrected_cholesky *previous, view<const idx> changed) {
     return corrected_cholesky::update(R, previous, changed, [&] { return cholesky(R, h); });
 }
 
