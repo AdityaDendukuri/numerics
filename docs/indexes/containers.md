@@ -36,7 +36,7 @@ num::scale_elements num::scale_rows num::divide_elements num::divide_rows num::a
 num::gather num::scatter
 
 ## Sparse matrices <linear/sparse/sparse.hpp>
-num::spmat num::spmat::from_triplets num::spmat::from_csc num::sparse_matvec num::dense num::spmat::nnz num::diagonal_similarity num::sparse_diagonal_similarity num::sparse_congruence num::symmetric_part
+num::spmat num::spmat::from_triplets num::spmat::from_csc num::sparse_matvec num::dense num::spmat::nnz num::diagonal_similarity num::sparse_diagonal_similarity num::sparse_congruence num::symmetric_part num::with_explicit_diagonal num::shifted num::sparse_linear_combination
 
 ## Sparse bilinear contractions <linear/sparse/bilinear.hpp>
 num::sparse_bilinear num::sparse_bilinear_trace

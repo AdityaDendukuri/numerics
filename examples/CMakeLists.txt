@@ -9,10 +9,7 @@ function(add_numerics_example TARGET_NAME SOURCE_FILE)
     add_dependencies(numerics_examples ${TARGET_NAME})
 endfunction()
 
-# ==============================================================================
-# Explicitly Registered Showcase Examples
-# Add your custom example target here!
-# ==============================================================================
+# Example programs
 
 add_numerics_example(00_core_storage_and_helpers    00_core_storage_and_helpers.cpp)
 add_numerics_example(01_direct_factorizations        01_direct_factorizations.cpp)
