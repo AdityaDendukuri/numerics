@@ -4,7 +4,8 @@
 algebra, Krylov solvers, eigenvalues and the SVD, ODE integrators, PDE operators, spectral
 transforms, quadrature, root finding, graphs and sampling. The arithmetic lives in `num::kernel`,
 a set of allocation-free loops over raw pointers with no dependencies. BLAS, LAPACK, OpenMP,
-CUDA, FFTW and SuiteSparse are used when they are present.
+CUDA, FFTW and SuiteSparse are used when they are present. SuiteSparse UMFPACK (GPL) is opt-in with
+`-DNUMERICS_USE_UMFPACK=ON`; see `THIRD_PARTY_LICENSES.md`.
 
 I started `numerics` to pull the code from my research and my numerical methods courses
 (fluid simulation, stochastic modeling, graph algorithms, linear algebra) into one library. I

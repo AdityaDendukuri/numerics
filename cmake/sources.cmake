@@ -17,6 +17,7 @@ set(NUMERICS_CORE_SOURCES
 
     # External bindings.
     src/linear/sparse/klu.cpp
+    src/linear/sparse/umfpack.cpp
     src/spectral/fft.cpp
 
     # Algorithm-local translation units.
