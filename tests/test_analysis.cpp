@@ -1,6 +1,7 @@
 /// @file test_analysis.cpp
 /// @brief Tests for root finding and quadrature
 #include "quadrature/quadrature.hpp"
+#include "quadrature/gauss_legendre_rule.hpp"
 #include "roots/roots.hpp"
 #include "core/policy.hpp"
 #include <cmath>
@@ -113,6 +114,18 @@ TEST(Quadrature, GaussLegendreExactPolynomial) {
     auto f = [](real x) { return x * x * x * x * x; };
     real result = gauss_legendre(f, 0.0, 1.0, 3);
     EXPECT_NEAR(result, 1.0 / 6.0, 1e-10);
+}
+
+TEST(Quadrature, GaussLegendreRuleArbitraryOrder) {
+    const auto [nodes, weights] = gauss_legendre_rule(48);
+    real mass = 0.0, cubic = 0.0;
+    for (idx i = 0; i < nodes.size(); ++i) {
+        mass += weights[i];
+        cubic += weights[i] * nodes[i] * nodes[i] * nodes[i];
+    }
+    EXPECT_NEAR(mass, 1.0, 1e-12);
+    EXPECT_NEAR(cubic, 0.25, 1e-12);
+    EXPECT_THROW(gauss_legendre_rule(0), std::invalid_argument);
 }
 
 TEST(Quadrature, AdaptiveSimpsonTrig) {
