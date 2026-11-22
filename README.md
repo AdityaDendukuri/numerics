@@ -1,20 +1,12 @@
 # numerics
 
-`numerics` is a C++20 library of numerical methods. It covers dense, banded and sparse linear
-algebra, Krylov solvers, eigenvalues and the SVD, ODE integrators, PDE operators, spectral
-transforms, quadrature, root finding, graphs and sampling. The arithmetic lives in `num::kernel`,
-a set of allocation-free loops over raw pointers with no dependencies. BLAS, LAPACK, OpenMP,
-CUDA, FFTW and SuiteSparse are used when they are present. SuiteSparse UMFPACK (GPL) is opt-in with
-`-DNUMERICS_USE_UMFPACK=ON`; see `THIRD_PARTY_LICENSES.md`.
+`numerics` is a C++ library I use to develop and test numerical methods for my research.
+It grew from code I had written for different projects and courses into a library I
+can reuse. I maintain it as my research develops, and some parts are more mature than
+others.
 
-I started `numerics` to pull the code from my research and my numerical methods courses
-(fluid simulation, stochastic modeling, graph algorithms, linear algebra) into one library. I
-maintain it myself, and it keeps growing alongside my research, so use it with appropriate
-caution!!
-
-Every feature is explained by a complete program in [`examples/`](examples/), with the output it
-prints. The [documentation](https://adityadendukuri.github.io/numerics/) indexes them by feature
-and has a reference page for every container, concept and kernel.
+The [`examples/`](examples/) show how to use the library. The
+[documentation](https://adityadendukuri.github.io/numerics/) has more detail.
 
 ## Setup
 
@@ -29,18 +21,20 @@ target_link_libraries(my_program PRIVATE numerics::numerics)
 
 `numerics::core` has no external dependency, and `numerics::kernel` is `num::kernel` alone.
 
+SuiteSparse UMFPACK is optional and uses the GPL. Enable it with
+`-DNUMERICS_USE_UMFPACK=ON` and see `THIRD_PARTY_LICENSES.md`.
+
 ```bash
 cmake --preset dev && cmake --build --preset dev && ctest --preset dev
 ```
 
-## Standout features from my PhD research
+## Examples from my PhD work
 
-| Feature | Example |
-| :--- | :--- |
-| Refactoring after a local change, with Woodbury-corrected LU while few states differ and block LU that keeps every block before the first change | [`16_factor_reuse.cpp`](examples/16_factor_reuse.cpp) |
-| Solving with A + PQ<sup>T</sup> from a factorization of A | [`17_woodbury_low_rank_update.cpp`](examples/17_woodbury_low_rank_update.cpp) |
-| diag(A<sup>-1</sup>) of a sparse M-matrix from a block of random probes | [`19_probed_inverse_diagonal.cpp`](examples/19_probed_inverse_diagonal.cpp) |
-| Shifted systems (sI - A)x = b at many shifts from one Hessenberg reduction, and Talbot inversion | [`03_resolvent_and_expv.cpp`](examples/03_resolvent_and_expv.cpp), [`13_talbot_spectral_validation.cpp`](examples/13_talbot_spectral_validation.cpp) |
+- [Refactor only a changed suffix](examples/16_factor_reuse.cpp) of a block matrix, reusing the unchanged prefix.
+- [Solve a diffusion problem](examples/15_diffusion_evidence_cg.cpp) with conjugate gradients.
+- [Estimate an inverse diagonal](examples/19_probed_inverse_diagonal.cpp) with random probes.
+- [Compare two ways to evolve a Markov model](examples/13_talbot_spectral_validation.cpp) using contour inversion and a Krylov method.
+- [Compute matrix exponential gradients with Krylov methods](https://github.com/AdityaDendukuri/krylov-gradients) in a separate research library built on `numerics`.
 
 ## License
 
