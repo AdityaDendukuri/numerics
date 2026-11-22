@@ -20,3 +20,14 @@ replacement of the dynamically linked KLU library.
 
 Upstream license collection:
 https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/dev/LICENSE.txt
+
+## SuiteSparse UMFPACK (optional, off by default)
+
+- UMFPACK: GPL-2.0-or-later
+
+UMFPACK provides `umfpack_factorization` (real sparse LU) and `umfpack_shifted_lu` (complex
+sI − A), each with ordinary and transposed solves. It is multifrontal with dense BLAS kernels and
+factors high-fill matrices several times faster than KLU. Because it is GPL, it is enabled only
+with `-DNUMERICS_USE_UMFPACK=ON`; numerics' own source stays MIT, and binaries built with
+UMFPACK enabled are subject to the GPL when distributed. Numerics does not vendor UMFPACK.
+

@@ -2,6 +2,7 @@
 #include "linear/factorization/factorization.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/sparse/klu.hpp"
+#include "linear/sparse/umfpack.hpp"
 #include "linear/sparse/sparse.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
@@ -740,5 +741,59 @@ TEST(Cholesky, SolveAcceptsAliasedAndUnsizedOutput) {
     matvec(A, x, Ax);
     for (idx i = 0; i < 3; ++i) {
         EXPECT_NEAR(Ax[i], b[i], 1e-12);
+    }
+}
+
+TEST(UMFPACK, RealSolveAndTransposedSolve) {
+    if (!umfpack_available()) {
+        GTEST_SKIP() << "UMFPACK backend not enabled (-DNUMERICS_USE_UMFPACK=ON)";
+    }
+    // nonsymmetric, so the transposed solve is a different system
+    const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
+                                        {4.0, -2.0, -1.0, 4.0, -1.0, -3.0, 3.0});
+    umfpack_factorization factor(A);
+    const vec<real> x_true{1.0, -2.0, 3.0};
+    vec<real> b(3, 0.0), x;
+    matvec(A, x_true, b);
+    solve(factor, b, x);
+    for (idx i = 0; i < 3; ++i) {
+        EXPECT_NEAR(x[i], x_true[i], 1e-13);
+    }
+    vec<real> bt(3, 0.0);
+    matvec(transpose(A), x_true, bt);
+    solve_transpose(factor, bt, x);
+    for (idx i = 0; i < 3; ++i) {
+        EXPECT_NEAR(x[i], x_true[i], 1e-13);
+    }
+}
+
+TEST(UMFPACK, ComplexShiftedSolveAndNonConjugateTranspose) {
+    if (!umfpack_available()) {
+        GTEST_SKIP() << "UMFPACK backend not enabled (-DNUMERICS_USE_UMFPACK=ON)";
+    }
+    const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
+                                        {-2.0, 1.0, 2.0, -3.0, 1.0, 1.0, -1.0});
+    const cplx s(0.5, 2.0);
+    umfpack_shifted_lu factor(A, s);
+    const vec<cplx> x_true{cplx(1, 1), cplx(-2, 0.5), cplx(0, 3)};
+    // b = (sI − A) x and bt = (sI − A)ᵀ x, without conjugation
+    vec<cplx> b(3, cplx(0)), bt(3, cplx(0)), x;
+    for (idx i = 0; i < 3; ++i) {
+        b[i] = s * x_true[i];
+        bt[i] = s * x_true[i];
+    }
+    for (idx r = 0; r < 3; ++r) {
+        for (idx k = A.row_ptr()[r]; k < A.row_ptr()[r + 1]; ++k) {
+            b[r] -= A.values()[k] * x_true[A.col_idx()[k]];
+            bt[A.col_idx()[k]] -= A.values()[k] * x_true[r];
+        }
+    }
+    solve(factor, b, x);
+    for (idx i = 0; i < 3; ++i) {
+        EXPECT_NEAR(std::abs(x[i] - x_true[i]), 0.0, 1e-13);
+    }
+    solve_transpose(factor, bt, x);
+    for (idx i = 0; i < 3; ++i) {
+        EXPECT_NEAR(std::abs(x[i] - x_true[i]), 0.0, 1e-13);
     }
 }

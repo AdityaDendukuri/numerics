@@ -22,6 +22,7 @@ option(NUMERICS_USE_LAPACK   "Link LAPACKE for Backend::lapack"   ON)
 option(NUMERICS_USE_OPENMP   "Enable OpenMP for Backend::omp"     ON)
 option(NUMERICS_USE_FFTW     "Link FFTW3 for spectral/"           ON)
 option(NUMERICS_USE_SUITESPARSE "Enable optional SuiteSparse KLU sparse-direct backend (real and complex)" ON)
+option(NUMERICS_USE_UMFPACK "Enable optional SuiteSparse UMFPACK backend (GPL-2.0-or-later; binaries built with it are GPL)" OFF)
 option(NUMERICS_BUILD_IO "Build the optional file-I/O target when available" ON)
 
 # Alignment, in bytes, of the storage owned by vec and mat. 64 is the
