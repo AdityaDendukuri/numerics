@@ -5,12 +5,30 @@
 #include "linear/factorization/cholesky.hpp"
 #include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
+#include "linear/sparse/bilinear.hpp"
 #include "omp/matrix_ops.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
 #include <vector>
 
 using namespace num;
+
+TEST(SparseBilinear, DenseBlocksAndComplexVectors) {
+    const spmat A = spmat::from_triplets(2, 3, {0, 0, 1}, {0, 2, 1}, {2.0, 3.0, 4.0});
+    mat<real> L(2, 2, 0.0), R(3, 2, 0.0);
+    L(0, 0) = 1.0; L(0, 1) = 2.0; L(1, 0) = 3.0; L(1, 1) = 4.0;
+    R(0, 0) = 5.0; R(0, 1) = 6.0; R(1, 0) = 7.0;
+    R(1, 1) = 8.0; R(2, 0) = 9.0; R(2, 1) = 10.0;
+    EXPECT_DOUBLE_EQ(sparse_bilinear_trace(A, L, R), 333.0);
+    EXPECT_THROW(sparse_bilinear_trace(A, R, L), std::invalid_argument);
+    EXPECT_DOUBLE_EQ(sparse_bilinear(A, vec<real>{1.0, 2.0}, vec<real>{3.0, 4.0, 5.0}), 53.0);
+
+    const vec<cplx> y{cplx(1.0, 1.0), cplx(2.0, -1.0)};
+    const vec<cplx> x{cplx(2.0), cplx(3.0, 1.0), cplx(4.0, -1.0)};
+    EXPECT_EQ(sparse_bilinear(A, y, x),
+              2.0 * y[0] * x[0] + 3.0 * y[0] * x[2] + 4.0 * y[1] * x[1]);
+    EXPECT_THROW(sparse_bilinear(A, x, y), std::invalid_argument);
+}
 
 TEST(mat, Construction) {
     mat<real> m(3, 4);
