@@ -5,6 +5,9 @@ Integration rules, contour quadrature and scalar root finding. The concepts are 
 ## Quadrature <quadrature/quadrature.hpp>
 num::trapz num::simpson num::gauss_legendre num::adaptive_simpson num::romberg
 
+## Arbitrary-order Gauss-Legendre <quadrature/gauss_legendre_rule.hpp>
+num::gauss_legendre_rule
+
 ## Talbot contour <quadrature/talbot.hpp>
 num::talbot_contour num::talbot_quadrature num::contour_node
 
