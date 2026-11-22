@@ -91,6 +91,15 @@ array<idx> labels(idx n) {
     return label;
 }
 
+/// count consecutive slots starting at `first`.
+array<idx> changed_slots(idx first, idx count) {
+    array<idx> slots(count);
+    for (idx k = 0; k < count; ++k) {
+        slots[k] = first + k;
+    }
+    return slots;
+}
+
 array<idx> pairs(idx n) {
     array<idx> level(n);
     for (idx i = 0; i < n; ++i) {
@@ -102,7 +111,9 @@ array<idx> pairs(idx n) {
 } // namespace
 
 TEST(Reuse, DenseCorrectsUntilTheCutoffThenRefactors) {
-    array<idx> label = labels(12);
+    // Sized from the cutoff, so the test follows max_changed rather than a hard-coded count.
+    constexpr idx cutoff = corrected_lu::max_changed;
+    array<idx> label = labels(cutoff + 16);
     corrected_lu Z = lu(sparse_of(path(label)), no_pivot, nullptr, {});
     EXPECT_FALSE(Z.reused());
 
@@ -114,10 +125,12 @@ TEST(Reuse, DenseCorrectsUntilTheCutoffThenRefactors) {
         expect_solves(Z, path(label));
     }
 
-    // Two more slots make four that differ, beyond the cutoff of three.
-    label[0] += 100;
-    label[11] += 100;
-    Z = lu(sparse_of(path(label)), no_pivot, &Z, array<idx>{0, 11});
+    // cutoff − 1 new slots make cutoff + 1 that differ, one beyond the cutoff.
+    const array<idx> beyond = changed_slots(10, cutoff - 1);
+    for (idx slot : beyond) {
+        label[slot] += 100;
+    }
+    Z = lu(sparse_of(path(label)), no_pivot, &Z, beyond);
     EXPECT_FALSE(Z.reused());
     expect_solves(Z, path(label));
 
@@ -136,8 +149,10 @@ TEST(Reuse, DenseWithNothingChangedKeepsTheFactor) {
 }
 
 TEST(Reuse, DenseCholeskyCorrectsUntilTheCutoffThenRefactors) {
-    array<idx> label = labels(12);
-    const vec<real> h(12, 1.0);
+    constexpr idx cutoff = corrected_cholesky::max_changed;
+    const idx n = cutoff + 16;
+    array<idx> label = labels(n);
+    const vec<real> h(n, 1.0);
     corrected_cholesky Z = cholesky(sparse_of(symmetric_path(label)), h, nullptr, {});
     EXPECT_FALSE(Z.reused());
 
@@ -148,9 +163,11 @@ TEST(Reuse, DenseCholeskyCorrectsUntilTheCutoffThenRefactors) {
         expect_solves(Z, symmetric_path(label));
     }
 
-    label[0] += 101;
-    label[11] += 101;
-    Z = cholesky(sparse_of(symmetric_path(label)), h, &Z, array<idx>{0, 11});
+    const array<idx> beyond = changed_slots(10, cutoff - 1);
+    for (idx slot : beyond) {
+        label[slot] += 101;
+    }
+    Z = cholesky(sparse_of(symmetric_path(label)), h, &Z, beyond);
     EXPECT_FALSE(Z.reused());
     expect_solves(Z, symmetric_path(label));
 }
