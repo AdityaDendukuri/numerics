@@ -11,6 +11,7 @@
 #include "core/policy.hpp"
 #include "kernel/kernel.hpp"
 #include <algorithm>
+#include <stdexcept>
 #include <type_traits>
 
 // `blas` and `omp` are always included and fall back to `num::kernel` when unconfigured, so
@@ -58,6 +59,26 @@ inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
 }
 
 inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) { accel::matmul(A, B, C); }
+
+/// @brief \f$C \leftarrow \alpha\,\mathrm{op}(A)\,\mathrm{op}(B) + \beta C\f$, with op the transpose when the
+/// flag is set. Uses the configured BLAS, else `num::kernel`.
+inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B, bool transB, real beta,
+                 mat<real> &C) {
+    blas::gemm(alpha, A, transA, B, transB, beta, C);
+}
+
+/// @brief \f$y \leftarrow \alpha\,\mathrm{op}(A_r)\,x + \beta y\f$, where \f$A_r\f$ is the first `rows` rows of
+/// A (all rows by default), so a basis stored row by row can grow inside a preallocated matrix.
+/// y must already have the result's length. Uses the configured BLAS, else `num::kernel`.
+inline void gemv(real alpha, const mat<real> &A, bool transA, const vec<real> &x, real beta, vec<real> &y,
+                 idx rows = static_cast<idx>(-1)) {
+    const idx r = std::min(rows, A.rows());
+    const idx m = transA ? A.cols() : r, k = transA ? r : A.cols();
+    if (x.size() != k || y.size() != m) {
+        throw std::invalid_argument("gemv: dimensions do not agree");
+    }
+    blas::gemm(alpha, A.data(), A.cols(), transA, x.data(), 1, false, beta, y.data(), 1, m, 1, k);
+}
 
 /// @brief \f$C \leftarrow \alpha A + \beta B\f$.
 inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B, mat<real> &C) {

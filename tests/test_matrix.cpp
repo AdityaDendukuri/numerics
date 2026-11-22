@@ -559,3 +559,48 @@ TEST(MatrixExpr, NonConformingShapesThrow) {
     EXPECT_THROW((void)add(vec<real>(2, 1.0), vec<real>(3, 1.0)), std::invalid_argument);
     EXPECT_THROW((void)sub(vec<real>(2, 1.0), vec<real>(3, 1.0)), std::invalid_argument);
 }
+
+TEST(DenseProducts, GemmWithTransposesMatchesLoops) {
+    mat<real> A(3, 4, 0.0), B(3, 2, 0.0), C(4, 2, 1.0), expected(4, 2, 0.0);
+    for (idx i = 0; i < 3; ++i) {
+        for (idx j = 0; j < 4; ++j) {
+            A(i, j) = 0.5 * static_cast<real>(i) - static_cast<real>(j);
+        }
+        for (idx j = 0; j < 2; ++j) {
+            B(i, j) = static_cast<real>(i + 2 * j) + 1.0;
+        }
+    }
+    for (idx i = 0; i < 4; ++i) {  // expected = 2 A^T B - C
+        for (idx j = 0; j < 2; ++j) {
+            for (idx k = 0; k < 3; ++k) {
+                expected(i, j) += 2.0 * A(k, i) * B(k, j);
+            }
+            expected(i, j) -= 1.0;
+        }
+    }
+    gemm(2.0, A, true, B, false, -1.0, C);
+    for (idx i = 0; i < 4; ++i) {
+        for (idx j = 0; j < 2; ++j) {
+            EXPECT_NEAR(C(i, j), expected(i, j), 1e-13);
+        }
+    }
+}
+
+TEST(DenseProducts, GemvOnLeadingRowsAndTranspose) {
+    mat<real> Q(5, 3, 0.0);  // only the first 2 rows are used
+    for (idx i = 0; i < 5; ++i) {
+        for (idx j = 0; j < 3; ++j) {
+            Q(i, j) = static_cast<real>(i * 3 + j) + 1.0;
+        }
+    }
+    const vec<real> w{1.0, -1.0, 2.0};
+    vec<real> t(2, 0.0);
+    gemv(1.0, Q, false, w, 0.0, t, 2);  // t = Q_2 w
+    EXPECT_NEAR(t[0], 1.0 - 2.0 + 6.0, 1e-14);
+    EXPECT_NEAR(t[1], 4.0 - 5.0 + 12.0, 1e-14);
+    vec<real> y{1.0, 1.0, 1.0};
+    gemv(-1.0, Q, true, t, 1.0, y, 2);  // y = y - Q_2^T t
+    for (idx j = 0; j < 3; ++j) {
+        EXPECT_NEAR(y[j], 1.0 - (Q(0, j) * t[0] + Q(1, j) * t[1]), 1e-13);
+    }
+}
