@@ -1,0 +1,22 @@
+[
+  {
+    "contour_nodes": 8,
+    "max_error": 6.315807791764131e-05
+  },
+  {
+    "contour_nodes": 12,
+    "max_error": 4.54881358728024e-07
+  },
+  {
+    "contour_nodes": 16,
+    "max_error": 2.865651139221325e-09
+  },
+  {
+    "contour_nodes": 24,
+    "max_error": 9.540016771207016e-14
+  },
+  {
+    "contour_nodes": 32,
+    "max_error": 4.007905118896815e-14
+  }
+]

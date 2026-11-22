@@ -1,0 +1,10 @@
+{
+  "dense_lu_difference": 1.6653345369377348e-16,
+  "lower_bandwidth": 2,
+  "multiple_rhs_ratio": 8.0,
+  "residual": 3.3306690738754696e-16,
+  "row_swaps": 1000,
+  "size": 2000,
+  "solution_norm": 0.49994851718708394,
+  "upper_bandwidth": 2
+}

@@ -1,0 +1,31 @@
+{
+  "quadrature_error": {
+    "adaptive_simpson": 6.661338147750939e-16,
+    "gauss_legendre": 1.1028447222116711e-07,
+    "romberg": 8.881784197001252e-16,
+    "simpson": 1.0824504403927904e-08,
+    "trapz": 0.0001644961125564226
+  },
+  "roots": {
+    "bisection": {
+      "error": 2.3869795029440866e-13,
+      "iterations": 38,
+      "root": 1.4142135623733338
+    },
+    "brent": {
+      "error": 4.1300296516055823e-14,
+      "iterations": 6,
+      "root": 1.4142135623731364
+    },
+    "newton": {
+      "error": 0.0,
+      "iterations": 6,
+      "root": 1.4142135623730951
+    },
+    "secant": {
+      "error": 2.220446049250313e-16,
+      "iterations": 7,
+      "root": 1.4142135623730954
+    }
+  }
+}

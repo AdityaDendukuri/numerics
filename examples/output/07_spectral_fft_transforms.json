@@ -1,0 +1,17 @@
+{
+  "complex_round_trip_error": 2.0411201962889075e-15,
+  "fftw_available": true,
+  "frequency_bins": 33,
+  "peaks": [
+    {
+      "amplitude": 1.0000000000000002,
+      "frequency": 3
+    },
+    {
+      "amplitude": 0.5000000000000001,
+      "frequency": 7
+    }
+  ],
+  "real_round_trip_error": 2.220446049250313e-16,
+  "simd_available": true
+}

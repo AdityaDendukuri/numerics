@@ -2,7 +2,7 @@
 /// @brief Solve after a small matrix change without factoring from scratch.
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numerics.hpp>
 
 using namespace num;
@@ -49,6 +49,5 @@ int main() {
     real error = 0.0;
     for (idx i = 0; i < n; ++i)
         error = std::max(error, std::abs(reused[i] - fresh[i]));
-    std::printf("rank %zu update, max error %.2e\n", static_cast<std::size_t>(updated.rank()),
-                error);
+    io::write_json({{"rank", updated.rank()}, {"max_error", error}}, "result.json");
 }

@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "expected_scale": 0.2,
+      "mean_relative_error": 0.15826622882068125,
+      "probes": 50,
+      "worst_relative_error": 0.7457680713550993
+    },
+    {
+      "expected_scale": 0.1,
+      "mean_relative_error": 0.07901451081745044,
+      "probes": 200,
+      "worst_relative_error": 0.3813838832827567
+    },
+    {
+      "expected_scale": 0.05,
+      "mean_relative_error": 0.0409277856912636,
+      "probes": 800,
+      "worst_relative_error": 0.17044712137826667
+    }
+  ],
+  "size": 1000
+}

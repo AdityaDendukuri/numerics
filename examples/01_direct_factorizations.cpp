@@ -5,7 +5,7 @@
 /// pivots, while `lu(A, no_pivot)` skips the pivot search for matrices whose structure keeps the
 /// pivots nonzero. `cholesky` requires a matrix that carries the SPD law. `qr` solves least-squares
 /// problems with more rows than columns, and `thomas` solves a tridiagonal system in O(n).
-#include <cstdio>
+#include <io/json.hpp>
 #include <numerics.hpp>
 #include <string_view>
 
@@ -23,20 +23,20 @@ int main(int argc, char **argv) {
     const auto F = lu(A);
     vec<real> x;
     solve(F, b, x);
-    std::printf("LU            x = [%g, %g, %g]  det %g  rcond %.3f\n", x[0], x[1], x[2], det(F),
-                rcond(F, A));
+    io::json results = {{"lu", {{"x", {x[0], x[1], x[2]}},
+                                 {"determinant", det(F)}, {"rcond", rcond(F, A)}}}};
     const mat<real> I = inverse(F);
-    std::printf("A^-1 (0, 0)   %.6f  (exact 15/56 = %.6f)\n", I(0, 0), 15.0 / 56.0);
+    results["inverse_00"] = I(0, 0);
 
     solve(lu(A, no_pivot), b, x);
-    std::printf("no-pivot LU   x = [%g, %g, %g]\n", x[0], x[1], x[2]);
+    results["no_pivot_lu"] = {x[0], x[1], x[2]};
 
     solve(cholesky(assume_spd(A)), b, x);
-    std::printf("Cholesky      x = [%g, %g, %g]\n", x[0], x[1], x[2]);
+    results["cholesky"] = {x[0], x[1], x[2]};
 
     vec<real> lower{1.0, 1.0}, diag{4.0, 4.0, 4.0}, upper{1.0, 1.0};
     thomas(lower, diag, upper, b, x);
-    std::printf("Thomas        x = [%g, %g, %g]\n", x[0], x[1], x[2]);
+    results["thomas"] = {x[0], x[1], x[2]};
 
     // Least squares: the line c0 + c1 t through five noisy points.
     const real t[5] = {0.0, 1.0, 2.0, 3.0, 4.0};
@@ -48,7 +48,8 @@ int main(int argc, char **argv) {
     }
     vec<real> c;
     solve(qr(V), data, c);
-    std::printf("QR fit        y = %.3f + %.3f t\n", c[0], c[1]);
+    results["least_squares_coefficients"] = {c[0], c[1]};
+    io::write_json(results, "result.json");
 
     if (plot) {
         std::vector<double> ts(t, t + 5), ys(data.data(), data.data() + 5), fit;
@@ -58,6 +59,6 @@ int main(int argc, char **argv) {
         plt::plot(ts, ys, "data", "points");
         plt::plot(ts, fit, "least-squares line", "lines");
         plt::title("01 QR least squares");
-        plt::show();
+        plt::savefig("plot.png");
     }
 }

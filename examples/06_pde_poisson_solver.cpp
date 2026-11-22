@@ -6,7 +6,7 @@
 /// vector. The manufactured solution \f$\phi = e^x\sin\pi x\sin\pi y\sin\pi z\f$ vanishes on the
 /// boundary, and halving the grid spacing divides the error by about four.
 #include <cmath>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numbers>
 #include <numerics.hpp>
 #include <string_view>
@@ -17,7 +17,7 @@ using namespace num;
 int main(int argc, char **argv) {
     const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
     constexpr real pi = std::numbers::pi;
-    std::printf("   n      h        CG iterations   max error   ratio\n");
+    io::json results = io::json::array();
     real previous = 0.0;
     std::vector<double> slice_x, slice_phi;
     for (idx n : {9, 17, 33}) {
@@ -43,9 +43,9 @@ int main(int argc, char **argv) {
         for (idx s = 0; s < phi.size(); ++s) {
             error = std::max(error, std::abs(phi.as_vec()[s] - exact.as_vec()[s]));
         }
-        std::printf("%4zu  %7.4f  %10zu        %.2e   %s\n", static_cast<std::size_t>(n), h,
-                    static_cast<std::size_t>(result.iterations), error,
-                    previous > 0.0 ? std::to_string(previous / error).substr(0, 4).c_str() : "");
+        results.push_back({{"grid_points", n}, {"spacing", h},
+                           {"cg_iterations", result.iterations}, {"max_error", error},
+                           {"error_ratio", previous > 0.0 ? previous / error : 0.0}});
         previous = error;
         if (n == 33) {
             for (idx i = 0; i < n; ++i) {
@@ -55,9 +55,11 @@ int main(int argc, char **argv) {
         }
     }
 
+    io::write_json(results, "result.json");
+
     if (plot) {
         plt::plot(slice_x, slice_phi, "phi(x, 1/2, 1/2)", "lines");
         plt::title("06 Poisson solution, centre slice");
-        plt::show();
+        plt::savefig("plot.png");
     }
 }

@@ -7,8 +7,7 @@
 /// too ill-conditioned for single precision, and then factors in `double` instead.
 #include <chrono>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
+#include <io/json.hpp>
 #include <numerics.hpp>
 #include <optional>
 #include <random>
@@ -64,7 +63,7 @@ double milliseconds(Work &&work) {
         .count();
 }
 
-void report(const char *name, const mat<real> &A) {
+io::json result(const mat<real> &A) {
     const vec<real> b(A.rows(), 1.0);
     vec<real> x_double, x_mixed;
     lu_result<real> D;
@@ -78,22 +77,21 @@ void report(const char *name, const mat<real> &A) {
         solve(*M, b, x_mixed);
     });
 
-    std::cout << name << " (n = " << A.rows() << ")\n"
-              << std::scientific << std::setprecision(1)
-              << "  rcond                " << rcond(D, A) << "\n"
-              << "  mixed precision      "
-              << (M->refined() ? "refined from float" : "fell back to double") << "\n"
-              << "  backward error       double " << backward_error(A, b, x_double) << ", mixed "
-              << backward_error(A, b, x_mixed) << "\n";
+    io::json summary = {
+        {"size", A.rows()}, {"rcond", rcond(D, A)}, {"refined_from_float", M->refined()},
+        {"double_backward_error", backward_error(A, b, x_double)},
+        {"mixed_backward_error", backward_error(A, b, x_mixed)}
+    };
     if (A.rows() >= 256) {
-        std::cout << std::fixed << std::setprecision(1) << "  factor + solve       double "
-                  << double_ms << " ms, mixed " << mixed_ms << " ms\n";
+        summary["double_ms"] = double_ms;
+        summary["mixed_ms"] = mixed_ms;
     }
+    return summary;
 }
 
 } // namespace
 
 int main() {
-    report("random, diagonally weighted", well_conditioned(1024));
-    report("Hilbert", hilbert(12));
+    io::write_json({{"well_conditioned", result(well_conditioned(1024))},
+                    {"hilbert", result(hilbert(12))}}, "result.json");
 }

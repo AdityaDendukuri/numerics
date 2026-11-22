@@ -1,0 +1,28 @@
+{
+  "cg_matrix_free": {
+    "converged": true,
+    "iterations": 75,
+    "residual": 6.057753463988824e-11
+  },
+  "cg_sparse": {
+    "converged": true,
+    "iterations": 75,
+    "residual": 6.057753463988824e-11
+  },
+  "gmres": {
+    "converged": true,
+    "iterations": 123,
+    "residual": 9.701531271268107e-11
+  },
+  "max_difference": 5.523581592115079e-12,
+  "minres": {
+    "converged": true,
+    "iterations": 74,
+    "residual": 8.227119791515665e-11
+  },
+  "pcg_jacobi": {
+    "converged": true,
+    "iterations": 28,
+    "residual": 1.992796354169953e-09
+  }
+}

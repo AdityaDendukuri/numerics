@@ -1,0 +1,18 @@
+{
+  "hilbert": {
+    "double_backward_error": 3.3050170855697e-18,
+    "mixed_backward_error": 3.3050170855697e-18,
+    "rcond": 2.5511565932698992e-17,
+    "refined_from_float": false,
+    "size": 12
+  },
+  "well_conditioned": {
+    "double_backward_error": 2.5897704730541425e-16,
+    "double_ms": 549.046458,
+    "mixed_backward_error": 3.2063824904479835e-16,
+    "mixed_ms": 655.979083,
+    "rcond": 0.011494530550849721,
+    "refined_from_float": true,
+    "size": 1024
+  }
+}

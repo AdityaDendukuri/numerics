@@ -2,7 +2,7 @@
 /// @brief Compare Talbot contour inversion with a Krylov solution for a birth-death process.
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numerics.hpp>
 
 using namespace num;
@@ -27,6 +27,7 @@ int main() {
     const vec<real> reference = expv(time, operators::dense_op(Q), initial, 30, 1e-12);
     const hessenberg_resolvent reduced(Q);
 
+    io::json results = io::json::array();
     for (idx nodes : {8, 12, 16, 24, 32}) {
         vec<cplx> result(n, 0.0);
         for (const auto &[shift, weight] : talbot_contour(time, nodes)) {
@@ -44,6 +45,7 @@ int main() {
         for (idx i = 0; i < n; ++i) {
             error = std::max(error, std::abs(probability[i] - reference[i]));
         }
-        std::printf("%2zu contour nodes, max error %.2e\n", static_cast<std::size_t>(nodes), error);
+        results.push_back({{"contour_nodes", nodes}, {"max_error", error}});
     }
+    io::write_json(results, "result.json");
 }

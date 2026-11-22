@@ -82,6 +82,12 @@ solution.means();                        // means(k, s) at solution.times[k]
 solution.snapshots.back().marginal(0);
 ```
 
+The [FSP example](https://github.com/AdityaDendukuri/markovkit/blob/main/examples/fsp_birth_death.cpp)
+plots that distribution at four times. It moves toward a steady shape as molecules are born
+and die.
+
+![Birth-death probability distributions at four times](fsp_birth_death.png)
+
 An RDME is also a `markov_model`, so SSA and FSP accept it unchanged:
 
 ```cpp
@@ -120,6 +126,7 @@ auto walkers = subsweep_walkers(rate_oracle, initial, walker_count, final_time, 
 
 | Program | Shows |
 | :--- | :--- |
+| `fsp_birth_death` | Distribution evolution by finite state projection |
 | `fsp_oregonator` | Adaptive FSP for the Field--Körös--Noyes oscillator |
 | `fsp_toggle_switch` | Adaptive FSP for a bistable genetic switch |
 | `ssa_birth_death` | Gillespie SSA against tau leaping |

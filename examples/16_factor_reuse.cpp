@@ -2,7 +2,7 @@
 /// @brief Reuse a matrix factorization after a few Markov states change.
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numerics.hpp>
 
 using namespace num;
@@ -59,16 +59,17 @@ int main() {
     labels[7] += 1;
     const spmat changed = chain(labels);
     corrected = lu(changed, no_pivot, &corrected, array<idx>{7});
-    std::printf("corrected LU reused %d, max error %.2e\n", corrected.reused(),
-                error_against_fresh(corrected, changed));
+    const real corrected_error = error_against_fresh(corrected, changed);
 
     // Changing block 3 keeps blocks 0 through 2 and refactors blocks 3 and 4.
     suffix_block_lu blocked = lu(changed, blocks(levels), nullptr, {});
     labels[15] += 1;
     const spmat changed_again = chain(labels);
     blocked = lu(changed_again, blocks(levels), &blocked, array<idx>{15});
-    std::printf("block LU reused %zu prefix blocks, refactored %zu suffix blocks, max error %.2e\n",
-                static_cast<std::size_t>(blocked.reused_blocks),
-                static_cast<std::size_t>(n / 4 - blocked.reused_blocks),
-                error_against_fresh(blocked, changed_again));
+    io::write_json({
+        {"corrected_lu", {{"reused", corrected.reused()}, {"max_error", corrected_error}}},
+        {"block_lu", {{"reused_prefix_blocks", blocked.reused_blocks},
+                      {"refactored_suffix_blocks", n / 4 - blocked.reused_blocks},
+                      {"max_error", error_against_fresh(blocked, changed_again)}}}
+    }, "result.json");
 }

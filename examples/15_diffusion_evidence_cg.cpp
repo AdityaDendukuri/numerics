@@ -4,7 +4,7 @@
 #include "numerics.hpp"
 
 #include <cmath>
-#include <iostream>
+#include <io/json.hpp>
 
 int main() {
     constexpr int points_per_side = 32;
@@ -32,7 +32,7 @@ int main() {
         num::cg(system, rhs, solution,
                 num::cg_options{.tolerance = 1e-12, .max_iterations = 4 * solution.size()});
 
-    std::cout << "backward-Euler diffusion: " << result.iterations << " CG iterations, residual "
-              << result.residual << '\n';
+    num::io::write_json({{"iterations", result.iterations}, {"residual", result.residual},
+                         {"converged", result.converged}}, "result.json");
     return result.converged ? 0 : 1;
 }

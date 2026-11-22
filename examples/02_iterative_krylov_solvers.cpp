@@ -5,7 +5,7 @@
 /// self-adjoint one, and GMRES accepts any linear operator. A law is attached to an operator with
 /// `assume_spd` or `assume_symmetric`, and an operator without the required law does not compile.
 #include <cmath>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numerics.hpp>
 #include <string_view>
 #include <vector>
@@ -41,9 +41,8 @@ spmat tridiagonal(idx n, real lower, real upper) {
     return spmat::from_triplets(n, n, rows, columns, values);
 }
 
-void report(const char *name, const solver_result &r) {
-    std::printf("%-30s converged %d  iterations %4zu  residual %.2e\n", name, r.converged,
-                static_cast<std::size_t>(r.iterations), r.residual);
+io::json summary(const solver_result &r) {
+    return {{"converged", r.converged}, {"iterations", r.iterations}, {"residual", r.residual}};
 }
 
 } // namespace
@@ -58,7 +57,8 @@ int main(int argc, char **argv) {
     const operators::sparse_op op(A);
 
     vec<real> x(n, 0.0);
-    report("CG, sparse", cg(assume_spd(op), b, x, {.tolerance = 1e-10, .max_iterations = 2000}));
+    io::json results = {{"cg_sparse", summary(cg(assume_spd(op), b, x,
+        {.tolerance = 1e-10, .max_iterations = 2000}))}};
 
     x = vec<real>(n, 0.0);
     vec<real> inverse_diagonal(n);
@@ -66,17 +66,18 @@ int main(int argc, char **argv) {
         inverse_diagonal[i] = 1.0 / coefficient(i);
     }
     const jacobi_preconditioner jacobi(inverse_diagonal);
-    report("PCG, Jacobi",
-           pcg(assume_spd(op), jacobi, b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 2000}));
+    results["pcg_jacobi"] = summary(pcg(assume_spd(op), jacobi, b, x,
+        {.tolerance = {.rtol = 1e-10}, .max_iterations = 2000}));
 
     x = vec<real>(n, 0.0);
-    report("MINRES", minres(assume_symmetric(op), b, x, {.tolerance = 1e-10, .max_iterations = 2000}));
+    results["minres"] = summary(minres(assume_symmetric(op), b, x,
+        {.tolerance = 1e-10, .max_iterations = 2000}));
 
     // A nonsymmetric matrix: convection-diffusion. Only GMRES applies.
     const spmat N = tridiagonal(n, -1.4, -0.6);
     vec<real> y(n, 0.0);
-    report("GMRES(30), nonsymmetric",
-           gmres(operators::sparse_op(N), b, y, {.tolerance = 1e-10, .max_iterations = 4000, .restart = 30}));
+    results["gmres"] = summary(gmres(operators::sparse_op(N), b, y,
+        {.tolerance = 1e-10, .max_iterations = 4000, .restart = 30}));
 
     // A matrix-free operator: the same SPD matrix as a lambda.
     const auto laplacian = operators::make_op(
@@ -88,14 +89,16 @@ int main(int argc, char **argv) {
         },
         n);
     vec<real> u(n, 0.0);
-    report("CG, matrix-free", cg(assume_spd(laplacian), b, u, {.tolerance = 1e-10, .max_iterations = 2000}));
-    std::printf("max |x_sparse - x_matrix_free| = %.1e\n", [&] {
+    results["cg_matrix_free"] = summary(cg(assume_spd(laplacian), b, u,
+        {.tolerance = 1e-10, .max_iterations = 2000}));
+    results["max_difference"] = [&] {
         real worst = 0.0;
         for (idx i = 0; i < n; ++i) {
             worst = std::max(worst, std::abs(x[i] - u[i]));
         }
         return worst;
-    }());
+    }();
+    io::write_json(results, "result.json");
 
     if (plot) {
         std::vector<double> grid, sol;
@@ -105,6 +108,6 @@ int main(int argc, char **argv) {
         }
         plt::plot(grid, sol, "x", "lines");
         plt::title("02 CG solution");
-        plt::show();
+        plt::savefig("plot.png");
     }
 }

@@ -5,7 +5,7 @@
 /// layout, with room for the fill that pivoting adds. `lu(band)` factors it with partial
 /// pivoting in O(n kl (kl + ku)), and `solve` takes a vector or a matrix of right-hand sides.
 #include <cmath>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numerics.hpp>
 #include <string_view>
 #include <vector>
@@ -47,17 +47,13 @@ int main(int argc, char **argv) {
         residual = std::max(residual, std::abs(product[i] - b[i]));
         size = std::max(size, std::abs(x[i]));
     }
-    std::printf("n = %zu, kl = %zu, ku = %zu: %zu row swaps, |x| %.2f, residual %.1e\n",
-                static_cast<std::size_t>(n), static_cast<std::size_t>(kl),
-                static_cast<std::size_t>(ku), static_cast<std::size_t>(swaps), size, residual);
-
     vec<real> dense_x;
     solve(lu(dense), b, dense_x);
     real difference = 0.0;
     for (idx i = 0; i < n; ++i) {
         difference = std::max(difference, std::abs(dense_x[i] - x[i]));
     }
-    std::printf("agreement with a dense LU of the same matrix: %.1e\n", difference);
+
 
     // Many right-hand sides at once, one per column.
     mat<real> rhs(n, 8, 0.0), X;
@@ -67,7 +63,10 @@ int main(int argc, char **argv) {
         }
     }
     solve(F, rhs, X);
-    std::printf("8 right-hand sides: X(10, 7) / x[10] = %.6f (expect 8)\n", X(10, 7) / x[10]);
+    io::write_json({{"size", n}, {"lower_bandwidth", kl}, {"upper_bandwidth", ku},
+                    {"row_swaps", swaps}, {"solution_norm", size},
+                    {"residual", residual}, {"dense_lu_difference", difference},
+                    {"multiple_rhs_ratio", X(10, 7) / x[10]}}, "result.json");
 
     if (plot) {
         std::vector<double> grid, sol;
@@ -77,6 +76,6 @@ int main(int argc, char **argv) {
         }
         plt::plot(grid, sol, "x", "lines");
         plt::title("10 Banded solve");
-        plt::show();
+        plt::savefig("plot.png");
     }
 }

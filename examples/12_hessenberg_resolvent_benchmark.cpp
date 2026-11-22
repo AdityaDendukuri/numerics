@@ -4,8 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <complex>
-#include <iomanip>
-#include <iostream>
+#include <io/json.hpp>
 #include <numerics.hpp>
 #include <random>
 #include <vector>
@@ -24,10 +23,7 @@ int main() {
         shifts[k] = num::cplx(0.1, static_cast<double>(k) * 0.1);
     }
 
-    std::cout << std::left << std::setw(8) << "N" << std::setw(10) << "Shifts" << std::setw(18)
-              << "Naive LU (ms)" << std::setw(20) << "Hessenberg (ms)" << std::setw(12) << "Speedup"
-              << std::setw(15) << "Max Diff" << "\n";
-    std::cout << std::string(80, '-') << "\n";
+    num::io::json results = num::io::json::array();
 
     for (num::idx n : sizes) {
         num::mat<num::real> A(n, n, 0.0);
@@ -72,12 +68,11 @@ int main() {
 
         double speedup = naive_ms / hess_ms;
 
-        std::cout << std::left << std::setw(8) << n << std::setw(10) << num_shifts << std::setw(18)
-                  << std::fixed << std::setprecision(2) << naive_ms << std::setw(20) << std::fixed
-                  << std::setprecision(2) << hess_ms << std::setw(12) << std::fixed
-                  << std::setprecision(1) << (std::to_string(speedup) + "x") << std::setw(15)
-                  << std::scientific << std::setprecision(2) << max_diff << "\n";
+        results.push_back({{"size", n}, {"shifts", num_shifts}, {"naive_ms", naive_ms},
+                           {"hessenberg_ms", hess_ms}, {"speedup", speedup},
+                           {"max_difference", max_diff}});
     }
 
+    num::io::write_json(results, "result.json");
     return 0;
 }

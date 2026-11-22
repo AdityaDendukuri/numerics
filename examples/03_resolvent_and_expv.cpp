@@ -7,7 +7,7 @@
 /// generator, \f$e^{tA}\f$ conserves total probability, which the output shows.
 #include <cmath>
 #include <complex>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numerics.hpp>
 #include <string_view>
 #include <vector>
@@ -45,8 +45,8 @@ int main(int argc, char **argv) {
         }
         residual = std::max(residual, std::abs(row - p0[i]));
     }
-    std::printf("(sI - A)z = p0 at s = 1+2i:  z[0] = %.5f%+.5fi  residual %.1e\n", z[0].real(),
-                z[0].imag(), residual);
+    io::json results = {{"shift_residual", residual},
+                        {"shift_solution_0", {z[0].real(), z[0].imag()}}};
 
     // Many shifts from the one reduction.
     array<cplx> shifts;
@@ -54,13 +54,13 @@ int main(int argc, char **argv) {
         shifts.push_back(cplx(1.0, 0.25 * k));
     }
     const auto batch = solve_batch(R, shifts, p0);
-    std::printf("%zu shifts solved from one Hessenberg reduction; |z[0]| at s = 1+15.75i: %.5f\n",
-                batch.size(), std::abs(batch.back()[0]));
+    results["batch_size"] = batch.size();
+    results["last_shift_magnitude"] = std::abs(batch.back()[0]);
 
     // p(t) = e^{tA} p0 conserves probability.
     const operators::dense_op op(A);
     std::vector<double> times, mean;
-    std::printf("\n   t    sum p(t)    mean state\n");
+    io::json evolution = io::json::array();
     for (real t : {0.5, 1.0, 2.0, 5.0, 10.0}) {
         const vec<real> p = expv(t, op, p0, 30, 1e-10);
         real total = 0.0, average = 0.0;
@@ -68,14 +68,18 @@ int main(int argc, char **argv) {
             total += p[i];
             average += static_cast<real>(i) * p[i];
         }
-        std::printf("%5.1f  %10.8f  %9.4f\n", t, total, average);
+        evolution.push_back({{"time", t}, {"total_probability", total},
+                             {"mean_state", average}});
         times.push_back(t);
         mean.push_back(average);
     }
 
+    results["evolution"] = evolution;
+    io::write_json(results, "result.json");
+
     if (plot) {
         plt::plot(times, mean, "mean state", "linespoints");
         plt::title("03 Expected state of a birth-death chain");
-        plt::show();
+        plt::savefig("plot.png");
     }
 }

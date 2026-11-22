@@ -1,0 +1,15 @@
+{
+  "connected": true,
+  "corner_distance": 78.0,
+  "disjoint_set": {
+    "zero_to_five": false,
+    "zero_to_three": true
+  },
+  "laplacian_pcg": {
+    "converged": true,
+    "effective_resistance": 4.774312176047017,
+    "iterations": 22
+  },
+  "spanning_tree_weight": 1599.0,
+  "vertices": 1600
+}

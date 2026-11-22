@@ -1,0 +1,17 @@
+[
+  {
+    "peak_frequency": 1.9959919839679359,
+    "peak_gain": 5.302579650028584,
+    "shift_real_part": 0.02
+  },
+  {
+    "peak_frequency": 1.9959919839679359,
+    "peak_gain": 1.9489748497851267,
+    "shift_real_part": 0.12
+  },
+  {
+    "peak_frequency": 1.9959919839679359,
+    "peak_gain": 0.7106628323884963,
+    "shift_real_part": 0.35
+  }
+]

@@ -8,8 +8,7 @@
 /// error shrinks like \f$\sqrt{2/\text{probes}}\f$. `F` can be any factorization of \f$A\f$. Here
 /// it is the sparse one, which also gives the exact diagonal below with one solve per entry.
 #include <cmath>
-#include <iomanip>
-#include <iostream>
+#include <io/json.hpp>
 #include <numerics.hpp>
 
 using namespace num;
@@ -46,7 +45,7 @@ int main() {
         unit[i] = 0.0;
     }
 
-    std::cout << "n = " << n << "\n" << std::fixed;
+    io::json results = io::json::array();
     for (idx probes : {50, 200, 800}) {
         const vec<real> estimate = inverse_diagonal(F, A, {}, {.probes = probes, .seed = 7});
         real mean = 0.0, worst = 0.0;
@@ -55,8 +54,9 @@ int main() {
             mean += relative / static_cast<real>(n);
             worst = std::max(worst, relative);
         }
-        std::cout << std::setw(4) << probes << " probes: " << std::setprecision(3)
-                  << "mean relative error " << mean << ", worst " << worst
-                  << ", sqrt(2/probes) = " << std::sqrt(2.0 / static_cast<real>(probes)) << "\n";
+        results.push_back({{"probes", probes}, {"mean_relative_error", mean},
+                           {"worst_relative_error", worst},
+                           {"expected_scale", std::sqrt(2.0 / static_cast<real>(probes))}});
     }
+    io::write_json({{"size", n}, {"results", results}}, "result.json");
 }

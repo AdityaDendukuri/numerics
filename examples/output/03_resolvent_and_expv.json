@@ -1,0 +1,36 @@
+{
+  "batch_size": 64,
+  "evolution": [
+    {
+      "mean_state": 0.44097046492100134,
+      "time": 0.5,
+      "total_probability": 0.9999999999999999
+    },
+    {
+      "mean_state": 0.8057999690775138,
+      "time": 1.0,
+      "total_probability": 0.9999999999999999
+    },
+    {
+      "mean_state": 1.4264146636669612,
+      "time": 2.0,
+      "total_probability": 0.9999999999999999
+    },
+    {
+      "mean_state": 2.968142092726155,
+      "time": 5.0,
+      "total_probability": 0.9999999999999999
+    },
+    {
+      "mean_state": 5.213886755577789,
+      "time": 10.0,
+      "total_probability": 1.0
+    }
+  ],
+  "last_shift_magnitude": 0.06284396865166768,
+  "shift_residual": 5.706159226861506e-17,
+  "shift_solution_0": [
+    0.23376918408008404,
+    -0.26651289612752316
+  ]
+}

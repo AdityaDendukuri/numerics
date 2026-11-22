@@ -1,0 +1,26 @@
+{
+  "rk4": {
+    "energy_error": -1.3871335457438239e-05,
+    "position": 0.48703588224934546,
+    "position_error": 0.00015179275766041833,
+    "steps": 2001
+  },
+  "rk45": {
+    "energy_error": -1.974661095749397e-07,
+    "position": 0.4871876041294068,
+    "position_error": 7.087759906765356e-08,
+    "steps": 2631
+  },
+  "verlet": {
+    "energy_error": -0.0008604245351273576,
+    "position": 0.5582655030590732,
+    "position_error": 0.0710778280520673,
+    "steps": 2001
+  },
+  "yoshida4": {
+    "energy_error": -2.9267364665686024e-06,
+    "position": 0.4860300688916958,
+    "position_error": 0.0011576061153100725,
+    "steps": 2001
+  }
+}

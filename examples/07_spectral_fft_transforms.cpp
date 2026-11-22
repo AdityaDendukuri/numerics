@@ -7,7 +7,7 @@
 /// FFTW when it is present, then the SIMD path, then the portable one, and each call can name one
 /// explicitly.
 #include <cmath>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numbers>
 #include <numerics.hpp>
 #include <string_view>
@@ -18,7 +18,7 @@ using namespace num::spectral;
 
 int main(int argc, char **argv) {
     const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
-    std::printf("FFTW available %d, SIMD path available %d\n", has_fftw, has_fft_simd);
+    io::json results = {{"fftw_available", has_fftw}, {"simd_available", has_fft_simd}};
 
     // A signal with components at frequencies 3 and 7.
     constexpr idx n = 64;
@@ -30,12 +30,12 @@ int main(int argc, char **argv) {
 
     vec<cplx> spectrum((n / 2) + 1); // rfft writes the n/2 + 1 non-negative frequencies
     rfft(signal, spectrum);
-    std::printf("rfft: %zu bins; amplitudes 2|X(k)|/n above 0.01:\n",
-                static_cast<std::size_t>(spectrum.size()));
+    results["frequency_bins"] = spectrum.size();
+    results["peaks"] = io::json::array();
     for (idx k = 0; k < spectrum.size(); ++k) {
         const real amplitude = 2.0 * std::abs(spectrum[k]) / n;
         if (amplitude > 0.01) {
-            std::printf("  k = %2zu  amplitude %.4f\n", static_cast<std::size_t>(k), amplitude);
+            results["peaks"].push_back({{"frequency", k}, {"amplitude", amplitude}});
         }
     }
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     for (idx i = 0; i < n; ++i) {
         error = std::max(error, std::abs((back[i] / n) - signal[i]));
     }
-    std::printf("irfft(rfft(x)) / n - x: %.1e\n", error);
+    results["real_round_trip_error"] = error;
 
     // Complex round trip, through the portable backend by name.
     vec<cplx> z(n), Z(n), z_back(n);
@@ -58,7 +58,8 @@ int main(int argc, char **argv) {
     for (idx i = 0; i < n; ++i) {
         error = std::max(error, std::abs((z_back[i] / static_cast<real>(n)) - z[i]));
     }
-    std::printf("ifft(fft(z)) / n - z:   %.1e\n", error);
+    results["complex_round_trip_error"] = error;
+    io::write_json(results, "result.json");
 
     if (plot) {
         std::vector<double> k, magnitude;
@@ -68,6 +69,6 @@ int main(int argc, char **argv) {
         }
         plt::plot(k, magnitude, "|X(k)|", "linespoints");
         plt::title("07 Spectrum");
-        plt::show();
+        plt::savefig("plot.png");
     }
 }

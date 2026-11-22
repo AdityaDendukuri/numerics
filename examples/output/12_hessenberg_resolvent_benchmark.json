@@ -1,0 +1,34 @@
+[
+  {
+    "hessenberg_ms": 3.474,
+    "max_difference": 0.0,
+    "naive_ms": 33.329084,
+    "shifts": 100,
+    "size": 50,
+    "speedup": 9.593864133563615
+  },
+  {
+    "hessenberg_ms": 9.383708,
+    "max_difference": 0.0,
+    "naive_ms": 188.5595,
+    "shifts": 100,
+    "size": 100,
+    "speedup": 20.094348630626616
+  },
+  {
+    "hessenberg_ms": 37.169459,
+    "max_difference": 0.0,
+    "naive_ms": 1278.664042,
+    "shifts": 100,
+    "size": 200,
+    "speedup": 34.400932281527155
+  },
+  {
+    "hessenberg_ms": 197.811667,
+    "max_difference": 0.0,
+    "naive_ms": 9548.066625,
+    "shifts": 100,
+    "size": 400,
+    "speedup": 48.268470559929106
+  }
+]

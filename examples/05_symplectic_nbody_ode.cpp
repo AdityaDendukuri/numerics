@@ -5,7 +5,7 @@
 /// a(q), and because they are symplectic their energy error stays bounded over long times instead
 /// of drifting. The oscillator q'' = -q has energy (q^2 + v^2)/2 = 1/2 and solution q(t) = cos t.
 #include <cmath>
-#include <cstdio>
+#include <io/json.hpp>
 #include <numerics.hpp>
 #include <string_view>
 #include <vector>
@@ -23,29 +23,27 @@ int main(int argc, char **argv) {
     };
     const auto acceleration = [](const vec<real> &q, vec<real> &a) { a[0] = -q[0]; };
 
-    std::printf("t = %.0f, step 0.1           q(t)        error      energy error  steps\n", tf);
     const ode_params fixed{.t0 = 0.0, .tf = tf, .h = 0.1};
     const ode_result rk4 = ode_rk4(rhs, vec<real>{1.0, 0.0}, fixed);
-    std::printf("rk4                    %12.8f  %10.2e  %12.2e  %5zu\n", rk4.u[0],
-                std::abs(rk4.u[0] - std::cos(tf)), energy(rk4.u[0], rk4.u[1]) - 0.5,
-                static_cast<std::size_t>(rk4.steps));
 
     const ode_result rk45 = ode_rk45(rhs, vec<real>{1.0, 0.0},
                                      {.t0 = 0.0, .tf = tf, .h = 0.1, .rtol = 1e-8, .atol = 1e-10});
-    std::printf("rk45 (rtol 1e-8)       %12.8f  %10.2e  %12.2e  %5zu\n", rk45.u[0],
-                std::abs(rk45.u[0] - std::cos(tf)), energy(rk45.u[0], rk45.u[1]) - 0.5,
-                static_cast<std::size_t>(rk45.steps));
 
     const symplectic_result verlet = ode_verlet(acceleration, vec<real>{1.0}, vec<real>{0.0}, fixed);
-    std::printf("verlet                 %12.8f  %10.2e  %12.2e  %5zu\n", verlet.q[0],
-                std::abs(verlet.q[0] - std::cos(tf)), energy(verlet.q[0], verlet.v[0]) - 0.5,
-                static_cast<std::size_t>(verlet.steps));
 
     const symplectic_result yoshida =
         ode_yoshida4(acceleration, vec<real>{1.0}, vec<real>{0.0}, fixed);
-    std::printf("yoshida4               %12.8f  %10.2e  %12.2e  %5zu\n", yoshida.q[0],
-                std::abs(yoshida.q[0] - std::cos(tf)), energy(yoshida.q[0], yoshida.v[0]) - 0.5,
-                static_cast<std::size_t>(yoshida.steps));
+
+    io::write_json({
+        {"rk4", {{"position", rk4.u[0]}, {"position_error", std::abs(rk4.u[0] - std::cos(tf))},
+                 {"energy_error", energy(rk4.u[0], rk4.u[1]) - 0.5}, {"steps", rk4.steps}}},
+        {"rk45", {{"position", rk45.u[0]}, {"position_error", std::abs(rk45.u[0] - std::cos(tf))},
+                  {"energy_error", energy(rk45.u[0], rk45.u[1]) - 0.5}, {"steps", rk45.steps}}},
+        {"verlet", {{"position", verlet.q[0]}, {"position_error", std::abs(verlet.q[0] - std::cos(tf))},
+                    {"energy_error", energy(verlet.q[0], verlet.v[0]) - 0.5}, {"steps", verlet.steps}}},
+        {"yoshida4", {{"position", yoshida.q[0]}, {"position_error", std::abs(yoshida.q[0] - std::cos(tf))},
+                      {"energy_error", energy(yoshida.q[0], yoshida.v[0]) - 0.5}, {"steps", yoshida.steps}}}
+    }, "result.json");
 
     if (plot) {
         std::vector<double> t, q, v;
@@ -59,6 +57,6 @@ int main(int argc, char **argv) {
         plt::plot(t, v, "v(t)", "lines");
         plt::title("05 Yoshida 4th-order oscillator");
         plt::legend();
-        plt::show();
+        plt::savefig("plot.png");
     }
 }

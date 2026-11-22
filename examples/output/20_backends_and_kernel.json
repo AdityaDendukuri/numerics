@@ -1,0 +1,36 @@
+{
+  "backends": {
+    "blas": true,
+    "lapack": true,
+    "lapack_default": false,
+    "openmp": true,
+    "simd": true
+  },
+  "cg": {
+    "converged": true,
+    "iterations": 500,
+    "midpoint": 125250.0
+  },
+  "cholesky_solution": [
+    0.2891566265060241,
+    0.18072289156626506,
+    0.5180722891566265
+  ],
+  "determinant": {
+    "kernel": 6.134120077960333e+60,
+    "lapack": 6.134120077960375e+60
+  },
+  "dot": {
+    "blas": 0.40354505080354675,
+    "default": 0.40354505080354675,
+    "openmp": 0.403545050803553,
+    "sequential": 0.403545050803553
+  },
+  "kernel_dot": 14.0,
+  "kernel_matvec": [
+    5.0,
+    15.0,
+    19.0
+  ],
+  "lapack_threshold": 768
+}

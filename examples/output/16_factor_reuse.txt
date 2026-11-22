@@ -1,2 +1,0 @@
-corrected LU reused 1, max error 3.55e-15
-block LU reused 3 prefix blocks, refactored 2 suffix blocks, max error 1.78e-15

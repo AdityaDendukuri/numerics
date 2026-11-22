@@ -743,7 +743,9 @@ def render_examples():
     directory = OUT / "examples"
     directory.mkdir(parents=True, exist_ok=True)
     rows = ["# Examples", "", "Complete programs from `examples/`, built with "
-            "`-DNUMERICS_BUILD_EXAMPLES=ON`.", "", "| program | summary |", "| :--- | :--- |"]
+            "`-DNUMERICS_BUILD_EXAMPLES=ON`. Most save `result.json`; plotting examples "
+            "save `plot.png` with `--plot`. The plot demo saves it directly.", "",
+            "| program | summary |", "| :--- | :--- |"]
     for source in sorted(EXAMPLES.glob("*.cpp")):
         text = source.read_text(errors="replace")
         head = re.match(r"(\s*///[^\n]*\n)+", text)
@@ -753,8 +755,16 @@ def render_examples():
         rows.append(f"| [`{source.name}`]({source.stem}.md) | {table_cell(brief)} |")
         body = text[head.end():] if head else text
         recorded = EXAMPLES / "output" / f"{source.stem}.txt"
-        output = (f"\nPossible output:\n\n```text\n{recorded.read_text().rstrip()}\n```\n"
-                  if recorded.exists() else "")
+        saved = EXAMPLES / "output" / f"{source.stem}.json"
+        if saved.exists():
+            output = f"\nSaved result:\n\n```json\n{saved.read_text().rstrip()}\n```\n"
+        elif recorded.exists():
+            output = f"\nOutput:\n\n```text\n{recorded.read_text().rstrip()}\n```\n"
+        else:
+            output = ""
+        plot = ROOT / "docs" / "assets" / "examples" / f"{source.stem}.png"
+        if plot.exists():
+            output += f"\n![{source.stem} plot](../../assets/examples/{source.stem}.png)\n"
         (directory / f"{source.stem}.md").write_text(
             f"# {source.name}\n\n{brief}\n\n{details}```cpp\n{body.strip()}\n```\n{output}")
     (directory / "index.md").write_text("\n".join(rows) + "\n")
