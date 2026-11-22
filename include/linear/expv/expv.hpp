@@ -30,9 +30,7 @@
 
 namespace num {
 
-namespace detail {
-mat<real> dense_expm_pade6(const mat<real> &A);
-}
+mat<real> expm(mat<real> A);
 
 /// @brief Compute \f$\exp(tA)v\f$ for any \f$y=A x\f$ adapter.
 template <class Op>
@@ -88,7 +86,7 @@ requires linear_operator<Op, vec<real>, vec<real>> vec<real> expv(real t, const 
         }
     }
 
-    mat<real> E = detail::dense_expm_pade6(projected);
+    mat<real> E = expm(projected);
 
     vec<real> result(n, 0.0);
     for (int j = 0; j < m_actual; j++) {
@@ -102,78 +100,112 @@ vec<real> expv(real t, const spmat &A, const vec<real> &v, int m_max = 30, real 
 
 namespace detail {
 
-inline mat<real> dense_expm_pade6(const mat<real> &A) {
-    const idx m = A.rows();
-
-    static constexpr double c[7] = {1.0,         0.5,           5.0 / 44.0,    1.0 / 66.0,
-                                    1.0 / 792.0, 1.0 / 15840.0, 1.0 / 665280.0};
-
-    double norm_inf = 0.0;
-    for (idx i = 0; i < m; i++) {
-        double row_sum = 0.0;
-        for (idx j = 0; j < m; j++) {
-            row_sum += std::abs(A(i, j));
+/// Parlett-Reinsch balancing: A <- D^-1 A D with D a diagonal of powers of 2. Returns D.
+inline std::vector<real> balance(mat<real> &A) {
+    const idx n = A.rows();
+    std::vector<real> d(n, 1.0);
+    bool converged = false;
+    while (!converged) {
+        converged = true;
+        for (idx i = 0; i < n; ++i) {
+            real c = 0;
+            real r = 0;
+            for (idx j = 0; j < n; ++j) {
+                if (j != i) {
+                    c += std::abs(A(j, i));
+                    r += std::abs(A(i, j));
+                }
+            }
+            if (c == 0 || r == 0) {
+                continue;
+            }
+            real f = 1;
+            const real s = c + r;
+            while (c < r / 2) {
+                f *= 2;
+                c *= 4;
+            }
+            while (c > r * 2) {
+                f /= 2;
+                c /= 4;
+            }
+            if ((c + r) / f < 0.95 * s) {
+                converged = false;
+                d[i] *= f;
+                for (idx j = 0; j < n; ++j) {
+                    A(i, j) /= f;
+                    A(j, i) *= f;
+                }
+            }
         }
-        norm_inf = num::max(norm_inf, row_sum);
     }
+    return d;
+}
 
-    int s = 0;
-    if (norm_inf > 0.5) {
-        s = (int)std::max(0.0, std::ceil(std::log2(norm_inf / 0.5)));
-    }
+} // namespace detail
 
-    double scale = std::ldexp(1.0, -s);
-    mat<real> as(m, m, 0.0);
-    // A_s <- 2^{-s} A.
-    kernel::scale_copy_strided(as.data(), 1, A.data(), 1, scale, m * m);
-
-    mat<real> B(m, m, 0.0);
-    matmul(as, as, B);
-
-    mat<real> B2(m, m, 0.0);
-    matmul(B, B, B2);
-
-    mat<real> B3(m, m, 0.0);
-    matmul(B2, B, B3);
-
-    mat<real> v_mat(m, m, 0.0);
-    for (idx i = 0; i < m; i++) {
-        for (idx j = 0; j < m; j++) {
-            v_mat(i, j) = (c[6] * B3(i, j)) + (c[4] * B2(i, j)) + (c[2] * B(i, j));
+/// @brief Dense matrix exponential: balancing, then scaling and squaring with the [13/13] Pade
+/// approximant (Higham, SIMAX 26, 2005). Balancing and the larger Pade degree need fewer squarings,
+/// which keeps graded, stiff matrices (such as Krylov projections of stiff generators) accurate.
+inline mat<real> expm(mat<real> A) {
+    const idx n = A.rows();
+    const std::vector<real> d = detail::balance(A);
+    real norm1 = 0;
+    for (idx j = 0; j < n; ++j) {
+        real s = 0;
+        for (idx i = 0; i < n; ++i) {
+            s += std::abs(A(i, j));
         }
-        v_mat(i, i) += c[0];
+        norm1 = num::max(norm1, s);
     }
-
-    mat<real> W(m, m, 0.0);
-    for (idx i = 0; i < m; i++) {
-        for (idx j = 0; j < m; j++) {
-            W(i, j) = (c[5] * B2(i, j)) + (c[3] * B(i, j));
+    constexpr real theta13 = 5.371920351148152;
+    const int s = norm1 > theta13 ? static_cast<int>(std::ceil(std::log2(norm1 / theta13))) : 0;
+    kernel::scale(A.data(), std::ldexp(1.0, -s), n * n);
+    static constexpr real b[14] = {64764752532480000.0, 32382376266240000.0, 7771770303897600.0,
+                                   1187353796428800.0,  129060195264000.0,   10559470521600.0,
+                                   670442572800.0,      33522128640.0,       1323241920.0,
+                                   40840800.0,          960960.0,            16380.0,
+                                   182.0,               1.0};
+    auto mul = [n](const mat<real> &X, const mat<real> &Y) {
+        mat<real> Z(n, n, 0.0);
+        matmul(X, Y, Z);
+        return Z;
+    };
+    const mat<real> A2 = mul(A, A), A4 = mul(A2, A2), A6 = mul(A4, A2);
+    mat<real> T1(n, n, 0.0), T2(n, n, 0.0);
+    for (idx k = 0; k < n * n; ++k) {
+        T1.data()[k] = b[13] * A6.data()[k] + b[11] * A4.data()[k] + b[9] * A2.data()[k];
+        T2.data()[k] = b[12] * A6.data()[k] + b[10] * A4.data()[k] + b[8] * A2.data()[k];
+    }
+    const mat<real> W1 = mul(A6, T1), W2 = mul(A6, T2);
+    mat<real> U0(n, n, 0.0), V(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            const real id = i == j ? 1.0 : 0.0;
+            U0(i, j) = W1(i, j) + b[7] * A6(i, j) + b[5] * A4(i, j) + b[3] * A2(i, j) + b[1] * id;
+            V(i, j) = W2(i, j) + b[6] * A6(i, j) + b[4] * A4(i, j) + b[2] * A2(i, j) + b[0] * id;
         }
-        W(i, i) += c[1];
     }
-
-    mat<real> U(m, m, 0.0);
-    matmul(as, W, U);
-
-    mat<real> vp_u(m, m, 0.0);
-    mat<real> vm_u(m, m, 0.0);
-    // V_plus <- V + U, V_minus <- V - U.
-    kernel::axpbyz(vp_u.data(), v_mat.data(), U.data(), real(1), real(1), m * m);
-    kernel::axpbyz(vm_u.data(), v_mat.data(), U.data(), real(1), real(-1), m * m);
-
-    // vm_u is constructed m-by-m.
-    lu_result<real> fac = lu(vm_u);
-    mat<real> E(m, m, 0.0);
-    solve(fac, vp_u, E);
-
-    for (int i = 0; i < s; i++) {
-        mat<real> E2(m, m, 0.0);
-        matmul(E, E, E2);
-        E = std::move(E2);
+    const mat<real> U = mul(A, U0);
+    mat<real> P(n, n, 0.0), Q(n, n, 0.0);
+    for (idx k = 0; k < n * n; ++k) {
+        P.data()[k] = V.data()[k] + U.data()[k];
+        Q.data()[k] = V.data()[k] - U.data()[k];
     }
-
+    mat<real> E(n, n, 0.0);
+    solve(lu(Q), P, E);
+    for (int k = 0; k < s; ++k) {
+        E = mul(E, E);
+    }
+    for (idx i = 0; i < n; ++i) {  // undo balancing: exp(A) = D exp(D^-1 A D) D^-1
+        for (idx j = 0; j < n; ++j) {
+            E(i, j) *= d[i] / d[j];
+        }
+    }
     return E;
 }
+
+namespace detail {
 
 struct krylov_step {
     vec<real> value;
@@ -229,7 +261,7 @@ projected_expv(real t, const Op &A, const vec<real> &v, int dimension) {
     for (int i = 0; i < projected_size; ++i)
         for (int j = 0; j < projected_size; ++j)
             projected(i, j) = t * H(i, j);
-    mat<real> exponential = dense_expm_pade6(projected);
+    mat<real> exponential = expm(projected);
 
     vec<real> value(v.size(), 0.0);
     for (int j = 0; j < size; ++j)

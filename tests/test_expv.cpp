@@ -30,3 +30,44 @@ TEST(Expv, RestartedKrylovAgreesWithOneShotOnASmallProblem) {
     for (idx i = 0; i < reference.size(); ++i)
         EXPECT_NEAR(restarted[i], reference[i], 1e-7);
 }
+
+TEST(Expm, StiffGradedTriangularMatchesClosedForm) {
+    // exp([a b; 0 c]) = [e^a, b (e^a - e^c)/(a - c); 0, e^c], with widely separated scales
+    const real a = -2000.0, b = 1e3, c = -1e-3;
+    mat<real> A(2, 2, 0.0);
+    A(0, 0) = a;
+    A(0, 1) = b;
+    A(1, 1) = c;
+    const mat<real> E = expm(A);
+    const real e01 = b * (std::exp(a) - std::exp(c)) / (a - c);
+    EXPECT_NEAR(E(1, 1), std::exp(c), 1e-13);
+    EXPECT_NEAR(E(0, 1) / e01, 1.0, 1e-13);
+    EXPECT_NEAR(E(1, 0), 0.0, 1e-300);
+}
+
+TEST(Expm, RotatedDiagonalMatchesEigendecomposition) {
+    // A = Q diag(-30, -1, 0.5) Q^T with a fixed rotation Q
+    const real ct = std::cos(0.7), st = std::sin(0.7);
+    mat<real> Q(3, 3, 0.0);
+    Q(0, 0) = ct;
+    Q(0, 1) = -st;
+    Q(1, 0) = st;
+    Q(1, 1) = ct;
+    Q(2, 2) = 1.0;
+    const real lam[3] = {-30.0, -1.0, 0.5};
+    mat<real> A(3, 3, 0.0), expected(3, 3, 0.0);
+    for (idx i = 0; i < 3; ++i) {
+        for (idx j = 0; j < 3; ++j) {
+            for (idx k = 0; k < 3; ++k) {
+                A(i, j) += Q(i, k) * lam[k] * Q(j, k);
+                expected(i, j) += Q(i, k) * std::exp(lam[k]) * Q(j, k);
+            }
+        }
+    }
+    const mat<real> E = expm(A);
+    for (idx i = 0; i < 3; ++i) {
+        for (idx j = 0; j < 3; ++j) {
+            EXPECT_NEAR(E(i, j), expected(i, j), 1e-14);
+        }
+    }
+}
