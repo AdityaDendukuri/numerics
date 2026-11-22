@@ -1,5 +1,5 @@
 /// @file solvers.hpp
-/// @brief Umbrella include for all linear solvers
+/// @brief All linear solvers.
 #pragma once
 
 #include "linear/solvers/auto_linear.hpp"

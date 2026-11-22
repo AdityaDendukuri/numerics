@@ -1,5 +1,5 @@
 /// @file linear/graph/randommat/types.hpp
-/// @brief Core types and factor representations for Randomized Numerical Linear Algebra (RandNLA).
+/// @brief The graphs and factors that approximate Cholesky works with.
 #pragma once
 
 #include "core/types.hpp"

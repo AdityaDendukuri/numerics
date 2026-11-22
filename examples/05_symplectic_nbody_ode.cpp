@@ -1,9 +1,9 @@
 /// @file 05_symplectic_nbody_ode.cpp
 /// @brief Explicit, adaptive and symplectic integrators on the harmonic oscillator.
 ///
-/// `ode_rk4` and `ode_rk45` integrate y' = f(t, y). `ode_verlet` and `ode_yoshida4` integrate q'' =
-/// a(q), and because they are symplectic their energy error stays bounded over long times instead
-/// of drifting. The oscillator q'' = -q has energy (q^2 + v^2)/2 = 1/2 and solution q(t) = cos t.
+/// `ode_rk4` and `ode_rk45` integrate y' = f(t, y). `ode_verlet` and `ode_yoshida4` integrate
+/// q'' = a(q). They are symplectic, so their energy error stays bounded instead of drifting.
+/// The oscillator q'' = -q starts at q = 1, v = 0, so its energy is 1/2 and q(t) = cos t.
 #include <cmath>
 #include <cstdio>
 #include <numerics.hpp>

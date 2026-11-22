@@ -1,5 +1,5 @@
 /// @file linear/graph/randommat/randommat.hpp
-/// @brief Umbrella header for Randomized Numerical Linear Algebra (RandNLA / randommat).
+/// @brief Approximate Cholesky for graph Laplacians, in one include.
 #pragma once
 
 #include "linear/graph/randommat/approxchol.hpp"

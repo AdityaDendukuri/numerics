@@ -50,27 +50,11 @@ klu_factorization::klu_factorization(const spmat &matrix) : impl_(std::make_uniq
 
     impl_->n = matrix.n_rows();
     const int n = static_cast<int>(impl_->n);
-    impl_->column_ptr.assign(n + 1, 0);
-    for (idx row = 0; row < matrix.n_rows(); ++row) {
-        for (idx entry = matrix.row_ptr()[row]; entry < matrix.row_ptr()[row + 1]; ++entry) {
-            ++impl_->column_ptr[matrix.col_idx()[entry] + 1];
-        }
-    }
-    for (int column = 0; column < n; ++column) {
-        impl_->column_ptr[column + 1] += impl_->column_ptr[column];
-    }
-
-    impl_->row_index.resize(matrix.nnz());
-    impl_->values.resize(matrix.nnz());
-    array<int> next = impl_->column_ptr;
-    for (idx row = 0; row < matrix.n_rows(); ++row) {
-        for (idx entry = matrix.row_ptr()[row]; entry < matrix.row_ptr()[row + 1]; ++entry) {
-            const auto column = static_cast<int>(matrix.col_idx()[entry]);
-            const int destination = next[column]++;
-            impl_->row_index[destination] = static_cast<int>(row);
-            impl_->values[destination] = matrix.values()[entry];
-        }
-    }
+    // The CSR arrays of A^T are A's compressed columns, with row indices sorted.
+    const spmat columns = transpose(matrix);
+    impl_->column_ptr.assign(columns.row_ptr(), columns.row_ptr() + n + 1);
+    impl_->row_index.assign(columns.col_idx(), columns.col_idx() + columns.nnz());
+    impl_->values.assign(columns.values(), columns.values() + columns.nnz());
 
     klu_defaults(&impl_->common);
     impl_->symbolic =

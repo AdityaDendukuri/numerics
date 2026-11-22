@@ -68,7 +68,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         res_cg.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
             vec<real> x(n, 0.0);
-            auto res = cg(spd_op, b, x, {.tolerance = 1e-15, .max_iterations = k});
+            auto res = cg(spd_op, b, x, {.tolerance = {.rtol = 1e-15}, .max_iterations = k});
             iters_cg.push_back(static_cast<double>(k));
             res_cg.push_back(std::max(1e-16, res.residual / b_norm));
             if (res.residual / b_norm < 1e-15) break;
@@ -96,7 +96,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         res_gmres.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
             vec<real> x(n, 0.0);
-            auto res = gmres(dense_op, b, x, {.tolerance = 1e-15, .max_iterations = k, .restart = 30});
+            auto res = gmres(dense_op, b, x, {.tolerance = {.rtol = 1e-15}, .max_iterations = k, .restart = 30});
             iters_gmres.push_back(static_cast<double>(k));
             res_gmres.push_back(std::max(1e-16, res.residual / b_norm));
             if (res.residual / b_norm < 1e-15) break;
@@ -110,7 +110,7 @@ void generate_iterative_convergence_plot(const std::string &out_dir) {
         res_minres.push_back(1.0);
         for (idx k = 1; k <= max_iters; ++k) {
             vec<real> x(n, 0.0);
-            auto res = minres(spd_op, b, x, {.tolerance = 1e-15, .max_iterations = k});
+            auto res = minres(spd_op, b, x, {.tolerance = {.rtol = 1e-15}, .max_iterations = k});
             iters_minres.push_back(static_cast<double>(k));
             res_minres.push_back(std::max(1e-16, res.residual / b_norm));
             if (res.residual / b_norm < 1e-15) break;
@@ -214,7 +214,7 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
 
         // MINRES
         vec<real> x_m(n, 0.0);
-        auto res_m = minres(spd_op, b, x_m, {.tolerance = 1e-15, .max_iterations = k});
+        auto res_m = minres(spd_op, b, x_m, {.tolerance = {.rtol = 1e-15}, .max_iterations = k});
         vec<real> e_m(n, 0.0);
         for (idx i = 0; i < n; ++i) e_m[i] = x_m[i] - x_star[i];
         err_minres.push_back(std::max(1e-16, norm(e_m)));
@@ -222,7 +222,7 @@ void generate_cg_vs_minres_plot(const std::string &out_dir) {
 
         // CG
         vec<real> x_c(n, 0.0);
-        auto res_c = cg(spd_op, b, x_c, {.tolerance = 1e-15, .max_iterations = k});
+        auto res_c = cg(spd_op, b, x_c, {.tolerance = {.rtol = 1e-15}, .max_iterations = k});
         vec<real> e_c(n, 0.0);
         for (idx i = 0; i < n; ++i) e_c[i] = x_c[i] - x_star[i];
         err_cg.push_back(std::max(1e-16, norm(e_c)));
@@ -268,7 +268,7 @@ void generate_talbot_convergence_plot(const std::string &out_dir) {
 
     for (idx M : node_counts) {
         std::vector<cplx> density(N, cplx(0.0, 0.0));
-        for (const auto &[shift, weight] : talbot_contour(t, M)) {
+        for (const auto &[shift, weight] : real_talbot_contour(t, M)) {
             auto sol = solve(num::shift(solver, shift), p0);
             for (idx i = 0; i < N; ++i) density[i] += weight * sol[i];
         }

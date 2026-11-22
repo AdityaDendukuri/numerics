@@ -1,6 +1,6 @@
 # All containers
 
-Grouped by what each does. Types own their storage and are over-aligned; the free functions write into caller-provided destinations.
+Types own over-aligned storage. Free functions write into an output the caller passes in.
 
 ## Scalars and vocabulary <core/types.hpp>
 num::real num::idx num::cplx num::array num::static_array num::view num::unordered_map num::map num::unordered_set num::set num::append num::scalar_fn num::vector_fn num::to_idx

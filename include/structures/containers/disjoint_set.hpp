@@ -1,5 +1,5 @@
 /// @file structures/containers/disjoint_set.hpp
-/// @brief High-performance Disjoint-Set (Union-Find) with path compression and union by rank.
+/// @brief Union-find with path compression and union by rank.
 #pragma once
 
 #include "core/types.hpp"

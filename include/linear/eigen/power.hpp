@@ -1,5 +1,5 @@
 /// @file linear/eigen/power.hpp
-/// @brief Power iteration, inverse iteration, Rayleigh quotient iteration
+/// @brief Power iteration, inverse iteration and Rayleigh quotient iteration.
 ///
 /// Every matvec/dot/axpy/norm call inside these iterations goes through the
 /// untagged `num::matvec`/`num::dot`/... entry points, which resolve to
@@ -50,7 +50,7 @@ inline real normalise(vec<real> &v) {
 /// @brief Power iteration  -- finds the eigenvalue largest in absolute value.
 ///
 /// @param A        Square matrix (need not be symmetric)
-/// @param tol      Tolerance on eigenvalue change between iterations
+/// @param tol      Tolerance on eigenvalue change relative to \f$|\lambda|\f$
 /// @param max_iter Maximum iterations
 power_result power_iteration(const mat<real> &A, real tol = 1e-10, idx max_iter = 1000);
 
@@ -60,7 +60,7 @@ power_result power_iteration(const mat<real> &A, real tol = 1e-10, idx max_iter 
 ///
 /// @param A        Square matrix (symmetric recommended)
 /// @param sigma    Shift  -- should be near the target eigenvalue
-/// @param tol      Tolerance on eigenvalue change between iterations
+/// @param tol      Tolerance on eigenvalue change relative to \f$|\lambda|\f$
 /// @param max_iter Maximum iterations
 power_result inverse_iteration(const mat<real> &A, real sigma, real tol = 1e-10, idx max_iter = 1000);
 
@@ -70,7 +70,7 @@ power_result inverse_iteration(const mat<real> &A, real sigma, real tol = 1e-10,
 ///
 /// @param A        Symmetric matrix
 /// @param x0       Starting vector (determines which eigenvalue is found)
-/// @param tol      Tolerance on residual ||A*v - lambda*v||
+/// @param tol      Tolerance on \f$\|Av - \lambda v\|_2\f$ relative to \f$\|A\|_F\f$
 /// @param max_iter Maximum iterations
 power_result rayleigh_iteration(const mat<real> &A, const vec<real> &x0, real tol = 1e-10,
                                idx max_iter = 50);
@@ -171,6 +171,11 @@ inline power_result rayleigh_iteration(const mat<real> &A, const vec<real> &x0, 
 
     vec<real> v = x0;
     detail::normalise(v);
+    real a_norm_sq = 0;
+    for (idx i = 0; i < n * n; ++i) {
+        a_norm_sq += A.data()[i] * A.data()[i];
+    }
+    const real a_norm = std::sqrt(a_norm_sq);
 
     // Initial Rayleigh quotient
     vec<real> av(n);
@@ -208,7 +213,7 @@ inline power_result rayleigh_iteration(const mat<real> &A, const vec<real> &x0, 
         sigma = new_sigma;
         v = w;
 
-        if (res < tol) {
+        if (res <= tol * a_norm) { // relative to ||A||_F
             result.converged = true;
             break;
         }

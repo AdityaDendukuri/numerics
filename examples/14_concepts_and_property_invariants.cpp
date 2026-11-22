@@ -1,89 +1,67 @@
 /// @file 14_concepts_and_property_invariants.cpp
-/// @brief Demonstrates C++20 linear algebra concepts, compile-time invariant tagging (assume_spd), and loud warnings on untagged storage.
-#include <iomanip>
-#include <iostream>
+/// @brief The SPD law, how to attach it, and what happens without it.
+///
+/// `cholesky(A)` does not compile unless A carries the SPD law. `assume_spd(A)` attaches the
+/// law and, at the active diagnostic level, tests it on a few random vectors. `make_spd(A)`
+/// checks it fully and throws if it fails. `unsafe::cholesky(A)` skips the requirement, and the
+/// name makes that easy to find later.
+#include <cstdio>
+#include <exception>
 #include <numerics.hpp>
 #include <string_view>
+#include <vector>
+
+using namespace num;
+
+namespace {
+
+void print(const char *name, const vec<real> &x) {
+    std::printf("%-26s[%g, %g, %g, %g]\n", name, x[0], x[1], x[2], x[3]);
+}
+
+} // namespace
 
 int main(int argc, char **argv) {
     const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
-    using namespace num;
 
-    std::cout << "========================================================================\n";
-    std::cout << "  14: C++20 Linear Algebra Invariants & Loud Diagnostics Demonstration  \n";
-    std::cout << "========================================================================\n\n";
-
-    // 1. Construct a 4x4 Symmetric Positive-Definite (SPD) 1D Laplace mat
+    // The 1D Laplacian, which is SPD. As a plain mat it carries no law.
     mat<real> A(4, 4, 0.0);
-    A(0, 0) = 2.0; A(0, 1) = -1.0;
-    A(1, 0) = -1.0; A(1, 1) = 2.0; A(1, 2) = -1.0;
-    A(2, 1) = -1.0; A(2, 2) = 2.0; A(2, 3) = -1.0;
-    A(3, 2) = -1.0; A(3, 3) = 2.0;
-
-    vec<real> b{1.0, 2.0, 2.0, 1.0};
-
-    // 2. Untagged input does not compile; the escape hatch is explicit
-    std::cout << "--- [Case 1: Deliberate opt-out via num::unsafe::cholesky(A)] ---\n";
-    std::cout << "cholesky(assume_spd(A)) on a raw mat is a compile error: a raw matrix carries no SPD\n"
-                 "invariant, and Cholesky is undefined without one. Uncommenting the line below\n"
-                 "fails to build, rather than warning and continuing:\n\n"
-                 "    // auto bad = cholesky(assume_spd(A));  // error: static assertion failed\n\n"
-                 "To take the precondition on faith anyway, say so at the call site:\n";
-
-    auto chol_untagged = unsafe::cholesky(A); // opt-out, greppable, no verification
-    vec<real> x_untagged(4, 0.0);
-    solve(chol_untagged, b, x_untagged);
-    std::cout << "unsafe:: Solution x = [" << x_untagged[0] << ", " << x_untagged[1] << ", "
-              << x_untagged[2] << ", " << x_untagged[3] << "]\n\n";
-
-    // 3. Demonstration of Tagged Input via assume_spd(A) -> 100% Warning-Free
-    std::cout << "--- [Case 2: Tagged Invariant Input cholesky(assume_spd(A))] ---\n";
-    std::cout << "Wrapping with assume_spd(A) makes it an spd_operator and runs 100% warning-free:\n";
-
-    auto spd_matrix = assume_spd(A);
-
-    // Static concept verification at compile time:
-    static_assert(spd_operator<decltype(spd_matrix)>, "assume_spd attaches law::spd");
-    static_assert(self_adjoint_operator<decltype(spd_matrix)>, "spd implies self-adjoint");
-
-    auto chol_tagged = cholesky(spd_matrix);
-    vec<real> x_tagged(4, 0.0);
-    solve(chol_tagged, b, x_tagged);
-    std::cout << "Tagged Solution x   = [" << x_tagged[0] << ", " << x_tagged[1] << ", "
-              << x_tagged[2] << ", " << x_tagged[3] << "]\n\n";
-
-    // 4. Demonstration of Dynamic Invariant Validation via make_spd(A)
-    std::cout << "--- [Case 3: Dynamic Validation via make_spd(A)] ---\n";
-    try {
-        auto validated = make_spd(A);
-        std::cout << "make_spd(A) successfully validated positive definiteness.\n";
-    } catch (const std::exception &e) {
-        std::cout << "Validation error: " << e.what() << "\n";
+    for (idx i = 0; i < 4; ++i) {
+        A(i, i) = 2.0;
+        if (i + 1 < 4) {
+            A(i, i + 1) = A(i + 1, i) = -1.0;
+        }
     }
+    const vec<real> b{1.0, 2.0, 2.0, 1.0};
 
-    mat<real> Indefinite(2, 2, 0.0);
-    Indefinite(0, 0) = 1.0; Indefinite(0, 1) = 3.0;
-    Indefinite(1, 0) = 3.0; Indefinite(1, 1) = 1.0; // det = -8 < 0
-    std::cout << "Testing make_spd on Indefinite mat [[1, 3], [3, 1]]...\n";
+    // auto F = cholesky(A);  // does not compile: A carries no SPD law
+
+    const auto spd = assume_spd(A);
+    static_assert(spd_operator<decltype(spd)>);
+    static_assert(self_adjoint_operator<decltype(spd)>, "SPD implies self-adjoint");
+    vec<real> x;
+    solve(cholesky(spd), b, x);
+    print("cholesky(assume_spd(A))", x);
+
+    solve(cholesky(make_spd(A)), b, x);
+    print("cholesky(make_spd(A))", x);
+
+    solve(unsafe::cholesky(A), b, x);
+    print("unsafe::cholesky(A)", x);
+
+    mat<real> B(2, 2, 0.0);
+    B(0, 0) = B(1, 1) = 1.0;
+    B(0, 1) = B(1, 0) = 3.0; // eigenvalues 4 and -2
     try {
-        auto invalid = make_spd(Indefinite);
-        (void)invalid;
+        (void)make_spd(B);
     } catch (const std::exception &e) {
-        std::cout << "[Caught Expected Violation] " << e.what() << "\n\n";
+        std::printf("make_spd([[1, 3], [3, 1]]) threw: %s\n", e.what());
     }
-
-    // 5. In-Terminal Solution Visualization
-    std::vector<double> grid{0.0, 1.0, 2.0, 3.0};
-    std::vector<double> sol{x_tagged[0], x_tagged[1], x_tagged[2], x_tagged[3]};
 
     if (plot) {
-        plt::plot(grid, sol, "x_solution", "linespoints");
-        plt::title("14 Concepts & Property Invariants: 1D Poisson Solution");
-        plt::xlabel("Grid Node i");
-        plt::ylabel("Solution x_i");
+        std::vector<double> grid{0.0, 1.0, 2.0, 3.0}, values(x.data(), x.data() + 4);
+        plt::plot(grid, values, "x", "linespoints");
+        plt::title("14 Solution of the 1D Poisson problem");
         plt::show();
     }
-
-    std::cout << "\n[SUCCESS] Example 14 completed.\n";
-    return 0;
 }

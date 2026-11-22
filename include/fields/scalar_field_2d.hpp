@@ -1,5 +1,5 @@
 /// @file fields/scalar_field_2d.hpp
-/// @brief scalar field on a 2D uniform interior grid.
+/// @brief Scalar field on a 2D uniform interior grid.
 #pragma once
 
 #include "container/vector.hpp"

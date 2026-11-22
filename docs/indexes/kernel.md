@@ -1,6 +1,6 @@
 # All kernels
 
-num::kernel: the BLAS layer, raw loops over pointers, templated on the scalar, allocating nothing.
+`num::kernel` is the BLAS layer. Each function is a plain loop over pointers, templated on the scalar, and allocates nothing.
 
 ## Vector construction <kernel/vector.hpp>
 num::kernel::copy num::kernel::fill num::kernel::copy_strided num::kernel::scale_copy_strided num::kernel::swap num::kernel::swap_strided

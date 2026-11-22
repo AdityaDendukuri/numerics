@@ -1,10 +1,10 @@
 /// @file 01_direct_factorizations.cpp
-/// @brief LU, Cholesky, QR least squares and the Thomas algorithm, all solved through solve(F, b, x).
+/// @brief LU, Cholesky, QR least squares and Thomas, all solved with solve(F, b, x).
 ///
-/// Every factorization is a value, and the same free function solves with all of them. `lu(A)`
-/// pivots, while `lu(A, no_pivot)` skips the pivot search for matrices whose structure keeps the
-/// pivots nonzero. `cholesky` requires a matrix that carries the SPD law. `qr` solves least-squares
-/// problems with more rows than columns, and `thomas` solves a tridiagonal system in O(n).
+/// Every factorization is a value, and one free function solves with any of them. `lu(A)` pivots.
+/// `lu(A, no_pivot)` skips pivoting when the structure keeps the pivots nonzero. `cholesky` needs a
+/// matrix that carries the SPD law. `qr` solves least-squares problems, and `thomas` solves a
+/// tridiagonal system in O(n).
 #include <cstdio>
 #include <numerics.hpp>
 #include <string_view>
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     thomas(lower, diag, upper, b, x);
     std::printf("Thomas        x = [%g, %g, %g]\n", x[0], x[1], x[2]);
 
-    // Least squares: the line c0 + c1 t through five noisy points.
+    // Least-squares fit of the line c0 + c1 t to five noisy points.
     const real t[5] = {0.0, 1.0, 2.0, 3.0, 4.0};
     const vec<real> data{1.1, 2.9, 5.2, 7.1, 8.8};
     mat<real> V(5, 2, 0.0);

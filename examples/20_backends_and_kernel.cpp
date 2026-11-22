@@ -1,12 +1,11 @@
 /// @file 20_backends_and_kernel.cpp
-/// @brief Backend namespaces, the build's default, and the raw-pointer kernel on plain buffers.
+/// @brief Backend namespaces, the build default, and the kernel on plain buffers.
 ///
-/// Every accelerator is a namespace with the same signatures as the kernel, namely `num::seq`
-/// (portable), `num::omp`, `num::blas` and `num::lapack`. An untagged call such as `num::dot`
-/// resolves at compile time to the build's default. Factorizations choose their own default, and LU
-/// uses the kernel up to `lapack_factor_threshold` and an optimized LAPACK above it. `num::kernel`
-/// is BLAS on raw pointers, and algorithms such as `num::cholesky` and `num::cg` take raw pointers
-/// too.
+/// The backends `num::seq`, `num::omp`, `num::blas` and `num::lapack` are namespaces with the
+/// same functions. Each compiles in every build and falls back to the portable loop when its
+/// library is missing. A plain call such as `num::dot` uses the build's default. LU uses the
+/// kernel up to `lapack_factor_threshold` and LAPACK above it. `num::kernel` is BLAS on raw
+/// pointers, and `num::cholesky` and `num::cg` also have raw-pointer forms.
 #include <cmath>
 #include <cstdio>
 #include <numerics.hpp>
@@ -33,7 +32,7 @@ int main() {
     std::printf("dot, blas    : %.12f\n", blas::dot(x, y));
     std::printf("dot, omp     : %.12f\n\n", omp::dot(x, y));
 
-    // A factorization by name: the kernel and LAPACK give the same factors to rounding.
+    // A factorization by name. The kernel and LAPACK give the same factors up to rounding.
     mat<real> A(200, 200, 0.0);
     for (idx i = 0; i < 200; ++i) {
         for (idx j = 0; j < 200; ++j) {
@@ -65,7 +64,7 @@ int main() {
             Lv[i] = (2.0 * v[i]) - (i > 0 ? v[i - 1] : 0.0) - (i + 1 < k ? v[i + 1] : 0.0);
         }
     };
-    const auto result = num::cg(laplacian, u.data(), rhs.data(), k, work.data(), 1e-10, 2000);
+    const auto result = num::cg(laplacian, u.data(), rhs.data(), k, work.data(), {.rtol = 1e-10}, 2000);
     std::printf("raw CG: converged %d in %zu iterations, u[k/2] = %.4f\n", result.converged,
                 static_cast<std::size_t>(result.iterations), u[k / 2]);
 }

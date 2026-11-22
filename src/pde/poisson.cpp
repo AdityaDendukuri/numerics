@@ -56,7 +56,6 @@ static mat<real> unflatten(const array<double> &v, int N) {
 mat<real> poisson2d_fd(const mat<real> &f, int N) {
     check_n(N);
     const double h = 1.0 / (N + 1);
-    const double pi = M_PI;
 
     array<double> buf = flatten(f, N);
     const std::size_t NN = static_cast<std::size_t>(N) * static_cast<std::size_t>(N);
@@ -87,7 +86,6 @@ mat<real> poisson2d_fd(const mat<real> &f, int N) {
 
 mat<real> poisson2d(const mat<real> &f, int N) {
     check_n(N);
-    const double pi = M_PI;
     const double N1sq = static_cast<double>(N + 1) * (N + 1);
 
     array<double> buf = flatten(f, N);

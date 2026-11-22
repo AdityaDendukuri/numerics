@@ -1,12 +1,12 @@
 # Linear algebra
 
-Factorizations, solvers, eigenvalues and the SVD. Every factorization is solved by `solve(F, b, x)`, and the raw-pointer overloads work on caller-owned buffers.
+Factorizations, solvers, eigenvalues and the SVD. Every factorization is solved with `solve(F, b, x)`. The raw-pointer overloads work on your own buffers.
 
 ## The solve protocol <linear/solve.hpp>
 num::factorization num::solve_transpose
 
 ## LU <linear/factorization/lu.hpp>
-num::lu num::lu_result num::no_pivot num::no_pivot_structure num::lower num::upper num::det num::inverse num::seq::lu num::lapack::lu num::lu_factor num::lu_factor_blocked num::lu_solve num::lu_invert num::lu_no_pivot num::lu_no_pivot_solve_multiple num::lu_no_pivot_solve_transpose_multiple
+num::lu num::lu_result num::no_pivot num::no_pivot_structure num::lower num::upper num::det num::inverse num::seq::lu num::lapack::lu num::lu_factor num::lu_factor_blocked num::lu_solve num::lu_invert num::lu_no_pivot num::lu_no_pivot_solve_multiple num::lu_no_pivot_solve_transpose_multiple num::lu_diagonal_shift_derivative
 
 ## Mixed precision <linear/factorization/mixed_lu.hpp>
 num::mixed_lu num::mixed_precision num::mixed_precision_structure
@@ -36,7 +36,7 @@ num::block_lu_factor num::block_cholesky_factor num::factor_block_lu num::factor
 num::sparse num::sparse_structure num::blocks num::block_structure num::similar_factor
 
 ## Factor reuse <linear/factorization/reuse.hpp>
-num::corrected_lu num::suffix_block_lu
+num::corrected_factor num::corrected_lu num::corrected_cholesky num::suffix_block_lu num::suffix_block_cholesky
 
 ## Low-rank updates <linear/factorization/woodbury.hpp>
 num::woodbury_solver num::low_rank_difference num::low_rank_update num::update_inverse_rows num::inverse_rows_workspace
@@ -45,7 +45,7 @@ num::woodbury_solver num::low_rank_difference num::low_rank_update num::update_i
 num::inverse_diagonal num::inverse_diagonal_workspace num::inverse_principal_block num::selected_inverse num::safe_add
 
 ## Probed inverse diagonal <linear/factorization/probed_inverse_diagonal.hpp>
-num::inverse_diagonal_options
+num::inverse_diagonal_options num::ac num::ac2 num::grounded_approxchol_factor
 
 ## Conditioning <linear/condition.hpp>
 num::rcond num::inverse_norm1_estimate num::opnorm1

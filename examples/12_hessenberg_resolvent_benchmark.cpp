@@ -1,89 +1,75 @@
-/// @file examples/12_hessenberg_resolvent_benchmark.cpp
-/// @brief Benchmark comparing naive O(k*n^3) full LU batch resolvent against O(n^3 + k*n^2) Hessenberg resolvent.
+/// @file 12_hessenberg_resolvent_benchmark.cpp
+/// @brief Timing shifted solves with one Hessenberg reduction against one per shift.
+///
+/// Solving \f$(sI - A)x = b\f$ at k shifts costs \f$O(kn^3)\f$ if A is reduced to Hessenberg form
+/// at every shift, and \f$O(n^3 + kn^2)\f$ if it is reduced once. Both use the same arithmetic per
+/// shift, so the solutions agree.
 #include <chrono>
-#include <cmath>
-#include <complex>
-#include <iomanip>
-#include <iostream>
+#include <cstdio>
+#include <numerics.hpp>
 #include <random>
 #include <vector>
-#include <numerics.hpp>
+
+using namespace num;
+
+namespace {
+
+template <class Work>
+double milliseconds(Work &&work) {
+    const auto start = std::chrono::steady_clock::now();
+    work();
+    return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start)
+        .count();
+}
+
+} // namespace
 
 int main() {
-    std::cout << "========================================================================\n";
-    std::cout << "  NUMERICS RESOLVENT BENCHMARK: Naive O(k*N^3) LU vs O(N^3 + k*N^2) Hessenberg\n";
-    std::cout << "========================================================================\n\n";
-
-    const std::vector<num::idx> sizes = {50, 100, 200, 400};
-    const std::size_t num_shifts = 100;
-
     std::mt19937_64 rng(42);
-    std::uniform_real_distribution<double> dist(-1.0, 1.0);
+    std::uniform_real_distribution<double> entry(-1.0, 1.0);
 
-    // Generate 100 sample shifts along the imaginary axis (typical in transfer function & AAA sampling)
-    std::vector<num::cplx> shifts(num_shifts);
-    for (std::size_t k = 0; k < num_shifts; ++k) {
-        shifts[k] = num::cplx(0.1, static_cast<double>(k) * 0.1);
+    // 100 shifts along the line Re s = 0.1, as in a frequency sweep.
+    array<cplx> shifts;
+    for (int k = 0; k < 100; ++k) {
+        shifts.push_back(cplx(0.1, 0.1 * k));
     }
 
-    std::cout << std::left << std::setw(8) << "N"
-              << std::setw(10) << "Shifts"
-              << std::setw(18) << "Naive LU (ms)"
-              << std::setw(20) << "Hessenberg (ms)"
-              << std::setw(12) << "Speedup"
-              << std::setw(15) << "Max Diff" << "\n";
-    std::cout << std::string(80, '-') << "\n";
-
-    for (num::idx n : sizes) {
-        num::mat<num::real> A(n, n, 0.0);
-        for (num::idx i = 0; i < n; ++i) {
-            for (num::idx j = 0; j < n; ++j) {
-                A(i, j) = dist(rng);
+    std::printf("   n  shifts  reduce per shift (ms)  reduce once (ms)  speedup  max difference\n");
+    for (idx n : {50, 100, 200, 400}) {
+        mat<real> A(n, n, 0.0);
+        for (idx i = 0; i < n; ++i) {
+            for (idx j = 0; j < n; ++j) {
+                A(i, j) = entry(rng);
             }
-            A(i, i) += 5.0; // Ensure well-conditioned
+            A(i, i) += 5.0;
+        }
+        vec<real> b(n);
+        for (idx i = 0; i < n; ++i) {
+            b[i] = entry(rng);
         }
 
-        num::vec<num::real> b(n);
-        for (num::idx i = 0; i < n; ++i) {
-            b[i] = dist(rng);
-        }
+        std::vector<vec<cplx>> each(shifts.size());
+        const double each_ms = milliseconds([&] {
+            for (idx k = 0; k < shifts.size(); ++k) {
+                const hessenberg_resolvent R(A);
+                each[k] = solve(shift(R, shifts[k]), b);
+            }
+        });
 
-        // 1. Naive O(k * n^3) approach: reduce A to Hessenberg form again for every shift
-        auto t0 = std::chrono::high_resolution_clock::now();
-        std::vector<num::vec<num::cplx>> naive_sol(num_shifts);
-        for (std::size_t k = 0; k < num_shifts; ++k) {
-            num::hessenberg_resolvent naive_solver(A);
-            naive_sol[k] = num::solve(num::shift(naive_solver, shifts[k]), b);
-        }
-        auto t1 = std::chrono::high_resolution_clock::now();
-        double naive_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+        array<vec<cplx>> once;
+        const double once_ms = milliseconds([&] {
+            const hessenberg_resolvent R(A);
+            once = solve_batch(R, shifts, b);
+        });
 
-        // 2. Optimized O(n^3 + k * n^2) Hessenberg approach
-        auto t2 = std::chrono::high_resolution_clock::now();
-        num::hessenberg_resolvent hess_solver(A);
-        auto hess_sol = num::solve_batch(hess_solver, shifts, b);
-        auto t3 = std::chrono::high_resolution_clock::now();
-        double hess_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();
-
-        // Check error agreement
-        double max_diff = 0.0;
-        for (std::size_t k = 0; k < num_shifts; ++k) {
-            for (num::idx i = 0; i < n; ++i) {
-                double diff = std::abs(naive_sol[k][i] - hess_sol[k][i]);
-                if (diff > max_diff) max_diff = diff;
+        real difference = 0.0;
+        for (idx k = 0; k < shifts.size(); ++k) {
+            for (idx i = 0; i < n; ++i) {
+                difference = std::max(difference, std::abs(each[k][i] - once[k][i]));
             }
         }
-
-        double speedup = naive_ms / hess_ms;
-
-        std::cout << std::left << std::setw(8) << n
-                  << std::setw(10) << num_shifts
-                  << std::setw(18) << std::fixed << std::setprecision(2) << naive_ms
-                  << std::setw(20) << std::fixed << std::setprecision(2) << hess_ms
-                  << std::setw(12) << std::fixed << std::setprecision(1) << (std::to_string(speedup) + "x")
-                  << std::setw(15) << std::scientific << std::setprecision(2) << max_diff << "\n";
+        std::printf("%4zu  %6zu  %21.2f  %16.2f  %6.1fx  %14.1e\n", static_cast<std::size_t>(n),
+                    static_cast<std::size_t>(shifts.size()), each_ms, once_ms, each_ms / once_ms,
+                    difference);
     }
-
-    std::cout << "\n========================================================================\n";
-    return 0;
 }

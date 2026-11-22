@@ -1,9 +1,9 @@
 /// @file 10_banded_and_spd_operators.cpp
-/// @brief Band storage, banded LU with pivoting, and solves with one or many right-hand sides.
+/// @brief Band storage, banded LU with pivoting, and solves with many right-hand sides.
 ///
-/// `band_mat(n, kl, ku)` stores the kl subdiagonals and ku superdiagonals in LAPACK band
-/// layout, with room for the fill that pivoting adds. `lu(band)` factors it with partial
-/// pivoting in O(n kl (kl + ku)), and `solve` takes a vector or a matrix of right-hand sides.
+/// `band_mat(n, kl, ku)` stores kl subdiagonals and ku superdiagonals in LAPACK band layout,
+/// with room for the fill from pivoting. `lu(band)` factors it with partial pivoting in
+/// O(n kl (kl + ku)). `solve` takes one right-hand side or a matrix of them.
 #include <cmath>
 #include <cstdio>
 #include <numerics.hpp>
@@ -15,9 +15,9 @@ using namespace num;
 int main(int argc, char **argv) {
     const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
 
-    // The tridiagonal matrix T = tridiag(-1, 4, -1) with adjacent rows swapped in pairs: still
-    // well conditioned, but its large entries now sit off the diagonal, so partial pivoting
-    // swaps rows at every other step. The swap widens the band to two on each side.
+    // The tridiagonal matrix T = tridiag(-1, 4, -1) with adjacent rows swapped in pairs. It is
+    // still well conditioned, but its large entries now sit off the diagonal, so partial pivoting
+    // swaps rows at every other step. The swaps widen the band to two on each side.
     constexpr idx n = 2000, kl = 2, ku = 2;
     band_mat B(n, kl, ku, 0.0);
     mat<real> dense(n, n, 0.0);

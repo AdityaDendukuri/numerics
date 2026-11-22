@@ -41,7 +41,7 @@ TEST(Chebyshev, EstimatesTheSpectralRadiusFromAbove) {
     auto op = shifted_laplacian(n, sigma);
     // Largest eigenvalue of the shifted 1D Laplacian on n interior points.
     const num::real exact =
-        sigma + (4.0 * std::pow(std::sin(M_PI * static_cast<double>(n) / (2.0 * (n + 1))), 2));
+        sigma + (4.0 * std::pow(std::sin(num::pi * static_cast<double>(n) / (2.0 * (n + 1))), 2));
 
     const num::real estimate = num::estimate_largest_eigenvalue(op);
     EXPECT_GT(estimate, exact) << "an upper bound must not sit below the spectrum";
@@ -122,7 +122,7 @@ TEST(Chebyshev, CutsKrylovIterationsRoughlyByTheDegree) {
     num::vec<num::real> b(n, 1.0);
     num::vec<num::real> x_plain(n, 0.0);
     const auto plain =
-        num::cg(A, b, x_plain, num::cg_options{.tolerance = 1e-10, .max_iterations = 20000});
+        num::cg(A, b, x_plain, num::cg_options{.tolerance = {.rtol = 1e-10}, .max_iterations = 20000});
     ASSERT_TRUE(plain.converged);
 
     auto M = num::make_chebyshev_preconditioner(A, sigma, 4.0 + sigma, 4);

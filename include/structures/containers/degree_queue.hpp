@@ -1,5 +1,5 @@
 /// @file structures/containers/degree_queue.hpp
-/// @brief O(1) amortized bucket priority queue for minimum degree elimination in graph algorithms.
+/// @brief Bucket queue keyed by degree, for minimum-degree elimination.
 #pragma once
 
 #include "core/types.hpp"

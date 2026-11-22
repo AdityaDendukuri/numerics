@@ -1,11 +1,12 @@
 /// @file gauss_seidel.hpp
-/// @brief Gauss-Seidel iterative solver
+/// @brief Gauss-Seidel iteration.
 #pragma once
 
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
 #include "container/vector_ops.hpp"
 #include "core/policy.hpp"
+#include "kernel/kernel.hpp"
 #include "linear/solvers/solver_result.hpp"
 #include <cmath>
 #include <stdexcept>
@@ -21,26 +22,31 @@ namespace num {
 /// @param A_in     Square matrix claiming the law
 /// @param b        Right-hand side vector
 /// @param x        Solution vector (initial guess on input, solution on output)
-/// @param tol      Convergence tolerance on residual norm (default 1e-10)
+/// @param tol      Stop once \f$\|b - Ax\|_2 \le \max(\text{rtol}\|b\|_2, \text{atol})\f$
+///                 (default `{.rtol = 1e-10}`)
 /// @param max_iter Maximum iterations (default 1000)
 /// @return solver_result with convergence info
 template <class Mat = with_law<mat<real>, law::diagonally_dominant>, bool Parallel = has_omp>
 requires claims<Mat, law::diagonally_dominant> || claims<Mat, law::spd>
-inline solver_result gauss_seidel(const Mat &A_in, const vec<real> &b, vec<real> &x, real tol = 1e-10,
+inline solver_result gauss_seidel(const Mat &A_in, const vec<real> &b, vec<real> &x,
+                           num::tolerance tol = {.rtol = 1e-10},
                                  idx max_iter = 1000) {
     const auto &A = A_in.base();
-    constexpr real zero_diag_tol = 1e-15;
     idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {
         throw std::invalid_argument("Dimension mismatch in Gauss-Seidel solver");
     }
+    if (!tol.valid()) {
+        throw std::invalid_argument("gauss_seidel: invalid tolerance");
+    }
+    const real b_norm = kernel::norm(b.data(), n);
 
     solver_result result{0, 0.0, false};
 
     for (idx iter = 0; iter < max_iter; ++iter) {
         // Sequential update  -- maintain GS convergence properties
         for (idx i = 0; i < n; ++i) {
-            if (std::abs(A(i, i)) < zero_diag_tol) {
+            if (A(i, i) == real(0)) {
                 throw std::runtime_error("Zero diagonal in Gauss-Seidel at row " +
                                          std::to_string(i));
             }
@@ -79,7 +85,7 @@ inline solver_result gauss_seidel(const Mat &A_in, const vec<real> &b, vec<real>
         result.residual = std::sqrt(res);
         result.iterations = iter + 1;
 
-        if (result.residual < tol) {
+        if (tol.met(result.residual, b_norm)) {
             result.converged = true;
             break;
         }

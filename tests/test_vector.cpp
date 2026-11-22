@@ -1,3 +1,4 @@
+#include "container/reduce.hpp"
 #include "container/vector.hpp"
 #include "container/lattice_point.hpp"
 #include "container/vector_ops.hpp"
@@ -160,4 +161,21 @@ TEST(LatticePoint, ArithmeticOrderAndHash) {
     std::unordered_map<point, int> seen{{x, 1}};
     EXPECT_EQ(seen.at(point{1, -2, 3}), 1);
     EXPECT_FALSE(seen.contains(y));
+}
+
+TEST(Reduce, LinfNormPropagatesNaNAboveTheParallelThreshold) {
+    vec<real> x(1 << 20, 1.0);
+    x[(1 << 20) - 3] = num::nan;
+    EXPECT_TRUE(std::isnan(num::linf_norm(x)));
+}
+
+// Plain summation of 1, 1e100, 1, -1e100 returns 0; the compensated sum recovers 2.
+TEST(Reduce, CompensatedSumRecoversCancelledTerms) {
+    const vec<real> x{1.0, 1e100, 1.0, -1e100};
+    EXPECT_EQ(num::sum(x, num::compensated), 2.0);
+    vec<real> tenths(1000000, 0.1);
+    EXPECT_LE(num::ulp_distance(num::sum(tenths, num::compensated), 100000.0), 1u);
+    EXPECT_EQ(num::sum(vec<real>{1.0, num::inf, 1.0}, num::compensated), num::inf);
+    EXPECT_TRUE(std::isnan(num::sum(vec<real>{num::inf, -num::inf}, num::compensated)));
+    EXPECT_EQ(num::sum(vec<real>{}, num::compensated), 0.0);
 }

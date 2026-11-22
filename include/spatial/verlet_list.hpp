@@ -1,5 +1,5 @@
 /// @file verlet_list.hpp
-/// @brief Verlet neighbour list with skin-radius temporal caching
+/// @brief Verlet neighbour list, rebuilt once a particle moves half the skin distance.
 #pragma once
 
 #include "core/types.hpp"

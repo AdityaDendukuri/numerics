@@ -73,7 +73,7 @@ TEST(ODE_RK4, OrderFour) {
 }
 
 TEST(ODE_RK4, HarmonicOscillatorAccuracy) {
-    auto res = ode_rk4(harmonic_osc(), {1.0, 0.0}, {.tf = 2.0 * M_PI, .h = 0.01});
+    auto res = ode_rk4(harmonic_osc(), {1.0, 0.0}, {.tf = 2.0 * num::pi, .h = 0.01});
     EXPECT_NEAR(res.u[0], 1.0, 1e-8);
     EXPECT_NEAR(res.u[1], 0.0, 1e-8);
 }
@@ -82,7 +82,7 @@ TEST(ODE_RK4, HarmonicOscillatorAccuracy) {
 
 TEST(ODE_RK45, HarmonicOscillator) {
     auto res =
-        ode_rk45(harmonic_osc(), {1.0, 0.0}, {.tf = 2.0 * M_PI, .rtol = 1e-9, .atol = 1e-12});
+        ode_rk45(harmonic_osc(), {1.0, 0.0}, {.tf = 2.0 * num::pi, .rtol = 1e-9, .atol = 1e-12});
     EXPECT_TRUE(res.converged);
     EXPECT_NEAR(res.u[0], 1.0, 1e-7);
     EXPECT_NEAR(res.u[1], 0.0, 1e-7);
@@ -125,7 +125,7 @@ TEST(ODE_Stepper, RK45StepCount) {
 // Velocity Verlet
 
 TEST(ODE_Verlet, CircularOrbit) {
-    auto res = ode_verlet(kepler_accel(), kepler_q0(), kepler_v0(), {.tf = 2.0 * M_PI, .h = 1e-3});
+    auto res = ode_verlet(kepler_accel(), kepler_q0(), kepler_v0(), {.tf = 2.0 * num::pi, .h = 1e-3});
     EXPECT_NEAR(res.q[0], 1.0, 1e-4);
     EXPECT_NEAR(res.q[1], 0.0, 1e-4);
     EXPECT_NEAR(res.v[0], 0.0, 1e-4);
@@ -177,13 +177,13 @@ TEST(ODE_Verlet, EnergyBetterThanRK4Long) {
 
 TEST(ODE_Yoshida4, CircularOrbit) {
     auto res =
-        ode_yoshida4(kepler_accel(), kepler_q0(), kepler_v0(), {.tf = 2.0 * M_PI, .h = 0.05});
+        ode_yoshida4(kepler_accel(), kepler_q0(), kepler_v0(), {.tf = 2.0 * num::pi, .h = 0.05});
     EXPECT_NEAR(res.q[0], 1.0, 1e-4);
     EXPECT_NEAR(res.q[1], 0.0, 1e-4);
 }
 
 TEST(ODE_Yoshida4, HigherOrderThanVerlet) {
-    real T = 2.0 * M_PI;
+    real T = 2.0 * num::pi;
     auto verlet_res = ode_verlet(kepler_accel(), kepler_q0(), kepler_v0(), {.tf = T, .h = 0.1});
     auto yoshida_res = ode_yoshida4(kepler_accel(), kepler_q0(), kepler_v0(), {.tf = T, .h = 0.1});
 
@@ -210,4 +210,59 @@ TEST(ODE_Verlet, StepCount) {
         (void)s, ++count;
     }
     EXPECT_EQ(count, 10);
+}
+
+// Stiffness: classical RK4 is stable on y' = lambda y only for h|lambda| below 2.785, whatever
+// accuracy the smooth solution would allow. One step must multiply by exactly R(h lambda).
+TEST(ODE_RK4, StabilityBoundaryOnTheNegativeRealAxis) {
+    const real lambda = -1000.0;
+    auto f = [lambda](real, const vec<real> &y, vec<real> &dy) { dy[0] = lambda * y[0]; };
+    auto R = [](real z) { return 1 + z + z * z / 2 + z * z * z / 6 + z * z * z * z / 24; };
+    for (real hz : {2.7, 2.9}) {
+        const real h = hz / -lambda;
+        const auto one = ode_rk4(f, vec<real>{1.0}, {.t0 = 0.0, .tf = h, .h = h});
+        EXPECT_NEAR(one.u[0], R(-hz), 1e-14);
+        const auto many = ode_rk4(f, vec<real>{1.0}, {.t0 = 0.0, .tf = 200 * h, .h = h});
+        if (hz < 2.785) {
+            EXPECT_LT(std::abs(many.u[0]), 1e-10);
+        } else {
+            EXPECT_GT(std::abs(many.u[0]), 1e10);
+        }
+    }
+}
+
+// t += h with h = 0.1 accumulates to 0.30000000000000004 or 0.9999999999999999; the driver
+// must neither take an extra sliver step nor stop one step short.
+TEST(ODE_RK4, DoesNotTakeASliverStep) {
+    auto f = [](real, const vec<real> &y, vec<real> &dy) { dy[0] = y[0]; };
+    for (const auto &[tf, steps] : {std::pair{0.3, idx{3}}, std::pair{1.0, idx{10}}, std::pair{0.7, idx{7}}}) {
+        const auto r = ode_rk4(f, vec<real>{1.0}, {.t0 = 0.0, .tf = tf, .h = 0.1});
+        EXPECT_EQ(r.steps, steps) << "tf = " << tf;
+        EXPECT_NEAR(r.t, tf, 1e-14) << "tf = " << tf;
+        EXPECT_NEAR(r.u[0], std::exp(tf), 1e-5) << "tf = " << tf;
+    }
+}
+
+// Prothero-Robinson y' = lambda (y - cos t) - sin t with lambda = -1e4: the solution cos t is
+// smooth, but an explicit adaptive method is stability-limited and must still deliver it.
+TEST(ODE_RK45, SurvivesProtheroRobinsonStiffness) {
+    const real lambda = -1e4;
+    auto f = [lambda](real t, const vec<real> &y, vec<real> &dy) {
+        dy[0] = lambda * (y[0] - std::cos(t)) - std::sin(t);
+    };
+    const auto r = ode_rk45(f, vec<real>{1.0}, {.t0 = 0.0, .tf = 1.0, .h = 1e-3, .rtol = 1e-8, .atol = 1e-10});
+    EXPECT_TRUE(r.converged) << r;
+    EXPECT_NEAR(r.u[0], std::cos(1.0), 1e-6);
+}
+
+// The adaptive controller's error norm is a running max; dropping a NaN would accept the step
+// and report success with a NaN state.
+TEST(ODE_RK45, ReportsFailureOnANonFiniteState) {
+    auto f = [](real t, const vec<real> &y, vec<real> &dy) {
+        dy[0] = -y[0];
+        dy[1] = t > 0.5 ? num::nan : 1.0;
+    };
+    const auto r = ode_rk45(f, vec<real>{1.0, 0.0}, {.t0 = 0.0, .tf = 1.0, .h = 1e-2});
+    EXPECT_FALSE(r.converged) << r;
+    EXPECT_LT(r.t, 1.0);
 }

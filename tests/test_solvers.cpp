@@ -20,6 +20,7 @@
 #include "stats/stats.hpp"
 #include "stochastic/categorical.hpp"
 #include <cmath>
+#include <limits>
 #include <gtest/gtest.h>
 #include <random>
 
@@ -218,7 +219,7 @@ TEST(GMRES, NonSymmetric2x2Dense) {
 
     vec<real> b{5.0, 4.0};
     vec<real> x(2, 0.0);
-    const solver_result r = gmres(A, b, x, {.tolerance = 1e-12, .max_iterations = 20});
+    const solver_result r = gmres(A, b, x, {.tolerance = {.rtol = 1e-12}, .max_iterations = 20});
 
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(x[0], 1.0, 1e-8);
@@ -235,7 +236,7 @@ TEST(CG, SparseOperator) {
 
     vec<real> b{1.0, 2.0, 3.0};
     vec<real> x(3, 0.0);
-    solver_result r = cg(num::assume_spd(op), b, x, {.tolerance = 1e-10, .max_iterations = 100});
+    solver_result r = cg(num::assume_spd(op), b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 100});
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -298,7 +299,7 @@ TEST(MINRES, SymmetricIndefiniteOperator) {
     vec<real> b{2.0, -2.0, 6.0};
     vec<real> x(3, 0.0);
 
-    solver_result r = minres(num::assume_symmetric(op), b, x, {.tolerance = 1e-10, .max_iterations = 10});
+    solver_result r = minres(num::assume_symmetric(op), b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 10});
     EXPECT_TRUE(r.converged);
     EXPECT_NEAR(x[0], 1.0, 1e-8);
     EXPECT_NEAR(x[1], 2.0, 1e-8);
@@ -311,7 +312,7 @@ TEST(PDEOperators, BackwardEulerOperatorIsSPD) {
 
     vec<real> b(A.rows(), 1.0);
     vec<real> x(A.rows(), 0.0);
-    solver_result r = cg(A, b, x, {.tolerance = 1e-10, .max_iterations = 100}); // A is already an SPD-tagged operator
+    solver_result r = cg(A, b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 100}); // A is already an SPD-tagged operator
 
     EXPECT_TRUE(r.converged);
     EXPECT_LT(r.residual, 1e-10);
@@ -369,7 +370,7 @@ TEST(GaussSeidel, DiagonalDominant3x3) {
     solver_result r = gauss_seidel(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
-    EXPECT_LT(r.residual, 1e-10);
+    EXPECT_LE(r.residual, 1e-10 * num::norm(b)); // the default {.rtol = 1e-10}
     EXPECT_NEAR(x[0], 5.0 / 28.0, 1e-6);
     EXPECT_NEAR(x[1], 2.0 / 7.0, 1e-6);
     EXPECT_NEAR(x[2], 19.0 / 28.0, 1e-6);
@@ -438,7 +439,7 @@ TEST(Jacobi, DiagonalDominant3x3) {
     solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
-    EXPECT_LT(r.residual, 1e-10);
+    EXPECT_LE(r.residual, 1e-10 * num::norm(b)); // the default {.rtol = 1e-10}
     EXPECT_NEAR(x[0], 5.0 / 28.0, 1e-6);
     EXPECT_NEAR(x[1], 2.0 / 7.0, 1e-6);
     EXPECT_NEAR(x[2], 19.0 / 28.0, 1e-6);
@@ -457,7 +458,7 @@ TEST(Jacobi, DiagonalSystem) {
     }
 
     // Diagonal system: Jacobi converges in one iteration
-    solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x, 1e-10, 1);
+    solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x, {.rtol = 1e-10}, 1);
     EXPECT_EQ(r.iterations, static_cast<idx>(1));
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(x[i], static_cast<real>(i + 1), 1e-10);
@@ -480,7 +481,7 @@ TEST(Jacobi, ResidualVerified) {
     solver_result r = jacobi(num::assume_diagonally_dominant(A), b, x);
 
     EXPECT_TRUE(r.converged);
-    EXPECT_LT(r.residual, 1e-10);
+    EXPECT_LE(r.residual, 1e-10 * num::norm(b)); // the default {.rtol = 1e-10}
 
     vec<real> Ax(n);
     matvec(A, x, Ax);
@@ -811,6 +812,7 @@ TEST(SparseResolvent, OptionalBackend) {
     solve(F4, x2, x2);
     EXPECT_NEAR(x2[0].real(), 1.0, 1e-12);
     EXPECT_NEAR(x2[1].real(), 1.0, 1e-12);
+
 }
 
 namespace {
@@ -1150,9 +1152,9 @@ TEST(PDEOperators, MatrixFreeLaplacianAndBackwardEulerMatchesSparseMatrix) {
     vec<real> b(n, 1.0);
     vec<real> u_free(n, 0.0), u_sparse(n, 0.0);
 
-    auto res_free = cg(be_op, b, u_free, {.tolerance = 1e-10, .max_iterations = 500});
+    auto res_free = cg(be_op, b, u_free, {.tolerance = {.rtol = 1e-10}, .max_iterations = 500});
     pde::backward_euler_operator_2d be_assembled_op(N, coeff);
-    auto res_sparse = cg(be_assembled_op, b, u_sparse, {.tolerance = 1e-10, .max_iterations = 500});
+    auto res_sparse = cg(be_assembled_op, b, u_sparse, {.tolerance = {.rtol = 1e-10}, .max_iterations = 500});
 
     EXPECT_TRUE(res_free.converged);
     EXPECT_TRUE(res_sparse.converged);
@@ -1161,4 +1163,161 @@ TEST(PDEOperators, MatrixFreeLaplacianAndBackwardEulerMatchesSparseMatrix) {
     for (idx i = 0; i < n; ++i) {
         EXPECT_NEAR(u_free[i], u_sparse[i], 1e-12);
     }
+}
+
+namespace {
+
+vec<real> dense_times(const mat<real> &A, const vec<real> &x) {
+    vec<real> y(A.rows(), 0.0);
+    for (idx i = 0; i < A.rows(); ++i) {
+        for (idx j = 0; j < A.cols(); ++j) {
+            y[i] += A(i, j) * x[j];
+        }
+    }
+    return y;
+}
+
+real norm_inf(const mat<real> &A) {
+    real m = 0;
+    for (idx i = 0; i < A.rows(); ++i) {
+        real row = 0;
+        for (idx j = 0; j < A.cols(); ++j) {
+            row += std::abs(A(i, j));
+        }
+        m = std::max(m, row);
+    }
+    return m;
+}
+
+real norm_inf(const vec<real> &v) {
+    real m = 0;
+    for (idx i = 0; i < v.size(); ++i) {
+        m = std::max(m, std::abs(v[i]));
+    }
+    return m;
+}
+
+mat<real> scaled_laplacian(idx n, real s) {
+    mat<real> A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        A(i, i) = s * 2.1;
+        if (i + 1 < n) {
+            A(i, i + 1) = A(i + 1, i) = -s;
+        }
+    }
+    return A;
+}
+
+vec<real> ramp(idx n, real s) {
+    vec<real> b(n);
+    for (idx i = 0; i < n; ++i) {
+        b[i] = s * std::sin(static_cast<real>(i + 1));
+    }
+    return b;
+}
+
+} // namespace
+
+// Greenbaum-Strakos: on this spectrum finite-precision CG needs well over n iterations, so a
+// solver must not cap itself at n, and its recursively updated residual must match the true one.
+TEST(CG, ConvergesPastNOnStrakosSpectrum) {
+    constexpr idx n = 48;
+    const real l1 = 0.1, ln = 100.0, rho = 0.875;
+    mat<real> A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        A(i, i) = l1 + (static_cast<real>(i) / (n - 1)) * (ln - l1) *
+                           std::pow(rho, static_cast<real>(n - 1 - i));
+    }
+    const vec<real> b(n, 1.0 / std::sqrt(static_cast<real>(n)));
+    vec<real> x(n, 0.0);
+    const auto r = cg(assume_spd(A), b, x, cg_options{.tolerance = {.rtol = 1e-12}, .max_iterations = 20 * n});
+    EXPECT_TRUE(r.converged) << r;
+    vec<real> Ax = dense_times(A, x);
+    real true_residual = 0;
+    for (idx i = 0; i < n; ++i) {
+        true_residual += (b[i] - Ax[i]) * (b[i] - Ax[i]);
+    }
+    EXPECT_LE(std::sqrt(true_residual), 1e-10);
+}
+
+// The cyclic shift with b = e1 is the standard GMRES stagnation example: the residual stays at
+// 1 for n-1 steps and drops to 0 at step n; restarted GMRES(m < n) never makes progress.
+TEST(GMRES, StagnatesOnCyclicShift) {
+    constexpr idx n = 10;
+    mat<real> A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        A((i + 1) % n, i) = 1.0;
+    }
+    vec<real> b(n, 0.0);
+    b[0] = 1.0;
+
+    vec<real> x(n, 0.0);
+    auto r = gmres(A, b, x, {.tolerance = {.rtol = 1e-12}, .max_iterations = n - 1, .restart = n});
+    EXPECT_FALSE(r.converged) << r;
+    EXPECT_NEAR(r.residual, 1.0, 1e-12);
+
+    x = vec<real>(n, 0.0);
+    r = gmres(A, b, x, {.tolerance = {.rtol = 1e-12}, .max_iterations = n, .restart = n});
+    EXPECT_TRUE(r.converged) << r;
+
+    x = vec<real>(n, 0.0);
+    r = gmres(A, b, x, {.tolerance = {.rtol = 1e-12}, .max_iterations = 500, .restart = n / 2});
+    EXPECT_FALSE(r.converged) << r;
+    EXPECT_NEAR(r.residual, 1.0, 1e-12);
+}
+
+TEST(MatrixProperties, NaNMatrixIsNotReportedSymmetric) {
+    mat<real> A(3, 3, 1.0);
+    A(0, 2) = num::nan;
+    EXPECT_FALSE(linear::is_symmetric(A));
+    EXPECT_TRUE(std::isnan(linear::symmetry_error(A)));
+}
+
+// Multiplying A and b by s leaves the solution and the Krylov iterates unchanged; a scale-
+// invariant stopping test must stop on the same iteration for every s. Before, an absolute
+// 1e-10 meant s = 1e-20 "converged" at x = 0 and s = 1e20 never converged.
+TEST(ScaleInvariance, KrylovSolversStopOnTheSameIterationForAnyScale) {
+    constexpr idx n = 40;
+    std::vector<idx> cg_its, pcg_its, minres_its, gmres_its, jacobi_its;
+    for (real s : {1.0, 1e-20, 1e20}) {
+        const mat<real> A = scaled_laplacian(n, s);
+        const vec<real> b = ramp(n, s);
+        const vec<real> b1 = ramp(n, 1.0);
+        auto solve_check = [&](const char *name, const solver_result &r, const vec<real> &x,
+                               std::vector<idx> &its) {
+            EXPECT_TRUE(r.converged) << name << " s = " << s << " " << r;
+            vec<real> reference(n, 0.0);
+            const mat<real> A1 = scaled_laplacian(n, 1.0);
+            cg(assume_spd(A1), b1, reference, cg_options{.tolerance = {.rtol = 1e-13}});
+            for (idx i = 0; i < n; ++i) {
+                EXPECT_NEAR(x[i], reference[i], 1e-6 * norm_inf(reference)) << name << " s = " << s;
+            }
+            its.push_back(r.iterations);
+        };
+        vec<real> x(n, 0.0);
+        solve_check("cg", cg(assume_spd(A), b, x), x, cg_its);
+        x = vec<real>(n, 0.0);
+        operators::dense_op op(A);
+        solve_check("pcg", pcg(assume_spd(op), make_jacobi_preconditioner(A), b, x), x, pcg_its);
+        x = vec<real>(n, 0.0);
+        solve_check("minres", minres(assume_symmetric(op), b, x), x, minres_its);
+        x = vec<real>(n, 0.0);
+        solve_check("gmres", gmres(A, b, x, {.tolerance = {.rtol = 1e-10}, .restart = n}), x, gmres_its);
+        x = vec<real>(n, 0.0);
+        solve_check("jacobi", jacobi(assume_diagonally_dominant(A), b, x, {.rtol = 1e-10}, 5000), x,
+                    jacobi_its);
+    }
+    for (const auto *its : {&cg_its, &pcg_its, &minres_its, &gmres_its, &jacobi_its}) {
+        ASSERT_EQ(its->size(), 3u);
+        EXPECT_NEAR(static_cast<double>((*its)[1]), static_cast<double>((*its)[0]), 1.0);
+        EXPECT_NEAR(static_cast<double>((*its)[2]), static_cast<double>((*its)[0]), 1.0);
+    }
+}
+
+TEST(CG, ZeroRightHandSideConvergesImmediately) {
+    const mat<real> A = scaled_laplacian(10, 1.0);
+    vec<real> x(10, 0.0);
+    const auto r = cg(assume_spd(A), vec<real>(10, 0.0), x);
+    EXPECT_TRUE(r.converged);
+    EXPECT_EQ(r.iterations, 0u);
 }

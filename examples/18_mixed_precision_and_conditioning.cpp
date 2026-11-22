@@ -1,10 +1,10 @@
 /// @file 18_mixed_precision_and_conditioning.cpp
-/// @brief Condition estimates from any factorization, and LU in float refined to double.
+/// @brief Condition estimates from a factorization, and LU in float refined to double.
 ///
-/// `rcond(F, A)` estimates \f$1/(\|A\|_1\|A^{-1}\|_1)\f$ with a handful of solves against an
-/// existing factorization. `lu(A, mixed_precision)` factors in `float`, which is about twice as
-/// fast, and refines each solve in `double`. It uses the same estimate to decide when \f$A\f$ is
-/// too ill-conditioned for single precision, and then factors in `double` instead.
+/// `rcond(F, A)` estimates \f$1/(\|A\|_1\|A^{-1}\|_1)\f$ with a few solves against an
+/// existing factorization. `lu(A, mixed_precision)` factors in `float`, which is cheaper, and
+/// refines each solve in `double`. If the estimate says \f$A\f$ is too ill-conditioned for
+/// single precision, it factors in `double` instead, as it does for the Hilbert matrix below.
 #include <chrono>
 #include <cmath>
 #include <iomanip>
@@ -40,7 +40,7 @@ mat<real> hilbert(idx n) {
     return H;
 }
 
-// ||b - A x||_inf / (||A||_inf ||x||_inf): about machine epsilon for a backward-stable solve.
+// ||b - A x||_inf / (||A||_inf ||x||_inf), about machine epsilon for a backward-stable solve.
 real backward_error(const mat<real> &A, const vec<real> &b, const vec<real> &x) {
     real residual = 0.0, a_norm = 0.0, x_norm = 0.0;
     for (idx i = 0; i < A.rows(); ++i) {

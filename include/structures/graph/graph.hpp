@@ -1,5 +1,5 @@
 /// @file structures/graph/graph.hpp
-/// @brief Weighted graph data structure with adjacency list and matrix/Laplacian conversions.
+/// @brief Weighted graph stored as adjacency lists.
 #pragma once
 
 #include "core/types.hpp"

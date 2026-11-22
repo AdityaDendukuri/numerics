@@ -53,15 +53,16 @@ requires requires(const Op &A, const vec<real> &x, vec<real> &y) {
     A.apply(x, y);
 }
 [[nodiscard]] real arnoldi_step(const Op &A, array<vec<real>> &basis, array<real> &h,
-                                idx k, vec<real> &scratch, real breakdown_tol = real(1e-14)) {
+                                idx k, vec<real> &scratch, real breakdown_tol = real(64) * num::eps) {
     // w <- A*v_k
     A.apply(basis[k], scratch);
+    const real image_norm = norm(scratch);
 
     // (h_{0:k,k}, h_{k+1,k}) <- Arnoldi orthogonalization of w
     const real beta = mgs_orthogonalize(basis, scratch, h, k + 1);
     h[k + 1] = beta;
 
-    if (beta > breakdown_tol) {
+    if (beta > breakdown_tol * image_norm) { // relative to ||A v_k||
         // v_{k+1} <- w/h_{k+1,k}
         scale(scratch, real(1) / beta);
         basis.push_back(scratch);

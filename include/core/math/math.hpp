@@ -1,5 +1,5 @@
 /// @file math.hpp
-/// @brief Foundational mathematical and computational spine.
+/// @brief Associated types, concepts, laws, vector space operations and subspaces.
 #pragma once
 
 #include "core/math/associated.hpp"

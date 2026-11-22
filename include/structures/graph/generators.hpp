@@ -1,5 +1,5 @@
 /// @file structures/graph/generators.hpp
-/// @brief Canonical random and structured graph generators.
+/// @brief Standard and random graphs.
 #pragma once
 
 #include "core/types.hpp"

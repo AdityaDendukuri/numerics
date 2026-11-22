@@ -21,6 +21,7 @@ struct series_entry {
     series data;
     std::string label;
     std::string style; // gnuplot "with" clause, e.g. "lines"
+    array<double> yerror;
 };
 
 /// 2-D field snapshot for heatmap rendering via gnuplot pm3d map.
@@ -35,7 +36,7 @@ struct heatmap_entry {
 struct plot_panel {
     array<series_entry> series;
     array<heatmap_entry> heatmaps;
-    std::string title_, panel_label_, xlabel_, ylabel_;
+    std::string title_, panel_label_, xlabel_, ylabel_, xtics_, ytics_;
     std::string xrange_, yrange_;
     std::string palette_; // gnuplot palette string; empty = cividis
     bool legend_ = false;
@@ -46,12 +47,14 @@ struct plot_panel {
     bool logy_ = false;
     bool square_ = false;
     bool equal_axes_ = false;
+    int row_ = 0, col_ = 0, row_span_ = 1, col_span_ = 1;
+    bool positioned_ = false;
 };
 
 struct plot_state {
     plot_panel current;
     array<plot_panel> panels;       // accumulated panels in multiplot mode
-    int mp_rows_ = 0, mp_cols_ = 0;  // 0 = single-plot mode
+    int mp_rows_ = 0, mp_cols_ = 0; // 0 = single-plot mode
     double mp_spacing_x_ = 0.08, mp_spacing_y_ = 0.12;
     std::string term_override_ = ""; // "dumb", "qt", "pngcairo"
     int term_w_ = 140, term_h_ = 35;
@@ -79,8 +82,7 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
     }
     fputs("unset label 1000\n", pipe);
     if (!p.panel_label_.empty()) {
-        fprintf(pipe,
-                "set label 1000 '%s' at graph -0.06,1.10 front font ',%d'\n",
+        fprintf(pipe, "set label 1000 '%s' at graph -0.06,1.10 front font ',%d'\n",
                 p.panel_label_.c_str(), state().figure_font_size_);
     }
     if (!p.xlabel_.empty()) {
@@ -141,20 +143,30 @@ inline void write_panel(FILE *pipe, const plot_panel &p, int block_offset) {
         } else {
             fputs("set yrange [*:*]\n", pipe);
         }
+        fputs("set xtics autofreq\nset ytics autofreq\n", pipe);
 
         if (p.logx_ && p.logy_) {
             fputs("set logscale xy\nset format x '10^{%L}'\nset format y '10^{%L}'\n", pipe);
         } else if (p.logx_) {
-            fputs("unset logscale y\nset logscale x\nset format x '10^{%L}'\nset format y '%g'\n", pipe);
+            fputs("unset logscale y\nset logscale x\nset format x '10^{%L}'\nset format y '%g'\n",
+                  pipe);
         } else if (p.logy_) {
-            fputs("unset logscale x\nset logscale y\nset format y '10^{%L}'\nset format x '%g'\n", pipe);
+            fputs("unset logscale x\nset logscale y\nset format y '10^{%L}'\nset format x '%g'\n",
+                  pipe);
         } else {
             fputs("unset logscale\nset format x '%g'\nset format y '%g'\n", pipe);
         }
+        if (!p.xtics_.empty()) {
+            fprintf(pipe, "set xtics %s\n", p.xtics_.c_str());
+        }
+        if (!p.ytics_.empty()) {
+            fprintf(pipe, "set ytics %s\n", p.ytics_.c_str());
+        }
 
         if (p.legend_) {
-            fprintf(pipe, "set key %s Left reverse samplen 2 spacing 1.15 font ',%d' opaque "
-                          "nobox\n",
+            fprintf(pipe,
+                    "set key %s Left reverse samplen 2 spacing 1.15 font ',%d' opaque "
+                    "nobox\n",
                     p.legend_pos_.c_str(), p.legend_font_size_);
             if (p.legend_rows_ > 0) {
                 fprintf(pipe, "set key maxrows %d\n", p.legend_rows_);
@@ -210,8 +222,8 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
             double h = multiplot ? 3.0 * s.mp_rows_ : 4.0;
             fprintf(pipe, "set terminal pdfcairo size 6,%.0f font 'Arial,11'\n", h);
         } else {
-            int w = s.figure_w_ > 0 ? s.figure_w_
-                                    : (multiplot ? std::max(900, 300 * s.mp_cols_) : 900);
+            int w =
+                s.figure_w_ > 0 ? s.figure_w_ : (multiplot ? std::max(900, 300 * s.mp_cols_) : 900);
             int h = s.figure_h_ > 0 ? s.figure_h_ : (multiplot ? 350 * s.mp_rows_ : 600);
             fprintf(pipe, "set terminal pngcairo size %d,%d enhanced font 'Arial,%d'\n", w, h,
                     s.figure_font_size_);
@@ -241,8 +253,13 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
     for (const auto &p : all) {
         for (const auto &e : p.series) {
             fprintf(pipe, "$d_%d << EOD\n", block++);
-            for (const auto &[x, y] : e.data) {
-                fprintf(pipe, "%.15g %.15g\n", x, y);
+            for (std::size_t i = 0; i < e.data.size(); ++i) {
+                const auto [x, y] = e.data[i];
+                if (e.yerror.empty()) {
+                    fprintf(pipe, "%.15g %.15g\n", x, y);
+                } else {
+                    fprintf(pipe, "%.15g %.15g %.15g\n", x, y, e.yerror[i]);
+                }
             }
             fputs("EOD\n", pipe);
         }
@@ -261,10 +278,23 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
     }
 
     if (multiplot) {
-        fprintf(pipe, "set multiplot layout %d,%d spacing %.3f,%.3f\n", s.mp_rows_, s.mp_cols_,
-                s.mp_spacing_x_, s.mp_spacing_y_);
+        bool positioned =
+            std::ranges::any_of(all, [](const plot_panel &p) { return p.positioned_; });
+        if (positioned) {
+            fputs("set multiplot\n", pipe);
+        } else {
+            fprintf(pipe, "set multiplot layout %d,%d spacing %.3f,%.3f\n", s.mp_rows_, s.mp_cols_,
+                    s.mp_spacing_x_, s.mp_spacing_y_);
+        }
         int off = 0;
         for (const auto &p : all) {
+            if (positioned) {
+                double x = static_cast<double>(p.col_) / s.mp_cols_;
+                double y = 1.0 - static_cast<double>(p.row_ + p.row_span_) / s.mp_rows_;
+                double width = static_cast<double>(p.col_span_) / s.mp_cols_;
+                double height = static_cast<double>(p.row_span_) / s.mp_rows_;
+                fprintf(pipe, "set origin %.8g,%.8g\nset size %.8g,%.8g\n", x, y, width, height);
+            }
             write_panel(pipe, p, off);
             off += (int)p.series.size() + (int)p.heatmaps.size();
         }
@@ -283,7 +313,7 @@ inline void flush_to(FILE *pipe, const std::string &outfile) {
 /// Append a series (vector of (x,y) pairs) to the current panel.
 inline void plot(const series &data, const std::string &label = "",
                  const std::string &style = "lines") {
-    detail::state().current.series.push_back({data, label, style});
+    detail::state().current.series.push_back({data, label, style, {}});
 }
 
 /// Append parallel x and y vectors to the current panel (supports std::vector,
@@ -296,7 +326,25 @@ inline void plot(const ContainerX &x, const ContainerY &y, const std::string &la
     for (std::size_t i = 0; i < x.size() && i < y.size(); ++i) {
         s.emplace_back(static_cast<double>(x[i]), static_cast<double>(y[i]));
     }
-    detail::state().current.series.push_back({std::move(s), label, style});
+    detail::state().current.series.push_back({std::move(s), label, style, {}});
+}
+
+/// Append means with symmetric vertical error bars.
+template <typename ContainerX, typename ContainerY, typename ContainerError>
+inline void errorbar(const ContainerX &x, const ContainerY &y, const ContainerError &error,
+                     const std::string &label = "", const std::string &style = "yerrorbars") {
+    if (x.size() != y.size() || x.size() != error.size()) {
+        throw std::invalid_argument("errorbar vectors must have the same size");
+    }
+    series s;
+    array<double> e;
+    s.reserve(x.size());
+    e.reserve(x.size());
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        s.emplace_back(static_cast<double>(x[i]), static_cast<double>(y[i]));
+        e.push_back(static_cast<double>(error[i]));
+    }
+    detail::state().current.series.push_back({std::move(s), label, style, std::move(e)});
 }
 
 // Decorators
@@ -308,6 +356,13 @@ inline void title(const std::string &t) {
 /// Place a compact panel label in the upper-left corner of the current axes.
 inline void panel_label(const std::string &label) {
     detail::state().current.panel_label_ = label;
+}
+
+inline void xtics(const std::string &specification) {
+    detail::state().current.xtics_ = specification;
+}
+inline void ytics(const std::string &specification) {
+    detail::state().current.ytics_ = specification;
 }
 /// Set the current panel x-axis label.
 inline void xlabel(const std::string &l) {
@@ -375,10 +430,10 @@ inline void plot_paths(const Paths &paths, const Labels &labels, const Colors &c
     }
 
     const std::size_t components = labels.size();
-    array<array<double>> lower(
-        components, array<double>(samples, std::numeric_limits<double>::max()));
-    array<array<double>> upper(
-        components, array<double>(samples, std::numeric_limits<double>::lowest()));
+    array<array<double>> lower(components,
+                               array<double>(samples, std::numeric_limits<double>::max()));
+    array<array<double>> upper(components,
+                               array<double>(samples, std::numeric_limits<double>::lowest()));
     array<array<double>> mean(components, array<double>(samples, 0.0));
     array<std::size_t> active(samples, 0);
 
@@ -462,6 +517,15 @@ inline void subplot(int rows, int cols = 1) {
     detail::state().reset();
     detail::state().mp_rows_ = rows;
     detail::state().mp_cols_ = cols;
+}
+
+inline void subplot_position(int row, int column, int row_span = 1, int column_span = 1) {
+    auto &panel = detail::state().current;
+    panel.row_ = row;
+    panel.col_ = column;
+    panel.row_span_ = row_span;
+    panel.col_span_ = column_span;
+    panel.positioned_ = true;
 }
 
 /// Set horizontal and vertical spacing between subplot axes.

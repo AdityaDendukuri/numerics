@@ -1,5 +1,5 @@
 /// @file linear/solvers/preconditioner.hpp
-/// @brief preconditioner concept and diagonal preconditioners.
+/// @brief The preconditioner concept and the Jacobi preconditioner.
 /// @todo Add SSOR, incomplete Cholesky, ILU(0), and block-Jacobi
 /// preconditioners for sparse systems.
 #pragma once
@@ -62,7 +62,7 @@ class jacobi_preconditioner final {
     }
     vec<real> inv(A.rows());
     for (idx i = 0; i < A.rows(); ++i) {
-        if (std::abs(A(i, i)) < real(1e-15)) {
+        if (A(i, i) == real(0)) {
             throw std::invalid_argument("jacobi_preconditioner: zero diagonal");
         }
         inv[i] = real(1) / A(i, i);
@@ -85,7 +85,7 @@ class jacobi_preconditioner final {
                 break;
             }
         }
-        if (std::abs(inv[i]) < real(1e-15)) {
+        if (inv[i] == real(0)) {
             throw std::invalid_argument("jacobi_preconditioner: zero diagonal");
         }
         inv[i] = real(1) / inv[i];

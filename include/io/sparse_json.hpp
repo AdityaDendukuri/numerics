@@ -1,5 +1,5 @@
 /// @file sparse_json.hpp
-/// @brief Generic JSON serialization for Numerics sparse matrices using nlohmann::json.
+/// @brief Reading and writing sparse matrices as JSON.
 #pragma once
 
 #include "core/types.hpp"

@@ -1,12 +1,11 @@
 /// @file 08_root_finding_and_quadrature.cpp
-/// @brief Root finding with bisection, Newton, secant and Brent, and five quadrature rules.
+/// @brief Bisection, Newton, secant and Brent, and five quadrature rules.
 ///
-/// Each root finder returns a `root_result<T>` holding the root, the iterations taken and the final
+/// Each root finder returns a `root_result<T>` with the root, the iteration count and the final
 /// residual. The quadrature rules integrate a callable over [a, b], and the table compares them on
 /// \f$\int_0^\pi \sin x\,dx = 2\f$.
 #include <cmath>
 #include <cstdio>
-#include <numbers>
 #include <numerics.hpp>
 #include <string_view>
 #include <vector>
@@ -24,20 +23,19 @@ int main(int argc, char **argv) {
         std::printf("%-10s root %.12f  error %.1e  iterations %2zu\n", name, r.root,
                     std::abs(r.root - root), static_cast<std::size_t>(r.iterations));
     };
-    report("bisection", bisection(f, 1.0, 2.0, 1e-12, 100));
-    report("newton", newton(f, df, 1.0, 1e-12, 100));
-    report("secant", secant(f, 1.0, 2.0, 1e-12, 100));
-    report("brent", brent(f, 1.0, 2.0, 1e-12, 100));
+    report("bisection", bisection(f, 1.0, 2.0, {.atol = 1e-12}, 100));
+    report("newton", newton(f, df, 1.0, {.atol = 1e-12}, 100));
+    report("secant", secant(f, 1.0, 2.0, {.atol = 1e-12}, 100));
+    report("brent", brent(f, 1.0, 2.0, {.atol = 1e-12}, 100));
 
     const auto g = [](real x) { return std::sin(x); };
-    const real pi = std::numbers::pi;
     std::printf("\nintegral of sin on [0, pi] = 2\n");
     std::printf("trapz, 100 points        error %.1e\n", std::abs(trapz(g, 0.0, pi, 100) - 2.0));
     std::printf("simpson, 100 points      error %.1e\n", std::abs(simpson(g, 0.0, pi, 100) - 2.0));
     std::printf("gauss_legendre, 5 nodes  error %.1e\n", std::abs(gauss_legendre(g, 0.0, pi, 5) - 2.0));
     std::printf("adaptive_simpson 1e-10   error %.1e\n",
-                std::abs(adaptive_simpson(g, 0.0, pi, 1e-10) - 2.0));
-    std::printf("romberg 1e-10            error %.1e\n", std::abs(romberg(g, 0.0, pi, 1e-10) - 2.0));
+                std::abs(adaptive_simpson(g, 0.0, pi, {.rtol = 1e-10}) - 2.0));
+    std::printf("romberg 1e-10            error %.1e\n", std::abs(romberg(g, 0.0, pi, {.rtol = 1e-10}) - 2.0));
 
     if (plot) {
         std::vector<double> x, y;

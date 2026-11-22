@@ -1,5 +1,5 @@
 /// @file linear/graph/randommat/preconditioner.hpp
-/// @brief Adapting the ApproxChol factorization to numerics' operator vocabulary.
+/// @brief Approximate Cholesky as a preconditioner for PCG.
 ///
 /// `approxchol.hpp` needs only `num::structures` and can be lifted out alone. This header
 /// converts a `num::spmat` Laplacian to its graph and wraps the factor as a

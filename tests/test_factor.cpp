@@ -378,7 +378,7 @@ TEST(RawPointer, CgConvergesOnAMatrixFreeLaplacian) {
         }
     };
     std::vector<real> b(n, 1.0), x(n, 0.0), work(3 * n), Ax(n);
-    const auto r = cg(A, x.data(), b.data(), n, work.data(), 1e-12, 500);
+    const auto r = cg(A, x.data(), b.data(), n, work.data(), {.rtol = 1e-12}, 500);
     ASSERT_TRUE(r.converged);
     A(x.data(), Ax.data());
     for (idx i = 0; i < n; ++i)

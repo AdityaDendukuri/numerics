@@ -412,7 +412,7 @@ static void BM_MathSpine_CG_Generic(benchmark::State &state) {
 
     for (auto _ : state) {
         std::fill(x.begin(), x.end(), 0.0);
-        auto result = cg(A, b, x, cg_options{.tolerance = 1e-10, .max_iterations = 100});
+        auto result = cg(A, b, x, cg_options{.tolerance = {.rtol = 1e-10}, .max_iterations = 100});
         benchmark::DoNotOptimize(result);
         benchmark::ClobberMemory();
     }
@@ -430,7 +430,7 @@ static void BM_MathSpine_CG_Raw(benchmark::State &state) {
 
     for (auto _ : state) {
         std::fill(x.begin(), x.end(), 0.0);
-        auto result = num::cg(apply, x.data(), b.data(), n, work.data(), 1e-10, 100);
+        auto result = num::cg(apply, x.data(), b.data(), n, work.data(), {.rtol = 1e-10}, 100);
         benchmark::DoNotOptimize(result);
         benchmark::ClobberMemory();
     }

@@ -1,6 +1,6 @@
 # All concepts
 
-Structure is decided by the operations a type provides; a law is declared, because the compiler cannot decide it.
+A concept such as `linear_operator` holds when a type provides the right operations. A law such as SPD cannot be checked by the compiler, so it is declared with `assume_spd` or `make_spd`.
 
 ## Scalars
 field scalar_function differentiable_function

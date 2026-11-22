@@ -1,5 +1,5 @@
 /// @file quadrature/quadrature_all.hpp
-/// @brief Umbrella for numerical integration.
+/// @brief All quadrature.
 #pragma once
 
 #include "quadrature/concepts.hpp"

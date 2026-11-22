@@ -1,13 +1,12 @@
 /// @file 04_eigen_and_svd.cpp
 /// @brief Symmetric eigendecomposition, Lanczos, power iteration and the SVD.
 ///
-/// `eig_sym` returns every eigenpair of a matrix that claims the self-adjoint law. `lanczos` finds
-/// the k largest eigenvalues from matrix-vector products alone, and `power_iteration` finds the
-/// dominant one. `svd` returns the singular values of any matrix. The 1D Laplacian has eigenvalues
-/// \f$2 - 2\cos(k\pi/(n+1))\f$, so the output can be checked against them.
+/// `eig_sym` returns every eigenpair of a self-adjoint matrix. `lanczos` finds the k largest
+/// eigenvalues from matrix-vector products alone, and `power_iteration` finds the dominant one.
+/// `svd` works on any matrix. The 1D Laplacian has eigenvalues \f$2 - 2\cos(k\pi/(n+1))\f$, so the
+/// output is easy to check.
 #include <cmath>
 #include <cstdio>
-#include <numbers>
 #include <numerics.hpp>
 #include <string_view>
 #include <vector>
@@ -25,7 +24,7 @@ int main(int argc, char **argv) {
         }
     }
     auto exact = [](idx k) {
-        return 2.0 - (2.0 * std::cos(static_cast<real>(k) * std::numbers::pi / (n + 1)));
+        return 2.0 - (2.0 * std::cos(static_cast<real>(k) * num::pi / (n + 1)));
     };
 
     const eigen_result all = eig_sym(assume_symmetric(L));

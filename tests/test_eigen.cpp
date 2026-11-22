@@ -1,3 +1,4 @@
+#include "linear/matrix_utils.hpp"
 #include "container/matrix.hpp"
 #include "container/matrix_ops.hpp"
 #include "container/vector.hpp"
@@ -5,6 +6,8 @@
 #include "operator/operator.hpp"
 
 #include <cmath>
+#include <limits>
+#include <vector>
 #include <gtest/gtest.h>
 
 using namespace num;
@@ -256,4 +259,129 @@ TEST(Lanczos, SquareRootOfZeroVector) {
     EXPECT_TRUE(result.converged);
     EXPECT_EQ(result.steps, 0u);
     EXPECT_EQ(norm(result.value), 0.0);
+}
+
+namespace {
+
+vec<real> dense_times(const mat<real> &A, const vec<real> &x) {
+    vec<real> y(A.rows(), 0.0);
+    for (idx i = 0; i < A.rows(); ++i) {
+        for (idx j = 0; j < A.cols(); ++j) {
+            y[i] += A(i, j) * x[j];
+        }
+    }
+    return y;
+}
+
+real orthogonality_loss(const mat<real> &Q) {
+    real worst = 0;
+    for (idx a = 0; a < Q.cols(); ++a) {
+        for (idx b = 0; b < Q.cols(); ++b) {
+            real s = 0;
+            for (idx i = 0; i < Q.rows(); ++i) {
+                s += Q(i, a) * Q(i, b);
+            }
+            worst = std::max(worst, std::abs(s - (a == b ? 1.0 : 0.0)));
+        }
+    }
+    return worst;
+}
+
+std::vector<long double> sturm_eigenvalues(const std::vector<long double> &d,
+                                           const std::vector<long double> &e) {
+    const idx n = d.size();
+    auto count_below = [&](long double x) {
+        idx count = 0;
+        long double q = d[0] - x;
+        count += q < 0;
+        for (idx i = 1; i < n; ++i) {
+            if (q == 0) {
+                q = std::numeric_limits<long double>::epsilon();
+            }
+            q = d[i] - x - e[i - 1] * e[i - 1] / q;
+            count += q < 0;
+        }
+        return count;
+    };
+    std::vector<long double> values(n);
+    for (idx k = 0; k < n; ++k) {
+        long double lo = -100, hi = 100;
+        for (int it = 0; it < 200; ++it) {
+            const long double mid = (lo + hi) / 2;
+            (count_below(mid) > k ? hi : lo) = mid;
+        }
+        values[k] = (lo + hi) / 2;
+    }
+    return values;
+}
+
+mat<real> scaled_laplacian(idx n, real s) {
+    mat<real> A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        A(i, i) = s * 2.1;
+        if (i + 1 < n) {
+            A(i, i + 1) = A(i + 1, i) = -s;
+        }
+    }
+    return A;
+}
+
+} // namespace
+
+// Wilkinson's W21+: its top two eigenvalues agree to about 1e-14, so each eigenvector is
+// ill-determined, yet a stable symmetric solver returns both values and an orthonormal basis.
+TEST(EigSym, WilkinsonW21PlusResolvesNearlyDoubleEigenvalues) {
+    constexpr idx n = 21;
+    mat<real> W(n, n, 0.0);
+    std::vector<long double> d(n), e(n - 1, 1.0L);
+    for (idx i = 0; i < n; ++i) {
+        d[i] = std::abs(static_cast<long double>(i) - 10.0L);
+        W(i, i) = static_cast<real>(d[i]);
+        if (i + 1 < n) {
+            W(i, i + 1) = W(i + 1, i) = 1.0;
+        }
+    }
+    const auto reference = sturm_eigenvalues(d, e);
+    ASSERT_LT(reference[n - 1] - reference[n - 2], 1e-12L);
+
+    auto check = [&](const eigen_result &r, const char *which) {
+        ASSERT_EQ(r.values.size(), n) << which;
+        for (idx k = 0; k < n; ++k) {
+            EXPECT_NEAR(r.values[k], static_cast<real>(reference[k]), 50.0 * eps * 12.0)
+                << which << " k = " << k;
+        }
+        EXPECT_LE(orthogonality_loss(r.vectors), 100.0 * n * eps) << which;
+        for (idx k = 0; k < n; ++k) {
+            vec<real> v(n);
+            for (idx i = 0; i < n; ++i) {
+                v[i] = r.vectors(i, k);
+            }
+            const vec<real> Wv = dense_times(W, v);
+            real res = 0;
+            for (idx i = 0; i < n; ++i) {
+                res = std::max(res, std::abs(Wv[i] - r.values[k] * v[i]));
+            }
+            EXPECT_LE(res, 100.0 * n * eps * 12.0) << which << " k = " << k;
+        }
+    };
+    check(eig_sym(assume_symmetric(W)), "default");
+    check(seq::eig_sym(W, 1e-14, 100), "seq");
+}
+
+TEST(ScaleInvariance, EigensolversIgnoreTheScale) {
+    constexpr idx n = 12;
+    for (real s : {1e-20, 1e20}) {
+        const mat<real> A = scaled_laplacian(n, s);
+        const auto e = seq::eig_sym(A, 1e-12, 100);
+        const auto e1 = seq::eig_sym(scaled_laplacian(n, 1.0), 1e-12, 100);
+        EXPECT_TRUE(e.converged) << "s = " << s;
+        EXPECT_EQ(e.sweeps, e1.sweeps) << "s = " << s;
+        for (idx k = 0; k < n; ++k) {
+            EXPECT_NEAR(e.values[k] / s, e1.values[k], 1e-12) << "s = " << s;
+        }
+
+        const auto l = lanczos(assume_symmetric(A), 2, 1e-8, n);
+        EXPECT_TRUE(l.converged) << "s = " << s;
+        EXPECT_NEAR(l.ritz_values[1] / s, e1.values[n - 1], 1e-8) << "s = " << s;
+    }
 }

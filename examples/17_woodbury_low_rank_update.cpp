@@ -1,11 +1,12 @@
 /// @file 17_woodbury_low_rank_update.cpp
-/// @brief Solving with A + PQ^T from a factorization of A, by the Woodbury identity.
+/// @brief Solving with A + PQ^T from a factorization of A.
 ///
-/// The Woodbury identity \f$(A + PQ^T)^{-1} = A^{-1} - A^{-1}P(I + Q^TA^{-1}P)^{-1}Q^TA^{-1}\f$
-/// means a rank-p change costs p solves with the old factors and one p-by-p factorization, instead
-/// of a new \f$O(n^3)\f$ one. `low_rank_difference` writes the change between two matrices that
-/// differ in a few rows and columns as \f$PQ^T\f$. `woodbury_solver` accepts any factorization of
-/// A, and here it is a dense LU.
+/// By the Woodbury identity
+/// \f$(A + PQ^T)^{-1} = A^{-1} - A^{-1}P(I + Q^TA^{-1}P)^{-1}Q^TA^{-1}\f$,
+/// a rank-p change costs p solves with the old factors and one p-by-p factorization, instead of
+/// a new \f$O(n^3)\f$ one. `low_rank_difference` writes the difference of two matrices as
+/// \f$PQ^T\f$. `woodbury_solver` takes any factorization of A, here a dense LU. The corrected
+/// solver also solves with the transpose and updates \f$\operatorname{diag}(A^{-1})\f$.
 #include <chrono>
 #include <cmath>
 #include <iomanip>
@@ -73,7 +74,7 @@ int main() {
     const mat<real> A = diagonally_dominant(n, 1);
     const lu_result<real> F = lu(A); // factored once
 
-    // Rows and columns 5, 100 and 640 change: a rank-6 update.
+    // Rows and columns 5, 100 and 640 change, which is a rank-6 update.
     const array<idx> changed{5, 100, 640};
     mat<real> B = A;
     for (idx k : changed) {
@@ -102,7 +103,7 @@ int main() {
               << std::scientific << std::setprecision(1)
               << "|x_woodbury - x_fresh|   = " << max_difference(corrected, fresh) << "\n";
 
-    // The corrected solver is a factorization like any other: transpose(W) solves with B^T.
+    // The corrected solver is a factorization like any other, so transpose(W) solves with B^T.
     vec<real> xt_fresh;
     const vec<real> xt = solve(transpose(*W), b);
     solve_transpose(lu(B), b, xt_fresh);

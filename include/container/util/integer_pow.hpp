@@ -1,5 +1,5 @@
 /// @file integer_pow.hpp
-/// @brief Compile-time integer exponentiation via repeated squaring
+/// @brief Integer powers by repeated squaring, usable at compile time.
 #pragma once
 
 namespace num {

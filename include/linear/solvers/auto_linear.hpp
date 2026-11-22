@@ -1,5 +1,5 @@
 /// @file linear/solvers/auto_linear.hpp
-/// @brief Automatic dense/sparse factorization for reusable real solves.
+/// @brief A factorization that chooses a dense or sparse method by size.
 #pragma once
 
 #include "container/matrix.hpp"

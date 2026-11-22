@@ -116,8 +116,8 @@ inline void refine(const mixed_lu &F, bool transposed, const vec<real> &b, vec<r
         residual(F.A, transposed, b, solution, r);
         real residual_norm = 0.0, solution_norm = 0.0;
         for (idx i = 0; i < solution.size(); ++i) {
-            residual_norm = std::max(residual_norm, std::abs(r[i]));
-            solution_norm = std::max(solution_norm, std::abs(solution[i]));
+            residual_norm = num::max(residual_norm, std::abs(r[i]));
+            solution_norm = num::max(solution_norm, std::abs(solution[i]));
         }
         if (residual_norm <= tolerance * solution_norm) {
             break;
@@ -162,7 +162,7 @@ inline void refine_columns(const mixed_lu &F, const mat<real> &B, mat<real> &X) 
         for (idx j = 0; j < A.cols(); ++j) {
             row += std::abs(A(i, j));
         }
-        F.norm_inf = std::max(F.norm_inf, row);
+        F.norm_inf = num::max(F.norm_inf, row);
     }
     F.condition_estimate = F.norm_1 * inverse_norm;
     const real contraction = F.condition_estimate * std::numeric_limits<float>::epsilon();

@@ -24,7 +24,7 @@ namespace num {
 /// \f$A_{pq}\f$ in a symmetric \f$2 \times 2\f$ block.
 template <std::floating_point T>
 NUM_K_AINLINE void jacobi_rotation(T app, T aqq, T apq, T &c, T &s) noexcept {
-    if (std::abs(apq) < T(1e-15)) {
+    if (apq == T(0)) {
         c = T(1);
         s = T(0);
         return;
@@ -62,7 +62,8 @@ struct eigen_result {
 /// `num::lapack::eig_sym`, `num::omp::eig_sym` or `num::seq::eig_sym` to force one.
 ///
 /// @param A Symmetric matrix, e.g. `num::assume_symmetric(A)`.
-/// @param tol Jacobi tolerance on \f$\sum_{i \ne j} A_{ij}^2\f$; LAPACK ignores it.
+/// @param tol Stop once \f$(\sum_{i \ne j} A_{ij}^2)^{1/2} \le \text{tol}\,\|A\|_F\f$; LAPACK
+/// ignores it.
 /// @param max_sweeps Maximum Jacobi sweeps (default: 100); LAPACK ignores it.
 /// @return `eigen_result` containing sorted eigenvalues, column eigenvector matrix, sweep count, and convergence status.
 /// @see assume_symmetric, make_symmetric, lanczos, power_iteration

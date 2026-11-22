@@ -1,5 +1,5 @@
 /// @file sparse.hpp
-/// @brief Compressed Sparse Row (CSR) matrix and operations
+/// @brief The CSR sparse matrix and its operations.
 #pragma once
 #include "container/concepts.hpp"
 #include "kernel/kernel.hpp"

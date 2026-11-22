@@ -13,7 +13,8 @@ include(CMakePackageConfigHelpers)
 set(NUMERICS_INSTALL_TARGETS
     numerics_kernel numerics_core
     numerics_backend_blas numerics_backend_lapack numerics_backend_openmp
-    numerics_backend_fftw numerics_backend_suitesparse numerics_backend_simd
+    numerics_backend_fftw numerics_backend_suitesparse
+    numerics_backend_simd
     numerics_backends numerics
     numerics_mpi
     numerics_solvers numerics_ode numerics_pde numerics_spectral numerics_plot

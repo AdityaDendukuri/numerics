@@ -44,12 +44,13 @@ struct krylov_result {
 /// @param b        Right-hand side, length n.
 /// @param n        System dimension.
 /// @param work     Caller-supplied scratch of length 3n.
-/// @param tol      Absolute tolerance on \f$\|r\|_2\f$.
+/// @param tol      Stop once \f$\|r\|_2 \le \max(\text{rtol}\|b\|_2, \text{atol})\f$.
 /// @param max_iter Iteration cap.
 /// @return `krylov_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
 template <std::floating_point T, class MatVec>
 [[nodiscard]] inline krylov_result<T> cg(MatVec &&A, T *NUM_K_RESTRICT x, const T *b, idx n,
-                                         T *NUM_K_RESTRICT work, T tol = T(1e-10),
+                                         T *NUM_K_RESTRICT work,
+                                         basic_tolerance<T> tol = {.rtol = T(1e-10)},
                                          idx max_iter = 1000) {
     T *r = work;
     T *p = work + n;
@@ -61,9 +62,10 @@ template <std::floating_point T, class MatVec>
         p[i] = r[i];
     }
 
+    const T b_norm = kernel::norm(b, n);
     T rs_old = kernel::dot(r, r, n);
     krylov_result<T> result{0, std::sqrt(rs_old), false};
-    if (result.residual < tol) {
+    if (tol.met(result.residual, b_norm)) {
         result.converged = true;
         return result;
     }
@@ -85,7 +87,7 @@ template <std::floating_point T, class MatVec>
         // r <- r - alpha*A*p; rs_new <- r^T*r
         const T rs_new = kernel::axpy_norm_sq(r, Ap, -alpha, n);
         result.residual = std::sqrt(rs_new);
-        if (result.residual < tol) {
+        if (tol.met(result.residual, b_norm)) {
             result.converged = true;
             break;
         }
@@ -106,10 +108,10 @@ template <std::floating_point T, class MatVec>
 
 namespace num {
 
-/// @brief Convergence options of `num::cg`: an absolute tolerance on the residual norm and an
-/// iteration limit.
+/// @brief Convergence options of `num::cg`: stop once
+/// \f$\|b - Ax\|_2 \le \max(\text{rtol}\|b\|_2, \text{atol})\f$, or after `max_iterations`.
 struct cg_options {
-    real tolerance = 1e-10;
+    num::tolerance tolerance{.rtol = 1e-10};
     idx max_iterations = 1000;
 };
 
@@ -132,9 +134,10 @@ requires math::inner_product_space<V> &&math::spd_operator<Op, V> &&
     if (math::dimension(x) != n || A.rows() != n || A.cols() != n) {
         throw std::invalid_argument("cg: incompatible operator and vector dimensions");
     }
-    if (!(options.tolerance > 0.0)) {
+    if (!options.tolerance.valid()) {
         throw std::invalid_argument("cg: invalid convergence options");
     }
+    const real b_norm = static_cast<real>(math::norm(b));
 
     V residual = math::zero_like(b);
     V direction = math::zero_like(b);
@@ -147,7 +150,7 @@ requires math::inner_product_space<V> &&math::spd_operator<Op, V> &&
 
     S residual_square = math::inner(residual, residual);
     solver_result result{0, static_cast<real>(std::sqrt(residual_square)), false};
-    if (result.residual < options.tolerance) {
+    if (options.tolerance.met(result.residual, b_norm)) {
         result.converged = true;
         return result;
     }
@@ -171,7 +174,7 @@ requires math::inner_product_space<V> &&math::spd_operator<Op, V> &&
             throw std::runtime_error("cg: inner-product norm invariant was violated");
         }
         result.residual = static_cast<real>(std::sqrt(next_square));
-        if (result.residual < options.tolerance) {
+        if (options.tolerance.met(result.residual, b_norm)) {
             result.converged = true;
             break;
         }
@@ -230,6 +233,7 @@ inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg
     if (A.rows() != n || A.cols() != n || x.size() != n) {
         throw std::invalid_argument("cg: incompatible matrix and vector dimensions");
     }
+    const real b_norm = kernel::norm(b.data(), n);
 
     const_cast<mat<real> &>(A).to_gpu();
     const_cast<vec<real> &>(b).to_gpu();
@@ -264,7 +268,7 @@ inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg
         real rsnew = num::cuda::dot(r.gpu_data(), r.gpu_data(), n);
         result.residual = std::sqrt(rsnew);
 
-        if (result.residual < options.tolerance) {
+        if (options.tolerance.met(result.residual, b_norm)) {
             result.converged = true;
             break;
         }

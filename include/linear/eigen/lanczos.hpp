@@ -150,6 +150,7 @@ inverse_sqrt_lanczos_impl(const Op &A, const vec<real> &right_hand_side, real to
         kernel::copy_strided(direction.data(), 1, &basis(0, j), basis.cols(), n);
         vec<real> image(n, 0.0);
         A.apply(direction, image);
+        const real image_norm = norm(image);
 
         alpha[j] = dot(direction, image);
         axpy(-alpha[j], direction, image);
@@ -158,7 +159,8 @@ inverse_sqrt_lanczos_impl(const Op &A, const vec<real> &right_hand_side, real to
 
         const real next_beta = dispatch::subspace::mgs_orthogonalize(basis, j + 1, image);
         const idx steps = j + 1;
-        const bool breakdown = next_beta <= real(1e-14);
+        // Breakdown: what orthogonalization left of A v_j is a few ulps of it.
+        const bool breakdown = next_beta <= real(64) * num::eps * image_norm;
         const bool geometric_checkpoint =
             steps >= minimum_steps_for_convergence_check && (steps & (steps - 1)) == 0;
         const bool check = geometric_checkpoint || breakdown || steps == max_steps;
@@ -217,6 +219,7 @@ sqrt_lanczos_impl(const Op &A, const vec<real> &right_hand_side, real tolerance,
         kernel::copy_strided(direction.data(), 1, &basis(0, j), basis.cols(), n);
         vec<real> image(n, 0.0);
         A.apply(direction, image);
+        const real image_norm = norm(image);
 
         alpha[j] = dot(direction, image);
         axpy(-alpha[j], direction, image);
@@ -225,7 +228,8 @@ sqrt_lanczos_impl(const Op &A, const vec<real> &right_hand_side, real tolerance,
 
         const real next_beta = dispatch::subspace::mgs_orthogonalize(basis, j + 1, image);
         const idx steps = j + 1;
-        const bool breakdown = next_beta <= real(1e-14);
+        // Breakdown: what orthogonalization left of A v_j is a few ulps of it.
+        const bool breakdown = next_beta <= real(64) * num::eps * image_norm;
         const bool geometric_checkpoint =
             steps >= minimum_steps_for_convergence_check && (steps & (steps - 1)) == 0;
         const bool check = geometric_checkpoint || breakdown || steps == max_steps;
@@ -287,6 +291,7 @@ requires linear_operator<Op, vec<real>, vec<real>>
 
         vec<real> w(n, 0.0);
         A.apply(vj, w);
+        const real image_norm = norm(w);
 
         const real a = dot(vj, w);
         alpha[j] = a;
@@ -300,7 +305,8 @@ requires linear_operator<Op, vec<real>, vec<real>>
         const real b = dispatch::subspace::mgs_orthogonalize(V, j + 1, w);
         ++steps;
 
-        if (b < real(1e-12)) {
+        // Breakdown: what orthogonalization left of A v_j is a few ulps of it.
+        if (b <= real(64) * num::eps * image_norm) {
             break;
         }
 
@@ -337,6 +343,11 @@ requires linear_operator<Op, vec<real>, vec<real>>
     // lambda_Ritz <- lambda(T_m)_selected
     kernel::copy(ritz_vals.data(), teig.values.data() + (m - nret), nret);
 
+    // Residuals are measured against ||T||_2 <= ||A||_2, so `tol` is relative to the operator.
+    real t_norm = 0;
+    for (idx i = 0; i < teig.values.size(); ++i) {
+        t_norm = num::max(t_norm, std::abs(teig.values[i]));
+    }
     bool all_converged = true;
     for (idx i = 0; i < nret; ++i) {
         vec<real> u(n);
@@ -349,7 +360,7 @@ requires linear_operator<Op, vec<real>, vec<real>>
         const real lam = ritz_vals[i];
         // res^2 <- ||A*u_i - lambda_i*u_i||_2^2
         const real res = kernel::linear_combination_norm_sq(Au.data(), real(1), u.data(), -lam, n);
-        if (std::sqrt(res) > tol) {
+        if (!(std::sqrt(res) <= tol * t_norm)) {
             all_converged = false;
             break;
         }
@@ -389,8 +400,8 @@ sqrt_lanczos(const Op &A, const vec<real> &right_hand_side, real tolerance = 1e-
 /// @tparam Op Linear operator type satisfying `self_adjoint_operator<Op, vec<real>>`.
 /// @param A Self-adjoint linear operator (matrix-free callable, sparse, or dense wrapper).
 /// @param k Number of extremal eigenpairs to compute (\f$0 < k \le n\f$).
-/// @param tol Residual tolerance \f$\|A v - \lambda v\|_2\f$ for declaring convergence (default:
-/// 1e-10).
+/// @param tol Converged once \f$\|A v - \lambda v\|_2 \le \text{tol}\,\|T\|_2\f$, \f$T\f$ the Lanczos
+/// tridiagonal, whose norm bounds \f$\|A\|_2\f$ from below (default: 1e-10).
 /// @param max_steps Maximum Lanczos steps to perform (defaults to \f$\min(3k, n)\f$).
 /// @return `lanczos_result` containing Ritz values, column Ritz vectors, steps performed, and
 /// convergence flag.
@@ -419,7 +430,7 @@ lanczos_result lanczos(const spmat &A, idx k, real tol = 1e-10, idx max_steps = 
 ///
 /// @param A Symmetric matrix, e.g. `num::assume_symmetric(A)`.
 /// @param k Number of extremal eigenpairs to compute.
-/// @param tol Residual tolerance (default: 1e-10).
+/// @param tol Residual tolerance relative to \f$\|T\|_2\f$ (default: 1e-10).
 /// @param max_steps Maximum Lanczos steps (default: \f$\min(3k, n)\f$).
 /// @return `lanczos_result` with Ritz pairs and convergence metadata.
 inline lanczos_result lanczos(const with_law<mat<real>, law::self_adjoint> &A, idx k, real tol = 1e-10,

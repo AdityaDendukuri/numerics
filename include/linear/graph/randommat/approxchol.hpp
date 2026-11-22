@@ -1,6 +1,5 @@
 /// @file linear/graph/randommat/approxchol.hpp
-/// @brief Randomized Approximate Cholesky (ApproxChol) factorizations and SDD/Laplacian
-/// preconditioners.
+/// @brief Randomized approximate Cholesky (ApproxChol) of Laplacian and SDD matrices.
 #pragma once
 
 #include "linear/graph/randommat/solve.hpp"

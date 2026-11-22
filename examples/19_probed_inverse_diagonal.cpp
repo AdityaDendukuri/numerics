@@ -1,12 +1,12 @@
 /// @file 19_probed_inverse_diagonal.cpp
-/// @brief diag(A^{-1}) of a sparse M-matrix from a block of random probes.
+/// @brief diag(A^{-1}) of a sparse M-matrix from random probes.
 ///
-/// For a nonsingular M-matrix, `inverse_diagonal(F, A)` estimates every entry of
-/// \f$\operatorname{diag}(A^{-1})\f$ at once from a block of Gaussian probes. It first scales
-/// \f$A\f$ by a diagonal similarity that makes its symmetric part positive definite, which turns
-/// each entry into a squared row norm. The estimate is unbiased and positive, and its relative
-/// error shrinks like \f$\sqrt{2/\text{probes}}\f$. `F` can be any factorization of \f$A\f$. Here
-/// it is the sparse one, which also gives the exact diagonal below with one solve per entry.
+/// For a nonsingular M-matrix, `inverse_diagonal(F, A)` estimates all of
+/// \f$\operatorname{diag}(A^{-1})\f$ at once from a block of Gaussian probes. It first rescales
+/// \f$A\f$ so its symmetric part is positive definite, and then each entry is a squared row norm.
+/// The estimate is unbiased and positive, with relative error about \f$\sqrt{2/\text{probes}}\f$.
+/// `F` can be any factorization of \f$A\f$. Here it is the sparse LU, which also gives the exact
+/// diagonal for comparison.
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -16,8 +16,8 @@ using namespace num;
 
 namespace {
 
-// A ring of n states with unequal clockwise and counterclockwise rates, plus decay: a
-// nonsymmetric, nonreversible M-matrix.
+// A ring of n states with unequal clockwise and counterclockwise rates, plus decay. The chain is
+// not reversible, and A is a nonsymmetric M-matrix.
 spmat ring(idx n) {
     array<idx> rows, columns;
     array<real> values;

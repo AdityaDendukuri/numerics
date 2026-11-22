@@ -277,7 +277,13 @@ class basic_rk45_steps {
             real err_norm = 0;
             for (idx i = 0; i < n; ++i) {
                 real sc = (rtol_ * std::max(std::abs(y_[i]), std::abs(ytmp_[i]))) + atol_;
-                err_norm = std::max(err_norm, std::abs(err_[i] / sc));
+                err_norm = num::max(err_norm, std::abs(err_[i] / sc));
+            }
+
+            if (std::isnan(err_norm)) {
+                done_ = true; // a non-finite state cannot be stepped past: report it
+                converged_ = false;
+                return;
             }
 
             real factor = 0.9 * std::pow(err_norm + 1e-10, -0.2);

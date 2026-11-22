@@ -1,9 +1,9 @@
 /// @file 02_iterative_krylov_solvers.cpp
 /// @brief CG, preconditioned CG, MINRES and GMRES on sparse and matrix-free operators.
 ///
-/// Each solver states its requirement as a concept. CG and PCG need an SPD operator, MINRES needs a
-/// self-adjoint one, and GMRES accepts any linear operator. A law is attached to an operator with
-/// `assume_spd` or `assume_symmetric`, and an operator without the required law does not compile.
+/// Each solver states what it needs as a concept. CG and PCG need an SPD operator, MINRES needs a
+/// self-adjoint one, and GMRES takes any linear operator. You attach a law with `assume_spd` or
+/// `assume_symmetric`. Passing an operator without the law is a compile error.
 #include <cmath>
 #include <cstdio>
 #include <numerics.hpp>
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     const operators::sparse_op op(A);
 
     vec<real> x(n, 0.0);
-    report("CG, sparse", cg(assume_spd(op), b, x, {.tolerance = 1e-10, .max_iterations = 2000}));
+    report("CG, sparse", cg(assume_spd(op), b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 2000}));
 
     x = vec<real>(n, 0.0);
     vec<real> inverse_diagonal(n);
@@ -70,15 +70,15 @@ int main(int argc, char **argv) {
            pcg(assume_spd(op), jacobi, b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 2000}));
 
     x = vec<real>(n, 0.0);
-    report("MINRES", minres(assume_symmetric(op), b, x, {.tolerance = 1e-10, .max_iterations = 2000}));
+    report("MINRES", minres(assume_symmetric(op), b, x, {.tolerance = {.rtol = 1e-10}, .max_iterations = 2000}));
 
-    // A nonsymmetric matrix: convection-diffusion. Only GMRES applies.
+    // A nonsymmetric convection-diffusion matrix, which only GMRES accepts.
     const spmat N = tridiagonal(n, -1.4, -0.6);
     vec<real> y(n, 0.0);
     report("GMRES(30), nonsymmetric",
-           gmres(operators::sparse_op(N), b, y, {.tolerance = 1e-10, .max_iterations = 4000, .restart = 30}));
+           gmres(operators::sparse_op(N), b, y, {.tolerance = {.rtol = 1e-10}, .max_iterations = 4000, .restart = 30}));
 
-    // A matrix-free operator: the same SPD matrix as a lambda.
+    // The same SPD matrix as a matrix-free lambda.
     const auto laplacian = operators::make_op(
         [](const vec<real> &u, vec<real> &Lu) {
             const idx m = u.size();
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
         },
         n);
     vec<real> u(n, 0.0);
-    report("CG, matrix-free", cg(assume_spd(laplacian), b, u, {.tolerance = 1e-10, .max_iterations = 2000}));
+    report("CG, matrix-free", cg(assume_spd(laplacian), b, u, {.tolerance = {.rtol = 1e-10}, .max_iterations = 2000}));
     std::printf("max |x_sparse - x_matrix_free| = %.1e\n", [&] {
         real worst = 0.0;
         for (idx i = 0; i < n; ++i) {

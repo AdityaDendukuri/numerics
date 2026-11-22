@@ -1,5 +1,5 @@
 /// @file linear/factorization/thomas.hpp
-/// @brief Pure template Thomas algorithm for tridiagonal systems.
+/// @brief The Thomas algorithm for tridiagonal systems.
 ///
 /// Solves \f$a_{i-1}x_{i-1}+b_i x_i+c_i x_{i+1}=d_i\f$ in \f$O(n)\f$.
 #pragma once

@@ -1,5 +1,5 @@
 /// @file cell_list_3d.hpp
-/// @brief Cache-coherent 3D cell list for O(1) amortized neighbour queries
+/// @brief 3D cell list for neighbour queries in O(1) amortized time.
 #pragma once
 
 #include "core/types.hpp"

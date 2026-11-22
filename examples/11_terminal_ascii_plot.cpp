@@ -1,28 +1,25 @@
 /// @file 11_terminal_ascii_plot.cpp
-/// @brief Quick-start guide for in-terminal ASCII plotting via gnuplot set terminal dumb.
+/// @brief Plotting in the terminal with gnuplot.
+///
+/// `plt::plot`, `plt::title` and the label calls build a figure as in matplotlib.
+/// `plt::show_dumb(width, height)` draws it as text with gnuplot's dumb terminal, which works over
+/// ssh and in logs. `plt::show` opens a window instead.
 #include <cmath>
-#include <iostream>
 #include <numerics.hpp>
+#include <vector>
 
 int main() {
     using namespace num;
 
-    // Generate sample sine wave data
     std::vector<double> x, y;
     for (int i = 0; i <= 60; ++i) {
-        double xi = i * 0.1;
-        x.push_back(xi);
-        y.push_back(std::sin(xi));
+        x.push_back(i * 0.1);
+        y.push_back(std::sin(i * 0.1));
     }
 
-    std::cout << "Rendering In-Terminal ASCII Plot (set terminal dumb size 120, 30)...\n\n";
-
-    // 1. Matplotlib-style plotting API rendered directly in terminal ASCII
     plt::plot(x, y, "sin(x)", "lines");
-    plt::title("In-Terminal ASCII Waveform Plot");
-    plt::xlabel("Time (x)");
-    plt::ylabel("Amplitude sin(x)");
+    plt::title("sin(x) in the terminal");
+    plt::xlabel("x");
+    plt::ylabel("sin(x)");
     plt::show_dumb(120, 25);
-
-    return 0;
 }

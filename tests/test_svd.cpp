@@ -159,3 +159,40 @@ TEST(SVD_Randomized, ColumnOrthonormality) {
     auto r = svd_truncated(A, 8);
     EXPECT_LT(col_ortho_error(r.U), 1e-8);
 }
+
+// Singular values from eig(A^T A) lose everything below sqrt(eps) * sigma_max; a proper SVD
+// keeps the small ones to absolute accuracy eps * sigma_max.
+TEST(SVD, DoesNotSquareTheConditionNumber) {
+    constexpr idx n = 4;
+    const real sigma[n] = {1.0, 1e-4, 1e-8, 1e-11};
+    // Orthogonal factors from two Householder reflectors.
+    auto reflector = [](const std::vector<real> &v) {
+        real vv = 0;
+        for (real x : v) {
+            vv += x * x;
+        }
+        mat<real> P(n, n, 0.0);
+        for (idx i = 0; i < n; ++i) {
+            for (idx j = 0; j < n; ++j) {
+                P(i, j) = (i == j ? 1.0 : 0.0) - 2.0 * v[i] * v[j] / vv;
+            }
+        }
+        return P;
+    };
+    const mat<real> U = reflector({1, 2, -1, 3});
+    const mat<real> V = reflector({2, -1, 1, 1});
+    mat<real> A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            for (idx k = 0; k < n; ++k) {
+                A(i, j) += U(i, k) * sigma[k] * V(j, k);
+            }
+        }
+    }
+    for (const auto &[r, which] : {std::pair{svd(A), "default"}, std::pair{seq::svd(A, 1e-15, 100), "seq"}}) {
+        ASSERT_EQ(r.S.size(), n) << which;
+        for (idx k = 0; k < n; ++k) {
+            EXPECT_NEAR(r.S[k], sigma[k], 20.0 * n * eps) << which << " k = " << k;
+        }
+    }
+}

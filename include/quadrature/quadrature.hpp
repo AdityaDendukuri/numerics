@@ -1,5 +1,5 @@
 /// @file quadrature/quadrature.hpp
-/// @brief Pure template numerical integration (quadrature) on [a, b].
+/// @brief Quadrature rules on [a, b].
 #pragma once
 
 #include "core/policy.hpp"
@@ -162,14 +162,23 @@ inline Float gauss_legendre(Func &&f, Float a, Float b, idx p = 5) {
 /// @param f Integrand function.
 /// @param a Lower limit.
 /// @param b Upper limit.
-/// @param tol Error tolerance for adaptive refinement (default: 1e-8).
+/// @param tol Tolerance on the error estimate against \f$\int_a^b |f|\f$ (default:
+/// `{.rtol = 1e-10}`). The scale is sampled at eight nodes, three at irrational fractions of the
+/// interval (Gander and Gautschi), so an integral that cancels to zero still has a nonzero scale.
 /// @param max_depth Maximum recursion depth before termination (default: 50).
 /// @return High-accuracy integral approximation satisfying error tolerance.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
-inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8}, idx max_depth = 50) {
-    Float fa = f(a), fb = f(b), fm = f(Float{0.5} * (a + b));
-    Float est = (b - a) / Float{6.0} * (fa + (Float{4.0} * fm) + fb);
-    return detail::adaptive_helper(f, a, b, fa, fm, fb, est, tol, max_depth);
+inline Float adaptive_simpson(Func &&f, Float a, Float b,
+                              basic_tolerance<Float> tol = {.rtol = Float{1e-10}}, idx max_depth = 50) {
+    const Float fa = f(a), fb = f(b), fm = f(Float{0.5} * (a + b));
+    const Float est = (b - a) / Float{6.0} * (fa + (Float{4.0} * fm) + fb);
+    Float magnitude = std::abs(fa) + std::abs(fm) + std::abs(fb);
+    for (Float c : {Float{0.25}, Float{0.75}, Float{0.2763932022500210}, Float{0.6180339887498949},
+                    Float{0.8541019662496845}}) {
+        magnitude += std::abs(f(a + (c * (b - a))));
+    }
+    const Float scale = std::abs(b - a) * magnitude / Float{8};
+    return detail::adaptive_helper(f, a, b, fa, fm, fb, est, tol.bound(scale), max_depth);
 }
 
 /// @brief Romberg numerical integration using Richardson extrapolation on trapezoidal sums.
@@ -181,11 +190,13 @@ inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8
 /// @param f Integrand function.
 /// @param a Lower limit.
 /// @param b Upper limit.
-/// @param tol Convergence tolerance on diagonal tableau entries (default: 1e-10).
+/// @param tol Tolerance on successive diagonal entries against the latest one (default:
+/// `{.rtol = 1e-10}`).
 /// @param max_levels Maximum tableau extrapolation levels (default: 12).
 /// @return Extrapolated integral approximation.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
-inline Float romberg(Func &&f, Float a, Float b, Float tol = Float{1e-10}, idx max_levels = 12) {
+inline Float romberg(Func &&f, Float a, Float b, basic_tolerance<Float> tol = {.rtol = Float{1e-10}},
+                     idx max_levels = 12) {
     array<array<Float>> R(max_levels, array<Float>(max_levels, Float{0}));
     R[0][0] = Float{0.5} * (b - a) * (f(a) + f(b));
 
@@ -204,7 +215,7 @@ inline Float romberg(Func &&f, Float a, Float b, Float tol = Float{1e-10}, idx m
             R[i][j] = R[i][j - 1] + ((R[i][j - 1] - R[i - 1][j - 1]) / (factor - Float{1.0}));
         }
 
-        if (i > 0 && std::abs(R[i][i] - R[i - 1][i - 1]) < tol) {
+        if (tol.met(std::abs(R[i][i] - R[i - 1][i - 1]), R[i][i])) {
             return R[i][i];
         }
     }

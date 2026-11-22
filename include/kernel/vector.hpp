@@ -27,6 +27,7 @@
 #include <cmath>
 #include <concepts>
 #include <cstddef>
+#include <limits>
 
 namespace num {
 /// Index type, identical to the one in container/types.hpp, so this file stays self-contained.
@@ -102,6 +103,7 @@ namespace contract {
 struct alias_safe_t final {};
 struct throughput_t final {};
 struct ordered_t final {};
+struct compensated_t final {};
 
 /// @brief Tag a call whose output may alias an input.
 inline constexpr alias_safe_t alias_safe{};
@@ -109,6 +111,8 @@ inline constexpr alias_safe_t alias_safe{};
 inline constexpr throughput_t throughput{};
 /// @brief Tag a call that must sum in index order.
 inline constexpr ordered_t ordered{};
+/// @brief Tag a sum that carries the rounding error of each addition (Neumaier).
+inline constexpr compensated_t compensated{};
 } // namespace contract
 
 namespace detail {
@@ -479,22 +483,43 @@ template <std::floating_point T>
 }
 
 /// @brief Computes \f$L_\infty\f$ norm \f$\|\mathbf{x}\|_\infty = \max_{0 \le i < n} |x_i|\f$.
+///
+/// NaN if any element is NaN: a comparison with NaN is false, so a plain running max skips it.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T linf_norm(const T *NUM_K_RESTRICT x, idx n) noexcept {
     T mx = T(0);
+    bool nan = false;
     for (idx i = 0; i < n; ++i) {
         const T v = std::abs(x[i]);
-        if (v > mx) {
-            mx = v;
-        }
+        nan |= (v != v);
+        mx = v > mx ? v : mx;
     }
-    return mx;
+    return nan ? std::numeric_limits<T>::quiet_NaN() : mx;
 }
 
 /// @brief Computes scalar vector sum \f$\sum_{i=0}^{n-1} x_i\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T sum(const T *NUM_K_RESTRICT x, idx n) noexcept {
     return detail::reduce<T>(n, [x](idx i) { return x[i]; });
+}
+
+/// @brief Sum with Neumaier's compensation: the error is about \f$2u\sum|x_i|\f$ independent of
+/// \f$n\f$, against \f$(n-1)u\sum|x_i|\f$ for recursive summation.
+///
+/// Recovers cancellation such as `1 + 1e100 + 1 - 1e100 = 2`, where plain summation returns 0.
+/// The compensation is lost under `-ffast-math`, which treats it as algebraically zero.
+template <std::floating_point T>
+[[nodiscard]] NUM_K_AINLINE T sum(contract::compensated_t, const T *NUM_K_RESTRICT x,
+                                  idx n) noexcept {
+    T s = T(0);
+    T c = T(0);
+    for (idx i = 0; i < n; ++i) {
+        const T t = s + x[i];
+        c += std::abs(s) >= std::abs(x[i]) ? (s - t) + x[i] : (x[i] - t) + s;
+        s = t;
+    }
+    // With an infinite term, s - t is inf - inf: keep s rather than a NaN correction.
+    return std::isfinite(s) ? s + c : s;
 }
 
 /// @brief In-place vector element clamp \f$x_i \leftarrow \min(\max(x_i, x_{\min}), x_{\max})\f$.

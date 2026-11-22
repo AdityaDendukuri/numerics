@@ -1,5 +1,5 @@
 /// @file pde/pde.hpp
-/// @brief Umbrella include for the PDE module.
+/// @brief Grids, stencils, diffusion and Poisson solvers.
 /// @todo Add boundary-condition objects, Helmholtz operators, variable-
 /// coefficient elliptic operators, and structured 1D/2D/3D operator builders.
 #pragma once

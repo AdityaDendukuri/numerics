@@ -1,5 +1,5 @@
 /// @file cell_list.hpp
-/// @brief Cache-coherent 2D cell list for O(1) amortized neighbour queries
+/// @brief 2D cell list for neighbour queries in O(1) amortized time.
 #pragma once
 
 #include "core/types.hpp"

@@ -1,5 +1,5 @@
 /// @file spatial.hpp
-/// @brief Umbrella include for spatial data structures
+/// @brief Cell lists, neighbour lists, periodic lattices and smoothing kernels.
 #pragma once
 
 #include "spatial/cell_list.hpp"

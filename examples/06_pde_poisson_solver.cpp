@@ -2,12 +2,11 @@
 /// @brief A 3D Poisson problem on scalar fields, converging at second order.
 ///
 /// `field_solver::solve_poisson(phi, s)` solves \f$\Delta\phi = s\f$ with zero Dirichlet
-/// boundaries. It runs CG on the 7-point Laplacian and uses the field's own storage as the solution
-/// vector. The manufactured solution \f$\phi = e^x\sin\pi x\sin\pi y\sin\pi z\f$ vanishes on the
-/// boundary, and halving the grid spacing divides the error by about four.
+/// boundaries. It runs CG on the 7-point Laplacian, using the field's storage as the solution
+/// vector. The exact solution is \f$\phi = e^x\sin\pi x\sin\pi y\sin\pi z\f$. Halving the grid
+/// spacing cuts the error by about four.
 #include <cmath>
 #include <cstdio>
-#include <numbers>
 #include <numerics.hpp>
 #include <string_view>
 #include <vector>
@@ -16,7 +15,6 @@ using namespace num;
 
 int main(int argc, char **argv) {
     const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
-    constexpr real pi = std::numbers::pi;
     std::printf("   n      h        CG iterations   max error   ratio\n");
     real previous = 0.0;
     std::vector<double> slice_x, slice_phi;

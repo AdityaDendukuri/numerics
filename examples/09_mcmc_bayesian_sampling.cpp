@@ -1,12 +1,11 @@
 /// @file 09_mcmc_bayesian_sampling.cpp
 /// @brief Running statistics and histograms over a stream of samples.
 ///
-/// `running_stats` accumulates the mean and variance in one pass with Welford's update, which
-/// stays accurate where the textbook sum-of-squares formula cancels. `histogram` bins samples
-/// over a fixed range and returns a normalized density.
+/// `running_stats` computes the mean and variance in one pass with Welford's update, which stays
+/// accurate where the textbook sum-of-squares formula loses digits. `histogram` bins samples over a
+/// fixed range and returns a normalized density.
 #include <cmath>
 #include <cstdio>
-#include <numbers>
 #include <numerics.hpp>
 #include <random>
 #include <string_view>
@@ -42,7 +41,7 @@ int main(int argc, char **argv) {
     for (idx b = 0; b < hist.nbins; b += 4) {
         const double x = hist.bin_centre(b);
         std::printf("%6.2f   %.4f    %.4f\n", x, density[b],
-                    std::exp(-0.5 * x * x) / std::sqrt(2.0 * std::numbers::pi));
+                    std::exp(-0.5 * x * x) / std::sqrt(2.0 * num::pi));
     }
 
     if (plot) {

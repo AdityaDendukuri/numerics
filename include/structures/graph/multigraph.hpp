@@ -1,5 +1,5 @@
 /// @file structures/graph/multigraph.hpp
-/// @brief Weighted multigraph data structure with multi-edge multiplicities for RandNLA and Laplacian solvers.
+/// @brief Weighted multigraph with edge multiplicities, used by approximate Cholesky.
 #pragma once
 
 #include "core/types.hpp"

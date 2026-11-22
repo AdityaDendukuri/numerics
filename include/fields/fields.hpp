@@ -1,5 +1,5 @@
 /// @file fields/fields.hpp
-/// @brief Umbrella include for grid and field containers.
+/// @brief Grids and the fields sampled on them.
 #pragma once
 
 #include "fields/field3d.hpp"

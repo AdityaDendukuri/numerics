@@ -56,15 +56,17 @@ namespace num::omp {
     const real *xd = x.data();
     const idx blocks = (n + parallel_block - 1) / parallel_block;
     real mx = real(0);
-#pragma omp parallel for reduction(max : mx) schedule(static)
+    bool nan_seen = false;
+#pragma omp parallel for reduction(max : mx) reduction(|| : nan_seen) schedule(static)
     for (idx b = 0; b < blocks; ++b) {
         const idx lo = b * parallel_block;
         const real v = kernel::linf_norm(xd + lo, std::min(parallel_block, n - lo));
+        nan_seen = nan_seen || std::isnan(v);
         if (v > mx) {
             mx = v;
         }
     }
-    return mx;
+    return nan_seen ? num::nan : mx;
 #else
     return seq::linf_norm(x);
 #endif
@@ -119,6 +121,14 @@ namespace num {
 #else
     return seq::sum(x);
 #endif
+}
+
+/// @brief Tag for `num::sum(x, num::compensated)`.
+inline constexpr kernel::contract::compensated_t compensated{};
+
+/// @brief The sum with Neumaier compensation, accurate to about \f$2u\sum_i|x_i|\f$ at any length.
+[[nodiscard]] inline real sum(const vec<real> &x, kernel::contract::compensated_t) noexcept {
+    return kernel::sum(kernel::contract::compensated, x.data(), x.size());
 }
 
 } // namespace num

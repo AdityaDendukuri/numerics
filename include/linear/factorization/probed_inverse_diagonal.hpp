@@ -14,8 +14,11 @@
 
 namespace num {
 
+/// @brief Which Gao--Kyng--Spielman sampler builds the approximate Cholesky factor.
 enum class approximate_cholesky_preconditioner { ac, ac2 };
+/// @brief One sample per edge.
 inline constexpr approximate_cholesky_preconditioner ac = approximate_cholesky_preconditioner::ac;
+/// @brief Two samples per edge.
 inline constexpr approximate_cholesky_preconditioner ac2 = approximate_cholesky_preconditioner::ac2;
 
 /// Accuracy and sampling choices for an approximate inverse diagonal.
@@ -27,6 +30,7 @@ struct inverse_diagonal_options {
     unsigned seed = 42;     ///< Seed for the probe block and the preconditioner.
 };
 
+/// @brief Approximate Cholesky factor of a grounded Laplacian, with the sampler chosen at run time.
 [[nodiscard]] inline grounded_approx_chol_factor
 grounded_approxchol_factor(const spmat &matrix, approximate_cholesky_preconditioner method,
                            unsigned seed) {

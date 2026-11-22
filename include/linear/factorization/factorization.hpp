@@ -1,5 +1,5 @@
 /// @file factorization.hpp
-/// @brief Umbrella include for dense matrix factorizations
+/// @brief All dense factorizations.
 #pragma once
 
 #include "linear/factorization/block_tridiagonal.hpp"

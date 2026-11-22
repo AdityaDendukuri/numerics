@@ -1,5 +1,5 @@
 /// @file stochastic/markov.hpp
-/// @brief Markov Chain Monte Carlo -- umbrella include.
+/// @brief Random engines, sampling and Markov chain Monte Carlo.
 ///
 /// Provides template-based Metropolis-Hastings sweeps and umbrella sampling
 /// with zero-overhead callable dispatch (no std::function in hot loops).

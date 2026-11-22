@@ -142,7 +142,7 @@ TEST(PreconditionedGMRES, ConvergesInOneStepWhenTheFactorizationIsExact) {
     num::vec<num::real> b(n, 1.0);
     num::vec<num::real> x(n, 0.0);
     const auto result =
-        num::gmres(op, M, b, x, num::gmres_options{.tolerance = 1e-10, .max_iterations = 100});
+        num::gmres(op, M, b, x, num::gmres_options{.tolerance = {.rtol = 1e-10}, .max_iterations = 100});
 
     EXPECT_TRUE(result.converged);
     EXPECT_LE(result.iterations, 2u) << "an exact preconditioner leaves nothing for Krylov to do";
@@ -159,7 +159,7 @@ TEST(PreconditionedGMRES, ReportsTheTrueResidualNotThePreconditionedOne) {
     num::vec<num::real> b(n, 2.0);
     num::vec<num::real> x(n, 0.0);
     const auto result =
-        num::gmres(op, M, b, x, num::gmres_options{.tolerance = 1e-9, .max_iterations = 200});
+        num::gmres(op, M, b, x, num::gmres_options{.tolerance = {.rtol = 1e-9}, .max_iterations = 200});
     ASSERT_TRUE(result.converged);
 
     num::vec<num::real> residual(n, 0.0);
@@ -206,14 +206,14 @@ TEST(PreconditionedGMRES, CutsIterationsOnANonsymmetricSystem) {
     num::vec<num::real> b(n, 1.0);
     num::vec<num::real> x_plain(n, 0.0);
     const auto plain = num::gmres(
-        op, b, x_plain, num::gmres_options{.tolerance = 1e-8, .max_iterations = 5000, .restart = 50});
+        op, b, x_plain, num::gmres_options{.tolerance = {.rtol = 1e-8}, .max_iterations = 5000, .restart = 50});
     ASSERT_TRUE(plain.converged);
 
     const num::ilu0_preconditioner M(A);
     num::vec<num::real> x_prec(n, 0.0);
     const auto preconditioned =
         num::gmres(op, M, b, x_prec,
-                   num::gmres_options{.tolerance = 1e-8, .max_iterations = 5000, .restart = 50});
+                   num::gmres_options{.tolerance = {.rtol = 1e-8}, .max_iterations = 5000, .restart = 50});
     ASSERT_TRUE(preconditioned.converged);
 
     EXPECT_LT(preconditioned.iterations * 4, plain.iterations)

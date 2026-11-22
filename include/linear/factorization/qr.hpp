@@ -38,7 +38,7 @@ NUM_K_AINLINE void householder_vector(T *NUM_K_RESTRICT v, T &beta, const T *NUM
         tail += x[i] * x[i];
     }
     const T norm_x = std::sqrt(tail + (x[0] * x[0]));
-    if (tail == T(0) || norm_x < T(1e-15)) {
+    if (tail == T(0)) {
         beta = T(0);
         v[0] = T(1);
         return;
@@ -72,7 +72,7 @@ NUM_K_AINLINE void householder_vector_strided(T *NUM_K_RESTRICT v, T &beta,
         tail += v[i] * v[i];
     }
     const T norm_x = std::sqrt(tail + (v[0] * v[0]));
-    if (tail == T(0) || norm_x < T(1e-15)) { // see householder_vector
+    if (tail == T(0)) { // see householder_vector
         beta = T(0);
         v[0] = T(1);
         return;

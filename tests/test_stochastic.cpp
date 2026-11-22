@@ -1,3 +1,4 @@
+#include "stats/stats.hpp"
 #include "stochastic/categorical.hpp"
 #include "stochastic/multinomial.hpp"
 #include "stochastic/probe.hpp"
@@ -68,4 +69,29 @@ TEST(multinomial, HandlesUnnormalizedAndDegenerateWeights) {
     EXPECT_THROW(sample_multinomial(negative, 1, generator), std::invalid_argument);
     EXPECT_THROW(sample_multinomial(zero, 1, generator), std::invalid_argument);
     EXPECT_THROW(sample_multinomial(empty, 1, generator), std::invalid_argument);
+}
+
+// Chan, Golub and LeVeque: the one-pass textbook formula sum(x^2) - n*mean^2 cancels
+// catastrophically on data with a large offset; Welford's update does not.
+TEST(RunningStats, WelfordVarianceSurvivesLargeOffset) {
+    for (real offset : {0.0, 1e8, 1e9, 1e12}) {
+        running_stats s;
+        for (real x : {4.0, 7.0, 13.0, 16.0}) {
+            s.update(offset + x);
+        }
+        EXPECT_NEAR(s.mean, offset + 10.0, 1e-15 * offset + 1e-15);
+        EXPECT_NEAR(s.variance(), 30.0, 30.0 * 1e-6) << "offset = " << offset;
+    }
+}
+
+// (x - lo) / (hi - lo) * n can round up to exactly n for x just below hi, which drops an
+// in-range sample. Every x in [lo, hi) must land in a valid bin.
+TEST(Histogram, BinsTheLargestValueBelowTheUpperEdge) {
+    for (idx nbins : {3, 7, 10, 100}) {
+        histogram h(nbins, -1.0, 1.0);
+        const real x = std::nextafter(1.0, 0.0);
+        EXPECT_LT(h.bin(x), nbins) << "nbins = " << nbins;
+        h.fill(x);
+        EXPECT_EQ(h.total(), 1.0) << "nbins = " << nbins;
+    }
 }

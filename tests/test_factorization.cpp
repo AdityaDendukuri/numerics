@@ -1,3 +1,4 @@
+#include "linear/matrix_properties.hpp"
 #include "container/matrix_ops.hpp"
 #include "linear/factorization/factorization.hpp"
 #include "linear/matrix_utils.hpp"
@@ -231,7 +232,6 @@ TEST(InversePrincipalBlock, DenseFactorizationsAndValidation) {
     EXPECT_THROW(inverse_principal_block(lu_factor, std::vector<idx>{3}, principal, workspace),
                  std::out_of_range);
 }
-
 TEST(LU, SolveSmall3x3) {
     // [2  1  0]       [1]
     // [4  3  2] x  =  [2]
@@ -740,5 +740,171 @@ TEST(Cholesky, SolveAcceptsAliasedAndUnsizedOutput) {
     matvec(A, x, Ax);
     for (idx i = 0; i < 3; ++i) {
         EXPECT_NEAR(Ax[i], b[i], 1e-12);
+    }
+}
+
+namespace {
+
+vec<real> dense_times(const mat<real> &A, const vec<real> &x) {
+    vec<real> y(A.rows(), 0.0);
+    for (idx i = 0; i < A.rows(); ++i) {
+        for (idx j = 0; j < A.cols(); ++j) {
+            y[i] += A(i, j) * x[j];
+        }
+    }
+    return y;
+}
+
+real norm_inf(const mat<real> &A) {
+    real m = 0;
+    for (idx i = 0; i < A.rows(); ++i) {
+        real row = 0;
+        for (idx j = 0; j < A.cols(); ++j) {
+            row += std::abs(A(i, j));
+        }
+        m = std::max(m, row);
+    }
+    return m;
+}
+
+real norm_inf(const vec<real> &v) {
+    real m = 0;
+    for (idx i = 0; i < v.size(); ++i) {
+        m = std::max(m, std::abs(v[i]));
+    }
+    return m;
+}
+
+real orthogonality_loss(const mat<real> &Q) {
+    real worst = 0;
+    for (idx a = 0; a < Q.cols(); ++a) {
+        for (idx b = 0; b < Q.cols(); ++b) {
+            real s = 0;
+            for (idx i = 0; i < Q.rows(); ++i) {
+                s += Q(i, a) * Q(i, b);
+            }
+            worst = std::max(worst, std::abs(s - (a == b ? 1.0 : 0.0)));
+        }
+    }
+    return worst;
+}
+
+mat<real> hilbert(idx n) {
+    mat<real> H(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            H(i, j) = 1.0 / static_cast<real>(i + j + 1);
+        }
+    }
+    return H;
+}
+
+mat<real> scaled_laplacian(idx n, real s) {
+    mat<real> A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        A(i, i) = s * 2.1;
+        if (i + 1 < n) {
+            A(i, i + 1) = A(i + 1, i) = -s;
+        }
+    }
+    return A;
+}
+
+} // namespace
+
+// Partial pivoting is backward stable only up to the growth factor, which Wilkinson showed
+// reaches 2^(n-1) on this matrix; the textbook kernel must attain the bound exactly.
+TEST(LU, WilkinsonMatrixAttainsPartialPivotingGrowthBound) {
+    constexpr idx n = 24;
+    mat<real> A(n, n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        A(i, i) = 1.0;
+        A(i, n - 1) = 1.0;
+        for (idx j = 0; j < i; ++j) {
+            A(i, j) = -1.0;
+        }
+    }
+    const auto f = seq::lu(A);
+    ASSERT_FALSE(f.singular);
+    real growth = 0;
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = i; j < n; ++j) {
+            growth = std::max(growth, std::abs(f.LU(i, j)));
+        }
+    }
+    EXPECT_EQ(growth, std::ldexp(1.0, n - 1));
+
+    // Householder QR has no growth factor and solves the same system to working accuracy.
+    vec<real> x_true(n, 0.0);
+    for (idx i = 0; i < n; ++i) {
+        x_true[i] = std::sin(static_cast<real>(i + 1));
+    }
+    vec<real> x;
+    solve(qr(A), dense_times(A, x_true), x);
+    for (idx i = 0; i < n; ++i) {
+        EXPECT_NEAR(x[i], x_true[i], 1e-12);
+    }
+}
+
+// Läuchli: forming A^T A squares the condition number and rounds this one to exact
+// singularity, while QR on A recovers the least-squares solution.
+TEST(QR, LauchliLeastSquaresNeedsQrNotNormalEquations) {
+    const real e = 1e-9;
+    mat<real> A(3, 2, 0.0);
+    A(0, 0) = 1.0;
+    A(0, 1) = 1.0;
+    A(1, 0) = e;
+    A(2, 1) = e;
+    mat<real> AtA(2, 2, 0.0);
+    for (idx i = 0; i < 2; ++i) {
+        for (idx j = 0; j < 2; ++j) {
+            for (idx k = 0; k < 3; ++k) {
+                AtA(i, j) += A(k, i) * A(k, j);
+            }
+        }
+    }
+    EXPECT_TRUE(lu(AtA).singular);
+
+    vec<real> x;
+    solve(qr(A), vec<real>{2.0, e, e}, x);
+    ASSERT_EQ(x.size(), 2u);
+    EXPECT_NEAR(x[0], 1.0, 1e-6);
+    EXPECT_NEAR(x[1], 1.0, 1e-6);
+}
+
+// Classical Gram-Schmidt loses orthogonality like kappa * eps; Householder QR must not.
+TEST(QR, StaysOrthogonalOnHilbertColumns) {
+    constexpr idx n = 12;
+    const mat<real> H = hilbert(n);
+    const auto f = qr(H);
+    EXPECT_LE(orthogonality_loss(f.Q), 50.0 * n * eps);
+    real defect = 0;
+    for (idx i = 0; i < n; ++i) {
+        for (idx j = 0; j < n; ++j) {
+            real s = 0;
+            for (idx k = 0; k < n; ++k) {
+                s += f.Q(i, k) * f.R(k, j);
+            }
+            defect = std::max(defect, std::abs(s - H(i, j)));
+        }
+    }
+    EXPECT_LE(defect, 50.0 * n * eps * norm_inf(H));
+}
+
+TEST(ScaleInvariance, LuQrAndSymmetryIgnoreTheScale) {
+    constexpr idx n = 12;
+    for (real s : {1e-20, 1e20}) {
+        const mat<real> A = scaled_laplacian(n, s);
+        // An absolute pivot floor of 1e-14 called every pivot of the 1e-20 matrix singular.
+        EXPECT_FALSE(lu(A).singular) << "s = " << s;
+        EXPECT_FALSE(seq::lu(A).singular) << "s = " << s;
+        EXPECT_TRUE(linear::is_symmetric(A)) << "s = " << s;
+
+        // An absolute 1e-15 floor on the column norm skipped every Householder reflector.
+        const auto f = qr(A);
+        EXPECT_LE(orthogonality_loss(f.Q), 100.0 * n * num::eps) << "s = " << s;
+        for (idx i = 1; i < n; ++i) {
+            EXPECT_LE(std::abs(f.R(i, i - 1)), 10.0 * num::eps * std::abs(s)) << "s = " << s;
+        }
     }
 }

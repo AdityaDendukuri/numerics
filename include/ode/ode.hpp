@@ -1,5 +1,5 @@
 /// @file ode/ode.hpp
-/// @brief ODE and symplectic integrator entry points.
+/// @brief Explicit, adaptive and symplectic ODE integrators.
 #pragma once
 
 #include "ode/concepts.hpp"

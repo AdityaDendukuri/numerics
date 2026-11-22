@@ -1,5 +1,5 @@
 /// @file linear/solvers/minres.hpp
-/// @brief Evidence-constrained minimum residual iteration.
+/// @brief MINRES for self-adjoint operators.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -20,7 +20,7 @@ namespace num {
 
 /// @brief Convergence options of `num::minres`: tolerance and iteration limit.
 struct minres_options {
-    real tolerance = 1e-10;
+    num::tolerance tolerance{.rtol = 1e-10}; ///< On \f$\|b - Ax\|_2\f$ against \f$\|b\|_2\f$.
     idx max_iterations = 1000;
 };
 
@@ -65,9 +65,10 @@ requires math::inner_product_space<V> &&math::self_adjoint_operator<Op, V> &&
     if (math::dimension(x) != n || A.rows() != n || A.cols() != n) {
         throw std::invalid_argument("minres: incompatible operator and vector dimensions");
     }
-    if (!(options.tolerance > 0.0)) {
+    if (!options.tolerance.valid()) {
         throw std::invalid_argument("minres: invalid convergence options");
     }
+    const real b_norm = static_cast<real>(math::norm(b));
 
     V residual = math::zero_like(b);
     V applied = math::zero_like(b);
@@ -76,7 +77,7 @@ requires math::inner_product_space<V> &&math::self_adjoint_operator<Op, V> &&
     math::linear_combination(real(1), b, real(-1), residual);
 
     const real beta0 = math::norm(residual);
-    solver_result result{0, beta0, beta0 < options.tolerance};
+    solver_result result{0, beta0, options.tolerance.met(beta0, b_norm)};
     if (result.converged || options.max_iterations == 0)
         return result;
 
@@ -120,12 +121,13 @@ requires math::inner_product_space<V> &&math::self_adjoint_operator<Op, V> &&
         // r <- b - A*x_candidate
         math::linear_combination(real(1), b, real(-1), residual);
         result.residual = math::norm(residual);
-        if (result.residual < options.tolerance) {
+        if (options.tolerance.met(result.residual, b_norm)) {
             x = std::move(candidate);
             result.converged = true;
             break;
         }
-        if (next_beta <= real(1e-15)) {
+        // Lanczos breakdown: the new direction is rounding noise relative to this step's scale.
+        if (next_beta <= num::eps * (std::abs(diagonal) + (j > 0 ? beta[j - 1] : real(0)))) {
             x = std::move(candidate);
             break;
         }

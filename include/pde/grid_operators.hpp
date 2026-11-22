@@ -1,5 +1,5 @@
 /// @file pde/grid_operators.hpp
-/// @brief mat-free grid & stencil operators with explicit spmat generation.
+/// @brief Matrix-free grid operators, and the sparse matrices they equal.
 #pragma once
 
 #include "core/types.hpp"

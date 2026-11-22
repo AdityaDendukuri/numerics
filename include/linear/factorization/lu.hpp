@@ -366,22 +366,37 @@ struct no_pivot_structure {};
 /// @brief Select LU without pivoting, for matrices whose structure keeps the pivots nonzero.
 inline constexpr no_pivot_structure no_pivot{};
 
+/// @brief Whether some pivot of `f` is at most \f$n\epsilon\max_{ij}|A_{ij}|\f$: a perturbation
+/// of `A` that small makes it exactly singular, so no solve can be trusted.
+template <std::floating_point T>
+[[nodiscard]] inline bool singular_to_working_precision(const lu_result<T> &f, const mat<T> &A) {
+    const idx n = A.rows();
+    T scale = T(0);
+    for (idx i = 0; i < n * n; ++i) {
+        scale = num::max(scale, std::abs(A.data()[i]));
+    }
+    const T floor = static_cast<T>(n) * eps_v<T> * scale;
+    for (idx k = 0; k < n; ++k) {
+        if (!(std::abs(f.LU(k, k)) > floor)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 namespace seq {
 /// Blocked partial-pivoting LU through `num::lu_factor_blocked`: panel
 /// factorization, then a `trsm` and a `gemm` per panel, so the bulk of the
-/// work runs at `gemm` speed. A pivot below `singular_tol` marks the result
-/// singular; the factorization still completes so the caller can inspect it.
+/// work runs at `gemm` speed. A singular `A` to working precision sets `singular`;
+/// the factorization still completes so the caller can inspect it.
 template <std::floating_point T>
 inline lu_result<T> lu(const mat<T> &A) {
-    constexpr T singular_tol = T(1e-14);
     const idx n = A.rows();
     lu_result<T> f;
     f.LU = A;
     f.swaps.resize(n);
     f.singular = !num::lu_factor_blocked(f.LU.data(), f.swaps.data(), n);
-    for (idx k = 0; k < n && !f.singular; ++k) {
-        f.singular = std::abs(f.LU(k, k)) < singular_tol;
-    }
+    f.singular = f.singular || singular_to_working_precision(f, A);
     return f;
 }
 } // namespace seq
@@ -403,9 +418,7 @@ inline lu_result<real> lu(const mat<real> &A) {
         throw std::runtime_error("lu (lapack): dgetrf argument error, info=" +
                                  std::to_string(info));
     }
-    if (info > 0) {
-        f.singular = true;
-    }
+    f.singular = info > 0 || singular_to_working_precision(f, A);
 
     for (idx k = 0; k < n; ++k) {
         f.swaps[k] = static_cast<idx>(ipiv[k] - 1);

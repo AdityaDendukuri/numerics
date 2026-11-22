@@ -16,6 +16,9 @@
 #include "operator/properties.hpp"
 #include "pde/grid_operators.hpp"
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <limits>
 #include <gtest/gtest.h>
 #include <string>
 #include <utility>
@@ -181,7 +184,7 @@ TEST(MathSpine, GenericCgSupportsForeignTypes) {
     std::vector<double> b{2.0, 8.0, 24.0};
     std::vector<double> x(3, 0.0);
 
-    const auto result = num::cg(A, b, x, {.tolerance = 1e-12, .max_iterations = 20});
+    const auto result = num::cg(A, b, x, {.tolerance = {.rtol = 1e-12}, .max_iterations = 20});
 
     EXPECT_TRUE(result.converged);
     EXPECT_NEAR(x[0], 1.0, 1e-10);
@@ -201,12 +204,12 @@ TEST(MathSpine, GenericKrylovFamilySupportsForeignTypes) {
 
     std::vector<double> x_minres(3, 0.0);
     const auto minres_result =
-        num::minres(A, b, x_minres, {.tolerance = 1e-12, .max_iterations = 20});
+        num::minres(A, b, x_minres, {.tolerance = {.rtol = 1e-12}, .max_iterations = 20});
     EXPECT_TRUE(minres_result.converged);
 
     std::vector<double> x_gmres(3, 0.0);
     const auto gmres_result =
-        num::gmres(A, b, x_gmres, {.tolerance = 1e-12, .max_iterations = 20, .restart = 3});
+        num::gmres(A, b, x_gmres, {.tolerance = {.rtol = 1e-12}, .max_iterations = 20, .restart = 3});
     EXPECT_TRUE(gmres_result.converged);
 
     for (const auto &solution : {x_pcg, x_minres, x_gmres}) {
@@ -275,7 +278,7 @@ TEST(MathSpine, PdeConstructionCarriesSpdIntoCg) {
     num::vec<num::real> b(A.rows(), 1.0);
     num::vec<num::real> x(A.rows(), 0.0);
 
-    const auto result = num::cg(A, b, x, {.tolerance = 1e-11, .max_iterations = 100});
+    const auto result = num::cg(A, b, x, {.tolerance = {.rtol = 1e-11}, .max_iterations = 100});
 
     EXPECT_TRUE(result.converged);
     EXPECT_LT(result.residual, 1e-10);
@@ -291,6 +294,18 @@ namespace core_vocabulary_test {
 
 using namespace num;
 
+TEST(FloatingPointVocabulary, ConstantsMatchTheirDefinitions) {
+    EXPECT_EQ(num::pi, std::acos(-1.0));
+    EXPECT_EQ(num::two_pi, 2.0 * num::pi);
+    EXPECT_EQ(num::eps, std::nextafter(1.0, 2.0) - 1.0);
+    EXPECT_EQ(num::unit_roundoff, num::eps / 2);
+    EXPECT_EQ(1.0 + num::unit_roundoff, 1.0);
+    EXPECT_TRUE(std::isinf(num::inf) && num::inf > 0);
+    EXPECT_TRUE(std::isnan(num::nan));
+    EXPECT_EQ(num::eps_v<float>, std::nextafter(1.0F, 2.0F) - 1.0F);
+    EXPECT_EQ(num::pi_v<float>, static_cast<float>(num::pi));
+}
+
 TEST(FloatingPointVocabulary, MaxAndMinPropagateNaNFromEitherSide) {
     EXPECT_TRUE(std::isnan(num::max(1.0, num::nan)));
     EXPECT_TRUE(std::isnan(num::max(num::nan, 1.0)));
@@ -304,6 +319,29 @@ TEST(FloatingPointVocabulary, MaxAndMinPropagateNaNFromEitherSide) {
         m = num::max(m, v);
     }
     EXPECT_TRUE(std::isnan(m));
+}
+
+TEST(FloatingPointVocabulary, CloseIsRelativeWithAnOptionalAbsoluteFloor) {
+    EXPECT_TRUE(num::close(1e10, 1e10 + 1.0));
+    EXPECT_FALSE(num::close(1.0, 1.0 + 1e-6));
+    EXPECT_TRUE(num::close(1.0, 1.0 + 1e-6, 1e-5));
+    EXPECT_FALSE(num::close(0.0, 1e-300));
+    EXPECT_TRUE(num::close(0.0, 1e-300, 1e-9, 1e-12));
+    EXPECT_TRUE(num::close(num::inf, num::inf));
+    EXPECT_FALSE(num::close(num::inf, -num::inf));
+    EXPECT_FALSE(num::close(num::nan, num::nan));
+    EXPECT_FALSE(num::close(num::huge, num::inf));
+}
+
+TEST(FloatingPointVocabulary, UlpDistanceCountsRepresentableValues) {
+    EXPECT_EQ(num::ulp_distance(1.0, 1.0), 0u);
+    EXPECT_EQ(num::ulp_distance(1.0, std::nextafter(1.0, 2.0)), 1u);
+    EXPECT_EQ(num::ulp_distance(0.0, -0.0), 0u);
+    const real denorm = std::numeric_limits<real>::denorm_min();
+    EXPECT_EQ(num::ulp_distance(-denorm, denorm), 2u);
+    EXPECT_EQ(num::ulp_distance(0.1 + 0.2, 0.3), 1u);
+    EXPECT_EQ(num::ulp_distance(num::huge, num::inf), 1u);
+    EXPECT_EQ(num::ulp_distance(1.0, num::nan), std::numeric_limits<std::uint64_t>::max());
 }
 
 TEST(Tolerance, BoundIsTheLargerOfRelativeAndAbsolute) {

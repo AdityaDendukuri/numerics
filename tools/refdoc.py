@@ -32,6 +32,18 @@ BACKENDS = ("seq", "omp", "blas", "lapack", "cuda", "mpi")
 INDEXES = ROOT / "docs" / "indexes"
 SKIPPED_DIRECTORIES = ("cuda/", "mpi/")
 
+# What a directory without an umbrella header holds, for the index of directories.
+ABOUT = {
+    "algebra": "Scalar concepts and the run-time sampling of operator laws.",
+    "blas": "Vector and matrix operations through BLAS.",
+    "container": "Vectors, matrices and the operations on them.",
+    "core": "Types, concepts, laws, diagnostics and the build's backend default.",
+    "io": "JSON input and output.",
+    "omp": "Vector and matrix operations threaded with OpenMP.",
+    "spectral": "FFTs and sine transforms.",
+    "stochastic": "Random engines, sampling and Markov chain Monte Carlo.",
+}
+
 
 # ---------------------------------------------------------------------------------------
 # Tools and flags
@@ -720,7 +732,7 @@ def render_indexes(names, headers, linker):
         if not any(by_header[h] for h in directories[directory]):
             continue
         umbrella = f"{directory}/{directory}.hpp"
-        about = file_brief(umbrella) if (INCLUDE / umbrella).exists() else ""
+        about = file_brief(umbrella) if (INCLUDE / umbrella).exists() else ABOUT.get(directory, "")
         top.append(f"| [`{directory}/`]({directory}.md) | {table_cell(plain(about))} |")
         page = OUT / f"{directory}.md"
         groups = []

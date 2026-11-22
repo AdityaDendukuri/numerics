@@ -98,7 +98,7 @@ inline svd_result svd(const mat<real> &A_in, real tol, idx max_sweeps) {
                 }
                 const real gamma = kernel::dot(&columns(p, 0), &columns(q, 0), m);
                 const real cos_pq = std::abs(gamma) / std::sqrt(alpha * beta);
-                max_cos = std::max(max_cos, cos_pq);
+                max_cos = num::max(max_cos, cos_pq);
                 if (cos_pq < tol) {
                     continue;
                 }

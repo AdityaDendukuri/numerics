@@ -1,10 +1,14 @@
 corrected no-pivot LU, n = 600
-  state  37: corrected   2.01 ms (fresh 18.10 ms)  error 2.7e-15
-  state 210: corrected   2.18 ms (fresh 16.29 ms)  error 2.7e-15
-  state  37: corrected   2.14 ms (fresh 16.27 ms)  error 2.7e-15
-  state 455: corrected   2.91 ms (fresh 16.25 ms)  error 2.7e-15
-  state 512: refactored  16.16 ms (fresh 16.16 ms)  error 2.7e-15
+  state  37: corrected   1.81 ms (fresh 16.88 ms)  error 8.9e-16
+  state 210: corrected   2.39 ms (fresh 18.17 ms)  error 8.9e-16
+  state  37: corrected   2.31 ms (fresh 17.02 ms)  error 8.9e-16
+  state 455: corrected   3.02 ms (fresh 16.62 ms)  error 8.9e-16
+  state 512: refactored  16.94 ms (fresh 16.94 ms)  error 8.9e-16
 block LU, 150 blocks
+  state 590: kept 147 of 150 blocks  error 6.7e-16
+  state 300: kept  75 of 150 blocks  error 6.7e-16
+  state   3: kept   0 of 150 blocks  error 6.7e-16
+block Cholesky, 150 blocks
   state 590: kept 147 of 150 blocks  error 1.8e-15
   state 300: kept  75 of 150 blocks  error 1.8e-15
-  state   3: kept   0 of 150 blocks  error 1.8e-15
+  state   3: kept   0 of 150 blocks  error 2.2e-15

@@ -1,6 +1,6 @@
 # ODEs
 
-Initial value problems: explicit, adaptive, symplectic and implicit integrators. The concepts are on the [Concepts](concepts.md) page.
+Explicit, adaptive, symplectic and implicit integrators for initial value problems. The concepts are on the [Concepts](concepts.md) page.
 
 ## Integrators <ode/ode.hpp>
 num::ode_euler num::ode_rk4 num::ode_rk45 num::ode_rk4_2nd num::ode_verlet num::ode_yoshida4 num::euler num::rk4 num::rk45 num::rk4_2nd num::verlet num::yoshida4

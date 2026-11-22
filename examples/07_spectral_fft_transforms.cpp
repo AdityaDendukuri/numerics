@@ -1,14 +1,12 @@
 /// @file 07_spectral_fft_transforms.cpp
-/// @brief FFT and inverse FFT, the real FFT, and the backend that runs them.
+/// @brief FFT, inverse FFT, the real FFT, and the backend that runs them.
 ///
-/// `fft` and `ifft` transform complex vectors, and `rfft` and `irfft` transform real ones, keeping
-/// the n/2 + 1 non-negative frequencies. The inverse transforms are unnormalized, as in FFTW, so
-/// dividing by n recovers the input. The caller sizes the output vectors. The backend defaults to
-/// FFTW when it is present, then the SIMD path, then the portable one, and each call can name one
-/// explicitly.
+/// `fft` and `ifft` work on complex vectors. `rfft` and `irfft` work on real ones and keep the
+/// n/2 + 1 non-negative frequencies. As in FFTW, the inverse is unnormalized, so dividing by n
+/// recovers the input. The caller sizes the output. The default backend is FFTW if the build
+/// found it, then the SIMD path, then the portable one, and any call can name a backend.
 #include <cmath>
 #include <cstdio>
-#include <numbers>
 #include <numerics.hpp>
 #include <string_view>
 #include <vector>
@@ -24,13 +22,13 @@ int main(int argc, char **argv) {
     constexpr idx n = 64;
     vec<real> signal(n);
     for (idx i = 0; i < n; ++i) {
-        const real t = 2.0 * std::numbers::pi * static_cast<real>(i) / n;
+        const real t = 2.0 * num::pi * static_cast<real>(i) / n;
         signal[i] = std::sin(3.0 * t) + (0.5 * std::cos(7.0 * t));
     }
 
     vec<cplx> spectrum((n / 2) + 1); // rfft writes the n/2 + 1 non-negative frequencies
     rfft(signal, spectrum);
-    std::printf("rfft: %zu bins; amplitudes 2|X(k)|/n above 0.01:\n",
+    std::printf("rfft gives %zu bins. Amplitudes 2|X(k)|/n above 0.01\n",
                 static_cast<std::size_t>(spectrum.size()));
     for (idx k = 0; k < spectrum.size(); ++k) {
         const real amplitude = 2.0 * std::abs(spectrum[k]) / n;

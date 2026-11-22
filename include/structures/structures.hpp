@@ -1,5 +1,5 @@
 /// @file structures/structures.hpp
-/// @brief Umbrella for discrete structures and the algorithms that run on them.
+/// @brief Graphs, queues, union-find and the algorithms on them.
 #pragma once
 
 #include "structures/algorithms/traversal.hpp"

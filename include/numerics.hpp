@@ -1,5 +1,5 @@
 /// @file numerics.hpp
-/// @brief Umbrella include for the numerics library.
+/// @brief The whole library.
 #pragma once
 
 #include "quadrature/quadrature_all.hpp"

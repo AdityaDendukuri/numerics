@@ -1,5 +1,5 @@
 /// @file structures/algorithms/traversal.hpp
-/// @brief Fundamental graph algorithms: connectivity, Dijkstra, Kruskal MST, BFS, and DFS.
+/// @brief BFS, DFS, Dijkstra, Kruskal's spanning tree and connectivity.
 #pragma once
 
 #include "core/types.hpp"

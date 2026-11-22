@@ -229,3 +229,14 @@ TEST(KernelDense, MatvecMatchesTheDefinitionAcrossTheLaneBoundary) {
 }
 
 } // namespace
+
+// A max-reduction written as `if (v > m) m = v` silently drops NaN, since every comparison with
+// NaN is false. A norm must propagate it so a corrupted vector is not reported as converged.
+TEST(KernelNorm, InfinityAndOneNormsPropagateNaN) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    for (const std::vector<double> &v :
+         {std::vector<double>{1.0, nan, 2.0}, std::vector<double>{nan, 1.0}, std::vector<double>{1.0, nan}}) {
+        EXPECT_TRUE(std::isnan(kern::linf_norm(v.data(), v.size())));
+        EXPECT_TRUE(std::isnan(kern::l1_norm(v.data(), v.size())));
+    }
+}

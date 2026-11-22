@@ -23,7 +23,7 @@ namespace linear {
     real error = 0.0;
     for (idx row = 0; row < A.rows(); ++row) {
         for (idx column = 0; column < row; ++column) {
-            error = std::max(error, std::abs(A(row, column) - A(column, row)));
+            error = num::max(error, std::abs(A(row, column) - A(column, row)));
         }
     }
     return error;
@@ -38,23 +38,29 @@ namespace linear {
     real scale = 1.0;
     for (idx row = 0; row < A.rows(); ++row) {
         for (idx column = 0; column < row; ++column) {
-            error = std::max(error, std::abs(A(row, column) - A(column, row)));
-            scale = std::max(scale, std::abs(A(row, column)));
-            scale = std::max(scale, std::abs(A(column, row)));
+            error = num::max(error, std::abs(A(row, column) - A(column, row)));
+            scale = num::max(scale, std::abs(A(row, column)));
+            scale = num::max(scale, std::abs(A(column, row)));
         }
     }
     return error / scale;
 }
 
-/// Test absolute entrywise symmetry using the supplied tolerance.
+/// Test \f$|A_{ij} - A_{ji}| \le \text{tol}\,\max_{kl}|A_{kl}|\f$, so rescaling `A` does not change
+/// the answer.
 [[nodiscard]] inline bool is_symmetric(const mat<real> &A, real tol = 1e-12) {
     if (A.rows() != A.cols()) {
         return false;
     }
     const idx n = A.rows();
+    real scale = 0;
+    for (idx i = 0; i < n * n; ++i) {
+        scale = num::max(scale, std::abs(A.data()[i]));
+    }
+    const real bound = tol * scale;
     for (idx i = 0; i < n; ++i) {
         for (idx j = 0; j < i; ++j) {
-            if (std::abs(A(i, j) - A(j, i)) > tol) {
+            if (!(std::abs(A(i, j) - A(j, i)) <= bound)) { // NaN fails
                 return false;
             }
         }
@@ -62,7 +68,7 @@ namespace linear {
     return true;
 }
 
-/// @brief Check symmetry \f$\max_{i,j} |A_{ij} - A_{ji}| \le \mathrm{tol}\f$ exhaustively, then
+/// @brief Check symmetry relative to \f$\max|A_{ij}|\f$ exhaustively (see `is_symmetric`), then
 /// attach it.
 /// @throws std::invalid_argument If `A` is not symmetric within `tol`.
 template <class Mat = mat<real>>

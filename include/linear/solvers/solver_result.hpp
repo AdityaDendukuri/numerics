@@ -1,5 +1,5 @@
 /// @file solver_result.hpp
-/// @brief Common result type shared by all iterative solvers
+/// @brief The result every iterative solver returns.
 #pragma once
 #include "core/types.hpp"
 

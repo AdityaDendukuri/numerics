@@ -1,11 +1,11 @@
 /// @file 21_graphs_and_structures.cpp
-/// @brief Graphs, traversal, spanning trees, disjoint sets, and a Laplacian solve with ApproxChol.
+/// @brief Graphs, traversal, spanning trees, disjoint sets, and a Laplacian solve.
 ///
-/// `graph<W, I>` stores weighted adjacency lists. `structures::dijkstra`, `bfs`,
-/// `connected_components` and `minimum_spanning_tree` run on it directly, and
-/// `linear::laplacian` turns it into a sparse matrix. A graph Laplacian is singular, so the
-/// solve is posed on the zero-sum subspace, where it is positive definite, and preconditioned by
-/// the randomized approximate Cholesky factorization of Gao, Kyng and Spielman.
+/// `graph<W, I>` stores weighted adjacency lists. `structures::dijkstra`,
+/// `minimum_spanning_tree` and `is_connected` run on it directly, and `linear::dense_laplacian`
+/// builds its Laplacian. The Laplacian is singular, so the solve is posed on the zero-sum
+/// subspace and preconditioned with the approximate Cholesky factorization of Gao, Kyng and
+/// Spielman. The result is the effective resistance between opposite corners.
 #include <cstdio>
 #include <numerics.hpp>
 
@@ -37,7 +37,7 @@ int main() {
     sets.unite(1, 3);
     std::printf("disjoint set: 0~3 %d, 0~5 %d\n\n", sets.connected(0, 3), sets.connected(0, 5));
 
-    // L x = b on the zero-sum subspace: unit current in at one corner and out at the other.
+    // Solve L x = b on the zero-sum subspace, with unit current in at one corner and out at the other.
     const mat<real> L = linear::dense_laplacian(G);
     const space::zero_sum zero_sum{};
     const auto laplacian = assume<law::spd_on<space::zero_sum>>(operators::dense_op(L));

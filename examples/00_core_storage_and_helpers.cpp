@@ -1,10 +1,10 @@
 /// @file 00_core_storage_and_helpers.cpp
-/// @brief Vectors, matrices, sparse matrices, expressions and the helpers around them.
+/// @brief Vectors, matrices, sparse matrices, expressions and helpers.
 ///
-/// `vec<T>` and `mat<T>` own aligned, contiguous storage, and `mat` is row-major. Arithmetic comes
-/// in two forms. Expressions under `num::ops` return new values and suit formulas. Functions with
-/// an output parameter, such as `matvec` and `axpy`, allocate nothing and suit loops. `spmat`
-/// stores a sparse matrix in CSR form and is built from triplets.
+/// `vec<T>` and `mat<T>` own aligned, contiguous storage, and `mat` is row-major. Expressions under
+/// `num::ops` return new values and are good for formulas. Functions with an output argument, such
+/// as `matvec` and `axpy`, allocate nothing and are good inside loops. `spmat` is a CSR matrix
+/// built from triplets.
 #include <array>
 #include <cstdio>
 #include <numerics.hpp>
@@ -36,7 +36,7 @@ void print(const char *name, const mat<real> &M) {
 } // namespace
 
 int main() {
-    // Construction and the in-place forms: nothing below allocates.
+    // The in-place forms write into vectors that already exist.
     vec<real> x{1.0, 2.0, 3.0};
     vec<real> y(3, 2.0), z(3, 0.0);
     scale(y, 0.5);    // y <- 0.5 y
@@ -69,7 +69,7 @@ int main() {
     print("linspace(0, 1, 5)", linspace(0.0, 1.0, 5));
     std::printf("%-27s%g\n", "accu(A) (sum of entries)", accu(A));
 
-    // CSR from triplets; duplicates are summed.
+    // CSR from triplets. Duplicate entries are summed.
     const spmat S = spmat::from_triplets(3, 3, std::vector<idx>{0, 0, 1, 2, 2},
                                          std::vector<idx>{0, 1, 1, 2, 2},
                                          std::vector<real>{2.0, 1.0, 3.0, 4.0, 0.5});

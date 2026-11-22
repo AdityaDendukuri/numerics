@@ -1,5 +1,5 @@
 /// @file structures/containers/indexed_priority_queue.hpp
-/// @brief Indexed binary heap supporting O(log N) push, pop, decrease_key, and element lookup.
+/// @brief Binary heap indexed by element, with O(log n) push, pop and decrease_key.
 #pragma once
 
 #include "core/types.hpp"

@@ -1,5 +1,5 @@
 /// @file linear/solvers/linear_solver.hpp
-/// @brief Universal linear solver callable type.
+/// @brief A callable that solves Ax = b, whatever method is behind it.
 #pragma once
 
 #include "container/vector.hpp"

@@ -68,7 +68,9 @@ struct basic_histogram {
         if (x < lo || x >= hi) {
             return nbins;
         }
-        return static_cast<Index>((x - lo) / (hi - lo) * static_cast<Float>(nbins));
+        // Rounding can carry x just below hi to nbins.
+        const auto b = static_cast<Index>((x - lo) / (hi - lo) * static_cast<Float>(nbins));
+        return std::min(b, nbins - 1);
     }
 
     /// Return the center coordinate of bin b.
@@ -132,7 +134,9 @@ inline Float autocorr_time(const Float *data, Index n, Float c = Float{6.0}) {
         c0 += d * d;
     }
     c0 /= static_cast<Float>(n);
-    if (c0 < Float{1e-15}) {
+    // A constant series: the variance is rounding noise in the mean.
+    const Float noise = static_cast<Float>(n) * eps_v<Float> * std::abs(mean);
+    if (c0 <= noise * noise) {
         return Float{0.5};
     }
 

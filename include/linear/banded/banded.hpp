@@ -1,5 +1,5 @@
 /// @file banded.hpp
-/// @brief banded matrix storage and solvers.
+/// @brief Banded matrix storage and solvers.
 #pragma once
 
 #include "kernel/kernel.hpp"
@@ -409,7 +409,7 @@ inline real banded_norm1(const band_mat &A) {
         for (idx i = i_start; i <= i_end; ++i) {
             col_sum += std::abs(ab[kv + i - j + (j * ldab)]);
         }
-        max_sum = std::max(max_sum, col_sum);
+        max_sum = num::max(max_sum, col_sum);
     }
     return max_sum;
 }

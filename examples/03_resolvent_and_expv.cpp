@@ -1,10 +1,10 @@
 /// @file 03_resolvent_and_expv.cpp
-/// @brief Shifted solves (sI - A)x = b at many shifts, and the action of the matrix exponential.
+/// @brief Solving (sI - A)x = b at many shifts, and the action of the matrix exponential.
 ///
-/// `hessenberg_resolvent R(A)` reduces A to Hessenberg form once. After that, `shift(R, s)` factors
-/// sI - A in O(n^2), and `solve_batch` solves at many shifts in parallel. `expv(t, A, v)` computes
-/// \f$e^{tA}v\f$ from a Krylov subspace without ever forming \f$e^{tA}\f$. When A is a Markov
-/// generator, \f$e^{tA}\f$ conserves total probability, which the output shows.
+/// `hessenberg_resolvent R(A)` reduces A to Hessenberg form once. After that, `shift(R, s)`
+/// factors sI - A in O(n^2), and `solve_batch` solves at many shifts in parallel.
+/// `expv(t, A, v)` computes \f$e^{tA}v\f$ from a Krylov subspace without forming \f$e^{tA}\f$.
+/// Here A is the generator of a birth-death chain, so the total probability stays 1.
 #include <cmath>
 #include <complex>
 #include <cstdio>
@@ -17,7 +17,7 @@ using namespace num;
 int main(int argc, char **argv) {
     const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
 
-    // A birth-death chain on 30 states: A is a generator (columns sum to zero).
+    // A birth-death chain on 30 states. A is a generator, so its columns sum to zero.
     constexpr idx n = 30;
     mat<real> A(n, n, 0.0);
     for (idx j = 0; j < n; ++j) {
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
         shifts.push_back(cplx(1.0, 0.25 * k));
     }
     const auto batch = solve_batch(R, shifts, p0);
-    std::printf("%zu shifts solved from one Hessenberg reduction; |z[0]| at s = 1+15.75i: %.5f\n",
+    std::printf("%zu shifts from one Hessenberg reduction, |z[0]| at s = 1+15.75i is %.5f\n",
                 batch.size(), std::abs(batch.back()[0]));
 
     // p(t) = e^{tA} p0 conserves probability.

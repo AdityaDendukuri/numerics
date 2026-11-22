@@ -332,7 +332,8 @@ TEST(Trsm, AllVariantsInvertTheirProducts) {
                 }
             }
             const mat<real> X = make_test_matrix(n, nrhs);
-            const auto expect_equal = [&](const mat<real> &Y, const mat<real> &reference, const char *what) {
+            const auto expect_equal = [&](const mat<real> &Y, const mat<real> &reference,
+                                          const char *what) {
                 for (idx i = 0; i < Y.rows(); ++i) {
                     for (idx j = 0; j < Y.cols(); ++j) {
                         EXPECT_NEAR(Y(i, j), reference(i, j), 1e-9)
