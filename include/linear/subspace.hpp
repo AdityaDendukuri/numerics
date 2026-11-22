@@ -2,6 +2,7 @@
 /// @brief Subspace construction and orthogonalization kernels.
 #pragma once
 
+#include "container/matrix_ops.hpp"
 #include "container/vector_ops.hpp"
 #include <stdexcept>
 
@@ -32,6 +33,22 @@ inline void mgs_columns(T *NUM_K_RESTRICT v, const T *NUM_K_RESTRICT basis, idx 
             v[row] -= projection * basis[(row * ldb) + column];
         }
     }
+}
+
+/// @brief Two-pass classical Gram--Schmidt of v against the first k rows of a row-stored basis Q:
+/// \f$t = Q_k v,\; v \leftarrow v - Q_k^T t\f$, twice, as matrix--vector products. Returns the accumulated
+/// coefficients (length k). Rows must be orthonormal.
+inline array<real> cgs2_orthogonalize(const mat<real> &Q, idx k, vec<real> &v) {
+    array<real> h(k, 0.0);
+    vec<real> t(k, 0.0);
+    for (int pass = 0; pass < 2; ++pass) {
+        gemv(1.0, Q, false, v, 0.0, t, k);
+        gemv(-1.0, Q, true, t, 1.0, v, k);
+        for (idx i = 0; i < k; ++i) {
+            h[i] += t[i];
+        }
+    }
+    return h;
 }
 
 } // namespace num

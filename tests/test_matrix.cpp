@@ -6,6 +6,8 @@
 #include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
 #include "linear/sparse/bilinear.hpp"
+#include "linear/sparse/sparse.hpp"
+#include "linear/subspace.hpp"
 #include "omp/matrix_ops.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
@@ -621,4 +623,33 @@ TEST(DenseProducts, GemvOnLeadingRowsAndTranspose) {
     for (idx j = 0; j < 3; ++j) {
         EXPECT_NEAR(y[j], 1.0 - (Q(0, j) * t[0] + Q(1, j) * t[1]), 1e-13);
     }
+}
+
+TEST(SparseHelpers, ExplicitDiagonalShiftAndLinearCombination) {
+    const spmat A = spmat::from_triplets(3, 3, {0, 1, 2}, {1, 2, 0}, {1.0, 2.0, 3.0});  // no diagonal stored
+    const spmat D = with_explicit_diagonal(A);
+    EXPECT_EQ(D.nnz(), 6u);
+    const spmat S = shifted(A, 2.5);  // 2.5 I - A
+    EXPECT_DOUBLE_EQ(S(0, 0), 2.5);
+    EXPECT_DOUBLE_EQ(S(0, 1), -1.0);
+    EXPECT_DOUBLE_EQ(S(2, 0), -3.0);
+    const spmat B = spmat::from_triplets(3, 3, {0, 2}, {1, 2}, {4.0, 5.0});
+    const spmat C = sparse_linear_combination({A, B}, {2.0, -1.0});
+    EXPECT_DOUBLE_EQ(C(0, 1), 2.0 * 1.0 - 4.0);
+    EXPECT_DOUBLE_EQ(C(2, 2), -5.0);
+    EXPECT_DOUBLE_EQ(C(1, 2), 4.0);
+    EXPECT_THROW(sparse_linear_combination({A}, {1.0, 2.0}), std::invalid_argument);
+}
+
+TEST(SparseHelpers, Cgs2OnLeadingRows) {
+    mat<real> Q(4, 3, 0.0);  // first 2 rows orthonormal; rows 2-3 unused
+    Q(0, 0) = 1.0;
+    Q(1, 1) = 1.0;
+    vec<real> v{3.0, -2.0, 5.0};
+    const auto h = cgs2_orthogonalize(Q, 2, v);
+    EXPECT_DOUBLE_EQ(h[0], 3.0);
+    EXPECT_DOUBLE_EQ(h[1], -2.0);
+    EXPECT_DOUBLE_EQ(v[0], 0.0);
+    EXPECT_DOUBLE_EQ(v[1], 0.0);
+    EXPECT_DOUBLE_EQ(v[2], 5.0);
 }

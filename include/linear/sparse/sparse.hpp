@@ -452,4 +452,62 @@ inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
     return result;
 }
 
+/// @brief A with every diagonal entry stored explicitly (zeros added where absent), as the shifted
+/// factorizations (`sparse_resolvent`, `umfpack_shifted_lu`) require.
+[[nodiscard]] inline spmat with_explicit_diagonal(const spmat &A) {
+    array<idx> rows, cols;
+    array<real> vals;
+    for (idx i = 0; i < A.n_rows(); ++i) {
+        bool has_diagonal = false;
+        for (idx k = A.row_ptr()[i]; k < A.row_ptr()[i + 1]; ++k) {
+            rows.push_back(i);
+            cols.push_back(A.col_idx()[k]);
+            vals.push_back(A.values()[k]);
+            has_diagonal = has_diagonal || A.col_idx()[k] == i;
+        }
+        if (!has_diagonal && i < A.n_cols()) {
+            rows.push_back(i);
+            cols.push_back(i);
+            vals.push_back(0.0);
+        }
+    }
+    return spmat::from_triplets(A.n_rows(), A.n_cols(), rows, cols, vals);
+}
+
+/// @brief \f$sI - A\f$ for a real shift s, on A's sparsity pattern plus the diagonal.
+[[nodiscard]] inline spmat shifted(const spmat &A, real s) {
+    const spmat D = with_explicit_diagonal(A);
+    array<real> vals(D.nnz());
+    array<idx> cols(D.col_idx(), D.col_idx() + D.nnz()), ptr(D.row_ptr(), D.row_ptr() + D.n_rows() + 1);
+    for (idx i = 0; i < D.n_rows(); ++i) {
+        for (idx k = ptr[i]; k < ptr[i + 1]; ++k) {
+            vals[k] = (cols[k] == i ? s : 0.0) - D.values()[k];
+        }
+    }
+    return spmat(D.n_rows(), D.n_cols(), std::move(vals), std::move(cols), std::move(ptr));
+}
+
+/// @brief \f$\sum_k w_k T_k\f$ for sparse matrices of equal size, on the union of their patterns.
+[[nodiscard]] inline spmat sparse_linear_combination(const std::vector<spmat> &terms, const std::vector<real> &weights) {
+    if (terms.empty() || terms.size() != weights.size()) {
+        throw std::invalid_argument("sparse_linear_combination: need one weight per term");
+    }
+    array<idx> rows, cols;
+    array<real> vals;
+    for (idx t = 0; t < terms.size(); ++t) {
+        const spmat &T = terms[t];
+        if (T.n_rows() != terms[0].n_rows() || T.n_cols() != terms[0].n_cols()) {
+            throw std::invalid_argument("sparse_linear_combination: size mismatch");
+        }
+        for (idx i = 0; i < T.n_rows(); ++i) {
+            for (idx k = T.row_ptr()[i]; k < T.row_ptr()[i + 1]; ++k) {
+                rows.push_back(i);
+                cols.push_back(T.col_idx()[k]);
+                vals.push_back(weights[t] * T.values()[k]);
+            }
+        }
+    }
+    return spmat::from_triplets(terms[0].n_rows(), terms[0].n_cols(), rows, cols, vals);
+}
+
 } // namespace num
