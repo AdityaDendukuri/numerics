@@ -1,7 +1,8 @@
 # markovkit
 
-`markovkit` is a C++20 library for continuous-time Markov chains and stochastic reaction
-networks, built on `numerics`. It solves the chemical master equation by finite state projection,
+`markovkit` is a header-only C++20 library for general continuous-time Markov chains, built on
+`numerics`. Because stochastic reaction systems were a big part of my PhD, it naturally has
+nice infrastructure for them: it solves the master equation by finite state projection,
 simulates paths with the SSA, models reaction-diffusion on meshes, and accelerates simulation by
 eliminating subnetworks of states.
 
@@ -42,15 +43,18 @@ concept state_space = requires(const Space &space, const state &x, idx i) {
 };
 ```
 
+Any `markov_model` works with `gillespie`, `tau_leaping`, `solve_adaptive_fsp`, and
+`solve_krylov_fsp`, and any model on any `state_space` gives a `generator`, a matrix-free
+operator for `expv` and Krylov solvers. Built-in models and spaces for stochastic reaction
+systems:
+
 | Models | Spaces |
 | :--- | :--- |
 | `reaction_network` | `distribution`: growable, hashed, with probabilities |
 | `reaction_diffusion<Graph>` | `population_sector`: fixed species totals, ranked |
 | | `population_box`: every sector up to maximum totals |
 
-Any model on any space gives a `generator`, a matrix-free operator for `expv` and Krylov
-solvers. `solve_adaptive_fsp` and `solve_krylov_fsp` run the FSP, `gillespie` and
-`tau_leaping` sample paths, and `sector_multigrid` preconditions RDME resolvent solves.
+`sector_multigrid` preconditions RDME resolvent solves on `population_box`.
 
 ## A first model
 
