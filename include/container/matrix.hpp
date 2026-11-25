@@ -1,5 +1,5 @@
-/// @file matrix.hpp
-/// @brief Dense row-major matrix templated over scalar type T.
+/// @file container/matrix.hpp
+/// @brief Dense row-major matrix.
 #pragma once
 
 #include "core/types.hpp"
@@ -16,20 +16,20 @@
 
 namespace num {
 
-/// @brief Dense row-major owning matrix. `mat<real>` takes the CPU and GPU backends.
+/// @brief Dense row-major matrix \f$A \in \mathbb{K}^{m \times n}\f$.
 template <std::floating_point T>
 class mat {
   public:
     using value_type = T;
 
-    /// Construct an empty matrix.
+    /// @brief Empty matrix.
     mat() : rows_(0), cols_(0), data_(nullptr) {}
 
-    /// Construct a zero-initialized rows-by-cols matrix.
+    /// @brief Zero matrix, `rows x cols`.
     mat(idx rows, idx cols)
         : rows_(rows), cols_(cols), data_(make_aligned<T>(checked_size(rows, cols))) {}
 
-    /// Construct a rows-by-cols matrix filled with val.
+    /// @brief Constant matrix, `rows x cols`, filled with `val`.
     mat(idx rows, idx cols, T val)
         : rows_(rows), cols_(cols),
           data_(make_aligned_for_overwrite<T>(checked_size(rows, cols))) {
@@ -102,22 +102,20 @@ class mat {
         return *this;
     }
 
-    /// Return the matrix dimensions and total element count.
+    /// @brief Shape: rows, columns and element count.
     [[nodiscard]] constexpr idx rows() const noexcept { return rows_; }
     [[nodiscard]] constexpr idx cols() const noexcept { return cols_; }
     [[nodiscard]] constexpr idx size() const noexcept { return rows_ * cols_; }
 
-    /// Return contiguous row-major host storage, aligned to `num::storage_alignment`.
-    ///
-    /// The row stride is `cols()`, so only row 0 is guaranteed to start on that
-    /// boundary; the alignment claim is about the base pointer.
+    /// @brief Row-major host storage; the base pointer is aligned to `storage_alignment`.
+    /// @note Rows after the first are not guaranteed to start on an aligned boundary.
     T *data() noexcept { return assume_storage_aligned(data_.get()); }
     [[nodiscard]] const T *data() const noexcept { return assume_storage_aligned(data_.get()); }
 
     T &operator()(idx i, idx j) { return data_[(i * cols_) + j]; }
     T operator()(idx i, idx j) const { return data_[(i * cols_) + j]; }
 
-    /// Copy host data to a lazily allocated device mirror.
+    /// @brief Copy to a device mirror, allocated on first use.
     void to_gpu() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
@@ -129,7 +127,7 @@ class mat {
 #endif
     }
 
-    /// Copy the device mirror back to host and release device storage.
+    /// @brief Copy back from the device mirror and release it.
     void to_cpu() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
@@ -142,21 +140,17 @@ class mat {
 #endif
     }
 
-    /// Return device storage, or null when no mirror exists.
+    /// @brief Device storage, or null without a mirror.
     T *gpu_data() { return d_data_; }
     [[nodiscard]] const T *gpu_data() const { return d_data_; }
     [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
 
-    /// Operator protocol application: y <- A * x
+    /// @brief Operator application: \f$y \leftarrow A x\f$.
     template <class X = vec<real>, class Y = vec<real>>
     void apply(const X &x, Y &y) const;
 
   private:
-    /// Element count of a rows-by-cols matrix, rejecting a product that would wrap.
-    ///
-    /// The three SuiteSparse bindings already guard their int32 interfaces this
-    /// way; without the check here a wrapped product allocates a short buffer
-    /// that `operator()` then indexes past.
+    /// @brief Element count \f$m n\f$, rejecting overflow.
     static idx checked_size(idx rows, idx cols) {
         if (rows != 0 && cols > std::numeric_limits<idx>::max() / rows) {
             throw std::overflow_error("mat: rows * cols exceeds the index range");

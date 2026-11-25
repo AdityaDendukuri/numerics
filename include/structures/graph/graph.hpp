@@ -1,5 +1,5 @@
 /// @file structures/graph/graph.hpp
-/// @brief Weighted graph data structure with adjacency list and matrix/Laplacian conversions.
+/// @brief Weighted graph as an adjacency list.
 #pragma once
 
 #include "core/types.hpp"
@@ -11,9 +11,7 @@
 
 namespace num {
 
-/// @brief Weighted directed or undirected graph represented as an adjacency list.
-/// @tparam Weight scalar type of edge weights (e.g. double, float, int).
-/// @tparam Index Integer type used for vertex indices (e.g. num::idx, uint32_t).
+/// @brief Weighted graph \f$G = (V, E, w)\f$, directed or undirected.
 template <typename Weight, std::integral Index>
 class graph {
   public:
@@ -25,11 +23,11 @@ class graph {
         Weight weight{1};
     };
 
-    /// Construct a graph with n vertices.
+    /// @brief Graph on `n` vertices with no edges.
     explicit graph(Index n = 0, bool directed = false)
         : n_(n), m_(0), directed_(directed), adj_(n) {}
 
-    /// Add an undirected edge between u and v with positive weight.
+    /// @brief Add undirected edge \f$\{u, v\}\f$ with weight \f$w > 0\f$.
     void add_edge(Index u, Index v, Weight weight = Weight{1}) {
         structures::debug::check_vertex_bounds(u, n_, "graph::add_edge u");
         structures::debug::check_vertex_bounds(v, n_, "graph::add_edge v");
@@ -42,7 +40,7 @@ class graph {
         m_++;
     }
 
-    /// Add a directed edge from u to v with positive weight.
+    /// @brief Add directed edge \f$u \to v\f$ with weight \f$w > 0\f$.
     void add_directed_edge(Index u, Index v, Weight weight = Weight{1}) {
         structures::debug::check_vertex_bounds(u, n_, "graph::add_directed_edge u");
         structures::debug::check_vertex_bounds(v, n_, "graph::add_directed_edge v");
@@ -52,7 +50,7 @@ class graph {
         m_++;
     }
 
-    /// Check whether an edge exists from u to v.
+    /// @brief Whether edge \f$u \to v\f$ exists.
     [[nodiscard]] bool has_edge(Index u, Index v) const {
         structures::debug::check_vertex_bounds(u, n_, "graph::has_edge u");
         structures::debug::check_vertex_bounds(v, n_, "graph::has_edge v");
@@ -62,7 +60,7 @@ class graph {
         return false;
     }
 
-    /// Return the weight of edge (u, v), or 0 if no edge exists.
+    /// @brief Weight of \f$u \to v\f$, or 0 without the edge.
     [[nodiscard]] Weight edge_weight(Index u, Index v) const {
         structures::debug::check_vertex_bounds(u, n_, "graph::edge_weight u");
         structures::debug::check_vertex_bounds(v, n_, "graph::edge_weight v");
@@ -72,13 +70,13 @@ class graph {
         return Weight{0};
     }
 
-    /// Return the number of incident edges for vertex u.
+    /// @brief Degree: \f$\deg(u)\f$.
     [[nodiscard]] Index degree(Index u) const {
         structures::debug::check_vertex_bounds(u, n_, "graph::degree");
         return static_cast<Index>(adj_[u].size());
     }
 
-    /// Return the sum of edge weights incident to vertex u.
+    /// @brief Weighted degree: \f$\sum_v w_{uv}\f$.
     [[nodiscard]] Weight weighted_degree(Index u) const {
         structures::debug::check_vertex_bounds(u, n_, "graph::weighted_degree");
         Weight sum{0};
@@ -88,19 +86,19 @@ class graph {
         return sum;
     }
 
-    /// Return view of neighbor edges for vertex u.
+    /// @brief Edges incident to `u`.
     [[nodiscard]] view<const graph_edge> neighbors(Index u) const {
         structures::debug::check_vertex_bounds(u, n_, "graph::neighbors");
         return adj_[u];
     }
 
-    /// Return the total number of vertices.
+    /// @brief Vertex count \f$|V|\f$.
     [[nodiscard]] Index n_vertices() const noexcept { return n_; }
 
-    /// Return the total number of edges.
+    /// @brief Edge count \f$|E|\f$.
     [[nodiscard]] Index n_edges() const noexcept { return m_; }
 
-    /// Return whether the graph is directed.
+    /// @brief Whether the graph is directed.
     [[nodiscard]] bool is_directed() const noexcept { return directed_; }
 
   private:

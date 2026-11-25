@@ -1,5 +1,5 @@
 /// @file ode/types.hpp
-/// @brief Shared callbacks, parameters, snapshots, and results for ODE solvers.
+/// @brief ODE callbacks, parameters, snapshots and results.
 #pragma once
 
 #include "container/vector.hpp"
@@ -7,22 +7,22 @@
 
 namespace num {
 
-/// First-order system callback that writes dy/dt for (t,y).
+/// @brief Right-hand side: writes \f$\dot{y} = f(t, y)\f$.
 using ode_rhs_fn = std::function<void(real t, const vec<real> &y, vec<real> &dydt)>;
-/// Position-dependent acceleration callback for second-order systems.
+/// @brief Acceleration: writes \f$a(q)\f$ for \f$\ddot{q} = a(q)\f$.
 using accel_fn = std::function<void(const vec<real> &q, vec<real> &acc)>;
-/// Optional callback invoked after accepted first-order steps.
+/// @brief First-order step observer: `(t, y)`.
 using observer_fn = std::function<void(real t, const vec<real> &y)>;
-/// Optional callback invoked after accepted symplectic steps.
+/// @brief Second-order step observer: `(t, q, v)`.
 using symp_observer_fn = std::function<void(real t, const vec<real> &q, const vec<real> &v)>;
 
-/// Snapshot yielded by a first-order lazy integrator.
+/// @brief First-order step snapshot: \f$(t, y)\f$.
 struct ode_step {
     real t = 0.0;
     vec<real> u;
 };
 
-/// Snapshot yielded by a second-order lazy integrator.
+/// @brief Second-order step snapshot: \f$(t, q, v)\f$.
 struct symplectic_step {
     real t = 0.0;
     vec<real> q;
@@ -31,7 +31,7 @@ struct symplectic_step {
 
 #include <ostream>
 
-/// Final state and convergence metadata for a first-order integration.
+/// @brief First-order result: final state and step counts.
 struct ode_result {
     vec<real> u;
     real t = 0.0;
@@ -47,7 +47,7 @@ struct ode_result {
     }
 };
 
-/// Final position and velocity from a second-order integration.
+/// @brief Second-order result: final position and velocity.
 struct symplectic_result {
     vec<real> q;
     vec<real> v;
@@ -63,7 +63,7 @@ struct symplectic_result {
     }
 };
 
-/// Shared integration interval, step-size, tolerance, and work limits.
+/// @brief Integration parameters: interval, step, tolerances, step limit.
 struct ode_params {
     real t0 = 0.0;
     real tf = 1.0;
@@ -73,7 +73,7 @@ struct ode_params {
     idx max_steps = 1000000;
 };
 
-/// Sentinel marking the end of a lazy integration range.
+/// @brief End sentinel of a step range.
 struct step_end {};
 
 } // namespace num

@@ -1,11 +1,6 @@
 /// @file spectral/fft.hpp
-/// @brief FFT interface with backend dispatch.
-///
-/// Forward transform convention:
-/// \f[
-///   X_k=\sum_{j=0}^{n-1} x_j e^{-2\pi i jk/n}.
-/// \f]
-/// The inverse transform is unnormalized.
+/// @brief Fast Fourier transforms: \f$X_k = \sum_j x_j e^{-2\pi i j k / n}\f$.
+/// Inverses are unnormalized.
 #pragma once
 
 #include "core/types.hpp"
@@ -15,7 +10,7 @@
 namespace num {
 namespace spectral {
 
-/// Available implementations for Fourier transforms.
+/// @brief FFT backend.
 enum class fft_backend : std::uint8_t {
     seq,
     simd,
@@ -23,16 +18,16 @@ enum class fft_backend : std::uint8_t {
     fftw,
 };
 
-/// @brief The in-tree FFT.
+/// @brief Backend: in-tree FFT.
 inline constexpr fft_backend seq = fft_backend::seq;
-/// @brief The FFTW backend.
+/// @brief Backend: FFTW.
 inline constexpr fft_backend fftw = fft_backend::fftw;
-/// @brief The FFT with explicit SIMD intrinsics.
+/// @brief Backend: in-tree FFT with SIMD intrinsics.
 inline constexpr fft_backend fft_simd = fft_backend::simd;
-/// @brief The FFT written with `std::simd`.
+/// @brief Backend: in-tree FFT with `std::simd`.
 inline constexpr fft_backend fft_stdsimd = fft_backend::stdsimd;
 
-/// @brief True when the build links FFTW.
+/// @brief Whether the build links FFTW.
 inline constexpr bool has_fftw =
 #ifdef NUMERICS_HAS_FFTW
     true;
@@ -40,7 +35,7 @@ inline constexpr bool has_fftw =
     false;
 #endif
 
-/// @brief True when the SIMD FFT is available.
+/// @brief Whether the SIMD FFT is available.
 inline constexpr bool has_fft_simd =
 #if defined(NUMERICS_HAS_AVX2) || defined(NUMERICS_HAS_NEON)
     true;
@@ -48,7 +43,7 @@ inline constexpr bool has_fft_simd =
     false;
 #endif
 
-/// @brief True when the `std::simd` FFT is available.
+/// @brief Whether the `std::simd` FFT is available.
 inline constexpr bool has_fft_stdsimd =
 #ifdef NUMERICS_HAS_STD_SIMD
     true;
@@ -56,7 +51,7 @@ inline constexpr bool has_fft_stdsimd =
     false;
 #endif
 
-/// @brief The FFT backend untagged calls use: FFTW when present, else the fastest in-tree one.
+/// @brief Default FFT backend: FFTW if linked, else the fastest in-tree one.
 inline constexpr fft_backend default_fft_backend =
 #ifdef NUMERICS_HAS_FFTW
     fft_backend::fftw;
@@ -66,60 +61,29 @@ inline constexpr fft_backend default_fft_backend =
                 fft_backend::seq;
 #endif
 
-/// @brief Compute unnormalized forward 1D Fast Fourier Transform \f$X_k = \sum_{j=0}^{n-1} x_j e^{-2\pi i j k / n}\f$.
-///
-/// Dispatches to FFTW3 when linked or in-tree SIMD / sequential Cooley-Tukey Radix-2 / Bluestein kernel.
-///
-/// @param in Input complex vector of length \f$n\f$.
-/// @param out Output complex spectrum vector (must be sized to \f$n\f$).
-/// @param b FFT backend tag (`fft_backend::fftw`, `fft_backend::simd`, `fft_backend::seq`).
-/// @see ifft, rfft, fft_plan
+/// @brief Fast Fourier transform (FFT): \f$X_k = \sum_{j=0}^{n-1} x_j e^{-2\pi i j k / n}\f$.
 void fft(const vec<cplx> &in, vec<cplx> &out, fft_backend b = default_fft_backend);
 
-/// @brief Compute unnormalized inverse 1D Fast Fourier Transform \f$x_j = \sum_{k=0}^{n-1} X_k e^{+2\pi i j k / n}\f$.
-///
-/// Note that dividing by \f$n\f$ is required to recover the original amplitude.
-///
-/// @param in Input complex spectrum of length \f$n\f$.
-/// @param out Output reconstructed complex vector (size \f$n\f$).
-/// @param b FFT backend tag.
-/// @see fft, irfft
+/// @brief Inverse FFT, unnormalized: \f$x_j = \sum_{k=0}^{n-1} X_k e^{2\pi i j k / n}\f$.
+/// Divide by \f$n\f$ to recover the input.
 void ifft(const vec<cplx> &in, vec<cplx> &out, fft_backend b = default_fft_backend);
 
-/// @brief Compute nonredundant half-spectrum of a real input signal: \f$n \to \lfloor n/2 \rfloor + 1\f$ complex coefficients.
-///
-/// Exploits Hermitian conjugate symmetry \f$X_{n-k} = X_k^*\f$ for real inputs.
-///
-/// @param in Real input vector of size \f$n\f$.
-/// @param out Output complex half-spectrum vector of size \f$n/2 + 1\f$.
-/// @param b FFT backend tag.
-/// @see irfft, fft
+/// @brief Real FFT: the \f$\lfloor n/2 \rfloor + 1\f$ nonredundant coefficients of real input.
 void rfft(const vec<real> &in, vec<cplx> &out, fft_backend b = default_fft_backend);
 
-/// @brief Reconstruct an \f$n\f$-point real signal from its nonredundant half-spectrum.
-///
-/// @param in Complex half-spectrum of length \f$n/2 + 1\f$.
-/// @param n Target length of the reconstructed real signal.
-/// @param out Output real signal vector (size \f$n\f$).
-/// @param b FFT backend tag.
-/// @see rfft, ifft
+/// @brief Inverse real FFT: an \f$n\f$-point real signal from its half spectrum.
 void irfft(const vec<cplx> &in, int n, vec<real> &out, fft_backend b = default_fft_backend);
 
-/// Backend interface owned by fft_plan.
+/// @brief FFT plan backend.
 struct fft_plan_impl {
     virtual ~fft_plan_impl() = default;
     virtual void execute(const vec<cplx> &in, vec<cplx> &out) const = 0;
 };
 
-/// @brief Precomputed 1D complex FFT execution plan for repeated transforms.
-///
-/// Pre-allocates twiddle factors, trigonometric lookup tables, or FFTW plans to amortize setup costs across multiple transforms of identical length.
+/// @brief FFT plan: a reusable transform of fixed length.
 class fft_plan {
   public:
-    /// @brief Precompute an \f$n\f$-point forward or inverse complex transform plan.
-    /// @param n Transform length.
-    /// @param forward `true` for forward FFT (\f$e^{-i\omega}\f$), `false` for inverse FFT (\f$e^{+i\omega}\f$).
-    /// @param b FFT backend tag.
+    /// @brief Plan for an \f$n\f$-point forward or inverse transform.
     explicit fft_plan(int n, bool forward = true, fft_backend b = default_fft_backend);
     ~fft_plan();
 
@@ -129,9 +93,7 @@ class fft_plan {
     fft_plan(fft_plan &&) noexcept;
     fft_plan &operator=(fft_plan &&) noexcept;
 
-    /// @brief Execute planned transform on input buffer.
-    /// @param in Input complex vector (must have length \f$n\f$).
-    /// @param out Output complex vector (must have length \f$n\f$).
+    /// @brief Execute the plan: \f$X \leftarrow \mathcal{F} x\f$, both of length \f$n\f$.
     void execute(const vec<cplx> &in, vec<cplx> &out) const;
 
     [[nodiscard]] int size() const { return n_; }

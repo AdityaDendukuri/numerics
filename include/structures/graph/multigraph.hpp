@@ -1,5 +1,5 @@
 /// @file structures/graph/multigraph.hpp
-/// @brief Weighted multigraph data structure with multi-edge multiplicities for RandNLA and Laplacian solvers.
+/// @brief Weighted multigraph with edge multiplicities.
 #pragma once
 
 #include "core/types.hpp"
@@ -12,7 +12,7 @@
 
 namespace num::structures {
 
-/// Weighted multi-edge with multiplicity count.
+/// @brief Multi-edge: target, weight and multiplicity.
 template <typename Weight = double, std::integral Index = num::idx>
 struct multi_edge {
     Index to{};
@@ -20,7 +20,7 @@ struct multi_edge {
     std::uint8_t count = 1;
 };
 
-/// @brief Weighted multigraph representation supporting parallel edges and integer counts.
+/// @brief Weighted multigraph: parallel edges with counts.
 template <typename Weight, std::integral Index>
 class multigraph {
   public:
@@ -28,15 +28,15 @@ class multigraph {
     using index_type = Index;
     using edge_type = multi_edge<Weight, Index>;
 
-    /// Construct an empty multigraph with n vertices.
+    /// @brief Multigraph on `n` vertices with no edges.
     explicit multigraph(Index n = 0) : adj_(n) {}
 
-    /// Number of vertices.
+    /// @brief Vertex count \f$|V|\f$.
     [[nodiscard]] Index n_vertices() const noexcept {
         return static_cast<Index>(adj_.size());
     }
 
-    /// Add an undirected multi-edge between u and v.
+    /// @brief Add undirected multi-edge \f$\{u, v\}\f$.
     void add_edge(Index u, Index v, Weight weight = Weight{1}, std::uint8_t count = 1) {
         if (u >= adj_.size() || v >= adj_.size()) {
             throw std::out_of_range("multigraph::add_edge: vertex index out of range");
@@ -45,7 +45,7 @@ class multigraph {
         adj_[v].push_back({u, weight, count});
     }
 
-    /// Add a directed multi-edge from u to v.
+    /// @brief Add directed multi-edge \f$u \to v\f$.
     void add_directed_edge(Index u, Index v, Weight weight = Weight{1}, std::uint8_t count = 1) {
         if (u >= adj_.size() || v >= adj_.size()) {
             throw std::out_of_range("multigraph::add_directed_edge: vertex index out of range");
@@ -53,7 +53,7 @@ class multigraph {
         adj_[u].push_back({v, weight, count});
     }
 
-    /// Const access to neighbor list of vertex u.
+    /// @brief Edges incident to `u`.
     [[nodiscard]] const array<edge_type> &neighbors(Index u) const {
         if (u >= adj_.size()) {
             throw std::out_of_range("multigraph::neighbors: vertex index out of range");
@@ -61,7 +61,7 @@ class multigraph {
         return adj_[u];
     }
 
-    /// Mutable access to neighbor list of vertex u.
+    /// @brief Edges incident to `u`, mutable.
     [[nodiscard]] array<edge_type> &neighbors(Index u) {
         if (u >= adj_.size()) {
             throw std::out_of_range("multigraph::neighbors: vertex index out of range");
@@ -69,17 +69,17 @@ class multigraph {
         return adj_[u];
     }
 
-    /// Raw underlying adjacency list.
+    /// @brief Adjacency lists.
     [[nodiscard]] const array<array<edge_type>> &adjacency() const noexcept {
         return adj_;
     }
 
-    /// Mutable raw underlying adjacency list.
+    /// @brief Adjacency lists, mutable.
     [[nodiscard]] array<array<edge_type>> &adjacency() noexcept {
         return adj_;
     }
 
-    /// Subscript operator for vertex neighbors.
+    /// @brief Edges incident to `u`.
     [[nodiscard]] const array<edge_type> &operator[](Index u) const {
         return adj_[u];
     }
@@ -87,7 +87,7 @@ class multigraph {
         return adj_[u];
     }
 
-    /// Convert to simple graph (consolidating parallel edges).
+    /// @brief Simple graph: parallel edges merged.
     [[nodiscard]] graph<Weight, Index> to_simple_graph() const {
         const Index n = n_vertices();
         graph<Weight, Index> G(n);
@@ -106,7 +106,7 @@ class multigraph {
     array<array<edge_type>> adj_;
 };
 
-/// Convert a graph to a multigraph.
+/// @brief Multigraph from a graph.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline multigraph<Weight, Index>
 to_multigraph(const graph<Weight, Index> &G) {

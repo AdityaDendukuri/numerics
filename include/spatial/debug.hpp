@@ -1,5 +1,5 @@
 /// @file spatial/debug.hpp
-/// @brief Runtime verification of spatial structure and kernel properties.
+/// @brief Runtime checks of spatial structures and kernels.
 #pragma once
 
 #include "core/debug.hpp"
@@ -15,14 +15,7 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief Verify that a smoothing kernel integrates to one over its support.
-///
-/// \f[ \int_0^{2h} W(r,h) \, 2\pi r \, dr = 1 \f]
-///
-/// SPH interpolates a field as \f$\sum_j m_j (\rho_j)^{-1} A_j W_{ij}\f$, which
-/// reproduces a constant only when the kernel is normalized. A kernel that is not
-/// produces densities off by a constant factor, which looks like a physical result
-/// rather than an error.
+/// @brief Kernel normalization check: \f$\int_0^{2h} W(r, h)\, 2\pi r\, dr = 1\f$.
 template <class K, class Scalar = float>
 requires smoothing_kernel<K, Scalar> inline void
 verify_kernel_normalization(Scalar h, Scalar tol = Scalar(2e-2),
@@ -50,7 +43,7 @@ verify_kernel_normalization(Scalar h, Scalar tol = Scalar(2e-2),
     }
 }
 
-/// @brief Verify that a kernel vanishes beyond its support radius.
+/// @brief Kernel support check: \f$W(r, h) = 0\f$ for \f$r > 2h\f$.
 template <class K, class Scalar = float>
 requires smoothing_kernel<K, Scalar> inline void
 verify_kernel_support(Scalar h, std::source_location loc = std::source_location::current()) {
@@ -66,10 +59,7 @@ verify_kernel_support(Scalar h, std::source_location loc = std::source_location:
     }
 }
 
-/// @brief Verify that a periodic lattice's neighbour tables are mutually consistent.
-///
-/// Stepping up from a site and then down must return to it, and likewise left and
-/// right. A table built with the wrong modulus satisfies neither.
+/// @brief Lattice neighbour check: up then down, and left then right, return to the start.
 template <class P>
 requires periodic_neighbourhood_2d<P> inline void
 verify_lattice_symmetry(const P &lattice,

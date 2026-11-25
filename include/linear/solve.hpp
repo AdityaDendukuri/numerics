@@ -1,16 +1,5 @@
 /// @file linear/solve.hpp
-/// @brief The solve protocol every factorization follows.
-///
-/// A factorization is a value, and solving with it is one free function chosen by its type:
-///
-///     auto F = lu(A);            // or cholesky(...), lu(band), lu(R, blocks(levels)), ...
-///     solve(F, b, x);            // x = A^{-1} b; x may be b
-///     x = solve(F, b);           // the same, allocating x
-///     solve(transpose(F), b, x); // x = A^{-T} b
-///
-/// Each factorization type supplies `solve(F, b, x)`, and `solve_transpose(F, b, x)` when it
-/// can, for `vec<real>` and `mat<real>` right-hand sides. Everything else here is written once
-/// on top of those. Overloads resolve at compile time, so a solve costs no indirect call.
+/// @brief Solve protocol: `solve(F, b, x)` and `solve_transpose(F, b, x)` for every factorization.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -19,9 +8,7 @@
 
 namespace num {
 
-/// @brief A factorization of a square \f$A\f$ that applies \f$A^{-1}\f$ and \f$A^{-T}\f$.
-///
-/// The out-parameter forms may alias their input, so a caller can solve in place.
+/// @brief Factorization: applies \f$A^{-1}\f$ and \f$A^{-T}\f$; out-parameter forms may alias.
 template <class F>
 concept factorization =
     requires(const F &factor, const vec<real> &v, const mat<real> &m, vec<real> &vout,
@@ -32,7 +19,7 @@ concept factorization =
         solve_transpose(factor, m, mout);
     };
 
-/// @brief Solve \f$Ax = b\f$, allocating `x`. Prefer the out-parameter form in hot loops.
+/// @brief Solve: \f$x = A^{-1} b\f$. Allocates.
 template <class F, class RHS>
 [[nodiscard]] RHS solve(const F &factor, const RHS &b) requires requires(RHS &x) {
     solve(factor, b, x);
@@ -43,7 +30,7 @@ template <class F, class RHS>
     return x;
 }
 
-/// @brief Solve \f$A^Tx = b\f$, allocating `x`.
+/// @brief Transposed solve: \f$x = A^{-T} b\f$. Allocates.
 template <class F, class RHS>
 [[nodiscard]] RHS solve_transpose(const F &factor, const RHS &b) requires requires(RHS &x) {
     solve_transpose(factor, b, x);
@@ -63,10 +50,8 @@ struct transposed_factor {
 
 } // namespace detail
 
-/// @brief View a factorization of \f$A\f$ as one of \f$A^T\f$, so `solve` covers both.
-///
-/// The view stores only a reference: it neither transposes nor copies the factors, and it
-/// must not outlive them.
+/// @brief Transposed view: a factorization of \f$A\f$ as one of \f$A^T\f$. References `F`.
+/// @warning References `F`; it must outlive the view.
 template <class F>
 requires requires(const F &factor, const vec<real> &b, vec<real> &x) {
     solve_transpose(factor, b, x);

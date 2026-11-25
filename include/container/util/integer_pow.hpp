@@ -1,10 +1,10 @@
-/// @file integer_pow.hpp
-/// @brief Compile-time integer exponentiation via repeated squaring
+/// @file container/util/integer_pow.hpp
+/// @brief Compile-time integer powers.
 #pragma once
 
 namespace num {
 
-/// @brief Compute x^N at compile time via repeated squaring.
+/// @brief Integer power: \f$x^N\f$ by repeated squaring.
 template <int N, typename T>
 constexpr T ipow(T x) noexcept {
     static_assert(N >= 0, "ipow: exponent must be non-negative");

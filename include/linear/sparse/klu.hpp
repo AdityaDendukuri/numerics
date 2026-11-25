@@ -1,5 +1,5 @@
-/// @file klu.hpp
-/// @brief Optional SuiteSparse KLU factorization for real sparse matrices.
+/// @file linear/sparse/klu.hpp
+/// @brief Sparse LU through SuiteSparse KLU.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -10,13 +10,14 @@
 
 namespace num {
 
-/// True when Numerics was built with the optional SuiteSparse KLU backend.
+/// @brief Whether KLU is available.
 [[nodiscard]] bool klu_available() noexcept;
 
-/// Reusable sparse LU factorization backed by SuiteSparse KLU.
+/// @brief KLU sparse LU: \f$P A Q = L U\f$.
 class klu_factorization {
   public:
-    /// Factor a square CSR matrix; throws when KLU is unavailable or factorization fails.
+    /// @brief Factor a square sparse matrix.
+    /// @throws std::runtime_error If KLU is unavailable or the factorization fails.
     explicit klu_factorization(const spmat &matrix);
     ~klu_factorization();
     klu_factorization(klu_factorization &&) noexcept;
@@ -24,7 +25,7 @@ class klu_factorization {
     klu_factorization(const klu_factorization &) = delete;
     klu_factorization &operator=(const klu_factorization &) = delete;
 
-    /// Return the order of the factored matrix.
+    /// @brief Order \f$n\f$.
     [[nodiscard]] idx size() const noexcept;
 
   private:
@@ -36,11 +37,11 @@ class klu_factorization {
     std::unique_ptr<Impl> impl_;
 };
 
-/// @brief Solve \f$Ax = b\f$. `x` may be `b`.
+/// @brief KLU solve: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 void solve(const klu_factorization &factor, const vec<real> &b, vec<real> &x);
-/// @brief Solve \f$AX = B\f$. `X` may be `B`.
+/// @brief KLU solve: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 void solve(const klu_factorization &factor, const mat<real> &B, mat<real> &X);
-/// @brief Solve \f$A^Tx = b\f$. `x` may be `b`.
+/// @brief KLU transposed solve: \f$x \leftarrow A^{-T} b\f$. `x` may alias `b`.
 void solve_transpose(const klu_factorization &factor, const vec<real> &b, vec<real> &x);
 void solve_transpose(const klu_factorization &factor, const mat<real> &B, mat<real> &X);
 

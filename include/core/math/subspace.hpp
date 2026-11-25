@@ -1,5 +1,5 @@
-/// @file subspace.hpp
-/// @brief Runtime predicates representing mathematical linear subspaces.
+/// @file core/math/subspace.hpp
+/// @brief Linear subspaces with membership tests and projections.
 #pragma once
 
 #include "core/math/concepts.hpp"
@@ -32,12 +32,12 @@ struct project_t {
     }
 };
 
-/// @brief True when a vector lies in a subspace.
+/// @brief Membership: \f$x \in S\f$.
 inline constexpr contains_t contains{};
-/// @brief Project a vector onto a subspace, in place.
+/// @brief Projection onto a subspace, in place: \f$x \leftarrow P_S x\f$.
 inline constexpr project_t project{};
 
-/// @brief A linear subspace of V that can test membership and project onto itself.
+/// @brief Linear subspace \f$S \subseteq V\f$ with `contains` and `project`.
 template <class Subspace, class V>
 concept linear_subspace_of = vector_space<V> &&
                            requires(const Subspace &subspace, const V &constant, V &value) {
@@ -49,7 +49,7 @@ concept linear_subspace_of = vector_space<V> &&
 
 namespace num::space {
 
-/// The codimension-one subspace {x : sum_i x_i = 0}.
+/// @brief Zero-sum subspace: \f$\{x : \sum_i x_i = 0\}\f$.
 struct zero_sum final {
     double tolerance = 1e-11;
 

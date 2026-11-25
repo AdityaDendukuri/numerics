@@ -1,9 +1,5 @@
 /// @file linear/eigen/power.hpp
-/// @brief Power iteration, inverse iteration, Rayleigh quotient iteration
-///
-/// Every matvec/dot/axpy/norm call inside these iterations goes through the
-/// untagged `num::matvec`/`num::dot`/... entry points, which resolve to
-/// `num::accel` (the build's best available backend) automatically.
+/// @brief Power, inverse and Rayleigh quotient iteration.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -19,7 +15,7 @@
 
 namespace num {
 
-/// @brief Result of a single-eigenvalue iteration
+/// @brief Single-eigenpair result: \f$(\lambda, v)\f$ and convergence.
 struct power_result {
     real eigenvalue = 0.0;  ///< Converged eigenvalue (Rayleigh quotient)
     vec<real> eigenvector;     ///< Corresponding unit eigenvector
@@ -35,7 +31,7 @@ struct power_result {
 };
 
 namespace detail {
-/// Normalise v in-place; returns the old norm.
+/// @brief Normalize in place: \f$v \leftarrow v / \|v\|_2\f$; returns \f$\|v\|_2\f$.
 inline real normalise(vec<real> &v) {
     // nrm <- ||v||_2
     const real nrm = kernel::norm(v.data(), v.size());
@@ -47,31 +43,14 @@ inline real normalise(vec<real> &v) {
 }
 } // namespace detail
 
-/// @brief Power iteration  -- finds the eigenvalue largest in absolute value.
-///
-/// @param A        Square matrix (need not be symmetric)
-/// @param tol      Tolerance on eigenvalue change between iterations
-/// @param max_iter Maximum iterations
+/// @brief Power iteration: dominant eigenpair, \f$\max |\lambda|\f$.
 power_result power_iteration(const mat<real> &A, real tol = 1e-10, idx max_iter = 1000);
 
-/// @brief Inverse iteration  -- finds the eigenvalue closest to a shift sigma.
-///
-/// Factorizes (A - sigmaI) once then solves repeatedly.
-///
-/// @param A        Square matrix (symmetric recommended)
-/// @param sigma    Shift  -- should be near the target eigenvalue
-/// @param tol      Tolerance on eigenvalue change between iterations
-/// @param max_iter Maximum iterations
+/// @brief Inverse iteration: eigenpair nearest \f$\sigma\f$, via \f$(A - \sigma I)^{-1}\f$.
 power_result inverse_iteration(const mat<real> &A, real sigma, real tol = 1e-10, idx max_iter = 1000);
 
-/// @brief Rayleigh quotient iteration  -- cubically convergent.
-///
-/// Updates the shift sigma = v^T*A*v at every step -> fresh LU each iteration.
-///
-/// @param A        Symmetric matrix
-/// @param x0       Starting vector (determines which eigenvalue is found)
-/// @param tol      Tolerance on residual ||A*v - lambda*v||
-/// @param max_iter Maximum iterations
+/// @brief Rayleigh quotient iteration: \f$\sigma_k = v_k^T A v_k\f$, cubically convergent.
+/// @note Refactors \f$A - \sigma_k I\f$ at every step.
 power_result rayleigh_iteration(const mat<real> &A, const vec<real> &x0, real tol = 1e-10,
                                idx max_iter = 50);
 

@@ -1,5 +1,5 @@
-/// @file jacobi.hpp
-/// @brief Jacobi iterative solver
+/// @file linear/solvers/jacobi.hpp
+/// @brief Jacobi iteration.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -12,17 +12,8 @@
 
 namespace num {
 
-/// @brief Jacobi iterative solver for Ax = b.
-///
-/// Updates every component from the previous iterate, so both sweeps thread. It needs strictly
-/// diagonally dominant A: pass `num::assume_diagonally_dominant(A)`.
-///
-/// @param A_in     Square matrix claiming the law
-/// @param b        Right-hand side vector
-/// @param x        Solution vector (initial guess on input, solution on output)
-/// @param tol      Convergence tolerance on residual norm (default 1e-10)
-/// @param max_iter Maximum iterations (default 1000)
-/// @return solver_result with convergence info
+/// @brief Jacobi iteration: \f$x^{(k+1)}_i = (b_i - \sum_{j \ne i} a_{ij} x^{(k)}_j) / a_{ii}\f$.
+/// Requires `A` tagged diagonally dominant.
 template <class Mat = with_law<mat<real>, law::diagonally_dominant>, bool Parallel = has_omp>
 requires claims<Mat, law::diagonally_dominant>
 inline solver_result jacobi(const Mat &A_in, const vec<real> &b, vec<real> &x, real tol = 1e-10,

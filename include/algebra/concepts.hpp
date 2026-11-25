@@ -1,9 +1,5 @@
 /// @file algebra/concepts.hpp
-/// @brief Concepts beside the space and operator concepts: entrywise matrix access and scalar
-/// functions.
-///
-/// The space and operator concepts are in `core/math/concepts.hpp`. Storage layout is
-/// described by the `num::repr` predicates in `container/concepts.hpp`.
+/// @brief Concepts for entrywise matrices and scalar functions.
 #pragma once
 
 #include "algebra/scalar.hpp"
@@ -13,10 +9,7 @@
 
 namespace num {
 
-/// @brief Linear map presented as an entrywise-indexable 2D array.
-///
-/// A matrix-free operator is a `linear_operator` but not a `matrix_space`. Routines that read
-/// entries, such as pivoting or banded factorization, require this.
+/// @brief Matrix space: a linear map with entrywise access \f$a_{ij}\f$.
 template <class A, class T = entry_t<A>>
 concept matrix_space = field<T> && requires(const A &a) {
     { a.rows() } -> std::convertible_to<idx>;
@@ -24,14 +17,13 @@ concept matrix_space = field<T> && requires(const A &a) {
     { a(idx{0}, idx{0}) } -> std::convertible_to<T>;
 };
 
-/// @brief Scalar function \f$f: \mathbb{K} \to \mathbb{K}\f$, any callable.
+/// @brief Scalar function: \f$f : \mathbb{K} \to \mathbb{K}\f$.
 template <class F, class T = real>
 concept scalar_function = field<T> && std::invocable<F, T> && requires(F f, T x) {
     { f(x) } -> std::convertible_to<T>;
 };
 
-/// @brief Scalar function supplied with its exact derivative \f$(f, f')\f$, as Newton and
-/// Halley's method need.
+/// @brief Differentiable scalar function: \f$f\f$ with its derivative \f$f'\f$.
 template <class F, class D, class T = real>
 concept differentiable_function = scalar_function<F, T> && scalar_function<D, T>;
 

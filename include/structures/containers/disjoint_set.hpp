@@ -1,5 +1,5 @@
 /// @file structures/containers/disjoint_set.hpp
-/// @brief High-performance Disjoint-Set (Union-Find) with path compression and union by rank.
+/// @brief Union-find with path compression and union by rank.
 #pragma once
 
 #include "core/types.hpp"
@@ -11,20 +11,19 @@
 
 namespace num {
 
-/// @brief Disjoint-Set forest data structure supporting near O(1) amortized operations.
-/// @tparam Index Integer type used for vertex/element indices (e.g. num::idx, uint32_t, int).
+/// @brief Disjoint-set forest: near-\f$O(1)\f$ amortized `find` and `unite`.
 template <std::integral Index = num::idx>
 class basic_disjoint_set {
   public:
     using index_type = Index;
 
-    /// Construct a disjoint-set structure with n singleton sets: {0}, {1}, ..., {n-1}.
+    /// @brief `n` singleton sets \f$\{0\}, \ldots, \{n-1\}\f$.
     explicit basic_disjoint_set(Index n = 0)
         : parent_(n), rank_(n, 0), size_(n, 1), count_(n) {
         std::iota(parent_.begin(), parent_.end(), static_cast<Index>(0));
     }
 
-    /// Find the representative root of the set containing element u with path compression.
+    /// @brief Representative of \f$[u]\f$, compressing the path.
     Index find(Index u) {
         structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::find");
         Index root = u;
@@ -41,7 +40,7 @@ class basic_disjoint_set {
         return root;
     }
 
-    /// Find representative root (const view without mutation).
+    /// @brief Representative of \f$[u]\f$, without compression.
     [[nodiscard]] Index find(Index u) const {
         structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::find");
         while (u != parent_[u]) {
@@ -50,8 +49,7 @@ class basic_disjoint_set {
         return u;
     }
 
-    /// Unite the sets containing elements u and v.
-    /// @return true if u and v were in different sets, false if already in the same set.
+    /// @brief Union: merge \f$[u]\f$ and \f$[v]\f$; returns whether they were distinct.
     bool unite(Index u, Index v) {
         structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::unite u");
         structures::debug::check_index_bounds(v, static_cast<Index>(parent_.size()), "disjoint_set::unite v");
@@ -78,27 +76,27 @@ class basic_disjoint_set {
         return true;
     }
 
-    /// Check whether elements u and v belong to the same connected component.
+    /// @brief Whether \f$u \sim v\f$.
     [[nodiscard]] bool connected(Index u, Index v) {
         return find(u) == find(v);
     }
 
-    /// Return the number of elements in the component containing element u.
+    /// @brief Size of \f$[u]\f$.
     [[nodiscard]] Index component_size(Index u) {
         return size_[find(u)];
     }
 
-    /// Return the total number of disjoint components remaining.
+    /// @brief Number of sets.
     [[nodiscard]] Index count() const noexcept {
         return count_;
     }
 
-    /// Return the total number of elements.
+    /// @brief Number of elements.
     [[nodiscard]] Index size() const noexcept {
         return static_cast<Index>(parent_.size());
     }
 
-    /// Reset the structure back to n singleton sets.
+    /// @brief Reset to `n` singleton sets.
     void reset(Index n = 0) {
         if (n == 0) n = static_cast<Index>(parent_.size());
         parent_.resize(n);
@@ -108,7 +106,7 @@ class basic_disjoint_set {
         count_ = n;
     }
 
-    /// Return all connected components as lists of element indices.
+    /// @brief All sets, as lists of elements.
     [[nodiscard]] array<array<Index>> components() {
         array<array<Index>> comp_map(parent_.size());
         for (Index i = 0; i < static_cast<Index>(parent_.size()); ++i) {
@@ -131,10 +129,10 @@ class basic_disjoint_set {
     Index count_ = 0;
 };
 
-/// Canonical 64-bit disjoint_set alias
+/// @brief Disjoint set with `idx` indices.
 using disjoint_set = basic_disjoint_set<num::idx>;
 
-/// Compact 32-bit disjoint_set alias (halves memory overhead)
+/// @brief Disjoint set with 32-bit indices.
 using disjoint_set_32 = basic_disjoint_set<uint32_t>;
 
 static_assert(concepts::equivalence_relation<disjoint_set, num::idx>,

@@ -1,8 +1,5 @@
 /// @file core/debug.hpp
-/// @brief Diagnostic presets, failure reporting, and dimension checks.
-///
-/// The scaffolding every module reports through. Sampling of mathematical
-/// properties builds on this and lives in `algebra/debug.hpp`.
+/// @brief Diagnostic presets, failure reporting and dimension checks.
 #pragma once
 
 #include "core/types.hpp"
@@ -26,27 +23,24 @@ enum class diagnostic_level {
     full = 2   ///< Includes sampled symmetry, adjoint, and positive-definiteness testing
 };
 
-/// @brief High-level execution and diagnostic presets for mathematical invariant enforcement.
+/// @brief Diagnostic preset: how much runtime checking runs.
 enum class diagnostic_preset : std::uint8_t {
-    strict,   ///< Full runtime property sampling (x^T A x > 0, symmetry), loud warnings on untagged
-              ///< inputs.
-    balanced, ///< Dimension matching, structure bounds, warnings on untagged inputs (skips
-              ///< randomized sampling).
-    unsafe,   ///< Prototyping mode: completely silences unverified invariant warnings and property
-              ///< checks.
-    production, ///< Maximum throughput: all diagnostics disabled.
+    strict,     ///< Shape checks and property sampling.
+    balanced,   ///< Shape checks only.
+    unsafe,     ///< Checks silenced.
+    production, ///< Diagnostics compiled out.
 };
 
 namespace preset {
-/// @brief Sample every property.
+/// @brief Preset: shape checks and property sampling.
 inline constexpr diagnostic_preset strict = diagnostic_preset::strict;
-/// @brief Check shapes and dimensions, and skip the sampling.
+/// @brief Preset: shape checks only.
 inline constexpr diagnostic_preset balanced = diagnostic_preset::balanced;
-/// @brief Silence the checks, for prototyping.
+/// @brief Preset: checks silenced.
 inline constexpr diagnostic_preset unsafe = diagnostic_preset::unsafe;
-/// @brief The same as `unsafe`.
+/// @brief Preset: alias of `unsafe`.
 inline constexpr diagnostic_preset prototype = diagnostic_preset::unsafe;
-/// @brief Turn every diagnostic off.
+/// @brief Preset: diagnostics compiled out.
 inline constexpr diagnostic_preset production = diagnostic_preset::production;
 } // namespace preset
 
@@ -76,18 +70,15 @@ inline constexpr diagnostic_preset production = diagnostic_preset::production;
 
 namespace num::debug {
 
-/// @brief The strongest level this build can reach. The runtime preset is clamped to it.
+/// @brief Highest diagnostic level compiled into this build.
 inline constexpr diagnostic_level compiled_level =
     static_cast<diagnostic_level>(NUMERICS_DIAGNOSTICS);
 
-/// @brief Whether shape, emptiness and finiteness checks exist in this build.
+/// @brief Whether shape, emptiness and finiteness checks are compiled in.
 inline constexpr bool checks_compiled_in = NUMERICS_DIAGNOSTICS >= 1;
 
-/// @brief Whether property sampling exists in this build.
-///
-/// Guard a probe with `if constexpr (!sampling_compiled_in) { return; }` and its body is
-/// discarded rather than branched over. This is what makes `preset::production` remove
-/// the code, which the documentation claimed long before it was true.
+/// @brief Whether property sampling is compiled in.
+/// @note Guard probes with `if constexpr (!sampling_compiled_in)` so production drops them.
 inline constexpr bool sampling_compiled_in = NUMERICS_DIAGNOSTICS >= 2;
 
 namespace detail {
@@ -124,46 +115,36 @@ inline std::atomic<diagnostic_preset> g_preset{default_preset()};
 
 } // namespace detail
 
-/// @brief Set the diagnostic level, clamped to the compile-time ceiling.
+/// @brief Set the diagnostic level, clamped to `compiled_level`.
 inline void set_level(diagnostic_level lvl) noexcept {
     detail::g_level.store(detail::clamp_to_ceiling(lvl), std::memory_order_relaxed);
 }
 
-/// @brief The active diagnostic level.
+/// @brief Current diagnostic level.
 [[nodiscard]] inline diagnostic_level get_level() noexcept {
     return detail::g_level.load(std::memory_order_relaxed);
 }
 
-/// @brief Configure the global execution preset.
-///
-/// The request is clamped to the compile-time ceiling. Asking for `strict` in a build
-/// configured at level 1 leaves sampling off, because that code was never emitted.
-/// `get_preset` still reports what was asked for; `preset_fully_applied` reports whether
-/// the request was met.
+/// @brief Set the diagnostic preset, clamped to `compiled_level`.
+/// @note A preset above the compiled level runs fewer checks than requested; see
+/// `preset_fully_applied`.
 inline void set_preset(diagnostic_preset p) noexcept {
     detail::g_preset.store(p, std::memory_order_relaxed);
     detail::g_level.store(detail::clamp_to_ceiling(detail::level_for(p)),
                           std::memory_order_relaxed);
 }
 
-/// @brief The preset most recently requested.
-///
-/// Stored rather than derived from the level. Deriving it could not tell `unsafe` from
-/// `production`, which share a level, so `set_preset(production)` used to report back
-/// `unsafe`.
+/// @brief Last requested diagnostic preset.
 [[nodiscard]] inline diagnostic_preset get_preset() noexcept {
     return detail::g_preset.load(std::memory_order_relaxed);
 }
 
-/// @brief Whether the preset in force is also reachable in this build.
-///
-/// False when a caller asked for more than the ceiling allows. Worth reporting once at
-/// startup rather than silently running fewer checks than the caller believes.
+/// @brief Whether the requested preset is fully available in this build.
 [[nodiscard]] inline bool preset_fully_applied() noexcept {
     return detail::level_for(get_preset()) == get_level();
 }
 
-/// @brief RAII guard to temporarily apply an execution preset within a scope.
+/// @brief Scoped diagnostic preset, restored on exit.
 class scoped_preset {
   public:
     explicit scoped_preset(diagnostic_preset temp_preset) noexcept
@@ -182,7 +163,7 @@ class scoped_preset {
     diagnostic_preset previous_preset_;
 };
 
-/// @brief Raise a descriptive diagnostic exception with source location info.
+/// @brief Raise a diagnostic error with the call site.
 [[noreturn]] inline void panic(std::string_view category, std::string_view message,
                                std::source_location loc = std::source_location::current()) {
     std::string err = "[" + std::string(category) + "] Error at " + loc.file_name() + ":" +
@@ -191,7 +172,7 @@ class scoped_preset {
     throw std::invalid_argument(err);
 }
 
-/// @brief Verify dimension equality (e.g. A.rows() == b.size())
+/// @brief Dimension check: `expected == actual`.
 inline void check_dim(idx expected, idx actual, std::string_view label,
                       std::source_location loc = std::source_location::current()) {
     if constexpr (checks_compiled_in) {
@@ -204,7 +185,7 @@ inline void check_dim(idx expected, idx actual, std::string_view label,
     }
 }
 
-/// @brief Verify a container is non-empty
+/// @brief Non-empty check: `size > 0`.
 inline void check_non_empty(idx size, std::string_view label,
                             std::source_location loc = std::source_location::current()) {
     if constexpr (checks_compiled_in) {
@@ -214,7 +195,7 @@ inline void check_non_empty(idx size, std::string_view label,
     }
 }
 
-/// @brief Verify all values in array are finite (not NaN or Inf)
+/// @brief Finiteness check: every value is finite.
 template <typename T>
 inline void check_finite(const T *data, idx n, std::string_view label,
                          std::source_location loc = std::source_location::current()) {

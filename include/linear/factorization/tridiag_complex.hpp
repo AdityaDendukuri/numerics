@@ -1,7 +1,5 @@
 /// @file linear/factorization/tridiag_complex.hpp
-/// @brief Precomputed Thomas solver for constant-coefficient complex systems.
-///
-/// Solves \f$a x_{k-1}+b x_k+c x_{k+1}=d_k\f$ with fixed \f$a,b,c\f$.
+/// @brief Constant-coefficient complex tridiagonal solves.
 #pragma once
 
 #include "core/types.hpp"
@@ -10,7 +8,8 @@
 
 namespace num {
 
-/// Reusable factorization of a constant-coefficient complex tridiagonal matrix.
+/// @brief Complex tridiagonal factor: \f$a x_{k-1} + b x_k + c x_{k+1} = d_k\f$.
+/// The coefficients \f$a, b, c\f$ are constant.
 struct complex_tri_diag {
     using cplx = std::complex<double>;
 
@@ -19,10 +18,10 @@ struct complex_tri_diag {
     int n = 0;
     cplx a_coeff = {};
 
-    /// Factor an n-by-n tridiagonal matrix with constant lower/diagonal/upper entries.
+    /// @brief Factor an \f$n \times n\f$ system with coefficients \f$a, b, c\f$.
     void factor(int n_, cplx a_, cplx b_, cplx c_);
 
-    /// Replace a matching right-hand side with its solution.
+    /// @brief Solve in place: \f$d \leftarrow T^{-1} d\f$.
     void solve(array<cplx> &d) const;
 };
 

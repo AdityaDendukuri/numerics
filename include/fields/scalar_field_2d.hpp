@@ -1,5 +1,5 @@
 /// @file fields/scalar_field_2d.hpp
-/// @brief scalar field on a 2D uniform interior grid.
+/// @brief 2D scalar field on a uniform interior grid.
 #pragma once
 
 #include "container/vector.hpp"
@@ -8,19 +8,19 @@
 
 namespace num {
 
-/// scalar values stored at the interior nodes of a uniform square grid.
+/// @brief 2D scalar field: \f$u_{ij}\f$ at interior nodes.
 class scalar_field_2d {
   public:
-    /// Allocate a zero-filled field on g.
+    /// @brief Zero field on `g`.
     explicit scalar_field_2d(grid2d g) : grid_(g), data_(static_cast<idx>(g.size())) {}
 
     template <typename F>
-    /// Sample f(x,y) at every grid node during construction.
+    /// @brief Field sampled from `f(x, y)`.
     scalar_field_2d(grid2d g, F &&f) : scalar_field_2d(g) {
         fill(std::forward<F>(f));
     }
 
-    /// Return the field geometry.
+    /// @brief Grid geometry.
     [[nodiscard]] const grid2d &grid() const { return grid_; }
     [[nodiscard]] int N() const { return grid_.N; }
     [[nodiscard]] double h() const { return grid_.h; }
@@ -29,7 +29,7 @@ class scalar_field_2d {
     real operator()(int i, int j) const { return data_[(static_cast<idx>(i) * grid_.N) + j]; }
 
     template <typename F>
-    /// Replace every field value with f(x,y) at its node.
+    /// @brief Fill: \f$u_{ij} \leftarrow f(x_i, y_j)\f$.
     void fill(F &&f) {
         for (int i = 0; i < grid_.N; ++i) {
             for (int j = 0; j < grid_.N; ++j) {
@@ -38,7 +38,7 @@ class scalar_field_2d {
         }
     }
 
-    /// Access the contiguous values in row-major grid order.
+    /// @brief Values as a vector, row-major.
     vec<real> &as_vec() { return data_; }
     [[nodiscard]] const vec<real> &as_vec() const { return data_; }
 

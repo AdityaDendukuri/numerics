@@ -1,5 +1,5 @@
 /// @file blas/matrix_ops.hpp
-/// @brief BLAS-accelerated Level-2/3 dense matrix operations.
+/// @brief Dense matrix operations through an external BLAS.
 #pragma once
 
 #include "blas/vector_ops.hpp"
@@ -30,9 +30,8 @@ inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) {
 #endif
 }
 
-/// @brief `C <- alpha op(A) op(B) + beta C` on row-major storage with leading
-/// dimensions, where `op` transposes when the flag is set: `op(A)` is `m x k`,
-/// `op(B)` is `k x n`, C is `m x n`. No operand is copied.
+/// @brief Matrix-matrix product (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
+/// Row-major with leading dimensions; \f$op\f$ transposes when its flag is set.
 inline void gemm(real alpha, const real *A, idx lda, bool transA, const real *B, idx ldb,
                  bool transB, real beta, real *C, idx ldc, idx m, idx n, idx k) {
 #if defined(NUMERICS_HAS_BLAS)
@@ -49,7 +48,8 @@ inline void gemm(real alpha, const real *A, idx lda, bool transA, const real *B,
 #endif
 }
 
-/// @brief `C <- alpha op(A) op(B) + beta C` for matrices; C must already be `m x n`.
+/// @brief Matrix-matrix product (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
+/// `C` must already be sized.
 inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B, bool transB,
                  real beta, mat<real> &C) {
     const idx m = transA ? A.cols() : A.rows();
@@ -62,9 +62,7 @@ inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B
          n, k);
 }
 
-/// @brief Solve `op(T) X = B` in place for a triangular `T` and row-major `X`.
-///
-/// This is the explicit external-BLAS alternative to the in-tree triangular kernels.
+/// @brief Triangular solve, left side (TRSM): \f$X \leftarrow op(T)^{-1} X\f$.
 inline void trsm_left(const real *T, idx ldt, real *X, idx ldx, idx n, idx nrhs, bool upper,
                       bool transpose, bool unit_diagonal) {
 #if defined(NUMERICS_HAS_BLAS)
@@ -92,7 +90,7 @@ inline void trsm_left(const real *T, idx ldt, real *X, idx ldx, idx n, idx nrhs,
 #endif
 }
 
-/// @brief Solve `X L^T = B` in place for a row-major panel and lower-triangular `L`.
+/// @brief Triangular solve, right side (TRSM): \f$X \leftarrow X L^{-T}\f$.
 inline void trsm_right_lower_transpose(const real *L, idx ldl, real *X, idx ldx, idx rows,
                                        idx n) {
 #if defined(NUMERICS_HAS_BLAS)
@@ -105,7 +103,7 @@ inline void trsm_right_lower_transpose(const real *L, idx ldl, real *X, idx ldx,
 #endif
 }
 
-/// @brief Update the lower triangle, `C <- alpha A A^T + beta C`.
+/// @brief Symmetric rank-k update (SYRK), lower: \f$C \leftarrow \alpha A A^T + \beta C\f$.
 inline void syrk_lower(real alpha, const real *A, idx lda, real beta, real *C, idx ldc, idx rows,
                        idx columns) {
 #if defined(NUMERICS_HAS_BLAS)

@@ -1,5 +1,5 @@
 /// @file structures/debug.hpp
-/// @brief Runtime verification of the laws discrete structures maintain.
+/// @brief Runtime checks of the laws discrete structures maintain.
 #pragma once
 
 #include "core/debug.hpp"
@@ -12,7 +12,7 @@
 
 namespace num::structures::debug {
 
-/// @brief Verify index is within valid capacity bounds [0, capacity).
+/// @brief Bounds check: \f$0 \le i < \mathrm{capacity}\f$.
 template <std::integral Index>
 inline void check_index_bounds(Index index, Index capacity, std::string_view label = "Index",
                                std::source_location loc = std::source_location::current()) {
@@ -26,7 +26,7 @@ inline void check_index_bounds(Index index, Index capacity, std::string_view lab
     }
 }
 
-/// @brief Verify an indexed item exists in an indexed container.
+/// @brief Presence check: `index` is in the container.
 template <std::integral Index>
 inline void check_contains(bool exists, Index index,
                            std::string_view label = "indexed_priority_queue",
@@ -41,7 +41,7 @@ inline void check_contains(bool exists, Index index,
     }
 }
 
-/// @brief Verify an indexed item does NOT already exist before insertion.
+/// @brief Absence check: `index` is not in the container.
 template <std::integral Index>
 inline void check_not_contains(bool exists, Index index,
                                std::string_view label = "indexed_priority_queue",
@@ -56,9 +56,7 @@ inline void check_not_contains(bool exists, Index index,
     }
 }
 
-/// @brief Sample the equivalence-relation axioms a union-find claims: reflexivity, symmetry,
-/// transitivity, and `connected(u,v)` agreeing with \f$\mathrm{find}(u) = \mathrm{find}(v)\f$.
-/// Takes a mutable reference because path compression rewrites the forest.
+/// @brief Sampled union-find test: \f$\sim\f$ is an equivalence and agrees with `find`.
 template <class DS, std::integral Index = num::idx>
 inline void
 verify_equivalence_relation(DS &ds, Index n,
@@ -130,7 +128,7 @@ verify_equivalence_relation(DS &ds, Index n,
     }
 }
 
-/// @brief Verify the heap axiom: the reported top key is minimal over the queue.
+/// @brief Heap test: the top key is minimal.
 template <class PQ, class Key = double, std::integral Index = num::idx>
 inline void verify_heap_order(const PQ &pq, Index capacity,
                               std::source_location loc = std::source_location::current()) {
@@ -148,7 +146,7 @@ inline void verify_heap_order(const PQ &pq, Index capacity,
     }
 }
 
-/// @brief Verify vertex index is within graph vertex range [0, n_vertices).
+/// @brief Vertex bounds check: \f$0 \le v < |V|\f$.
 template <std::integral Index>
 inline void check_vertex_bounds(Index u, Index n_vertices, std::string_view label = "graph::vertex",
                                 std::source_location loc = std::source_location::current()) {
@@ -162,7 +160,7 @@ inline void check_vertex_bounds(Index u, Index n_vertices, std::string_view labe
     }
 }
 
-/// @brief Verify edge weight is strictly positive.
+/// @brief Edge weight check: \f$w > 0\f$.
 template <typename Weight>
 inline void check_positive_weight(const Weight &weight,
                                   std::string_view label = "graph::edge_weight",
@@ -176,7 +174,7 @@ inline void check_positive_weight(const Weight &weight,
     }
 }
 
-/// @brief Verify graph connectivity invariant (1 connected component).
+/// @brief Connectivity check: one component.
 template <std::integral Index>
 inline void check_connected(Index n_components, std::string_view label = "graph",
                             std::source_location loc = std::source_location::current()) {
@@ -190,11 +188,7 @@ inline void check_connected(Index n_components, std::string_view label = "graph"
     }
 }
 
-/// @brief Verify that reported degrees agree with the enumerated adjacency.
-///
-/// `degree(u)` and `neighbors(u)` are two presentations of the same set
-/// \f$\{v : (u,v) \in E\}\f$; a graph whose degrees disagree with its adjacency
-/// silently corrupts every traversal built on it.
+/// @brief Degree check: `degree(u)` equals the size of `neighbors(u)`.
 template <class G, std::integral Index = num::idx>
 inline void verify_degree_consistency(const G &g,
                                       std::source_location loc = std::source_location::current()) {
@@ -216,7 +210,7 @@ inline void verify_degree_consistency(const G &g,
     }
 }
 
-/// @brief Verify the handshake lemma \f$\sum_u \deg(u) = 2|E|\f$ for an undirected graph.
+/// @brief Handshake check: \f$\sum_u \deg(u) = 2|E|\f$.
 template <class G, std::integral Index = num::idx>
 inline void verify_handshake_lemma(const G &g,
                                    std::source_location loc = std::source_location::current()) {
@@ -237,10 +231,7 @@ inline void verify_handshake_lemma(const G &g,
     }
 }
 
-/// @brief Verify the structure of a graph Laplacian \f$\Delta = D - W\f$: symmetric with
-/// \f$\Delta \mathbf{1} = 0\f$. That null space makes it `law::psd`, not `law::spd`.
-///
-/// Dense or CSR; CSR visits only stored entries.
+/// @brief Graph Laplacian check: \f$L = D - W\f$ symmetric with \f$L \mathbf{1} = 0\f$.
 template <class Mat>
 inline void verify_laplacian_structure(const Mat &L, double tol = 1e-9,
                                        std::source_location loc = std::source_location::current()) {

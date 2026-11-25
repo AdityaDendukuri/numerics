@@ -1,5 +1,5 @@
 /// @file linear/solvers/auto_resolvent.hpp
-/// @brief Shifted solves that choose a dense or sparse method by size.
+/// @brief Shifted solves, dense or sparse by size.
 #pragma once
 
 #include "core/types.hpp"
@@ -15,13 +15,12 @@ namespace num {
 
 struct auto_shifted_lu;
 
-/// Dense/sparse cutoff and optional sparse symbolic symmetry hint.
+/// @brief Backend selection: dense up to `dense_limit`, plus a sparse symmetry hint.
 struct auto_resolvent_options {
     idx dense_limit = 128;
 };
 
-/// @brief \f$A\f$ prepared for shifted solves \f$(sI - A)x = b\f$, by Hessenberg reduction at
-/// or below `dense_limit` and by sparse analysis above it.
+/// @brief Automatic resolvent: \f$(s I - A)^{-1}\f$ by Hessenberg reduction or sparse LU.
 class auto_resolvent {
   public:
     explicit auto_resolvent(const spmat &A, auto_resolvent_options options = {}) {
@@ -43,7 +42,7 @@ class auto_resolvent {
     friend auto_shifted_lu shift(const auto_resolvent &R, cplx s);
 };
 
-/// @brief \f$sI - A\f$ for one shift, factored by whichever method `auto_resolvent` chose.
+/// @brief Shifted factor: \f$s I - A\f$ for one \f$s\f$.
 struct auto_shifted_lu {
     std::variant<hessenberg_shifted_lu, sparse_shifted_lu> factor;
 
@@ -52,7 +51,7 @@ struct auto_shifted_lu {
     }
 };
 
-/// @brief Factor \f$sI - A\f$.
+/// @brief Factor \f$s I - A\f$.
 [[nodiscard]] inline auto_shifted_lu shift(const auto_resolvent &R, cplx s) {
     if (R.dense_) {
         return {shift(*R.dense_, s)};
@@ -60,7 +59,7 @@ struct auto_shifted_lu {
     return {shift(*R.sparse_, s)};
 }
 
-/// @brief Solve \f$(sI - A)x = b\f$. `x` may be `b`.
+/// @brief Shifted solve: \f$x \leftarrow (s I - A)^{-1} b\f$. `x` may alias `b`.
 inline void solve(const auto_shifted_lu &F, const vec<cplx> &b, vec<cplx> &x) {
     std::visit([&](const auto &factor) { solve(factor, b, x); }, F.factor);
 }

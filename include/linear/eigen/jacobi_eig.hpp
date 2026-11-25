@@ -1,8 +1,5 @@
 /// @file linear/eigen/jacobi_eig.hpp
-/// @brief Full symmetric eigendecomposition via cyclic Jacobi sweeps.
-///
-/// Applies orthogonal plane rotations until
-/// \f$\sum_{i\ne j} A_{ij}^2 < \mathrm{tol}^2\f$.
+/// @brief Symmetric eigendecomposition by cyclic Jacobi.
 #pragma once
 
 #include "kernel/kernel.hpp"
@@ -20,8 +17,7 @@ namespace num {
 
 // Jacobi Rotations
 
-/// @brief Computes Jacobi rotation parameters \f$(c, s)\f$ annihilating off-diagonal entry
-/// \f$A_{pq}\f$ in a symmetric \f$2 \times 2\f$ block.
+/// @brief Jacobi rotation: \f$(c, s)\f$ zeroing \f$a_{pq}\f$ of a symmetric \f$2 \times 2\f$ block.
 template <std::floating_point T>
 NUM_K_AINLINE void jacobi_rotation(T app, T aqq, T apq, T &c, T &s) noexcept {
     if (std::abs(apq) < T(1e-15)) {
@@ -39,7 +35,7 @@ NUM_K_AINLINE void jacobi_rotation(T app, T aqq, T apq, T &c, T &s) noexcept {
 
 namespace num {
 
-/// @brief Symmetric eigendecomposition \f$A=V\Lambda V^T\f$.
+/// @brief Symmetric eigendecomposition result: \f$A = V \Lambda V^T\f$.
 struct eigen_result {
     vec<real> values;          ///< Eigenvalues in ascending order.
     mat<real> vectors;         ///< Corresponding eigenvectors stored as columns.
@@ -55,17 +51,8 @@ struct eigen_result {
     }
 };
 
-/// @brief Compute full symmetric eigendecomposition \f$A = V \Lambda V^T\f$, with sorted
-/// eigenvalues and orthonormal eigenvector columns.
-///
-/// Uses LAPACK `dsyevd` when configured, else OpenMP or sequential cyclic Jacobi. Call
-/// `num::lapack::eig_sym`, `num::omp::eig_sym` or `num::seq::eig_sym` to force one.
-///
-/// @param A Symmetric matrix, e.g. `num::assume_symmetric(A)`.
-/// @param tol Jacobi tolerance on \f$\sum_{i \ne j} A_{ij}^2\f$; LAPACK ignores it.
-/// @param max_sweeps Maximum Jacobi sweeps (default: 100); LAPACK ignores it.
-/// @return `eigen_result` containing sorted eigenvalues, column eigenvector matrix, sweep count, and convergence status.
-/// @see assume_symmetric, make_symmetric, lanczos, power_iteration
+/// @brief Symmetric eigendecomposition: \f$A = V \Lambda V^T\f$, eigenvalues sorted.
+/// Uses LAPACK `dsyevd` when available, else cyclic Jacobi.
 eigen_result eig_sym(const with_law<mat<real>, law::self_adjoint> &A, real tol = 1e-12, idx max_sweeps = 100);
 
 namespace seq {
@@ -80,15 +67,14 @@ eigen_result eig_sym(const mat<real> &A);
 
 namespace unsafe {
 
-/// @brief Symmetric eigendecomposition without requiring or checking the symmetry invariant.
-///
-/// Reads only the lower triangle, so an asymmetric matrix yields the spectrum of
-/// its symmetric part rather than an error.
+/// @brief Symmetric eigendecomposition, unchecked: \f$A = V \Lambda V^T\f$.
+/// Reads the lower triangle.
+/// @warning An asymmetric matrix yields the spectrum of its symmetric part, not an error.
 eigen_result eig_sym(const mat<real> &A, real tol = 1e-12, idx max_sweeps = 100);
 
 } // namespace unsafe
 
-/// @brief Rejects an untagged matrix at compile time.
+/// @brief Compile-time rejection of an untagged matrix; tag it symmetric first.
 template <class M>
 requires matrix_space<M> && (!claims<M, law::self_adjoint>)
 eigen_result eig_sym(const M & /*untagged*/, real = 1e-12, idx = 100) {

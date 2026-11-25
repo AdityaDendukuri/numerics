@@ -1,5 +1,5 @@
-/// @file lapack_wrapper.hpp
-/// @brief Standard C/C++ LAPACKE header for cross-platform Linux and macOS build targets.
+/// @file lapack/lapack_wrapper.hpp
+/// @brief Portable LAPACKE include.
 #pragma once
 
 #include "core/types.hpp"

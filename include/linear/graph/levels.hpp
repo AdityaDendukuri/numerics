@@ -1,5 +1,5 @@
 /// @file linear/graph/levels.hpp
-/// @brief Block-tridiagonal level labels from graph distance.
+/// @brief Block-tridiagonal levels from graph distance.
 #pragma once
 
 #include "container/vector.hpp"
@@ -10,17 +10,9 @@
 
 namespace num {
 
-/// @brief Label each row by its graph distance from a seed set.
-///
-/// An edge joins rows whose distances differ by at most one, so grouping by distance makes
-/// the matrix block-tridiagonal, as `build_block_order` and `factor_block_lu` need. A
-/// component no seed reaches restarts at distance zero from its own search. With L balanced
-/// levels, elimination costs \f$O(n^3/L^2)\f$.
-///
-/// @param A Square CSR matrix whose undirected support graph is traversed.
-/// @param seeds Rows at distance zero. Empty means every component starts from
-///        its lowest-numbered row.
-/// @return One level label per row.
+/// @brief Graph-distance levels: \f$\ell_i = d(i, \mathrm{seeds})\f$.
+/// Grouping by level makes \f$A\f$ block tridiagonal.
+/// Empty `seeds` starts each component at its lowest row.
 /// @throws std::invalid_argument If `A` is not square or a seed is out of range.
 [[nodiscard]] inline array<idx> graph_distance_levels(const spmat &A, view<const idx> seeds) {
     const idx n = A.n_rows();
@@ -78,7 +70,7 @@ namespace num {
     return level;
 }
 
-/// @brief The same labels from a single seed row.
+/// @brief Graph-distance levels from one seed: \f$\ell_i = d(i, s)\f$.
 [[nodiscard]] inline array<idx> graph_distance_levels(const spmat &A, idx seed) {
     const array<idx> seeds{seed};
     return graph_distance_levels(A, seeds);

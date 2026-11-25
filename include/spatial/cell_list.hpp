@@ -1,5 +1,5 @@
-/// @file cell_list.hpp
-/// @brief Cache-coherent 2D cell list for O(1) amortized neighbour queries
+/// @file spatial/cell_list.hpp
+/// @brief 2D cell list for neighbour queries.
 #pragma once
 
 #include "core/types.hpp"
@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// Lightweight non-owning range of integer particle indices.
+/// @brief Non-owning range of particle indices.
 struct integer_range {
     const int *first;
     const int *last;
@@ -24,10 +24,10 @@ struct integer_range {
 };
 
 template <field scalar>
-/// Counting-sorted 2D spatial bins for local-neighbor iteration.
+/// @brief 2D cell list: particles binned by counting sort.
 class cell_list_2d {
   public:
-    /// Cover the bounding box with padded square cells.
+    /// @brief Cell list over the bounding box with square cells of side `cell_size`.
     cell_list_2d(scalar cell_size, scalar xmin, scalar xmax, scalar ymin, scalar ymax)
         : cs_(cell_size), xmin_(xmin), ymin_(ymin) {
         // Padding cells avoid boundary checks in the hot query loops.
@@ -38,7 +38,7 @@ class cell_list_2d {
         count_.assign(total, 0);
     }
 
-    /// @brief Rebuild by counting-sort over cell ids.
+    /// @brief Rebuild the bins by counting sort.
     template <position_accessor_2d<scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n) {
         sorted_.resize(n);
@@ -62,7 +62,7 @@ class cell_list_2d {
         }
     }
 
-    /// @brief Call f(j) for candidate particles near (px, py).
+    /// @brief Neighbour query: `f(j)` for each candidate near \f$(p_x, p_y)\f$.
     template <typename F>
     void query(scalar px, scalar py, F &&f) const {
         const int cx = cell_x(px);
@@ -85,7 +85,7 @@ class cell_list_2d {
         }
     }
 
-    /// @brief Visit each candidate pair once.
+    /// @brief Pair visit: `f(i, j)` once per candidate pair.
     template <typename F>
     void iterate_pairs(F &&f) const {
         // Half-shell offsets cover all neighboring cell pairs once.
@@ -129,7 +129,7 @@ class cell_list_2d {
         }
     }
 
-    /// Return the particles stored in one cell.
+    /// @brief Particles in cell \f$(c_x, c_y)\f$.
     [[nodiscard]] integer_range cell_particles(int cx, int cy) const noexcept {
         const int cid = (cy * nx_) + cx;
         return {sorted_.data() + start_[cid], sorted_.data() + start_[cid + 1]};

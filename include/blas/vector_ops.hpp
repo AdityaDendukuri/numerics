@@ -1,5 +1,5 @@
 /// @file blas/vector_ops.hpp
-/// @brief BLAS-accelerated Level-1 vector operations.
+/// @brief Vector operations through an external BLAS.
 #pragma once
 
 #include "container/vector.hpp"
@@ -17,7 +17,7 @@
 
 namespace num::blas {
 
-/// One-shot notice when a BLAS path is requested but BLAS was not configured.
+/// @brief One-time warning that BLAS was requested but not configured.
 inline void warn_unavailable() {
 #if !defined(NUMERICS_HAS_BLAS)
     static bool warned = false;
@@ -66,8 +66,7 @@ inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept {
 #endif
 }
 
-/// @brief `z <- x + y`. No single BLAS call does an out-of-place add; a plain
-/// loop is exactly as fast as `dcopy`+`daxpy` and skips the extra pass.
+/// @brief Vector addition: \f$z \leftarrow x + y\f$.
 inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept {
     const idx n = x.size();
     const real *xd = x.data();

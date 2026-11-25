@@ -1,10 +1,5 @@
 /// @file cuda/container_ops.hpp
-/// @brief `vec<real>`-level convenience overloads over the raw CUDA device kernels.
-///
-/// `cuda_ops.hpp` stays raw-pointer-only (device pointers, explicit lengths) so
-/// callers that manage device buffers directly — `unsafe::cg`, batched solvers —
-/// have nothing above them. These overloads exist only so `num::cuda` can serve
-/// as `num::accel` on the same footing as `num::omp`/`num::blas`/`num::seq`.
+/// @brief CUDA operations on `vec<real>`.
 #pragma once
 
 #include "container/matrix.hpp"

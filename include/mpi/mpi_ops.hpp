@@ -1,5 +1,5 @@
-/// @file mpi_ops.hpp
-/// @brief MPI distributed operations
+/// @file mpi/mpi_ops.hpp
+/// @brief Distributed operations over MPI.
 #pragma once
 
 
@@ -16,28 +16,28 @@ constexpr MPI_Comm MPI_COMM_WORLD = 0;
 
 namespace num::mpi {
 
-/// @brief Initialize MPI (call once)
+/// @brief Initialize MPI; call once.
 void init(int *argc, char ***argv);
 
-/// @brief Finalize MPI
+/// @brief Finalize MPI.
 void finalize();
 
-/// @brief Get communicator rank
+/// @brief Rank in `comm`.
 int rank(MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Get communicator size
+/// @brief Size of `comm`.
 int size(MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Distributed dot product (each rank holds partial vector)
+/// @brief Distributed dot product: \f$\sum_r x_r^T y_r\f$ over ranks.
 real dot(const vec<real> &x, const vec<real> &y, MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Distributed norm
+/// @brief Distributed Euclidean norm: \f$\|x\|_2\f$ over ranks.
 real norm(const vec<real> &x, MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Allreduce sum
+/// @brief Allreduce sum: \f$x \leftarrow \sum_r x_r\f$.
 void allreduce_sum(real *data, idx n, MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Broadcast from root
+/// @brief Broadcast from `root`.
 void broadcast(real *data, idx n, int root = 0, MPI_Comm comm = MPI_COMM_WORLD);
 
 

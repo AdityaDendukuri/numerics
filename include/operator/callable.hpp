@@ -1,5 +1,5 @@
 /// @file operator/callable.hpp
-/// @brief Callable adapter for matrix-free linear operators.
+/// @brief Matrix-free operators from callables.
 #pragma once
 
 #include "container/vector.hpp"
@@ -9,20 +9,19 @@
 
 namespace num::operators {
 
-/// @brief Adapt any callable void(const vec&, vec&) to the operator
-/// protocol.
+/// @brief Callable operator: \f$y \leftarrow f(x)\f$ for `f(const vec &, vec &)`.
 template <class F>
 struct callable_op final {
     using domain_type = vec<real>;
     using codomain_type = vec<real>;
 
-    /// Adapt a callable to a rectangular operator with explicit dimensions.
+    /// @brief Rectangular callable operator, `rows x cols`.
     callable_op(F f, idx rows, idx cols) : f_(std::move(f)), rows_(rows), cols_(cols) {}
 
-    /// Adapt a callable to a square n-by-n operator.
+    /// @brief Square callable operator, `n x n`.
     callable_op(F f, idx n) : callable_op(std::move(f), n, n) {}
 
-    /// Evaluate y=A*x, resizing y to the declared row count when needed.
+    /// @brief Operator application: \f$y \leftarrow A x\f$; resizes `y` if needed.
     void apply(const vec<real> &x, vec<real> &y) const {
         if (y.size() != rows_) {
             y = vec<real>(rows_);
@@ -40,13 +39,13 @@ struct callable_op final {
 };
 
 template <class F>
-/// Construct a rectangular callable operator with inferred callable type.
+/// @brief Rectangular callable operator, type deduced.
 [[nodiscard]] callable_op<F> make_op(F f, idx rows, idx cols) {
     return callable_op<F>(std::move(f), rows, cols);
 }
 
 template <class F>
-/// Construct a square callable operator with inferred callable type.
+/// @brief Square callable operator, type deduced.
 [[nodiscard]] callable_op<F> make_op(F f, idx n) {
     return callable_op<F>(std::move(f), n);
 }

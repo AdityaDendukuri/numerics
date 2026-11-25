@@ -1,5 +1,5 @@
 /// @file linear/factorization/factor.hpp
-/// @brief Factor a matrix once and solve against any number of right-hand sides.
+/// @brief Structured factorizations, selected by tag.
 #pragma once
 
 #include "linear/factorization/block_tridiagonal.hpp"
@@ -18,24 +18,22 @@
 
 namespace num {
 
-/// @brief The block-level structure of a matrix, one level label per row, for `num::lu` and
-/// `num::cholesky` on block-tridiagonal matrices.
+/// @brief Block-tridiagonal structure: one level label per row.
 struct block_structure {
     view<const idx> levels;
 };
 
-/// @brief Select block-tridiagonal factorization with one level label per row.
+/// @brief Select block-tridiagonal factorization.
 [[nodiscard]] inline block_structure blocks(view<const idx> levels) {
     return {levels};
 }
 
-/// @brief The tag type of `num::sparse`.
+/// @brief Tag type of `num::sparse`.
 struct sparse_structure {};
 /// @brief Select sparse direct factorization.
 inline constexpr sparse_structure sparse{};
 
-/// @brief A factorization of the diagonal similarity of a matrix under the weights `h`, with
-/// the weights it used.
+/// @brief Factorization of a diagonal similarity: \f$H A H^{-1}\f$, with weights \f$h\f$.
 template <class F>
 struct similar_factor {
     F factor;
@@ -80,7 +78,7 @@ inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
 
 } // namespace detail
 
-/// Factor a sparse unstructured nonsingular M-matrix by no-pivot LU.
+/// @brief Sparse LU, unpivoted, for an M-matrix: \f$A = L U\f$.
 /// @throws std::runtime_error If a pivot is zero.
 [[nodiscard]] inline lu_result<real> lu(const spmat &R, no_pivot_structure) {
     lu_result<real> Z = lu(dense(R), no_pivot);
@@ -90,17 +88,17 @@ inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
     return Z;
 }
 
-/// Factor a block-tridiagonal nonsingular M-matrix by block LU.
+/// @brief Block LU of a block-tridiagonal M-matrix: \f$P A P^T = \mathcal{L} \mathcal{U}\f$.
 [[nodiscard]] inline block_lu_factor lu(const spmat &R, block_structure structure) {
     return factor_block_lu(R, structure.levels);
 }
 
-/// Factor a large unstructured matrix with the configured sparse backend.
+/// @brief Sparse LU through the configured backend: \f$P A Q = L U\f$.
 [[nodiscard]] inline auto_linear_solver lu(const spmat &R, sparse_structure) {
     return auto_linear_solver(R);
 }
 
-/// Factor H R H^-1 by Cholesky and retain H for applications of R^-1.
+/// @brief Cholesky of a diagonal similarity: \f$H A H^{-1} = L L^T\f$, keeping \f$H\f$.
 [[nodiscard]] inline similar_factor<cholesky_result> cholesky(const spmat &R, view<const real> h) {
     vec<real> weights = detail::checked_weights(h);
     cholesky_result C =
@@ -111,7 +109,7 @@ inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
     return {std::move(C), std::move(weights)};
 }
 
-/// Block-Cholesky specialization of the diagonally similar factorization.
+/// @brief Block Cholesky of a diagonal similarity: \f$H A H^{-1} = \mathcal{L} \mathcal{L}^T\f$.
 [[nodiscard]] inline similar_factor<block_cholesky_factor>
 cholesky(const spmat &R, block_structure structure, view<const real> h) {
     vec<real> weights = detail::checked_weights(h);

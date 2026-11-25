@@ -1,7 +1,5 @@
 /// @file linear/factorization/thomas.hpp
-/// @brief Pure template Thomas algorithm for tridiagonal systems.
-///
-/// Solves \f$a_{i-1}x_{i-1}+b_i x_i+c_i x_{i+1}=d_i\f$ in \f$O(n)\f$.
+/// @brief Thomas algorithm for tridiagonal systems.
 #pragma once
 
 #include "core/policy.hpp"
@@ -88,21 +86,9 @@ inline void thomas(const vec<real> &a, const vec<real> &b, const vec<real> &c, c
 } // namespace cuda
 #endif
 
-/// @brief Solve tridiagonal linear system \f$a_{i-1} x_{i-1} + b_i x_i + c_i x_{i+1} = d_i\f$ in \f$\mathcal{O}(n)\f$ time.
-///
-/// Executes the Thomas algorithm (specialized Gaussian elimination for tridiagonal systems) with zero heap allocations.
-/// Picks LAPACK (`dgtsv`) if configured, else the in-tree sequential elimination.
-/// To force a specific one (including the CUDA batched kernel when built with
-/// CUDA), call `num::lapack::thomas`/`num::seq::thomas`/`num::cuda::thomas`.
-///
-/// @tparam Float Floating-point scalar type (`double`, `float`).
-/// @param a Subdiagonal entries (\f$n-1\f$ elements: \f$a_0, \dots, a_{n-2}\f$).
-/// @param b Main diagonal entries (\f$n\f$ elements: \f$b_0, \dots, b_{n-1}\f$).
-/// @param c Superdiagonal entries (\f$n-1\f$ elements: \f$c_0, \dots, c_{n-2}\f$).
-/// @param d Right-hand side vector (\f$n\f$ elements).
-/// @param x Output solution vector (\f$n\f$ elements).
-/// @throws std::invalid_argument If dimensions do not match (\f$a, c\f$ size \f$n-1\f$, \f$b, d, x\f$ size \f$n\f$).
-/// @see lu, solve
+/// @brief Tridiagonal solve (Thomas): \f$a_{i-1} x_{i-1} + b_i x_i + c_i x_{i+1} = d_i\f$.
+/// Uses LAPACK `dgtsv` when available.
+/// @throws std::invalid_argument If the diagonal lengths are inconsistent.
 template <typename Float = double>
 inline void thomas(const vec<Float> &a, const vec<Float> &b,
                    const vec<Float> &c, const vec<Float> &d,

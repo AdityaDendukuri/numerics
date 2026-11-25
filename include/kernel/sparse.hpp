@@ -1,12 +1,9 @@
 /// @file kernel/sparse.hpp
-/// @brief Raw-pointer kernels: CSR SpMV and SpMM.
+/// @brief Sparse kernels over raw pointers: CSR matrix-vector and matrix-matrix products.
 ///
 /// SPDX-License-Identifier: MIT
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
-///
-/// Depends only on kernel/vector.hpp, and does not allocate. Keep the two attribution lines
-/// above with whatever you copy.
 #pragma once
 
 #include "kernel/vector.hpp"
@@ -18,13 +15,11 @@ namespace num::kernel {
 
 namespace detail {
 
-/// @brief Row length below which a plain running sum beats `reduce`'s blocked accumulation.
-/// One accumulator block is the cutoff; a five-point stencil row measured about 15% slower
-/// through `reduce`.
+/// @brief Row length below which a plain sum beats `reduce`.
 template <std::floating_point T>
 inline constexpr idx short_row_cutoff = 4 * (NUM_K_VECTOR_BYTES / sizeof(T));
 
-/// @brief One CSR row: plain running sum when short, blocked reduction when long.
+/// @brief CSR row dot product: \f$\sum_k a_{ik} x_k\f$.
 template <std::floating_point T, std::integral Index>
 [[nodiscard]] NUM_K_AINLINE T csr_row_dot(const T *NUM_K_RESTRICT val,
                                           const Index *NUM_K_RESTRICT col_idx,
@@ -46,8 +41,7 @@ template <std::floating_point T, std::integral Index>
 
 } // namespace detail
 
-/// @brief Compressed Sparse Row (CSR) matrix-vector multiplication \f$\mathbf{y} \leftarrow A
-/// \mathbf{x}\f$.
+/// @brief CSR sparse matrix-vector product (SpMV): \f$y \leftarrow A x\f$.
 template <std::floating_point T, std::integral Index>
 NUM_K_AINLINE void spmv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT val,
                         const Index *NUM_K_RESTRICT row_ptr, const Index *NUM_K_RESTRICT col_idx,
@@ -59,8 +53,7 @@ NUM_K_AINLINE void spmv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT val,
     }
 }
 
-/// @brief Fused CSR SpMV and vector accumulation \f$\mathbf{y} \leftarrow \alpha A \mathbf{x} +
-/// \beta \mathbf{y}\f$.
+/// @brief Scaled CSR sparse matrix-vector product: \f$y \leftarrow \alpha A x + \beta y\f$.
 template <std::floating_point T, std::integral Index>
 NUM_K_AINLINE void spmv_axpy(T *NUM_K_RESTRICT y, T alpha, const T *NUM_K_RESTRICT val,
                              const Index *NUM_K_RESTRICT row_ptr,
@@ -74,8 +67,8 @@ NUM_K_AINLINE void spmv_axpy(T *NUM_K_RESTRICT y, T alpha, const T *NUM_K_RESTRI
     }
 }
 
-/// @brief CSR sparse matrix times a row-major dense block, `Y <- A*X`, with `nrhs` values per
-/// row. The right-hand-side loop is innermost, so it vectorizes.
+/// @brief CSR sparse times dense matrix product (SpMM): \f$Y \leftarrow A X\f$.
+/// `X` and `Y` are row-major with `nrhs` columns.
 template <std::floating_point T, std::integral Index>
 inline void spmm(T *NUM_K_RESTRICT Y, idx ldy, const T *NUM_K_RESTRICT val,
                  const Index *NUM_K_RESTRICT row_ptr, const Index *NUM_K_RESTRICT col_idx,

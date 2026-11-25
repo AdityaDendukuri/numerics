@@ -1,5 +1,5 @@
 /// @file quadrature/talbot.hpp
-/// @brief The midpoint Weideman--Talbot contour for numerical inverse Laplace transforms.
+/// @brief Weideman–Talbot contours for numerical inverse Laplace transforms.
 #pragma once
 
 #include "core/types.hpp"
@@ -11,14 +11,13 @@
 
 namespace num {
 
-/// One node of an inversion contour: f(t) is approximately the sum of
-/// `weight * F(shift)` over the nodes, with the weights including 1/(2 pi i).
+/// @brief Contour node: \f$f(t) \approx \sum_k w_k F(s_k)\f$, weights including \f$1 / 2\pi i\f$.
 struct contour_node {
     cplx shift;
     cplx weight;
 };
 
-/// @brief Weideman--Talbot hyperbolic contour quadrature for Numerical Inverse Laplace Transformation.
+/// @brief Weideman–Talbot quadrature: \f$f(t) = \mathcal{L}^{-1}[F](t)\f$.
 struct talbot_quadrature {
     idx modes = 16;
     real sigma = 0.6407;
@@ -55,16 +54,13 @@ struct talbot_quadrature {
     }
 };
 
-/// Return quadrature nodes and weights on the Weideman--Talbot inversion contour for \f$f(t) = \mathcal{L}^{-1}[F](t), \; t > 0\f$.
-/// The contour is scaled per requested time; weights include \f$1/(2\pi i)\f$.
+/// @brief Weideman–Talbot contour for \f$f(t) = \mathcal{L}^{-1}[F](t)\f$, \f$t > 0\f$.
 inline array<contour_node> talbot_contour(real t, idx modes = 16) {
     return talbot_quadrature{modes}.nodes(t);
 }
 
-/// @brief Half-contour Talbot quadrature for the inverse transform of real data.
-///
-/// Since \f$F(\bar s)=\overline{F(s)}\f$, each upper-half-plane node represents its conjugate
-/// partner and has twice the full-contour weight.
+/// @brief Half Weideman–Talbot contour for real \f$f\f$: \f$F(\bar{s}) = \overline{F(s)}\f$.
+/// Each weight is doubled.
 inline array<contour_node> real_talbot_contour(real t, idx modes = 16) {
     if (modes % 2 != 0) {
         throw std::invalid_argument("real_talbot_contour requires an even mode count");

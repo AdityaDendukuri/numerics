@@ -1,5 +1,5 @@
 /// @file fields/concepts.hpp
-/// @brief Contracts for grids and the fields sampled on them.
+/// @brief Concepts for grids and fields.
 #pragma once
 
 #include "algebra/concepts.hpp"
@@ -11,11 +11,7 @@
 
 namespace num {
 
-/// @brief scalar-valued field sampled on a grid.
-///
-/// Indexing by grid coordinate reads a sample. The values are contiguous and
-/// exposed as a vector space, so a field can be handed to a Krylov solver without
-/// being copied.
+/// @brief Scalar field: samples on a grid, stored contiguously.
 template <class F, class T = real>
 concept scalar_field_like = field<T> && requires(F &f, const F &cf, int i, int j) {
     { cf(i, j) } -> std::convertible_to<T>;
@@ -23,12 +19,7 @@ concept scalar_field_like = field<T> && requires(F &f, const F &cf, int i, int j
     { f.as_vec() };
 };
 
-/// @brief field whose storage satisfies the vector space contract.
-///
-/// This is what lets an implicit time stepper solve on a field directly. It is exactly
-/// `num::vec_field` restricted to fields sampled on a grid, so it refines that rather than
-/// restating the requirement — and, like it, takes the space as a parameter instead of
-/// naming `vec<real>`.
+/// @brief Vector-space field: a scalar field whose storage is a vector space `V`.
 template <class F, class T = real, class V = vec<real>>
 concept solvable_field = scalar_field_like<F, T> && vec_field<F, V>;
 

@@ -1,9 +1,5 @@
 /// @file linear/sparse/sparse_op.hpp
-/// @brief spmat adapter for the operator protocol.
-///
-/// Lives beside spmat (rather than under operator/) so the operator
-/// module stays free of any linear-algebra dependency; the linear_operator contract it
-/// models is defined in operator/concepts.hpp.
+/// @brief Sparse matrix operator adapter.
 #pragma once
 
 #include "core/math/associated.hpp"
@@ -14,15 +10,16 @@
 
 namespace num::operators {
 
-/// @brief Adapt a spmat to the operator protocol.
+/// @brief Sparse operator: \f$y \leftarrow A x\f$ for an `spmat`.
 struct sparse_op final {
     using domain_type = vec<real>;
     using codomain_type = vec<real>;
 
-    /// Store a non-owning reference to a CSR matrix.
+    /// @brief Non-owning view of `A`.
+    /// @warning `A` must outlive the operator.
     explicit sparse_op(const spmat &A) : A_(A) {}
 
-    /// Compute y=A*x.
+    /// @brief Operator application: \f$y \leftarrow A x\f$.
     void apply(const vec<real> &x, vec<real> &y) const;
     [[nodiscard]] idx rows() const noexcept { return A_.n_rows(); }
     [[nodiscard]] idx cols() const noexcept { return A_.n_cols(); }

@@ -1,10 +1,6 @@
-/// @file expv.hpp
-/// @brief The action exp(tA)v of the matrix exponential, from a Krylov subspace.
-///
-/// Approximates \f$\exp(tA)v \approx \|v\| Q_m \exp(tH_m)e_1\f$ where
-/// \f$AQ_m \approx Q_{m+1}\bar{H}_m\f$ is the Arnoldi relation.
-/// @todo Add adaptive step subdivision and an a posteriori error estimate for
-/// large \f$|t|\|A\|\f$.
+/// @file linear/expv/expv.hpp
+/// @brief Matrix exponential and its action: \f$\exp(t A) v \approx \|v\| Q_m \exp(t H_m) e_1\f$.
+// TODO: a posteriori error estimate for large |t| ||A||.
 #pragma once
 
 #include "container/matrix_ops.hpp"
@@ -32,7 +28,7 @@ namespace num {
 
 mat<real> expm(mat<real> A);
 
-/// @brief Compute \f$\exp(tA)v\f$ for any \f$y=A x\f$ adapter.
+/// @brief Krylov matrix exponential action: \f$\exp(t A) v\f$.
 template <class Op>
 requires linear_operator<Op, vec<real>, vec<real>> vec<real> expv(real t, const Op &A, const vec<real> &v,
                                                         int m_max = 30, real tol = 1e-8) {
@@ -100,7 +96,7 @@ vec<real> expv(real t, const spmat &A, const vec<real> &v, int m_max = 30, real 
 
 namespace detail {
 
-/// Parlett-Reinsch balancing: A <- D^-1 A D with D a diagonal of powers of 2. Returns D.
+/// @brief Parlett–Reinsch balancing: \f$A \leftarrow D^{-1} A D\f$; returns \f$D\f$.
 inline std::vector<real> balance(mat<real> &A) {
     const idx n = A.rows();
     std::vector<real> d(n, 1.0);
@@ -144,9 +140,7 @@ inline std::vector<real> balance(mat<real> &A) {
 
 } // namespace detail
 
-/// @brief Dense matrix exponential: balancing, then scaling and squaring with the [13/13] Pade
-/// approximant (Higham, SIMAX 26, 2005). Balancing and the larger Pade degree need fewer squarings,
-/// which keeps graded, stiff matrices (such as Krylov projections of stiff generators) accurate.
+/// @brief Matrix exponential (balanced scaling and squaring, [13/13] Padé): \f$\exp(A)\f$.
 inline mat<real> expm(mat<real> A) {
     const idx n = A.rows();
     const std::vector<real> d = detail::balance(A);
@@ -287,13 +281,14 @@ inline vec<real> expv(real t, const spmat &A, const vec<real> &v, int m_max, rea
     return expv(t, op, v, m_max, tol);
 }
 
+/// @brief Settings for `restarted_expv`.
 struct expv_options {
-    int krylov_dimension = 30;
-    real tolerance = 1e-8;
-    int maximum_steps = 10000;
+    int krylov_dimension = 30; ///< Arnoldi basis size per step.
+    real tolerance = 1e-8;     ///< Relative error target over the whole interval.
+    int maximum_steps = 10000; ///< Accepted plus rejected steps before giving up.
 };
 
-/// @brief Compute exp(tA)v with adaptive restarted Arnoldi steps.
+/// @brief Restarted Krylov matrix exponential action, adaptive steps: \f$\exp(t A) v\f$.
 template <class Op>
 requires linear_operator<Op, vec<real>, vec<real>> vec<real>
 restarted_expv(real t, const Op &A, const vec<real> &v, expv_options options = {}) {

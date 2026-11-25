@@ -1,9 +1,6 @@
 /// @file linear/eigen/lanczos.hpp
-/// @brief Lanczos eigensolver for symmetric operators.
-///
-/// Builds an orthonormal basis \f$Q_m\f$ such that
-/// \f$Q_m^T A Q_m = T_m\f$, with \f$T_m\f$ tridiagonal.
-/// @todo Add thick-restart Lanczos and selective reorthogonalization controls.
+/// @brief Lanczos iteration: \f$Q_m^T A Q_m = T_m\f$, \f$T_m\f$ tridiagonal.
+// TODO: thick restarts and selective reorthogonalization.
 #pragma once
 
 #include "linear/sparse/sparse_op.hpp"
@@ -30,7 +27,7 @@
 
 namespace num {
 
-/// Largest Ritz pairs and residual-based convergence metadata.
+/// @brief Lanczos result: Ritz pairs and convergence.
 struct lanczos_result {
     vec<real> ritz_values;        ///< Requested Ritz values in ascending order.
     mat<real> ritz_vectors;       ///< Ritz vectors stored as columns.
@@ -44,8 +41,7 @@ struct lanczos_result {
     }
 };
 
-/// Approximation of \f$f(A)b\f$ produced from a Lanczos projection, for
-/// \f$f(A) = A^{-1/2}\f$ (`inverse_sqrt_lanczos`) or \f$A^{1/2}\f$ (`sqrt_lanczos`).
+/// @brief Lanczos matrix function result: \f$f(A) b\f$, \f$f\f$ a square root or its inverse.
 struct lanczos_action_result {
     vec<real> value;
     idx steps = 0;
@@ -360,12 +356,8 @@ requires linear_operator<Op, vec<real>, vec<real>>
 
 } // namespace detail
 
-/// Approximate \f$A^{-1/2}b\f$ for a symmetric positive-definite operator.
-///
-/// At step \f$m\f$, the returned vector is
-/// \f$\|b\|_2 Q_m T_m^{-1/2}e_1\f$.  Iteration stops when consecutive
-/// projected actions differ by at most `tolerance` in relative Euclidean norm,
-/// or when `max_steps` is reached.
+/// @brief Lanczos inverse square root: \f$A^{-1/2} b \approx \|b\|_2 Q_m T_m^{-1/2} e_1\f$.
+/// \f$A\f$ must be SPD.
 template <class Op>
 requires spd_operator<Op, vec<real>> [[nodiscard]] lanczos_action_result
 inverse_sqrt_lanczos(const Op &A, const vec<real> &right_hand_side, real tolerance = 1e-8,
@@ -373,29 +365,15 @@ inverse_sqrt_lanczos(const Op &A, const vec<real> &right_hand_side, real toleran
     return detail::inverse_sqrt_lanczos_impl(A, right_hand_side, tolerance, max_steps);
 }
 
-/// Approximate \f$A^{1/2}b\f$ for a symmetric positive-definite operator.
+/// @brief Lanczos square root: \f$A^{1/2} b \approx \|b\|_2 Q_m T_m^{1/2} e_1\f$, \f$A\f$ SPD.
 template <class Op>
 requires spd_operator<Op, vec<real>> [[nodiscard]] lanczos_action_result
 sqrt_lanczos(const Op &A, const vec<real> &right_hand_side, real tolerance = 1e-8, idx max_steps = 0) {
     return detail::sqrt_lanczos_impl(A, right_hand_side, tolerance, max_steps);
 }
 
-/// @brief Compute the largest \f$k\f$ extremal Ritz pairs of a symmetric / self-adjoint operator
-/// using Lanczos iteration.
-///
-/// Builds an orthonormal Krylov basis with modified Gram-Schmidt reorthogonalization, generates
-/// a symmetric tridiagonal projection \f$T_m\f$, and extracts Ritz values and Ritz vectors.
-///
-/// @tparam Op Linear operator type satisfying `self_adjoint_operator<Op, vec<real>>`.
-/// @param A Self-adjoint linear operator (matrix-free callable, sparse, or dense wrapper).
-/// @param k Number of extremal eigenpairs to compute (\f$0 < k \le n\f$).
-/// @param tol Residual tolerance \f$\|A v - \lambda v\|_2\f$ for declaring convergence (default:
-/// 1e-10).
-/// @param max_steps Maximum Lanczos steps to perform (defaults to \f$\min(3k, n)\f$).
-/// @return `lanczos_result` containing Ritz values, column Ritz vectors, steps performed, and
-/// convergence flag.
-/// @throws std::invalid_argument If `k` is invalid or operator is not square.
-/// @see eig_sym, power_iteration
+/// @brief Lanczos eigensolver: \f$k\f$ extremal Ritz pairs \f$A v \approx \lambda v\f$.
+/// @throws std::invalid_argument If `k` is out of range or `A` is not square.
 template <class Op>
 requires self_adjoint_operator<Op, vec<real>>
     lanczos_result lanczos(const Op &A, idx k, real tol = 1e-10, idx max_steps = 0) {
@@ -404,30 +382,25 @@ requires self_adjoint_operator<Op, vec<real>>
 
 namespace unsafe {
 
-/// @brief Lanczos on a stored dense matrix without requiring the symmetry invariant.
-///
-/// The three-term recurrence is derived from \f$A = A^T\f$; without it the basis
-/// loses orthogonality and the Ritz values are not eigenvalue estimates.
+/// @brief Lanczos eigensolver on a dense matrix, unchecked: \f$A v \approx \lambda v\f$.
+/// @warning On an asymmetric matrix the basis loses orthogonality, and the Ritz values
+/// are not eigenvalue estimates.
 lanczos_result lanczos(const mat<real> &A, idx k, real tol = 1e-10, idx max_steps = 0);
 
-/// @brief Lanczos on a stored sparse matrix without requiring the symmetry invariant.
+/// @brief Lanczos eigensolver on a sparse matrix, unchecked: \f$A v \approx \lambda v\f$.
+/// @warning On an asymmetric matrix the basis loses orthogonality, and the Ritz values
+/// are not eigenvalue estimates.
 lanczos_result lanczos(const spmat &A, idx k, real tol = 1e-10, idx max_steps = 0);
 
 } // namespace unsafe
 
-/// @brief Compute the largest \f$k\f$ Ritz pairs of a matrix claiming `law::self_adjoint`.
-///
-/// @param A Symmetric matrix, e.g. `num::assume_symmetric(A)`.
-/// @param k Number of extremal eigenpairs to compute.
-/// @param tol Residual tolerance (default: 1e-10).
-/// @param max_steps Maximum Lanczos steps (default: \f$\min(3k, n)\f$).
-/// @return `lanczos_result` with Ritz pairs and convergence metadata.
+/// @brief Lanczos eigensolver on a symmetric-tagged matrix: \f$A v \approx \lambda v\f$.
 inline lanczos_result lanczos(const with_law<mat<real>, law::self_adjoint> &A, idx k, real tol = 1e-10,
                               idx max_steps = 0) {
     return unsafe::lanczos(A.base(), k, tol, max_steps);
 }
 
-/// @brief Rejects an untagged matrix at compile time.
+/// @brief Compile-time rejection of an untagged matrix; tag it symmetric first.
 template <class M>
 requires matrix_space<M> && (!claims<M, law::self_adjoint>)
 lanczos_result lanczos(const M & /*untagged*/, idx, real = 1e-10, idx = 0) {

@@ -1,5 +1,5 @@
 /// @file quadrature/quadrature.hpp
-/// @brief Pure template numerical integration (quadrature) on [a, b].
+/// @brief Quadrature on \f$[a, b]\f$: trapezoid, Simpson, Gauss–Legendre, adaptive, Romberg.
 #pragma once
 
 #include "core/policy.hpp"
@@ -56,19 +56,7 @@ inline Float adaptive_helper(Func &&f, Float a, Float b, Float fa, Float fm, Flo
 
 } // namespace detail
 
-/// @brief Composite Trapezoidal numerical integration over \f$[a, b]\f$ with \f$n\f$ panels.
-///
-/// Computes \f$\int_a^b f(x)\,\mathrm{d}x \approx h \left( \frac{f(a)+f(b)}{2} + \sum_{i=1}^{n-1} f(a+ih) \right)\f$ with \f$\mathcal{O}(h^2)\f$ error.
-///
-/// @tparam Float Floating point scalar type (`double`, `float`).
-/// @tparam Func Integrand callable `Float(Float x)`.
-/// @param f Integrand function.
-/// @param a Lower integration limit.
-/// @param b Upper integration limit.
-/// @param n Number of uniform subintervals / panels (default: 100).
-/// @tparam Parallel Thread the panel sum with OpenMP (default: sequential).
-/// @return Approximated integral value.
-/// @see simpson, gauss_legendre, romberg
+/// @brief Composite trapezoid rule: \f$\int_a^b f \approx h (f_0 / 2 + f_1 + \cdots + f_n / 2)\f$.
 template <bool Parallel = false, typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float trapz(Func &&f, Float a, Float b, idx n = 100) {
     Float h = (b - a) / static_cast<Float>(n);
@@ -89,20 +77,8 @@ inline Float trapz(Func &&f, Float a, Float b, idx n = 100) {
     return h * ((Float{0.5} * (f(a) + f(b))) + sum);
 }
 
-/// @brief Composite Simpson's 1/3 numerical integration with \f$n\f$ panels (\f$n\f$ even).
-///
-/// Approximates \f$\int_a^b f(x)\,\mathrm{d}x\f$ using piecewise quadratic polynomials, achieving \f$\mathcal{O}(h^4)\f$ error.
-///
-/// @tparam Float Floating point scalar type.
-/// @tparam Func Integrand callable `Float(Float x)`.
-/// @param f Integrand function.
-/// @param a Lower limit.
-/// @param b Upper limit.
-/// @param n Number of panels (must be even, default: 100).
-/// @tparam Parallel Thread the panel sum with OpenMP (default: sequential).
-/// @return Approximated integral value.
-/// @throws std::invalid_argument If `n` is not even.
-/// @see trapz, adaptive_simpson, gauss_legendre
+/// @brief Composite Simpson rule: \f$\int_a^b f \approx \frac{h}{3} (f_0 + 4 f_1 + \cdots)\f$.
+/// @throws std::invalid_argument If `n` is odd.
 template <bool Parallel = false, typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float simpson(Func &&f, Float a, Float b, idx n = 100) {
     if (n % 2 != 0) {
@@ -126,18 +102,9 @@ inline Float simpson(Func &&f, Float a, Float b, idx n = 100) {
     return (h / Float{3.0}) * sum;
 }
 
-/// @brief Gauss–Legendre quadrature with \f$p \in [1, 5]\f$ optimal nodes.
-///
-/// Exact for all polynomials up to degree \f$2p - 1\f$ using precomputed roots and weights of Legendre polynomials.
-///
-/// @tparam Float Floating point scalar type.
-/// @tparam Func Integrand callable.
-/// @param f Integrand function.
-/// @param a Lower integration limit.
-/// @param b Upper integration limit.
-/// @param p Number of quadrature nodes (\f$1 \le p \le 5\f$, default: 5).
-/// @return Exact or high-precision approximation of the integral.
-/// @throws std::invalid_argument If `p` is not in range \f$[1, 5]\f$.
+/// @brief Gauss–Legendre quadrature: \f$\int_a^b f \approx \sum_{k=1}^p w_k f(x_k)\f$.
+/// Exact to degree \f$2p - 1\f$.
+/// @throws std::invalid_argument If `p` is not in \f$[1, 5]\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float gauss_legendre(Func &&f, Float a, Float b, idx p = 5) {
     if (p < 1 || p > 5) {
@@ -153,18 +120,7 @@ inline Float gauss_legendre(Func &&f, Float a, Float b, idx p = 5) {
     return half * sum;
 }
 
-/// @brief Adaptive Simpson quadrature with recursive interval bisection and error control.
-///
-/// Automatically concentrates function evaluations in regions of high curvature.
-///
-/// @tparam Float Floating point scalar type.
-/// @tparam Func Integrand callable.
-/// @param f Integrand function.
-/// @param a Lower limit.
-/// @param b Upper limit.
-/// @param tol Error tolerance for adaptive refinement (default: 1e-8).
-/// @param max_depth Maximum recursion depth before termination (default: 50).
-/// @return High-accuracy integral approximation satisfying error tolerance.
+/// @brief Adaptive Simpson quadrature: \f$\int_a^b f\f$ to tolerance `tol` by bisection.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8}, idx max_depth = 50) {
     Float fa = f(a), fb = f(b), fm = f(Float{0.5} * (a + b));
@@ -172,18 +128,7 @@ inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8
     return detail::adaptive_helper(f, a, b, fa, fm, fb, est, tol, max_depth);
 }
 
-/// @brief Romberg numerical integration using Richardson extrapolation on trapezoidal sums.
-///
-/// Generates triangular tableau \f$R(j, k)\f$ with successive error cancellations of order \f$\mathcal{O}(h^{2(k+1)})\f$.
-///
-/// @tparam Float Floating point scalar type.
-/// @tparam Func Integrand callable.
-/// @param f Integrand function.
-/// @param a Lower limit.
-/// @param b Upper limit.
-/// @param tol Convergence tolerance on diagonal tableau entries (default: 1e-10).
-/// @param max_levels Maximum tableau extrapolation levels (default: 12).
-/// @return Extrapolated integral approximation.
+/// @brief Romberg integration: Richardson extrapolation of trapezoid sums, \f$R(j, k)\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float romberg(Func &&f, Float a, Float b, Float tol = Float{1e-10}, idx max_levels = 12) {
     array<array<Float>> R(max_levels, array<Float>(max_levels, Float{0}));

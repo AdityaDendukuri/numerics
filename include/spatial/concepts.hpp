@@ -1,9 +1,5 @@
 /// @file spatial/concepts.hpp
-/// @brief Contracts for spatial acceleration structures and smoothing kernels.
-///
-/// Coordinates live in a scalar field, so the structures here are stated over
-/// `num::field`. An integer coordinate type would place particles in the wrong
-/// cells and report nothing, and the constraint rejects it.
+/// @brief Concepts for spatial structures and smoothing kernels.
 #pragma once
 
 #include "algebra/concepts.hpp"
@@ -14,38 +10,25 @@
 
 namespace num {
 
-/// @brief Callable returning the position of particle \f$i\f$ as \f$(x, y)\f$.
-///
-/// The acceleration structures never own coordinates. A caller supplies an
-/// accessor, so positions may live in a struct of arrays, an array of structs,
-/// or a simulation's own particle type.
+/// @brief Position accessor: `pos(i)` returns \f$(x_i, y_i)\f$.
 template <class A, class Scalar = real>
 concept position_accessor_2d = field<Scalar> && requires(const A &get_pos, int i) {
     { get_pos(i) } -> std::convertible_to<std::pair<Scalar, Scalar>>;
 };
 
-/// @brief Structure answering which particles lie near a point.
-///
-/// The contract is a visitor rather than a returned container: `query` calls
-/// `f(j)` for each candidate, so nothing allocates in the inner loop.
+/// @brief Neighbour structure: `query(p, f)` calls `f(j)` for each candidate near \f$p\f$.
 template <class L, class Scalar = real>
 concept neighbor_query_2d = field<Scalar> &&
     requires(const L &list, Scalar px, Scalar py) {
     list.query(px, py, [](int) {});
 };
 
-/// @brief Radially symmetric smoothing kernel \f$W(r, h)\f$ with its radial derivative.
-///
-/// An SPH kernel is normalized so that \f$\int W \, dV = 1\f$ over its support and
-/// vanishes beyond \f$r = 2h\f$. Both are properties of the values rather than the
-/// type, and `num::spatial::debug::verify_kernel_normalization` samples them.
+/// @brief Smoothing kernel: \f$W(r, h)\f$ and \f$\partial W / \partial r\f$.
 template <class K, class Scalar = float>
 concept smoothing_kernel = field<Scalar> && requires(Scalar r, Scalar h) {
     { K::W(r, h) } -> std::convertible_to<Scalar>;
     { K::dW_dr(r, h) } -> std::convertible_to<Scalar>;
 };
 
-/// @brief Site-indexed lattice supplying periodic nearest neighbours.
-///
 
 } // namespace num

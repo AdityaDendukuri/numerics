@@ -1,5 +1,5 @@
 /// @file linear/matrix_properties.hpp
-/// @brief Exact symmetry and definiteness checks for dense matrices, and the laws they attach.
+/// @brief Exact symmetry checks and the laws they attach.
 #pragma once
 
 #include "container/concepts.hpp"
@@ -15,7 +15,7 @@ namespace num {
 
 namespace linear {
 
-/// Maximum absolute difference between mirrored entries of a square matrix.
+/// @brief Symmetry error: \f$\max_{ij} |a_{ij} - a_{ji}|\f$.
 [[nodiscard]] inline real symmetry_error(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("symmetry_error: matrix must be square");
@@ -29,7 +29,7 @@ namespace linear {
     return error;
 }
 
-/// Maximum mirrored-entry error relative to the largest off-diagonal entry.
+/// @brief Relative symmetry error: \f$\max_{ij} |a_{ij} - a_{ji}| / \max_{i \ne j} |a_{ij}|\f$.
 [[nodiscard]] inline real relative_symmetry_error(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("relative_symmetry_error: matrix must be square");
@@ -46,7 +46,7 @@ namespace linear {
     return error / scale;
 }
 
-/// Test absolute entrywise symmetry using the supplied tolerance.
+/// @brief Symmetry test: \f$\max_{ij} |a_{ij} - a_{ji}| \le \mathrm{tol}\f$.
 [[nodiscard]] inline bool is_symmetric(const mat<real> &A, real tol = 1e-12) {
     if (A.rows() != A.cols()) {
         return false;
@@ -62,8 +62,7 @@ namespace linear {
     return true;
 }
 
-/// @brief Check symmetry \f$\max_{i,j} |A_{ij} - A_{ji}| \le \mathrm{tol}\f$ exhaustively, then
-/// attach it.
+/// @brief Make symmetric: verify \f$\max_{ij} |a_{ij} - a_{ji}| \le \mathrm{tol}\f$, then attach.
 /// @throws std::invalid_argument If `A` is not symmetric within `tol`.
 template <class Mat = mat<real>>
 [[nodiscard]] inline with_law<Mat, law::self_adjoint>

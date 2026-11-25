@@ -36,13 +36,13 @@ install(TARGETS ${NUMERICS_INSTALL_TARGETS}
 # vector/dense/sparse/rotations/factor/krylov all live directly under
 # num::kernel with no further split, so one directory install covers it.
 install(DIRECTORY include/kernel/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/kernel
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/numerics/kernel
     COMPONENT kernel
 )
 
-# All public headers (preserves directory structure under include/)
+# All public headers, namespaced under include/numerics/ (structure preserved)
 install(DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/numerics
     COMPONENT full
 )
 

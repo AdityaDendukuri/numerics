@@ -1,5 +1,5 @@
 /// @file linear/graph/randommat/solve.hpp
-/// @brief Substitution and solve routines for Approximate Cholesky factors.
+/// @brief Solves with approximate Cholesky factors.
 #pragma once
 
 #include "container/vector.hpp"
@@ -10,7 +10,7 @@
 
 namespace num::randommat {
 
-/// Solve (P A P^T) (P x) = P b using forward and backward substitution with L L^T.
+/// @brief Approximate Cholesky solve: \f$x \leftarrow P^T C^{-T} C^{-1} P b\f$.
 template <typename Float = double, std::integral Index = num::idx>
 inline void solve(const cholesky_factor<Float, Index> &factor, const Float *b, Float *x,
                   std::vector<Float> &scratch) {
@@ -58,7 +58,7 @@ inline void solve(const cholesky_factor<Float, Index> &factor, const Float *b, F
     }
 }
 
-/// Convenience vector solve overload.
+/// @brief Approximate Cholesky solve on arrays.
 template <typename Float = double, std::integral Index = num::idx>
 inline std::vector<Float> solve(const cholesky_factor<Float, Index> &factor,
                                 const std::vector<Float> &b) {
@@ -69,7 +69,7 @@ inline std::vector<Float> solve(const cholesky_factor<Float, Index> &factor,
     return x;
 }
 
-/// Convenience num::vec<real> solve overload.
+/// @brief Approximate Cholesky solve on `vec<real>`.
 template <typename Float = double, std::integral Index = num::idx>
 inline void solve(const cholesky_factor<Float, Index> &factor,
                   const vec<Float> &b, vec<Float> &x) {

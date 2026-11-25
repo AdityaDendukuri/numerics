@@ -1,9 +1,5 @@
 /// @file algebra/scalar.hpp
-/// @brief Scalar helpers shared by algorithms and runtime invariant sampling.
-///
-/// Numerical structure is stated over a scalar field \f$\mathbb{K}\f$ (typically
-/// \f$\mathbb{R}\f$ or \f$\mathbb{C}\f$). These traits let structure and diagnostics
-/// be written once and hold for both, rather than being fixed to `double`.
+/// @brief Scalar traits over real and complex fields.
 #pragma once
 
 #include "core/math/associated.hpp"
@@ -18,7 +14,7 @@
 
 namespace num::scalars {
 
-/// @brief Complex conjugation; the identity on real fields.
+/// @brief Complex conjugate: \f$\bar{x}\f$; identity on reals.
 template <class T>
 [[nodiscard]] constexpr T conj(const T &x) noexcept {
     if constexpr (is_complex_v<T>) {
@@ -28,7 +24,7 @@ template <class T>
     }
 }
 
-/// @brief Real part; the identity on real fields.
+/// @brief Real part: \f$\mathrm{Re}(x)\f$; identity on reals.
 template <class T>
 [[nodiscard]] constexpr real_t<T> re(const T &x) noexcept {
     if constexpr (is_complex_v<T>) {
@@ -38,7 +34,7 @@ template <class T>
     }
 }
 
-/// @brief Modulus \f$|x|\f$, uniform over real and complex fields.
+/// @brief Modulus: \f$|x|\f$.
 template <class T>
 [[nodiscard]] inline real_t<T> mag(const T &x) noexcept {
     if constexpr (is_complex_v<T>) {
@@ -54,11 +50,7 @@ template <class T>
     return std::numeric_limits<real_t<T>>::epsilon();
 }
 
-/// @brief Default relative tolerance for sampled property tests.
-///
-/// \f$\sqrt{\varepsilon}\f$ is the standard choice for randomized numerical probes:
-/// tight enough to reject genuine violations, loose enough to absorb the
-/// \f$O(n\varepsilon)\f$ round-off of the operator applications used to probe.
+/// @brief Default tolerance for sampled tests: \f$\sqrt{\epsilon}\f$.
 template <class T>
 [[nodiscard]] inline real_t<T> sampling_tol() noexcept {
     return std::sqrt(eps<T>());
@@ -85,7 +77,7 @@ struct entry_of<A, std::void_t<decltype(std::declval<const A &>()(std::size_t{0}
 
 using math::scalar_t;
 
-/// @brief Entry type of a two-index container, or void when it has no such access.
+/// @brief Entry type of a two-index container, else `void`.
 template <class A>
 using entry_t = typename detail::entry_of<A>::type;
 

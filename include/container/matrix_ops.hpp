@@ -1,8 +1,5 @@
 /// @file container/matrix_ops.hpp
-/// @brief Untagged Level-2/3 dense matrix operations: resolve through `num::accel`.
-///
-/// Call a backend by name, such as `num::omp::matmul`, to pick one. `kernel::gemm` blocks
-/// itself, so `matmul` has no tuning variants.
+/// @brief Dense matrix operations through the default backend.
 #pragma once
 
 #include "container/concepts.hpp"
@@ -25,8 +22,7 @@
 
 namespace num::seq {
 
-/// @brief Thin mat-aware wrappers over `num::kernel`, used when no
-/// accelerator (BLAS/OMP/CUDA) was configured.
+/// @brief Matrix-vector product, sequential: \f$y \leftarrow A x\f$.
 inline void matvec(const mat<real> &A, const vec<real> &x, vec<real> &y) {
     kernel::matvec(y.data(), A.data(), x.data(), A.rows(), A.cols());
 }
@@ -43,11 +39,7 @@ inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) {
 
 namespace num {
 
-/// @brief \f$y \leftarrow Ax\f$ for any row-major dense matrix.
-///
-/// Constrained on @ref num::repr::dense_row_major, so a foreign matrix with `data()`, `rows()`
-/// and `cols()` works. `num::mat<real>` takes the configured backend, anything else the kernel. The
-/// CSR overload in `linear/sparse/sparse.hpp` is selected by the disjoint @ref num::repr::csr.
+/// @brief Matrix-vector product for any row-major matrix: \f$y \leftarrow A x\f$.
 template <class M>
 requires repr::dense_row_major<M>
 inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
@@ -60,16 +52,15 @@ inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
 
 inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) { accel::matmul(A, B, C); }
 
-/// @brief \f$C \leftarrow \alpha\,\mathrm{op}(A)\,\mathrm{op}(B) + \beta C\f$, with op the transpose when the
-/// flag is set. Uses the configured BLAS, else `num::kernel`.
+/// @brief Matrix-matrix product (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
+/// \f$op\f$ transposes when its flag is set.
 inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B, bool transB, real beta,
                  mat<real> &C) {
     blas::gemm(alpha, A, transA, B, transB, beta, C);
 }
 
-/// @brief \f$y \leftarrow \alpha\,\mathrm{op}(A_r)\,x + \beta y\f$, where \f$A_r\f$ is the first `rows` rows of
-/// A (all rows by default), so a basis stored row by row can grow inside a preallocated matrix.
-/// y must already have the result's length. Uses the configured BLAS, else `num::kernel`.
+/// @brief Matrix-vector product (GEMV): \f$y \leftarrow \alpha\, op(A_r)\, x + \beta y\f$.
+/// \f$A_r\f$ is the leading `rows` rows of A; `y` must already be sized.
 inline void gemv(real alpha, const mat<real> &A, bool transA, const vec<real> &x, real beta, vec<real> &y,
                  idx rows = static_cast<idx>(-1)) {
     const idx r = std::min(rows, A.rows());
@@ -80,7 +71,7 @@ inline void gemv(real alpha, const mat<real> &A, bool transA, const vec<real> &x
     blas::gemm(alpha, A.data(), A.cols(), transA, x.data(), 1, false, beta, y.data(), 1, m, 1, k);
 }
 
-/// @brief \f$C \leftarrow \alpha A + \beta B\f$.
+/// @brief Matrix linear combination: \f$C \leftarrow \alpha A + \beta B\f$.
 inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B, mat<real> &C) {
     if constexpr (requires { accel::matadd(alpha, A, beta, B, C); }) {
         accel::matadd(alpha, A, beta, B, C);

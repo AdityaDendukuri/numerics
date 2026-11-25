@@ -1,11 +1,5 @@
 /// @file linear/debug.hpp
-/// @brief Runtime validation of structural invariants carried by stored matrices.
-///
-/// These are the diagnostic siblings of the structural concepts in
-/// linear/concepts.hpp. Unlike the operator axioms, which can only ever be
-/// sampled, everything here is *decidable*: whether a CSR index array is
-/// monotonic, whether a matrix is square, whether a bandwidth fits its dimension.
-/// They are checked exhaustively rather than probed.
+/// @brief Exhaustive checks of stored-matrix structure.
 #pragma once
 
 #include "core/debug.hpp"
@@ -23,7 +17,7 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief Validate structural invariants of CSR sparse storage.
+/// @brief CSR structure check: monotone row offsets, column indices in range.
 template <class SparseType>
 inline void verify_sparse_structure(const SparseType &A,
                                     std::source_location loc = std::source_location::current()) {

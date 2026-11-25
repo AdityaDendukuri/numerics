@@ -1,5 +1,5 @@
 /// @file linear/factorization/cholesky.hpp
-/// @brief Dense Cholesky factorization for SPD matrices.
+/// @brief Dense Cholesky factorization.
 #pragma once
 
 #include "blas/matrix_ops.hpp"
@@ -19,14 +19,8 @@
 
 namespace num {
 
-/// @brief Cholesky factorization \f$A = L L^T\f$ for symmetric positive definite \f$A\f$.
-///
-/// Writes L and zeroes the strict upper triangle; `L` and `A` may alias. Returns false at the
-/// first non-positive pivot, which proves A is not positive definite.
-///
-/// @param L Output lower triangular factor, n*n.
-/// @param A Input symmetric matrix, n*n; only the lower triangle is read.
-/// @param n mat dimension.
+/// @brief Cholesky factorization: \f$A = L L^T\f$.
+/// Reads the lower triangle; `L` and `A` may alias. Returns false at a non-positive pivot.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky(T *L, const T *A, idx n) noexcept {
     for (idx i = 0; i < n; ++i) {
@@ -51,8 +45,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Unblocked lower Cholesky of an `n x n` block with row stride `lda`,
-/// writing zeros above the diagonal.
+/// @brief Unblocked Cholesky, in place: \f$A = L L^T\f$, zeros above the diagonal.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky_block(T *A, idx lda, idx n) noexcept {
     for (idx i = 0; i < n; ++i) {
@@ -77,11 +70,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Blocked lower Cholesky of an `n x n` block with row stride `lda`.
-///
-/// Diagonal blocks wider than the `trsm`/`syrk` block are factored by
-/// recursion, so the panel solve and trailing update always see blocks long
-/// enough for their internal `gemm` to matter.
+/// @brief Blocked Cholesky, in place: \f$A = L L^T\f$.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky_blocked(T *A, idx lda, idx n, idx block_size) noexcept {
     for (idx kk = 0; kk < n; kk += block_size) {
@@ -112,7 +101,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Blocked double-precision Cholesky using level-3 BLAS for panels and trailing updates.
+/// @brief Blocked Cholesky through level-3 BLAS: \f$A = L L^T\f$.
 [[nodiscard]] inline bool cholesky_blocked_blas(real *A, idx lda, idx n,
                                                 idx block_size = 256) noexcept {
     if (block_size == 0)
@@ -158,10 +147,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief In-place blocked Cholesky factorization, `A <- L` with `A = L*L^T`.
-///
-/// Panels of `block_size` columns; the panel solve and trailing update are the blocked `trsm`
-/// and `syrk`, so large sizes run at `gemm` speed.
+/// @brief Blocked Cholesky, in place: \f$A \leftarrow L\f$ with \f$A = L L^T\f$.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky_blocked(T *A, idx n, idx block_size = 256) noexcept {
     if (n == 0) {
@@ -182,9 +168,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Solve \f$A x = b\f$ from a Cholesky factor, via \f$L y = b\f$ then \f$L^T x = y\f$.
-///
-/// `x` and `b` may alias.
+/// @brief Cholesky solve: \f$x \leftarrow L^{-T} L^{-1} b\f$. `x` and `b` may alias.
 template <std::floating_point T>
 inline void cholesky_solve(T *x, const T *L, const T *b, idx n) noexcept {
     // The public contract permits x == b, so select the explicitly alias-safe
@@ -199,9 +183,7 @@ namespace num {
 
 namespace linear {
 
-/// Test symmetry and positive definiteness by a Cholesky factorization, which fails exactly
-/// when a pivot is not positive. The raw-pointer overload is used because the `mat` overload of
-/// `num::cholesky` requires the invariant being tested.
+/// @brief SPD test by Cholesky: symmetric within `tol` and \f$A = L L^T\f$ succeeds.
 [[nodiscard]] inline bool is_spd(const mat<real> &A, real tol = 1e-12) {
     if (!is_symmetric(A, tol)) {
         return false;
@@ -210,9 +192,8 @@ namespace linear {
     return num::cholesky(factor.data(), A.data(), A.rows());
 }
 
-/// @brief Check symmetric positive definiteness exhaustively by a Cholesky factorization, then
-/// attach it.
-/// @throws std::invalid_argument If `A` is not symmetric within `tol`, or a pivot is not positive.
+/// @brief Make SPD: verify by Cholesky, then attach `law::spd`.
+/// @throws std::invalid_argument If `A` is not symmetric within `tol` or not positive definite.
 template <class Mat = mat<real>>
 [[nodiscard]] inline with_law<Mat, law::spd> make_spd(Mat A, real tol = 1e-12) {
     if (!is_spd(A, tol)) {
@@ -225,7 +206,7 @@ template <class Mat = mat<real>>
 
 using linear::make_spd;
 
-/// @brief Lower-triangular factorization \f$A=LL^T\f$.
+/// @brief Cholesky factorization result: \f$A = L L^T\f$.
 struct cholesky_result {
     mat<real> L;                    ///< Lower-triangular factor, valid when `positive_definite`.
     bool positive_definite = false; ///< False when a pivot was not positive.
@@ -241,27 +222,19 @@ namespace detail {
 cholesky_result cholesky_impl(const mat<real> &A);
 }
 
-/// Factor a matrix whose SPD property has already been established.
+/// @brief Cholesky factorization of an SPD-tagged matrix: \f$A = L L^T\f$.
 cholesky_result cholesky(const with_law<mat<real>, law::spd> &A);
 
 namespace unsafe {
 
-/// @brief Factor \f$A = LL^T\f$ without requiring or checking the SPD invariant.
-///
-/// The deliberate escape hatch. Calling this says, at the call site and in a form
-/// that survives grep, that the SPD precondition is being taken on faith. Nothing
-/// is sampled; if A is not positive definite the factorization simply reports
-/// failure through `cholesky_result::positive_definite`.
+/// @brief Cholesky factorization, unchecked: \f$A = L L^T\f$.
+/// Failure is reported in `positive_definite`.
+/// @warning Positive definiteness is taken on faith; prefer tagging `A` with `assume_spd`.
 cholesky_result cholesky(const mat<real> &A);
 
 } // namespace unsafe
 
-/// @brief Rejects an untagged matrix at compile time.
-///
-/// Cholesky is defined only for symmetric positive definite matrices, so a raw
-/// `mat<real>` does not satisfy its precondition. This overload exists to say so in a
-/// diagnostic rather than to run: a warning can be silenced by an unrelated
-/// `-Wno-` flag, whereas this cannot compile.
+/// @brief Compile-time rejection of an untagged matrix; tag it SPD first.
 template <class M>
 requires matrix_space<M> && (!claims<M, law::spd>)
 cholesky_result cholesky(const M & /*untagged*/) {
@@ -273,25 +246,25 @@ cholesky_result cholesky(const M & /*untagged*/) {
     return {};
 }
 
-/// @brief Solve \f$Ax=b\f$. `x` may be `b`.
+/// @brief Cholesky solve: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 void solve(const cholesky_result &f, const vec<real> &b, vec<real> &x);
-/// @brief Solve \f$AX=B\f$. `X` may be `B`.
+/// @brief Cholesky solve: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 void solve(const cholesky_result &f, const mat<real> &B, mat<real> &X);
-/// @brief Solve \f$A^Tx=b\f$, the same solve since \f$A\f$ is symmetric.
+/// @brief Cholesky transposed solve: \f$x \leftarrow A^{-T} b = A^{-1} b\f$.
 void solve_transpose(const cholesky_result &f, const vec<real> &b, vec<real> &x);
 void solve_transpose(const cholesky_result &f, const mat<real> &B, mat<real> &X);
 
-/// Replace A=LL^T by A+x*x^T in O(n^2).
+/// @brief Rank-1 Cholesky update: \f$A \leftarrow A + x x^T\f$, \f$O(n^2)\f$.
 void cholesky_update(cholesky_result &factor, const vec<real> &update);
 
-/// Replace A=LL^T by A-x*x^T in O(n^2), or throw if it is not SPD.
+/// @brief Rank-1 Cholesky downdate: \f$A \leftarrow A - x x^T\f$, \f$O(n^2)\f$.
+/// @throws std::runtime_error If the result is not positive definite.
 void cholesky_downdate(cholesky_result &factor, const vec<real> &update);
 
 namespace lapack {
 
-/// Cholesky through LAPACKE's dpotrf. Not the default: the kernel's blocked
-/// factorization measured faster at every size tried (see
-/// `lapack_factor_threshold`), but the binding stays callable by name.
+/// @brief Cholesky factorization through LAPACK `dpotrf`: \f$A = L L^T\f$.
+/// @note Not the default: the in-tree blocked kernel measured faster at every size tried.
 inline cholesky_result cholesky(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("cholesky: matrix must be square");

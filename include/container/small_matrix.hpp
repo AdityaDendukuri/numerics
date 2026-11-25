@@ -1,5 +1,5 @@
-/// @file small_matrix.hpp
-/// @brief Constexpr fixed-size vector, matrix, and Givens rotation helpers.
+/// @file container/small_matrix.hpp
+/// @brief Fixed-size constexpr vectors, matrices and Givens rotations.
 #pragma once
 
 #include "container/vector_ops.hpp"
@@ -11,7 +11,7 @@
 namespace num {
 
 template <idx N>
-/// Stack-allocated fixed-size real vector with constexpr arithmetic.
+/// @brief Fixed-size vector \f$x \in \mathbb{R}^N\f$, on the stack.
 struct small_vec {
     std::array<real, N> data{};
 
@@ -62,7 +62,7 @@ constexpr small_vec<N> operator*(real s, small_vec<N> v) noexcept {
 }
 
 template <idx M, idx N>
-/// Stack-allocated row-major real matrix with constexpr arithmetic.
+/// @brief Fixed-size matrix \f$A \in \mathbb{R}^{M \times N}\f$, row-major, on the stack.
 struct small_matrix {
     std::array<real, M * N> data{};
 
@@ -75,10 +75,10 @@ struct small_matrix {
 
     constexpr void fill(real v) noexcept { data.fill(v); }
 
-    /// Construct a zero-filled matrix.
+    /// @brief Zero matrix.
     static constexpr small_matrix zeros() noexcept { return small_matrix{}; }
 
-    /// Construct an identity matrix; available only for square shapes.
+    /// @brief Identity matrix \f$I\f$; square shapes only.
     static constexpr small_matrix identity() noexcept {
         static_assert(M == N, "identity() requires a square matrix");
         small_matrix m{};
@@ -88,7 +88,7 @@ struct small_matrix {
         return m;
     }
 
-    /// Return a copy with rows and columns exchanged.
+    /// @brief Transpose: \f$A^T\f$.
     constexpr small_matrix<N, M> transposed() const noexcept {
         small_matrix<N, M> t{};
         for (idx i = 0; i < M; ++i) {
@@ -137,12 +137,12 @@ struct small_matrix {
     }
 };
 
-/// Plane rotation used to eliminate one component of a two-vector.
+/// @brief Givens rotation \f$G = \begin{bmatrix} c & s \\ -s & c \end{bmatrix}\f$.
 struct givens_rotation {
     real c = 1;
     real s = 0;
 
-    /// @brief Construct \f$G=\begin{bmatrix}c&s\\-s&c\end{bmatrix}\f$.
+    /// @brief Givens rotation zeroing \f$b\f$: \f$G (a, b)^T = (r, 0)^T\f$.
     static constexpr givens_rotation from(real a, real b) noexcept {
         if (b == 0) {
             return {};
@@ -151,21 +151,21 @@ struct givens_rotation {
         return {a / r, b / r};
     }
 
-    /// Apply G to the pair (x,y) in place.
+    /// @brief Rotation: \f$(x, y) \leftarrow G (x, y)\f$.
     constexpr void apply(real &x, real &y) const noexcept {
         const real tmp = (c * x) + (s * y);
         y = (-s * x) + (c * y);
         x = tmp;
     }
 
-    /// Apply G^T to the pair (x,y) in place.
+    /// @brief Transposed rotation: \f$(x, y) \leftarrow G^T (x, y)\f$.
     constexpr void apply_t(real &x, real &y) const noexcept {
         const real tmp = (c * x) - (s * y);
         y = (s * x) + (c * y);
         x = tmp;
     }
 
-    /// Materialize the rotation as a 2x2 matrix.
+    /// @brief The rotation as a \f$2 \times 2\f$ matrix.
     constexpr small_matrix<2, 2> matrix() const noexcept {
         small_matrix<2, 2> G{};
         G(0, 0) = c;

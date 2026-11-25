@@ -1,5 +1,5 @@
 /// @file container/lattice_point.hpp
-/// @brief A point of the integer lattice, stored inline.
+/// @brief Integer lattice points.
 #pragma once
 
 #include <compare>
@@ -8,8 +8,7 @@
 
 namespace num {
 
-/// @brief A point of \f$\mathbb{Z}^D\f$: `D` ints stored inline, with lattice addition,
-/// lexicographic order and a hash, so it can key a map.
+/// @brief Lattice point in \f$\mathbb{Z}^D\f$, ordered and hashable.
 template <int D>
 struct lattice_point {
     static_assert(D > 0, "lattice_point needs at least one coordinate");

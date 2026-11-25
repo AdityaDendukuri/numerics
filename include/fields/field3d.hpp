@@ -1,9 +1,5 @@
 /// @file fields/field3d.hpp
-/// @brief 3D scalar and vector fields on uniform Cartesian grids.
-///
-/// A scalar_field_3d is geometry (grid_3d) + values (num::vec<real>), mirroring the
-/// 2D scalar_field_2d design. Because the values live in a num::vec<real>, the field
-/// plugs straight into linear solvers and operators via .as_vec() with no copy.
+/// @brief 3D scalar and vector fields on uniform grids.
 #pragma once
 
 #include "core/types.hpp"
@@ -16,10 +12,10 @@
 
 namespace num {
 
-/// scalar values stored on a uniform Cartesian grid.
+/// @brief 3D scalar field: \f$\phi_{ijk}\f$ on a uniform grid.
 class scalar_field_3d {
   public:
-    /// Allocate a zero-filled field with optional physical origin.
+    /// @brief Zero field, `nx x ny x nz`, spacing `dx`, origin \f$(o_x, o_y, o_z)\f$.
     scalar_field_3d(int nx, int ny, int nz, float dx, float ox = 0.0f, float oy = 0.0f,
                   float oz = 0.0f)
         : grid_{nx,
@@ -32,14 +28,14 @@ class scalar_field_3d {
           data_(static_cast<idx>(grid_.size())) {}
 
     template <typename F>
-    /// Sample f(i,j,k) at every grid node during construction.
+    /// @brief Field sampled from `f(i, j, k)`.
     scalar_field_3d(int nx, int ny, int nz, float dx, F &&f, float ox = 0.0f, float oy = 0.0f,
                   float oz = 0.0f)
         : scalar_field_3d(nx, ny, nz, dx, ox, oy, oz) {
         fill(std::forward<F>(f));
     }
 
-    /// Return the field geometry.
+    /// @brief Grid geometry.
     [[nodiscard]] const grid_3d &grid() const { return grid_; }
 
     [[nodiscard]] int nx() const { return grid_.nx; }
@@ -55,14 +51,14 @@ class scalar_field_3d {
 
     void set(int i, int j, int k, double v) { data_[grid_.flat(i, j, k)] = static_cast<real>(v); }
 
-    /// Fill every node with a constant value.
+    /// @brief Constant fill: \f$\phi_{ijk} \leftarrow v\f$.
     void fill(double v) {
         for (idx n = 0; n < data_.size(); ++n) {
             data_[n] = static_cast<real>(v);
         }
     }
 
-    /// Fill every node with f(i, j, k).
+    /// @brief Fill: \f$\phi_{ijk} \leftarrow f(i, j, k)\f$.
     template <typename F>
     void fill(F &&f) {
         for (int k = 0; k < grid_.nz; ++k) {
@@ -74,14 +70,14 @@ class scalar_field_3d {
         }
     }
 
-    /// Access the contiguous values in grid flattening order.
+    /// @brief Values as a vector, in grid order.
     vec<real> &as_vec() { return data_; }
     [[nodiscard]] const vec<real> &as_vec() const { return data_; }
     real *data() { return data_.data(); }
     [[nodiscard]] const real *data() const { return data_.data(); }
     [[nodiscard]] idx size() const { return data_.size(); }
 
-    /// Trilinearly interpolate the field at physical coordinates.
+    /// @brief Trilinear interpolation: \f$\phi(x, y, z)\f$.
     [[nodiscard]] float sample(float x, float y, float z) const;
 
   private:
@@ -89,17 +85,17 @@ class scalar_field_3d {
     vec<real> data_;
 };
 
-/// Three-component vector field sharing a common 3D grid.
+/// @brief 3D vector field: three components on one grid.
 struct vector_field_3d {
     scalar_field_3d x, y, z;
 
     vector_field_3d(int nx, int ny, int nz, float dx, float ox = 0.0f, float oy = 0.0f,
                   float oz = 0.0f);
 
-    /// Trilinearly interpolate all components at a physical point.
+    /// @brief Trilinear interpolation of all components at \f$(x, y, z)\f$.
     [[nodiscard]] std::array<float, 3> sample(float px, float py, float pz) const;
 
-    /// Scale all components in place.
+    /// @brief Scaling: \f$F \leftarrow s F\f$.
     void scale(float s);
 };
 

@@ -1,5 +1,5 @@
 /// @file linear/subspace.hpp
-/// @brief Subspace construction and orthogonalization kernels.
+/// @brief Orthogonalization and Krylov basis construction.
 #pragma once
 
 #include "container/matrix_ops.hpp"
@@ -14,10 +14,7 @@
 
 namespace num {
 
-/// @brief Modified Gram--Schmidt against row-major basis columns.
-///
-/// Keeps the sequential projection order; `project_columns` then `combine_columns` is the
-/// faster classical variant, with weaker stability.
+/// @brief Modified Gram–Schmidt: \f$v \leftarrow v - (q_j^T v) q_j\f$ for each column in turn.
 template <std::floating_point T>
 inline void mgs_columns(T *NUM_K_RESTRICT v, const T *NUM_K_RESTRICT basis, idx ldb, idx rows,
                         idx columns, T *coefficients = nullptr) noexcept {
@@ -35,9 +32,8 @@ inline void mgs_columns(T *NUM_K_RESTRICT v, const T *NUM_K_RESTRICT basis, idx 
     }
 }
 
-/// @brief Two-pass classical Gram--Schmidt of v against the first k rows of a row-stored basis Q:
-/// \f$t = Q_k v,\; v \leftarrow v - Q_k^T t\f$, twice, as matrix--vector products. Returns the accumulated
-/// coefficients (length k). Rows must be orthonormal.
+/// @brief Classical Gram–Schmidt, twice (CGS2): \f$v \leftarrow (I - Q_k^T Q_k)^2 v\f$.
+/// Returns the coefficients; rows of \f$Q_k\f$ must be orthonormal.
 inline array<real> cgs2_orthogonalize(const mat<real> &Q, idx k, vec<real> &v) {
     array<real> h(k, 0.0);
     vec<real> t(k, 0.0);
@@ -55,16 +51,14 @@ inline array<real> cgs2_orthogonalize(const mat<real> &Q, idx k, vec<real> &v) {
 
 namespace num::dispatch::subspace {
 
-/// @brief Modified Gram–Schmidt orthogonalization against basis vectors \f$\mathbf{v}_0, \dots,
-/// \mathbf{v}_{k-1}\f$.
+/// @brief Modified Gram–Schmidt against \f$v_0, \ldots, v_{k-1}\f$.
 [[nodiscard]] real mgs_orthogonalize(const array<vec<real>> &basis, vec<real> &v,
                                      array<real> &h, idx k);
 
-/// @brief Modified Gram–Schmidt orthogonalization against columns \f$0, \dots, k-1\f$ of a
-/// row-major matrix.
+/// @brief Modified Gram–Schmidt against columns \f$0, \ldots, k-1\f$ of a row-major matrix.
 [[nodiscard]] real mgs_orthogonalize(const mat<real> &basis, idx k, vec<real> &v);
 
-/// @brief One Arnoldi iteration step: expands orthonormal Krylov basis \f$V_k \to V_{k+1}\f$.
+/// @brief Arnoldi step: \f$A v_k = \sum_{j \le k+1} h_{jk} v_j\f$, extending the basis by one.
 template <class Op>
 requires requires(const Op &A, const vec<real> &x, vec<real> &y) {
     A.apply(x, y);

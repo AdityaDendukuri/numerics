@@ -1,10 +1,6 @@
 /// @file ode/implicit.hpp
-/// @brief Fixed-step backward Euler through a user-supplied linear_solver.
-///
-/// `advance(u, solver, params)` and `advance(u, solver, params, obs)`, the latter with a step
-/// callback. The field is any `vec_field`, meaning anything with `.as_vec()`.
-/// @todo Add Crank-Nicolson, BDF2, and IMEX step drivers with explicit mass
-/// matrix/operator hooks.
+/// @brief Fixed-step backward Euler through a user-supplied linear solver.
+// TODO: Crank-Nicolson, BDF2 and IMEX drivers with mass-matrix hooks.
 #pragma once
 
 #include "container/vector.hpp"
@@ -14,14 +10,14 @@
 namespace num {
 namespace ode {
 
-/// Parameters for fixed-step implicit integration.
+/// @brief Fixed-step implicit integration parameters.
 struct implicit_params {
     int nstep; ///< number of time steps
     double dt; ///< step size (reported to observer as t)
 };
 
-/// Advance u by nstep implicit steps using solver.
-/// obs(step, t, u) is called at step 0 (initial) and after each solve.
+/// @brief Backward Euler: \f$(I - \Delta t\, L) u_{n+1} = u_n\f$, `nstep` steps.
+/// `obs(step, t, u)` runs at step 0 and after each solve.
 template <vec_field field, typename Observer>
 void advance(field &u, const linear_solver &solver, implicit_params p, Observer &&obs) {
     obs(0, 0.0, u);
@@ -32,7 +28,7 @@ void advance(field &u, const linear_solver &solver, implicit_params p, Observer 
     }
 }
 
-/// Overload without observer.
+/// @brief Backward Euler: \f$(I - \Delta t\, L) u_{n+1} = u_n\f$, `nstep` steps.
 template <vec_field field>
 void advance(field &u, const linear_solver &solver, implicit_params p) {
     for (int s = 0; s < p.nstep; ++s) {

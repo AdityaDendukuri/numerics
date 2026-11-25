@@ -1,5 +1,5 @@
 /// @file linear/factorization/hessenberg.hpp
-/// @brief Upper Hessenberg decomposition A = Q H Q^T via Householder reflections.
+/// @brief Hessenberg decomposition: \f$A = Q H Q^T\f$.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -20,16 +20,7 @@ namespace num {
 
 // Shifted Hessenberg resolvent
 
-/// @brief Factor \f$sI - H\f$ in place for an upper Hessenberg \f$H\f$, in \f$O(n^2)\f$.
-///
-/// Only one subdiagonal entry per column is eliminated, and pivoting compares it against the
-/// diagonal. This makes each shift of a Krylov resolvent cheap.
-///
-/// @param work  In/out, n*n. Receives \f$sI - H\f$ and its factors.
-/// @param H     Upper Hessenberg matrix, n*n row-major, real.
-/// @param shift Complex shift \f$s\f$.
-/// @param n     Dimension.
-/// @param piv   Output pivot record, length n.
+/// @brief Shifted Hessenberg LU, in place: \f$s I - H = P L U\f$, \f$O(n^2)\f$.
 template <std::floating_point T, class Index>
 inline void hessenberg_shifted_factor(std::complex<T> *NUM_K_RESTRICT work,
                                       const T *NUM_K_RESTRICT H, std::complex<T> shift, idx n,
@@ -69,10 +60,8 @@ inline void hessenberg_shifted_factor(std::complex<T> *NUM_K_RESTRICT work,
     }
 }
 
-/// @brief Substitute a right-hand side through a factored shifted Hessenberg system.
-///
-/// Separate from the factorization so that many right-hand sides share one
-/// factorization at the same shift. `y` and `b` may alias.
+/// @brief Shifted Hessenberg substitution: \f$y \leftarrow (s I - H)^{-1} b\f$ from the factors.
+/// `y` and `b` may alias.
 template <std::floating_point T, class Index>
 inline void hessenberg_shifted_substitute(std::complex<T> *y,
                                           const std::complex<T> *NUM_K_RESTRICT work,
@@ -102,7 +91,7 @@ inline void hessenberg_shifted_substitute(std::complex<T> *y,
     }
 }
 
-/// @brief Solve \f$(sI - H)\,y = b\f$ for a single right-hand side.
+/// @brief Shifted Hessenberg solve: \f$y \leftarrow (s I - H)^{-1} b\f$.
 template <std::floating_point T, class Index>
 inline void hessenberg_shifted_solve(std::complex<T> *y, const T *H, std::complex<T> shift,
                                      const std::complex<T> *b, idx n,
@@ -116,17 +105,13 @@ inline void hessenberg_shifted_solve(std::complex<T> *y, const T *H, std::comple
 
 namespace num {
 
-/// @brief Upper Hessenberg decomposition of a square matrix: A = Q H Q^T.
+/// @brief Hessenberg decomposition: \f$A = Q H Q^T\f$, \f$H\f$ upper Hessenberg.
 class hessenberg_decomposition {
   public:
-    /// Compute the Hessenberg decomposition of square matrix A, preferring
-    /// LAPACK (`dgehrd`/`dorghr`) when configured, else the in-tree vectorized
-    /// Householder elimination. To force one explicitly, call
-    /// `num::lapack::hessenberg`/`num::seq::hessenberg`.
+    /// @brief Hessenberg decomposition, LAPACK when available: \f$A = Q H Q^T\f$.
     explicit hessenberg_decomposition(const mat<real> &A) : hessenberg_decomposition(A, has_lapack) {}
 
-    /// Selects LAPACK vs. the sequential path explicitly. Prefer the free
-    /// functions `num::hessenberg`/`num::lapack::hessenberg`/`num::seq::hessenberg`.
+    /// @brief Hessenberg decomposition with an explicit backend choice.
     hessenberg_decomposition(const mat<real> &A, bool use_lapack);
 
     [[nodiscard]] idx size() const noexcept { return H_.rows(); }
@@ -138,7 +123,7 @@ class hessenberg_decomposition {
     mat<real> Q_;
 };
 
-/// Compute the upper Hessenberg decomposition of a square matrix.
+/// @brief Hessenberg decomposition: \f$A = Q H Q^T\f$.
 [[nodiscard]] inline hessenberg_decomposition hessenberg(const mat<real> &A) {
     return hessenberg_decomposition(A);
 }
@@ -251,19 +236,8 @@ inline hessenberg_decomposition::hessenberg_decomposition(const mat<real> &A, bo
 }
 
 
-/// @brief Solve the shifted Hessenberg system \f$(sI - H)y = \tilde b\f$ in \f$O(n^2)\f$.
-///
-/// Gaussian elimination with partial pivoting on an upper Hessenberg matrix touches
-/// one subdiagonal per column, so the factorization is \f$O(n^2)\f$ rather than
-/// \f$O(n^3)\f$. This is what makes a resolvent \f$(sI-A)^{-1}b\f$ cheap once
-/// \f$A\f$ has been reduced once: every subsequent shift reuses the same \f$H\f$.
-///
-/// @param H Upper Hessenberg matrix, n*n.
-/// @param shift The scalar s.
-/// @param b_tilde Right-hand side, length n.
-/// @param y Output, resized to n.
-/// @param M_buf Scratch, grown to n*n and reusable across calls.
-/// @param pivots Scratch, grown to n and reusable across calls.
+/// @brief Shifted Hessenberg solve: \f$y \leftarrow (s I - H)^{-1} \tilde{b}\f$, \f$O(n^2)\f$.
+/// `M_buf` and `pivots` are reusable scratch.
 inline void hessenberg_shifted_solve(const mat<real> &H, cplx shift, const vec<cplx> &b_tilde,
                                      vec<cplx> &y, array<cplx> &M_buf, array<idx> &pivots) {
     const idx n = H.rows();
@@ -283,10 +257,7 @@ inline void hessenberg_shifted_solve(const mat<real> &H, cplx shift, const vec<c
                                   pivots.data());
 }
 
-/// @brief Project a right-hand side onto the Hessenberg basis: \f$\tilde b = Q^T b\f$.
-///
-/// Accepts a real or complex right-hand side. The result is complex either way,
-/// since the shift generally is.
+/// @brief Projection onto the Hessenberg basis: \f$\tilde{b} = Q^T b\f$.
 template <class Rhs>
 inline vec<cplx> hessenberg_project(const mat<real> &Q, const Rhs &b) {
     const idx n = Q.rows();
@@ -295,7 +266,7 @@ inline vec<cplx> hessenberg_project(const mat<real> &Q, const Rhs &b) {
     return b_tilde;
 }
 
-/// @brief Carry a solution back to the original basis: \f$x = Q y\f$.
+/// @brief Back-projection from the Hessenberg basis: \f$x = Q y\f$.
 inline void hessenberg_back_project(const mat<real> &Q, const vec<cplx> &y, vec<cplx> &x) {
     const idx n = Q.rows();
     if (x.size() != n) {

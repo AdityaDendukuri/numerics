@@ -21,9 +21,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install documentation tools
-        run: python -m pip install libclang mkdocs-material
-
       - name: Configure
         run: |
           cmake -B build \
@@ -31,6 +28,9 @@ jobs:
             -DNUMERICS_BUILD_TESTS=OFF \
             -DNUMERICS_BUILD_BENCHMARKS=OFF \
             -DNUMERICS_BUILD_DOCS=ON
+
+      - name: Check doc comments and indexes
+        run: cmake --build build --target docs-check
 
       - name: Build docs
         run: cmake --build build --target docs

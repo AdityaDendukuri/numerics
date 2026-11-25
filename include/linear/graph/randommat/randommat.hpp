@@ -1,5 +1,5 @@
 /// @file linear/graph/randommat/randommat.hpp
-/// @brief Umbrella header for Randomized Numerical Linear Algebra (RandNLA / randommat).
+/// @brief Randomized numerical linear algebra.
 #pragma once
 
 #include "linear/graph/randommat/approxchol.hpp"

@@ -36,6 +36,11 @@ add_library(numerics::kernel ALIAS numerics_kernel)
 set_target_properties(numerics_kernel PROPERTIES EXPORT_NAME kernel)
 target_include_directories(numerics_kernel INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    # Installed headers live under <prefix>/include/numerics so they never collide
+    # with other packages. Exposing that directory keeps <numerics.hpp> and the
+    # library's own "core/..." includes working; <prefix>/include also allows
+    # <numerics/numerics.hpp>.
+    $<INSTALL_INTERFACE:include/numerics>
     $<INSTALL_INTERFACE:include>
 )
 target_compile_features(numerics_kernel INTERFACE cxx_std_20)

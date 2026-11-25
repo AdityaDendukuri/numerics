@@ -1,8 +1,5 @@
 /// @file container/matrix_expr.hpp
-/// @brief Value-returning dense arithmetic, and opt-in operators built on it.
-///
-/// Each function returns its result and checks conformance. The operators sit in `num::ops`,
-/// so they need `using namespace num::ops;`. Prefer the out-parameter forms in hot loops.
+/// @brief Value-returning dense arithmetic, with opt-in operators in `num::ops`.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -13,7 +10,7 @@
 
 namespace num {
 
-/// Return A*B. Allocates; prefer the out-param form in hot loops.
+/// @brief Matrix product: \f$A B\f$. Allocates.
 [[nodiscard]] inline mat<real> matmul(const mat<real> &A, const mat<real> &B) {
     if (A.cols() != B.rows()) {
         throw std::invalid_argument("matmul: inner dimensions do not agree");
@@ -23,7 +20,7 @@ namespace num {
     return C;
 }
 
-/// Return A*x. Allocates; prefer the out-param form in hot loops.
+/// @brief Matrix-vector product: \f$A x\f$. Allocates.
 [[nodiscard]] inline vec<real> matvec(const mat<real> &A, const vec<real> &x) {
     if (A.cols() != x.size()) {
         throw std::invalid_argument("matvec: matrix columns do not match vector size");
@@ -33,7 +30,7 @@ namespace num {
     return y;
 }
 
-/// Return A+B. Allocates; prefer the out-param form in hot loops.
+/// @brief Matrix sum: \f$A + B\f$. Allocates.
 [[nodiscard]] inline mat<real> add(const mat<real> &A, const mat<real> &B) {
     if (A.rows() != B.rows() || A.cols() != B.cols()) {
         throw std::invalid_argument("add: matrix shapes do not agree");
@@ -43,7 +40,7 @@ namespace num {
     return C;
 }
 
-/// Return A-B. Allocates; prefer the out-param form in hot loops.
+/// @brief Matrix difference: \f$A - B\f$. Allocates.
 [[nodiscard]] inline mat<real> sub(const mat<real> &A, const mat<real> &B) {
     if (A.rows() != B.rows() || A.cols() != B.cols()) {
         throw std::invalid_argument("sub: matrix shapes do not agree");
@@ -53,7 +50,7 @@ namespace num {
     return C;
 }
 
-/// Return x+y. Allocates; prefer the out-param form in hot loops.
+/// @brief Vector sum: \f$x + y\f$. Allocates.
 [[nodiscard]] inline vec<real> add(const vec<real> &x, const vec<real> &y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("add: vector sizes do not agree");
@@ -63,7 +60,7 @@ namespace num {
     return z;
 }
 
-/// Return x-y. Allocates; prefer the out-param form in hot loops.
+/// @brief Vector difference: \f$x - y\f$. Allocates.
 [[nodiscard]] inline vec<real> sub(const vec<real> &x, const vec<real> &y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("sub: vector sizes do not agree");
@@ -73,26 +70,21 @@ namespace num {
     return z;
 }
 
-/// Return alpha*A, matching the value-returning `scaled` for sparse matrices.
-/// Allocates; prefer in-place scaling in hot loops.
+/// @brief Scaled matrix: \f$\alpha A\f$. Allocates.
 [[nodiscard]] inline mat<real> scaled(const mat<real> &A, real alpha) {
     mat<real> result(A.rows(), A.cols(), 0.0);
     matadd(alpha, A, 0.0, A, result);
     return result;
 }
 
-/// Return alpha*x for vectors.
+/// @brief Scaled vector: \f$\alpha x\f$. Allocates.
 [[nodiscard]] inline vec<real> scaled(const vec<real> &x, real alpha) {
     vec<real> result = x;
     scale(result, alpha);
     return result;
 }
 
-/// Opt-in operator spellings for the functions above.
-///
-/// These are deliberately not in `num`, so that no translation unit acquires
-/// them by including a header.  Write `using namespace num::ops;` to enable
-/// them where expression syntax makes a formula clearer.
+/// @brief Operator spellings of the functions above; enable with `using namespace num::ops;`.
 namespace ops {
 
 [[nodiscard]] inline mat<real> operator*(const mat<real> &A, const mat<real> &B) { return matmul(A, B); }

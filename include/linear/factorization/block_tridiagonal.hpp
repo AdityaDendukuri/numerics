@@ -1,23 +1,8 @@
 /// @file linear/factorization/block_tridiagonal.hpp
-/// @brief Block LU and block Cholesky for block-tridiagonal sparse matrices.
+/// @brief Block LU and block Cholesky of block-tridiagonal sparse matrices.
 ///
-/// A matrix whose rows carry a level label is block tridiagonal when every nonzero couples
-/// rows of the same or adjacent levels. Reordered by level, it factors one block row at a time
-/// in \f$O(\sum_k n_k^3)\f$ work with no fill outside the band. The labels are the caller's
-/// and are only compressed to contiguous block indices.
-///
-/// ### Index convention
-///
-/// With `nb` blocks, `offsets` has `nb + 1` entries and block `k` spans the reordered rows
-/// `[offsets[k], offsets[k+1])`. `upper` and `lower` have `nb - 1` entries, indexed by the
-/// coupling:
-///
-///   - `upper[k]` is the block at row `k`, column `k+1`;
-///   - `lower[k]` is the block at row `k+1`, column `k`.
-///
-/// The elimination reads `lower[k] <- lower[k] D_k^{-1}`, then
-/// `D_{k+1} <- D_{k+1} - lower[k] upper[k]`. The factors are plain aggregates, so a low-rank
-/// update can apply them directly.
+/// Block `k` spans reordered rows `[offsets[k], offsets[k+1])`; `upper[k]` is block
+/// \f$(k, k+1)\f$ and `lower[k]` is block \f$(k+1, k)\f$.
 #pragma once
 
 #include "blas/matrix_ops.hpp"
@@ -38,12 +23,7 @@
 
 namespace num {
 
-/// @brief Block LU factors of a block-tridiagonal matrix.
-///
-/// After factorization the matrix reads \f$PA P^{T} = \mathcal{L}\,\mathcal{U}\f$
-/// with \f$\mathcal{L}\f$ block unit lower bidiagonal (its off-diagonal blocks in
-/// `lower`) and \f$\mathcal{U}\f$ block upper bidiagonal (`diagonal` on the
-/// diagonal, `upper` off it).
+/// @brief Block LU factors: \f$P A P^T = \mathcal{L} \mathcal{U}\f$, block bidiagonal.
 struct block_lu_factor {
     idx size = 0;                  ///< Order of the original matrix.
     array<idx> offsets;      ///< `nb + 1` block boundaries in reordered indexing.
@@ -58,19 +38,14 @@ struct block_lu_factor {
     }
     /// @brief Rows in block `k`.
     [[nodiscard]] idx block_size(idx k) const { return offsets[k + 1] - offsets[k]; }
-    /// @brief True when some diagonal block was singular.
+    /// @brief Whether a diagonal block was singular.
     [[nodiscard]] bool singular() const noexcept {
         return std::any_of(diagonal.begin(), diagonal.end(),
                            [](const lu_result<real> &f) { return f.singular; });
     }
 };
 
-/// @brief Block Cholesky factors of a symmetric positive-definite block-tridiagonal matrix.
-///
-/// \f$PAP^{T} = \mathcal{L}\mathcal{L}^{T}\f$ with \f$\mathcal{L}\f$ block lower
-/// bidiagonal: `diagonal[k]` holds the dense Cholesky factor of block `k`, and
-/// `lower[k]` the block at row `k+1`, column `k`, already right-scaled by
-/// \f$L_k^{-T}\f$.
+/// @brief Block Cholesky factors: \f$P A P^T = \mathcal{L} \mathcal{L}^T\f$, block bidiagonal.
 struct block_cholesky_factor {
     idx size = 0;
     array<idx> offsets;
@@ -82,7 +57,7 @@ struct block_cholesky_factor {
         return offsets.empty() ? 0 : offsets.size() - 1;
     }
     [[nodiscard]] idx block_size(idx k) const { return offsets[k + 1] - offsets[k]; }
-    /// @brief True when some diagonal block was not positive definite.
+    /// @brief Whether a diagonal block was not positive definite.
     [[nodiscard]] bool failed() const noexcept {
         return std::any_of(diagonal.begin(), diagonal.end(),
                            [](const cholesky_result &f) { return !f.positive_definite; });
@@ -91,7 +66,7 @@ struct block_cholesky_factor {
 
 namespace detail {
 
-/// @brief Reordering induced by a level labelling.
+/// @brief Block reordering from a level labelling.
 struct block_layout {
     array<idx> offsets;  ///< `nb + 1` boundaries.
     array<idx> order;    ///< reordered position -> original row.
@@ -99,12 +74,7 @@ struct block_layout {
     array<idx> block_of; ///< original row -> block index.
 };
 
-/// @brief Compress arbitrary level labels into contiguous blocks and build the permutation.
-///
-/// Labels need not be contiguous, zero-based, or dense; they are sorted, and the
-/// distinct values become blocks `0, 1, ...` in that order. Rows keep their
-/// original relative order within a block, so the permutation is deterministic
-/// and a run of already-sorted labels is the identity.
+/// @brief Block layout: compress level labels into contiguous blocks, stable within each block.
 [[nodiscard]] inline block_layout build_block_order(view<const idx> levels) {
     const idx n = levels.size();
     array<idx> distinct(levels.begin(), levels.end());
@@ -136,11 +106,7 @@ struct block_layout {
     return layout;
 }
 
-/// @brief Reject any nonzero coupling non-adjacent blocks.
-///
-/// Structural entries that store an exact zero are skipped: they contribute
-/// nothing to the factorization, and rejecting them would make an explicitly
-/// padded sparsity pattern unusable for no numerical reason.
+/// @brief Block structure check: nonzeros couple only the same or adjacent blocks.
 inline void validate_block_structure(const spmat &A, const block_layout &layout) {
     const idx n = A.n_rows();
     const idx *row_ptr = A.row_ptr();
@@ -166,14 +132,14 @@ inline void validate_block_structure(const spmat &A, const block_layout &layout)
     }
 }
 
-/// @brief Dense diagonal, super- and sub-diagonal blocks in reordered indexing.
+/// @brief Dense diagonal, super- and subdiagonal blocks.
 struct assembled_blocks {
     array<mat<real>> diagonal;
     array<mat<real>> upper;
     array<mat<real>> lower;
 };
 
-/// @brief Scatter the sparse entries into dense blocks, scaling as it goes.
+/// @brief Scatter sparse entries into scaled dense blocks.
 [[nodiscard]] inline assembled_blocks gather_blocks(const spmat &A, const block_layout &layout,
                                                    real scale) {
     const idx blocks = layout.offsets.size() - 1;
@@ -217,7 +183,7 @@ struct assembled_blocks {
     return out;
 }
 
-/// @brief Permute a right-hand side into block order.
+/// @brief Permute rows into block order.
 [[nodiscard]] inline mat<real> gather_rows(const mat<real> &B, const array<idx> &order) {
     mat<real> out(B.rows(), B.cols(), 0.0);
     for (idx p = 0; p < B.rows(); ++p) {
@@ -228,7 +194,7 @@ struct assembled_blocks {
     return out;
 }
 
-/// @brief Undo `gather_rows`.
+/// @brief Permute rows back from block order.
 inline void scatter_rows(const mat<real> &in, const array<idx> &order, mat<real> &out) {
     for (idx p = 0; p < in.rows(); ++p) {
         for (idx c = 0; c < in.cols(); ++c) {
@@ -251,7 +217,7 @@ inline void scatter_rows(const vec<real> &in, const array<idx> &order, vec<real>
     }
 }
 
-/// @brief Rows `[first, first + count)` of `M` as a dense block.
+/// @brief Rows `[first, first + count)` of `M`.
 [[nodiscard]] inline mat<real> block_rows(const mat<real> &M, idx first, idx count) {
     mat<real> out(count, M.cols(), 0.0);
     for (idx r = 0; r < count; ++r) {
@@ -284,21 +250,21 @@ inline void set_block_rows(vec<real> &v, idx first, const vec<real> &block) {
     }
 }
 
-/// @brief `C <- A B` with `C` sized here.
+/// @brief Matrix product: \f$A B\f$.
 [[nodiscard]] inline mat<real> product(const mat<real> &A, const mat<real> &B) {
     mat<real> out(A.rows(), B.cols(), 0.0);
     matmul(A, B, out);
     return out;
 }
 
-/// @brief `y <- A x`.
+/// @brief Matrix-vector product: \f$A x\f$.
 [[nodiscard]] inline vec<real> product(const mat<real> &A, const vec<real> &x) {
     vec<real> out(A.rows(), 0.0);
     matvec(A, x, out);
     return out;
 }
 
-/// @brief `target <- target - update`.
+/// @brief Subtraction: \f$T \leftarrow T - U\f$.
 inline void subtract_from(mat<real> &target, const mat<real> &update) {
     matadd(real(1), target, real(-1), update, target);
 }
@@ -309,7 +275,7 @@ inline void subtract_from(vec<real> &target, const vec<real> &update) {
     }
 }
 
-/// @brief Common validation and layout construction for both factorizations.
+/// @brief Shared validation and layout for both factorizations.
 [[nodiscard]] inline block_layout prepare(const spmat &A, view<const idx> levels) {
     if (A.n_rows() != A.n_cols()) {
         throw std::invalid_argument("block_tridiagonal: matrix must be square");
@@ -324,12 +290,7 @@ inline void subtract_from(vec<real> &target, const vec<real> &update) {
     return layout;
 }
 
-/// @brief Check that factors before `first_changed_block` use the same rows.
-///
-/// A suffix refactorization deliberately trusts the caller's statement that the
-/// matrix entries in the retained prefix are unchanged. The layout itself is
-/// checked here, because reusing a factor for a differently sized or reordered
-/// prefix would always be invalid.
+/// @brief Prefix check: factors before `first_changed_block` use the same layout.
 template <class Factor>
 inline void validate_reusable_prefix(const block_layout &layout, const Factor &previous,
                                      idx first_changed_block) {
@@ -354,7 +315,7 @@ inline void validate_reusable_prefix(const block_layout &layout, const Factor &p
     }
 }
 
-/// @brief Solve `L z = rhs` for lower-triangular `L`, column by column.
+/// @brief Lower triangular solve: \f$Z \leftarrow L^{-1} R\f$.
 [[nodiscard]] inline mat<real> forward_substitute(const mat<real> &L, const mat<real> &rhs) {
     const idx n = L.rows();
     mat<real> out(n, rhs.cols(), 0.0);
@@ -372,7 +333,7 @@ inline void validate_reusable_prefix(const block_layout &layout, const Factor &p
     return out;
 }
 
-/// @brief Solve `L^T z = rhs` for lower-triangular `L`, column by column.
+/// @brief Transposed lower triangular solve: \f$Z \leftarrow L^{-T} R\f$.
 [[nodiscard]] inline mat<real> backward_substitute(const mat<real> &L, const mat<real> &rhs) {
     const idx n = L.rows();
     mat<real> out = rhs; // trsv_transpose_lower works in place
@@ -407,7 +368,7 @@ inline void validate_reusable_prefix(const block_layout &layout, const Factor &p
 
 namespace detail {
 
-/// Rows of `X` (n x nrhs, row-major) permuted into `work` by `order`.
+/// @brief Permute rows of `X` into `work` by `order`.
 inline void gather(const real *X, idx nrhs, const array<idx> &order, real *work) {
     for (idx p = 0; p < order.size(); ++p)
         std::copy_n(X + order[p] * nrhs, nrhs, work + p * nrhs);
@@ -420,9 +381,8 @@ inline void scatter(const real *work, idx nrhs, const array<idx> &order, real *X
 
 } // namespace detail
 
-/// @brief Solve \f$AX = B\f$ in place: `X` holds `B` on entry and the solution on
-/// exit, as `n x nrhs` row-major storage in the original ordering. `work`
-/// holds `n * nrhs` elements. Nothing is allocated.
+/// @brief Block LU solve, in place: \f$X \leftarrow A^{-1} X\f$.
+/// `X` is `n x nrhs` row-major; `work` holds `n * nrhs`. Allocation-free.
 inline void solve_in_place(const block_lu_factor &f, real *X, idx nrhs, real *work) {
     const idx count = f.blocks();
     detail::gather(X, nrhs, f.order, work);
@@ -441,7 +401,7 @@ inline void solve_in_place(const block_lu_factor &f, real *X, idx nrhs, real *wo
     detail::scatter(work, nrhs, f.order, X);
 }
 
-/// @brief Solve \f$A^T X = B\f$ in place, as `solve_in_place`.
+/// @brief Block LU transposed solve, in place: \f$X \leftarrow A^{-T} X\f$.
 inline void solve_transpose_in_place(const block_lu_factor &f, real *X, idx nrhs, real *work) {
     const idx count = f.blocks();
     detail::gather(X, nrhs, f.order, work);
@@ -461,7 +421,7 @@ inline void solve_transpose_in_place(const block_lu_factor &f, real *X, idx nrhs
     detail::scatter(work, nrhs, f.order, X);
 }
 
-/// @brief Solve \f$AX = B\f$ in place from block Cholesky factors, as `solve_in_place`.
+/// @brief Block Cholesky solve, in place: \f$X \leftarrow A^{-1} X\f$.
 inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, real *work) {
     const idx count = f.blocks();
     detail::gather(X, nrhs, f.order, work);
@@ -486,17 +446,10 @@ inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, re
 
 // Block LU
 
-/// @brief Factor a block-tridiagonal matrix by block LU without row pivoting.
-///
-/// The caller guarantees nonzero pivots in the block ordering, as for a nonsingular M-matrix,
-/// whose diagonal Schur blocks stay nonsingular M-matrices.
-///
-/// @param A Square sparse matrix whose nonzeros stay within adjacent level blocks.
-/// @param levels One level label per row; arbitrary values, compressed internally.
-/// @param scale Uniform scaling applied while assembling, so `factor(scale*A)` needs no copy.
-/// @throws std::invalid_argument If `A` is not square, the level count is wrong,
-///         or a nonzero couples non-adjacent blocks.
-/// @throws std::runtime_error If a diagonal Schur block has a zero pivot.
+/// @brief Block LU factorization, unpivoted: \f$P A P^T = \mathcal{L} \mathcal{U}\f$.
+/// Pivots must stay nonzero, as for an M-matrix. `scale` factors `scale * A`.
+/// @throws std::invalid_argument If `A` is not square or couples non-adjacent blocks.
+/// @throws std::runtime_error If a diagonal block has a zero pivot.
 [[nodiscard]] inline block_lu_factor factor_block_lu(const spmat &A,
                                                    view<const idx> levels,
                                                    real scale = 1.0) {
@@ -535,16 +488,8 @@ inline void solve_in_place(const block_cholesky_factor &f, real *X, idx nrhs, re
     return factor;
 }
 
-/// @brief Reuse a block-LU prefix and refactor only the changed suffix.
-///
-/// Blocks before `first_changed_block` must be numerically unchanged from the
-/// matrix represented by `previous`. The coupling immediately before the
-/// changed block is assembled and eliminated again, because it touches the
-/// changed suffix. Thus a change beginning at block `j` retains diagonal
-/// factors `0,...,j-1` and scaled lower blocks `0,...,j-2`.
-///
-/// The layout of the retained prefix is checked, while equality of its matrix
-/// entries is the caller's responsibility.
+/// @brief Block LU suffix refactorization: reuse blocks before `first_changed_block`.
+/// @warning The retained prefix must be numerically unchanged; only its layout is checked.
 [[nodiscard]] inline block_lu_factor
 refactor_block_lu_suffix(const spmat &A, view<const idx> levels,
                          const block_lu_factor &previous, idx first_changed_block,
@@ -599,7 +544,7 @@ refactor_block_lu_suffix(const spmat &A, view<const idx> levels,
     return factor;
 }
 
-/// @brief Solve \f$AX = B\f$ using stored block LU factors.
+/// @brief Block LU solve: \f$X \leftarrow A^{-1} B\f$.
 inline void solve(const block_lu_factor &factor, const mat<real> &B, mat<real> &X) {
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
@@ -609,7 +554,7 @@ inline void solve(const block_lu_factor &factor, const mat<real> &B, mat<real> &
     solve_in_place(factor, X.data(), B.cols(), work.data());
 }
 
-/// @brief Solve \f$Ax = b\f$ using stored block LU factors.
+/// @brief Block LU solve: \f$x \leftarrow A^{-1} b\f$.
 inline void solve(const block_lu_factor &factor, const vec<real> &b, vec<real> &x) {
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");
@@ -619,13 +564,7 @@ inline void solve(const block_lu_factor &factor, const vec<real> &b, vec<real> &
     solve_in_place(factor, x.data(), 1, work.data());
 }
 
-/// @brief Solve \f$A^{T}X = B\f$ from the same factors, without refactorizing.
-///
-/// \f$A = \mathcal{L}\mathcal{U}\f$ gives \f$A^{T} = \mathcal{U}^{T}\mathcal{L}^{T}\f$,
-/// so the block dependency runs the other way: a forward sweep through
-/// \f$\mathcal{U}^{T}\f$ (block lower bidiagonal, `upper[k]^T` below the
-/// diagonal) followed by a backward sweep through \f$\mathcal{L}^{T}\f$ (block
-/// unit upper bidiagonal, `lower[k]^T` above it).
+/// @brief Block LU transposed solve: \f$X \leftarrow A^{-T} B\f$.
 inline void solve_transpose(const block_lu_factor &factor, const mat<real> &B, mat<real> &X) {
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
@@ -635,7 +574,7 @@ inline void solve_transpose(const block_lu_factor &factor, const mat<real> &B, m
     solve_transpose_in_place(factor, X.data(), B.cols(), work.data());
 }
 
-/// @brief Solve \f$A^{T}x = b\f$ from the same factors, without refactorizing.
+/// @brief Block LU transposed solve: \f$x \leftarrow A^{-T} b\f$.
 inline void solve_transpose(const block_lu_factor &factor, const vec<real> &b, vec<real> &x) {
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");
@@ -647,14 +586,9 @@ inline void solve_transpose(const block_lu_factor &factor, const vec<real> &b, v
 
 // Block Cholesky
 
-/// @brief Factor a symmetric positive-definite block-tridiagonal matrix.
-///
-/// Only the diagonal and sub-diagonal blocks are used; the super-diagonal blocks
-/// are taken to be their transposes, so an input storing both halves and one
-/// storing only the lower half factor identically.
-///
-/// @throws std::invalid_argument If `A` is not square, the level count is wrong,
-///         or a nonzero couples non-adjacent blocks.
+/// @brief Block Cholesky factorization: \f$P A P^T = \mathcal{L} \mathcal{L}^T\f$.
+/// Reads only the diagonal and subdiagonal blocks.
+/// @throws std::invalid_argument If `A` is not square or couples non-adjacent blocks.
 /// @throws std::runtime_error If a diagonal block is not positive definite.
 [[nodiscard]] inline block_cholesky_factor factor_block_cholesky(const spmat &A,
                                                                view<const idx> levels) {
@@ -690,11 +624,8 @@ inline void solve_transpose(const block_lu_factor &factor, const vec<real> &b, v
     return factor;
 }
 
-/// @brief Reuse a block-Cholesky prefix and refactor only the changed suffix.
-///
-/// The retained diagonal factors are `0,...,j-1`, and the retained scaled lower
-/// blocks are `0,...,j-2`, where `j = first_changed_block`. The boundary
-/// coupling `j-1` is recomputed because it touches the changed suffix.
+/// @brief Block Cholesky suffix refactorization: reuse blocks before `first_changed_block`.
+/// @warning The retained prefix must be numerically unchanged; only its layout is checked.
 [[nodiscard]] inline block_cholesky_factor
 refactor_block_cholesky_suffix(const spmat &A, view<const idx> levels,
                                const block_cholesky_factor &previous,
@@ -747,7 +678,7 @@ refactor_block_cholesky_suffix(const spmat &A, view<const idx> levels,
     return factor;
 }
 
-/// @brief Solve \f$AX = B\f$ using stored block Cholesky factors.
+/// @brief Block Cholesky solve: \f$X \leftarrow A^{-1} B\f$.
 inline void solve(const block_cholesky_factor &factor, const mat<real> &B, mat<real> &X) {
     if (B.rows() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side row count mismatch");
@@ -757,7 +688,7 @@ inline void solve(const block_cholesky_factor &factor, const mat<real> &B, mat<r
     solve_in_place(factor, X.data(), B.cols(), work.data());
 }
 
-/// @brief Solve \f$Ax = b\f$ using stored block Cholesky factors.
+/// @brief Block Cholesky solve: \f$x \leftarrow A^{-1} b\f$.
 inline void solve(const block_cholesky_factor &factor, const vec<real> &b, vec<real> &x) {
     if (b.size() != factor.size) {
         throw std::invalid_argument("block_tridiagonal: right-hand side size mismatch");

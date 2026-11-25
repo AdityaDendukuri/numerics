@@ -1,5 +1,5 @@
 /// @file quadrature/gauss_legendre_rule.hpp
-/// @brief Gauss-Legendre nodes and weights for an arbitrary positive order.
+/// @brief Gauss–Legendre nodes and weights of any order.
 #pragma once
 
 #include "linear/eigen/jacobi_eig.hpp"
@@ -11,7 +11,8 @@
 
 namespace num {
 
-/// Golub-Welsch Gauss-Legendre rule on [a, b]. Weights sum to b-a.
+/// @brief Gauss–Legendre rule on \f$[a, b]\f$ (Golub–Welsch): nodes \f$x_k\f$, weights \f$w_k\f$.
+/// The weights sum to \f$b - a\f$.
 inline std::pair<std::vector<real>, std::vector<real>> gauss_legendre_rule(idx order, real a = 0.0,
                                                                           real b = 1.0) {
     if (order == 0) {

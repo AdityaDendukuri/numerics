@@ -1,9 +1,5 @@
 /// @file omp/matrix_ops.hpp
-/// @brief OpenMP-accelerated Level-2/3 dense matrix operations.
-///
-/// Threads split the rows into tiles and each tile is a `num::kernel` call. Not routed
-/// through `dispatch::parallel_apply`, whose element-count threshold would never thread a
-/// matrix of a few hundred rows.
+/// @brief Dense matrix operations threaded with OpenMP.
 #pragma once
 
 #include "container/matrix.hpp"

@@ -1,5 +1,5 @@
 /// @file stochastic/boltzmann_table.hpp
-/// @brief Boltzmann acceptance probability helpers for Metropolis MCMC.
+/// @brief Metropolis acceptance probabilities.
 #pragma once
 
 #include "core/types.hpp"
@@ -8,12 +8,12 @@
 
 namespace num::markov {
 
-/// Return min(1, exp(-beta*dE)) for a proposed energy change.
+/// @brief Metropolis acceptance: \f$\min(1, e^{-\beta \Delta E})\f$.
 inline double boltzmann_accept(double dE, double beta) noexcept {
     return (dE <= 0.0) ? 1.0 : std::exp(-beta * dE);
 }
 
-/// Precompute Boltzmann acceptance probabilities for fixed energy changes.
+/// @brief Acceptance table: \f$\min(1, e^{-\beta \Delta E_k})\f$ for each \f$\Delta E_k\f$.
 inline array<double> make_boltzmann_table(const array<double> &dEs, double beta) {
     array<double> table(dEs.size());
     for (std::size_t i = 0; i < dEs.size(); ++i) {

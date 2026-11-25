@@ -1,10 +1,5 @@
 /// @file spectral/dst.hpp
-/// @brief Discrete sine transforms, built on the complex FFT.
-///
-/// The DST-I diagonalizes the Dirichlet Laplacian, which is what makes a direct
-/// Poisson solve on a uniform grid \f$O(N^2 \log N)\f$ rather than \f$O(N^3)\f$.
-/// It is expressed through the complex FFT by odd extension rather than being
-/// implemented separately, so it inherits whichever FFT backend the build selected.
+/// @brief Discrete sine transforms through the complex FFT.
 #pragma once
 
 #include "container/vector.hpp"
@@ -16,10 +11,7 @@
 
 namespace num::spectral {
 
-/// @brief Reject a length the odd-extension route cannot transform.
-///
-/// The extension has length 2(N+1), and the radix-2 FFT needs that to be a
-/// power of two, so N has to be one less than a power of two.
+/// @brief DST length check: \f$N + 1\f$ must be a power of two.
 inline void dst_check_size(int N) {
     if (N <= 0 || (N & (N + 1)) != 0) {
         throw std::invalid_argument(
@@ -27,11 +19,9 @@ inline void dst_check_size(int N) {
     }
 }
 
-/// Unnormalised DST-I of an N-point vector via complex FFT.
-///
-/// X[k] = sum_{j=1}^{N} x[j] * sin(j*k*pi/(N+1)),  k = 1..N (stored 0-indexed).
-/// Odd-extension y = [0, x, 0, -rev(x)] has length M = 2(N+1).
-/// FFT(y)[k] = -2i * sum sin(...)  =>  DST(x)[k-1] = -Im(FFT(y)[k]) / 2.
+/// @brief Discrete sine transform (DST-I): \f$X_k = \sum_{j=1}^N x_j \sin(j k \pi / (N + 1))\f$.
+/// Unnormalized.
+/// @note \f$N + 1\f$ must be a power of two.
 inline vec<real> dst1(const vec<real> &x) {
     const int N = static_cast<int>(x.size());
     dst_check_size(N);
@@ -51,7 +41,7 @@ inline vec<real> dst1(const vec<real> &x) {
     return out;
 }
 
-/// @brief Apply the DST-I to each row of an \f$N \times N\f$ row-major array, in place.
+/// @brief Row-wise DST-I of an \f$N \times N\f$ array, in place.
 inline void dst_rows(array<double> &A, int N) {
     vec<real> row(static_cast<std::size_t>(N));
     for (int i = 0; i < N; ++i) {
@@ -66,7 +56,7 @@ inline void dst_rows(array<double> &A, int N) {
     }
 }
 
-/// @brief Apply the DST-I to each column, in place.
+/// @brief Column-wise DST-I of an \f$N \times N\f$ array, in place.
 inline void dst_cols(array<double> &A, int N) {
     vec<real> col(static_cast<std::size_t>(N));
     for (int j = 0; j < N; ++j) {
@@ -83,7 +73,7 @@ inline void dst_cols(array<double> &A, int N) {
     }
 }
 
-/// @brief The 2D DST-I of an \f$N \times N\f$ array, in place.
+/// @brief 2D DST-I of an \f$N \times N\f$ array, in place.
 inline void dst2d(array<double> &A, int N) {
     dst_check_size(N);
     dst_cols(A, N);
