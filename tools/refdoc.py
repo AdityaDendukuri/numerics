@@ -137,7 +137,7 @@ COMMAND = re.compile(r"^[@\\](brief|param|tparam|returns?|throws?|exception|see|
 def parse_comment(raw):
     """Split a comment into its brief, prose paragraphs, and tagged sections."""
     doc = {"brief": "", "details": [], "param": [], "tparam": [], "returns": [],
-           "throws": [], "see": [], "note": [], "pre": [], "post": []}
+           "throws": [], "see": [], "note": [], "warning": [], "pre": [], "post": []}
     if not raw:
         return doc
     current = None  # the list receiving continuation lines, or "ignored"
@@ -191,7 +191,7 @@ def parse_comment(raw):
                 doc[key].append(entry)
                 current = entry
                 continue
-            key = {"return": "returns", "sa": "see", "warning": "note"}.get(tag, tag)
+            key = {"return": "returns", "sa": "see"}.get(tag, tag)
             entry = [text]
             doc[key].append(entry)
             current = entry
@@ -520,6 +520,12 @@ def section(title, body):
     return f"\n## {title}\n\n{body.strip()}\n" if body.strip() else ""
 
 
+def admonition(kind, text):
+    """A Material admonition box: `@warning` text renders as a highlighted warning."""
+    body = "\n".join("    " + line if line else "" for line in text.strip().split("\n"))
+    return f"\n!!! {kind}\n\n{body}\n"
+
+
 def listing(pairs, convert):
     return "\n".join(f"- `{name}`: {convert(text)}" if text else f"- `{name}`"
                      for name, text in pairs)
@@ -590,6 +596,8 @@ def render_page(name, overloads, linker):
         section("Return value", "\n\n".join(dict.fromkeys(returns))),
         section("Exceptions", listing(union("throws"), convert)),
         section("Preconditions", lines("pre")),
+        "".join(admonition("warning", convert(e[0])) for o in overloads
+                for e in o["doc"]["warning"]),
         section("Notes", lines("note")),
     ]))
 

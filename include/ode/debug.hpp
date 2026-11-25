@@ -1,9 +1,5 @@
 /// @file ode/debug.hpp
-/// @brief Runtime verification of the laws an integrator is supposed to obey.
-///
-/// The order of accuracy is measured from step halving, which catches a wrong Butcher
-/// tableau. Symplecticity is checked as preservation of \f$\omega = dq \wedge dp\f$, which bounds
-/// long-time energy drift.
+/// @brief Runtime checks of integrator order and symplecticity.
 #pragma once
 
 #include "container/vector.hpp"
@@ -19,18 +15,8 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief Measure the observed order of accuracy of a one-step integrator.
-///
-/// Integrates with steps \f$h\f$ and \f$h/2\f$ against a reference at \f$h/16\f$. The error
-/// ratio approaches \f$2^p\f$, so its \f$\log_2\f$ recovers \f$p\f$.
-///
-/// @param advance Callable `(real t0, real t1, real h, const vec<real> &y0, vec<real> &y1)`.
-/// @param y0 Initial state.
-/// @param t0 Start of the integration interval.
-/// @param t1 End of the integration interval.
-/// @param claimed_order The order the method advertises.
-/// @param slack Tolerated shortfall in the measured order.
-/// @param loc Call site reported in the diagnostic.
+/// @brief Observed order of accuracy: \f$p \approx \log_2(e_h / e_{h/2})\f$.
+/// `advance(t0, t1, h, y0, y1)` integrates one interval.
 template <class Advance>
 inline void verify_order_of_accuracy(Advance &&advance, const vec<real> &y0, real t0, real t1,
                                      real claimed_order, real slack = 0.4,
@@ -81,17 +67,8 @@ inline void verify_order_of_accuracy(Advance &&advance, const vec<real> &y0, rea
     }
 }
 
-/// @brief Verify that one step preserves the symplectic 2-form \f$\omega = dq \wedge dp\f$.
-///
-/// Two tangent vectors are propagated by finite differences, and their pairing
-/// \f$\omega(u,v) = \delta q_u \cdot \delta p_v - \delta q_v \cdot \delta p_u\f$ must be unchanged.
-///
-/// @param step Callable `(const vec<real> &q, const vec<real> &p, real h, vec<real> &q1, vec<real> &p1)`.
-/// @param q0 Position at which to test.
-/// @param p0 Momentum at which to test.
-/// @param h Step size.
-/// @param tol Relative tolerance on the preserved form.
-/// @param loc Call site reported in the diagnostic.
+/// @brief Symplecticity check: one step preserves \f$\omega = dq \wedge dp\f$.
+/// `step(q, p, h, q1, p1)` takes one step.
 template <class Step>
 inline void verify_symplectic_2form(Step &&step, const vec<real> &q0, const vec<real> &p0, real h,
                                     real tol = 1e-6,

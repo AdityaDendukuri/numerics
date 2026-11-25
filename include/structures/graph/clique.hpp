@@ -1,5 +1,5 @@
 /// @file structures/graph/clique.hpp
-/// @brief Exact and randomized clique reduction (star-mesh transformation) on multigraphs.
+/// @brief Exact and sampled clique elimination (star-mesh transform) on multigraphs.
 #pragma once
 
 #include "core/types.hpp"
@@ -14,7 +14,7 @@
 
 namespace num::structures {
 
-/// @brief Gather the neighbors of `v`, merging parallel edges, and return their total weight.
+/// @brief Neighbours of `v`, parallel edges merged; returns their total weight.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>>
 inline Weight collect_neighbors(Index v, array<array<multi_edge<Weight, Index>>> &G,
@@ -59,7 +59,7 @@ inline Weight collect_neighbors(Index v, array<array<multi_edge<Weight, Index>>>
     return total_weight;
 }
 
-/// @brief Add the exact clique that eliminating a vertex creates among its neighbors.
+/// @brief Exact clique elimination: add \f$w_{ij} = c_i c_j / C\f$ among the neighbours of `v`.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>>
 inline void add_exact_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
@@ -78,8 +78,7 @@ inline void add_exact_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &
     }
 }
 
-/// @brief Add a sampled sparse approximation of that clique, with at most `sample_limit` draws
-/// per neighbor.
+/// @brief Sampled clique elimination: at most `sample_limit` draws per neighbour.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>, typename Rng = rng64>
 inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
@@ -126,21 +125,8 @@ inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
 }
 
 
-/// @brief Replace the star-mesh clique by a random spanning tree of it, reweighted
-/// so the elimination stays unbiased in expectation.
-///
-/// Eliminating `v` adds a clique on its neighbours with weights \f$w_{ij} = c_i c_j / C\f$,
-/// where \f$c_i\f$ is the conductance from `v` to `i` and \f$C = \sum_i c_i\f$. Edge
-/// \f$ij\f$ enters the tree with probability \f$p_{ij} = (c_i + c_j)/C\f$ and is reweighted
-/// to the harmonic mean \f$c_i c_j / (c_i + c_j)\f$, so \f$\mathbb{E}[\widetilde L^{(v)}] =
-/// \mathrm{Sc}(L)\f$. The walk is capped: past the cap the remaining vertices attach to the
-/// heaviest neighbour, which keeps a spanning tree but loses exactness for that elimination.
-///
-/// @param G Adjacency being eliminated; sampled edges are appended.
-/// @param q Degree queue, rekeyed for each endpoint touched.
-/// @param nbr Neighbours of the eliminated vertex, with their conductances.
-/// @param total_weight \f$C\f$, the sum of those conductances.
-/// @param rng Random source.
+/// @brief Spanning-tree clique sampling: \f$\mathbb{E}[\tilde{L}^{(v)}] = \mathrm{Sc}(L)\f$.
+/// Edge \f$ij\f$ is kept with \f$p_{ij} = (c_i + c_j) / C\f$, weighted \f$c_i c_j / (c_i + c_j)\f$.
 template <typename Weight, std::integral Index, typename Queue, typename Rng>
 inline void sample_clique_tree(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
                                const array<multi_edge<Weight, Index>> &nbr,
@@ -232,23 +218,8 @@ inline void sample_clique_tree(array<array<multi_edge<Weight, Index>>> &G, Queue
 }
 
 
-/// @brief Sample a spanning tree of the directed product biclique left by an LU pivot.
-///
-/// Eliminating pivot `v` leaves the rank-one Schur update \f$xy^{T}/a\f$, with
-/// \f$x_i = -A_{iv}\f$, \f$y_j = -A_{vj}\f$ and \f$a = A_{vv}\f$. Each in-neighbour becomes
-/// \f$i_L\f$ and each out-neighbour \f$j_R\f$ of a bipartite graph with conductances
-/// \f$x_iy_j/a\f$. Edge \f$i_L j_R\f$ enters the tree with probability
-/// \f$p_{ij} = 1 - (1-\alpha_i)(1-\beta_j)\f$, where \f$\alpha_i = x_i/X\f$ and
-/// \f$\beta_j = y_j/Y\f$, and reweighting by \f$w_{ij}/p_{ij}\f$ gives
-/// \f$\mathbb{E}[\widetilde S_v] = xy^{T}/a\f$. It requires \f$x_i, y_j, a > 0\f$, as in a
-/// nonsymmetric M-matrix; otherwise nothing is emitted.
-///
-/// @param x Incoming conductances, all strictly positive.
-/// @param y Outgoing conductances, all strictly positive.
-/// @param pivot \f$a = A_{vv}\f$, strictly positive.
-/// @param rng Random source.
-/// @param trees Independent trees to average; each sampled weight is divided by this.
-/// @param emit Callable `void(std::size_t i, std::size_t j, Weight w)` receiving directed fill.
+/// @brief Biclique tree sampling for an LU pivot: \f$\mathbb{E}[\tilde{S}_v] = x y^T / a\f$.
+/// Requires \f$x_i, y_j, a > 0\f$; `emit(i, j, w)` receives each directed fill edge.
 template <typename Weight, typename Rng, typename Emit>
 inline void sample_biclique_tree(const array<Weight> &x, const array<Weight> &y,
                                  Weight pivot, Rng &rng, std::size_t trees, Emit emit) {

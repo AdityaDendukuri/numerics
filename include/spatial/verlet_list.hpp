@@ -1,5 +1,5 @@
-/// @file verlet_list.hpp
-/// @brief Verlet neighbour list with skin-radius temporal caching
+/// @file spatial/verlet_list.hpp
+/// @brief Verlet neighbour lists with a skin radius.
 #pragma once
 
 #include "core/types.hpp"
@@ -13,14 +13,15 @@
 namespace num {
 
 template <field scalar>
-/// Cached 2D neighbor lists valid until motion consumes half the skin distance.
+/// @brief 2D Verlet list: neighbours within \f$r_c + r_s\f$.
+/// Valid until a particle moves \f$r_s / 2\f$.
 class verlet_list_2d {
   public:
-    /// Configure the physical cutoff and rebuild skin.
+    /// @brief Verlet list with cutoff \f$r_c\f$ and skin \f$r_s\f$.
     verlet_list_2d(scalar cutoff, scalar skin)
         : cutoff_(cutoff), skin_(skin), ext_sq_((cutoff + skin) * (cutoff + skin)) {}
 
-    /// @brief Build the neighbour list using a pre-built cell_list_2d.
+    /// @brief Rebuild from a cell list.
     template <position_accessor_2d<scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n, const cell_list_2d<scalar> &cl) {
         starts_.resize(n + 1);
@@ -49,7 +50,7 @@ class verlet_list_2d {
         }
     }
 
-    /// @brief Return true if a particle moved more than half the skin.
+    /// @brief Whether a particle moved more than \f$r_s / 2\f$ since the rebuild.
     template <position_accessor_2d<scalar> PosAccessor>
     bool needs_rebuild(PosAccessor &&get_pos, int n) const {
         if (ref_x_.empty()) {
@@ -67,16 +68,16 @@ class verlet_list_2d {
         return false;
     }
 
-    /// @brief Cached neighbors of particle i.
+    /// @brief Neighbours of particle `i`.
     [[nodiscard]] integer_range neighbors(int i) const noexcept {
         return {flat_.data() + starts_[i], flat_.data() + starts_[i + 1]};
     }
 
-    /// Return the physical interaction cutoff.
+    /// @brief Cutoff \f$r_c\f$.
     scalar cutoff() const noexcept { return cutoff_; }
-    /// Return the displacement buffer used between rebuilds.
+    /// @brief Skin \f$r_s\f$.
     scalar skin() const noexcept { return skin_; }
-    /// Return cutoff plus skin, used when constructing the cached list.
+    /// @brief Extended cutoff \f$r_c + r_s\f$.
     scalar ext_cutoff() const noexcept { return cutoff_ + skin_; }
     [[nodiscard]] int n_particles() const noexcept {
         return starts_.empty() ? 0 : static_cast<int>(starts_.size()) - 1;

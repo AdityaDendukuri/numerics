@@ -22,7 +22,7 @@
 
 namespace num {
 
-/// An additive change \f$A_{new} = A_{base} + PQ^{T}\f$ of rank at most p.
+/// @brief Low-rank update: \f$A_{\mathrm{new}} = A_{\mathrm{base}} + P Q^T\f$.
 struct low_rank_update {
     mat<real> left;  ///< P, of shape n by p.
     mat<real> right; ///< Q, of shape n by p.
@@ -73,14 +73,7 @@ struct thin_qr_blocks {
 
 } // namespace detail
 
-/// @brief Express \f$B - A\f$ as \f$PQ^{T}\f$ when the two differ only in the
-/// listed rows and columns.
-///
-/// Changing k indices of a square matrix touches at most k rows and k columns,
-/// so the difference has rank at most 2k. The first k columns of P are the
-/// corresponding unit vectors and carry the changed rows in Q; the last k
-/// columns of Q are the unit vectors and carry the changed columns in P,
-/// excluding entries a changed row already accounts for.
+/// @brief Low-rank difference: \f$B - A = P Q^T\f$, rank \f$\le 2k\f$ for \f$k\f$ changed slots.
 [[nodiscard]] inline low_rank_update low_rank_difference(const spmat &base, const spmat &current,
                                                          view<const idx> changed) {
     const idx n = base.n_rows();
@@ -119,8 +112,7 @@ struct thin_qr_blocks {
     return {std::move(left), std::move(right)};
 }
 
-/// Orthogonalize both column spaces of a sparse row-and-column change. This
-/// preserves P Q^T while balancing the reduced Woodbury system.
+/// @brief Orthogonalized low-rank difference: \f$B - A = P Q^T\f$.
 [[nodiscard]] inline low_rank_update orthogonalized_low_rank_difference(const spmat &base,
                                                                         const spmat &current,
                                                                         view<const idx> changed) {
@@ -132,16 +124,9 @@ struct thin_qr_blocks {
     return {left.Q * core, std::move(right.Q)};
 }
 
-/// @brief Solves with \f$A_{base} + PQ^{T}\f$ through the retained factor of
-/// \f$A_{base}\f$.
-///
-/// The Woodbury identity gives \f$x = y - WG^{-1}P^{T}y\f$ with
-/// \f$y = A_{base}^{-T}b\f$, \f$W = A_{base}^{-T}Q\f$ and \f$G = I + P^{T}W\f$,
-/// and the mirror identity for forward solves. Construction costs one rank-p
-/// transpose solve. \f$A_{base}^{-1}P\f$ and \f$A_{base}^{-T}W\f$ are formed on
-/// first use, so a caller that only solves transposes never pays for them.
-///
-/// The base factorization is referenced, not copied, and must outlive this object.
+/// @brief Woodbury solver: \f$(A + P Q^T)^{-1} b\f$ from a factor of \f$A\f$.
+/// \f$x = y - W G^{-1} P^T y\f$ with \f$G = I + P^T W\f$.
+/// @warning References the base factorization; it must outlive the solver.
 template <factorization F>
 class woodbury_solver {
   public:
@@ -157,17 +142,17 @@ class woodbury_solver {
         }
     }
 
-    /// The rank p of the update.
+    /// @brief Rank \f$p\f$ of the update.
     [[nodiscard]] idx rank() const { return left_.cols(); }
-    /// The order n of the corrected matrix.
+    /// @brief Order \f$n\f$.
     [[nodiscard]] idx size() const { return left_.rows(); }
 
-    /// P.
+    /// @brief Left factor \f$P\f$.
     [[nodiscard]] const mat<real> &left() const { return left_; }
-    /// \f$W = A_{base}^{-T}Q\f$.
+    /// @brief \f$W = A^{-T} Q\f$.
     [[nodiscard]] const mat<real> &transpose_right() const { return transpose_right_; }
 
-    /// \f$A_{base}^{-1}P\f$, formed on first use.
+    /// @brief \f$A^{-1} P\f$, formed on first use.
     [[nodiscard]] const mat<real> &inverse_left() const {
         if (!inverse_left_) {
             inverse_left_.emplace();
@@ -176,7 +161,7 @@ class woodbury_solver {
         return *inverse_left_;
     }
 
-    /// \f$A_{base}^{-T}W\f$, formed on first use.
+    /// @brief \f$A^{-T} W\f$, formed on first use.
     [[nodiscard]] const mat<real> &transpose_right_squared() const {
         if (!transpose_right_squared_) {
             transpose_right_squared_.emplace();
@@ -185,7 +170,7 @@ class woodbury_solver {
         return *transpose_right_squared_;
     }
 
-    /// @brief Replace y by \f$yG^{-1}\f$, solving \f$G^{T}y_i^{T} = y_i^{T}\f$ per row.
+    /// @brief Right solve: \f$Y \leftarrow Y G^{-1}\f$.
     void right_solve(mat<real> &y, vec<real> &scratch) const {
         const idx p = rank();
         if (scratch.size() != p) {
@@ -201,7 +186,7 @@ class woodbury_solver {
         }
     }
 
-    /// Solve \f$(A_{base} + PQ^{T})x = b\f$. `x` may be `b`.
+    /// @brief Woodbury solve: \f$x \leftarrow (A + P Q^T)^{-1} b\f$. `x` may alias `b`.
     template <class RHS>
     friend void solve(const woodbury_solver &W, const RHS &b, RHS &x) {
         using namespace ops;
@@ -212,7 +197,7 @@ class woodbury_solver {
         x = y - W.inverse_left() * coefficients;
     }
 
-    /// Solve \f$(A_{base} + PQ^{T})^{T}x = b\f$. `x` may be `b`.
+    /// @brief Woodbury transposed solve: \f$x \leftarrow (A + P Q^T)^{-T} b\f$. `x` may alias `b`.
     template <class RHS>
     friend void solve_transpose(const woodbury_solver &W, const RHS &b, RHS &x) {
         using namespace ops;
@@ -223,11 +208,7 @@ class woodbury_solver {
         x = y - W.transpose_right_ * coefficients;
     }
 
-    /// @brief \f$diag(A_{new}^{-1})\f$ from the base diagonal.
-    ///
-    /// \f$diag(A_{new}^{-1}) = diag(A_{base}^{-1})
-    /// - diag(A_{base}^{-1}PG^{-1}Q^{T}A_{base}^{-1})\f$, which costs no solve
-    /// beyond the two rank-p blocks already held.
+    /// @brief Updated inverse diagonal: \f$\mathrm{diag}(A_{\mathrm{new}}^{-1})\f$.
     [[nodiscard]] vec<real> inverse_diagonal(view<const real> base_diagonal) const {
         if (base_diagonal.size() != size()) {
             throw std::invalid_argument("the base diagonal has the wrong size");
@@ -256,18 +237,13 @@ class woodbury_solver {
 template <factorization F>
 woodbury_solver(const F &, low_rank_update) -> woodbury_solver<F>;
 
-/// Reusable blocks for `update_inverse_rows`, resized on demand.
+/// @brief Reusable buffers for `update_inverse_rows`.
 struct inverse_rows_workspace {
     mat<real> first, second;
     vec<real> scratch;
 };
 
-/// @brief Carry selected rows of \f$A^{-1}\f$ and \f$A^{-2}\f$ across a low-rank change.
-///
-/// With \f$U_b = EA_{base}^{-1}\f$ and \f$V_b = EA_{base}^{-2}\f$ on entry, this
-/// leaves the corresponding rows of the corrected inverse and its square in
-/// `first` and `second`. Both updates are rank-p, so the cost does not grow with
-/// the number of rows carried.
+/// @brief Inverse row update across a low-rank change: rows of \f$A^{-1}\f$ and \f$A^{-2}\f$.
 template <factorization F>
 void update_inverse_rows(const woodbury_solver<F> &correction, mat<real> &first, mat<real> &second,
                          inverse_rows_workspace &work) {

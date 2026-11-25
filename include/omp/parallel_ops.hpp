@@ -1,10 +1,6 @@
 /// @file omp/parallel_ops.hpp
-/// @brief Threaded block decomposition and reduction over the raw kernels.
-///
-/// Each thread calls the raw kernel on a block, and block partials are summed in index order,
-/// so the result does not depend on the thread count. See the backends page.
-///
-/// Independent of `vec<real>`/`mat<real>`, so container headers can use it without a circular include.
+/// @brief Threaded blocked loops and reductions over the raw kernels.
+/// Results do not depend on the thread count.
 #pragma once
 
 #include "core/types.hpp"
@@ -12,24 +8,21 @@
 
 namespace num::omp {
 
-/// @brief Elements handled by one thread's call into a raw kernel.
+/// @brief Elements per thread block.
 inline constexpr idx parallel_block = idx{1} << 14;
 
-/// @brief Below this element count an operation stays on one thread. Starting a parallel region
-/// costs about 34 us on macOS libomp. Override with `-DNUMERICS_PARALLEL_THRESHOLD=<n>`.
+/// @brief Default single-thread threshold. Override with `-DNUMERICS_PARALLEL_THRESHOLD=<n>`.
 #ifndef NUMERICS_PARALLEL_THRESHOLD
 #define NUMERICS_PARALLEL_THRESHOLD (1 << 18)
 #endif
-/// @brief The element count below which an operation stays on one thread.
+/// @brief Element count below which an operation stays on one thread.
+/// @note Starting a parallel region costs about 34 µs on macOS libomp.
 inline constexpr idx parallel_threshold = idx{NUMERICS_PARALLEL_THRESHOLD};
 
-/// @brief Upper bound on blocks, so the partial-sum buffer can live on the stack.
+/// @brief Maximum number of blocks.
 inline constexpr idx max_parallel_blocks = 256;
 
-/// @brief Element count per block for a problem of size `n`.
-///
-/// At least `parallel_block`, and large enough that no more than
-/// `max_parallel_blocks` blocks are produced.
+/// @brief Block size for `n` elements: at least `parallel_block`, at most `max_parallel_blocks`.
 [[nodiscard]] inline constexpr idx block_size_for(idx n) noexcept {
     const idx even_split = (n + max_parallel_blocks - 1) / max_parallel_blocks;
     return even_split > parallel_block ? even_split : parallel_block;
@@ -41,11 +34,8 @@ inline constexpr idx max_parallel_blocks = 256;
     return (n + size - 1) / size;
 }
 
-/// @brief Sum `block(offset, length)` over a blocked decomposition of `[0, n)`.
-///
-/// `block` is expected to be a raw kernel call over the slice, returning its
-/// partial. Runs on one thread below `parallel_threshold`, or when the build has
-/// no OpenMP. The summation order of the partials is fixed regardless.
+/// @brief Blocked reduction: \f$\sum_b \mathrm{block}(o_b, \ell_b)\f$ over \f$[0, n)\f$.
+/// Partials are summed in block order.
 template <class T, class Block>
 [[nodiscard]] inline T parallel_reduce(idx n, Block block) {
     if (n == 0) {
@@ -72,10 +62,7 @@ template <class T, class Block>
     return block(idx{0}, n);
 }
 
-/// @brief Apply `block(offset, length)` over a blocked decomposition of `[0, n)`.
-///
-/// For elementwise work, where blocks are independent and no combination step is
-/// needed. Deterministic by construction.
+/// @brief Blocked loop: `block(offset, length)` over \f$[0, n)\f$.
 template <class Block>
 inline void parallel_apply(idx n, Block block) {
     if (n == 0) {

@@ -1,5 +1,5 @@
 /// @file structures/graph/generators.hpp
-/// @brief Canonical random and structured graph generators.
+/// @brief Graph generators: paths, cycles, grids, complete, star, random trees and \f$G(n, p)\f$.
 #pragma once
 
 #include "core/types.hpp"
@@ -15,7 +15,7 @@
 
 namespace num::structures {
 
-/// Generate an undirected path graph: 0 - 1 - 2 - ... - (n-1).
+/// @brief Path graph \f$P_n\f$.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> path_graph(std::type_identity_t<Index> n,
                                                          Weight weight = Weight{1}) {
@@ -26,7 +26,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// Generate an undirected cycle graph: 0 - 1 - ... - (n-1) - 0.
+/// @brief Cycle graph \f$C_n\f$.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> cycle_graph(std::type_identity_t<Index> n,
                                                           Weight weight = Weight{1}) {
@@ -37,7 +37,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// Generate an undirected 2D grid graph of size nx by ny.
+/// @brief Grid graph, `nx x ny`.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> grid_2d(std::type_identity_t<Index> nx,
                                                       std::type_identity_t<Index> ny,
@@ -55,7 +55,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// Generate an undirected complete graph K_n.
+/// @brief Complete graph \f$K_n\f$.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> complete_graph(std::type_identity_t<Index> n,
                                                              Weight weight = Weight{1}) {
@@ -68,7 +68,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// Generate a star graph with center at vertex 0 and n-1 leaves.
+/// @brief Star graph \f$S_n\f$, centred at vertex 0.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> star_graph(std::type_identity_t<Index> n,
                                                          Weight weight = Weight{1}) {
@@ -79,7 +79,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// Generate a uniformly random connected spanning tree on n vertices via Wilson's algorithm.
+/// @brief Uniform random spanning tree on `n` vertices (Wilson's algorithm).
 template <typename Weight = double, std::integral Index = num::idx, typename RNG>
 [[nodiscard]] inline graph<Weight, Index> random_spanning_tree(std::type_identity_t<Index> n,
                                                                    RNG &rng,
@@ -125,7 +125,7 @@ template <typename Weight = double, std::integral Index = num::idx, typename RNG
     return G;
 }
 
-/// Generate an Erdős-Rényi random graph G(n, p) with optional guaranteed connectivity.
+/// @brief Erdős–Rényi random graph \f$G(n, p)\f$, optionally connected.
 template <typename Weight = double, std::integral Index = num::idx, typename RNG>
 [[nodiscard]] inline graph<Weight, Index> erdos_renyi(std::type_identity_t<Index> n,
                                                            double p, RNG &rng,

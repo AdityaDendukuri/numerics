@@ -1,17 +1,12 @@
 /// @file fields/grid3d.hpp
-/// @brief 3D uniform Cartesian grid: geometry only, no field data.
-///
-/// grid_3d describes an nx*ny*nz lattice with uniform spacing dx and origin
-/// (ox,oy,oz). It carries no field values -- those live in a scalar_field_3d --
-/// mirroring the geometry/data split of grid2d and scalar_field_2d.
-/// Flat layout: idx = k*ny*nx + j*nx + i  (x is fastest, z is slowest).
+/// @brief 3D uniform grid.
 #pragma once
 
 #include "core/types.hpp"
 
 namespace num {
 
-/// @brief A uniform 3D grid.
+/// @brief Uniform 3D grid: `nx x ny x nz`, spacing `dx`; flat index \f$(k n_y + j) n_x + i\f$.
 struct grid_3d {
     int nx{}, ny{}, nz{};                ///< nodes per axis
     double dx = 1.0;                     ///< uniform cell size

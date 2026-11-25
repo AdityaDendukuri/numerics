@@ -9,7 +9,7 @@ num::trapz num::simpson num::gauss_legendre num::adaptive_simpson num::romberg
 num::gauss_legendre_rule
 
 ## Talbot contour <quadrature/talbot.hpp>
-num::talbot_contour num::talbot_quadrature num::contour_node
+num::talbot_contour num::real_talbot_contour num::talbot_quadrature num::contour_node
 
 ## Root finding <roots/roots.hpp>
 num::bisection num::newton num::secant num::brent num::root_result

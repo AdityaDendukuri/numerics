@@ -1,7 +1,6 @@
 /// @file pde/pde.hpp
-/// @brief Umbrella include for the PDE module.
-/// @todo Add boundary-condition objects, Helmholtz operators, variable-
-/// coefficient elliptic operators, and structured 1D/2D/3D operator builders.
+/// @brief PDE module.
+// TODO: boundary-condition objects, Helmholtz, variable-coefficient elliptic operators.
 #pragma once
 
 #include "pde/grid_operators.hpp"

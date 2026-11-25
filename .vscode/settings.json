@@ -1,0 +1,5 @@
+{
+  // clangd provides completion, hover docs and diagnostics from build/compile_commands.json
+  // and .clangd. Microsoft's IntelliSense would show a second, conflicting set.
+  "C_Cpp.intelliSenseEngine": "disabled"
+}

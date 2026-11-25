@@ -1,5 +1,5 @@
 /// @file roots/debug.hpp
-/// @brief Runtime verification of root-finding preconditions.
+/// @brief Runtime checks of root-finding preconditions.
 #pragma once
 
 #include "core/call_site.hpp"
@@ -16,11 +16,7 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief Verify that \f$f\f$ changes sign on \f$[a,b]\f$.
-///
-/// Bisection and Brent's method converge because a sign change forces a root
-/// inside the interval. Without one they return a value that is not a root and
-/// report no error, so the bracket is checked rather than assumed.
+/// @brief Bracket check: \f$f(a) f(b) < 0\f$.
 template <class F, class T = real>
 requires scalar_function<F, T> inline void verify_bracket(F &&f, T a, T b, call_site site = {}) {
     const std::source_location loc = site.location;
@@ -45,10 +41,7 @@ requires scalar_function<F, T> inline void verify_bracket(F &&f, T a, T b, call_
     }
 }
 
-/// @brief Verify a supplied derivative against a central difference.
-///
-/// A wrong derivative makes Newton's method converge slowly, to the wrong point,
-/// or not at all, and none of those report an error on their own.
+/// @brief Derivative check: \f$f'(x) \approx (f(x + h) - f(x - h)) / 2h\f$.
 template <class F, class D, class T = real>
 requires differentiable_function<F, D, T> inline void
 verify_derivative(F &&f, D &&df, T x, T tol = T(1e-5), call_site site = {}) {

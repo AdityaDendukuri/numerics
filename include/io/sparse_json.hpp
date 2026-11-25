@@ -1,5 +1,5 @@
-/// @file sparse_json.hpp
-/// @brief Generic JSON serialization for Numerics sparse matrices using nlohmann::json.
+/// @file io/sparse_json.hpp
+/// @brief JSON serialization of sparse matrices.
 #pragma once
 
 #include "core/types.hpp"
@@ -11,9 +11,9 @@
 
 namespace num::io {
 
-/// Decode a CSR or CSC sparse-matrix JSON object into native CSR storage.
+/// @brief Sparse matrix from a CSR or CSC JSON object.
 [[nodiscard]] spmat sparse_matrix(const json &value);
-/// Encode a sparse matrix as a CSR JSON object.
+/// @brief Sparse matrix to a CSR JSON object.
 [[nodiscard]] json sparse_matrix_json(const spmat &matrix);
 
 

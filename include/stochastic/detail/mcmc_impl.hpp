@@ -1,6 +1,5 @@
 /// @file stochastic/detail/mcmc_impl.hpp
-/// @brief Template implementations for stochastic/mcmc.hpp.
-/// Included at the bottom of mcmc.hpp -- do not include directly.
+/// @brief Metropolis sweep implementations; included by `stochastic/mcmc.hpp`.
 #pragma once
 #include "stochastic/mcmc.hpp"
 #include <cmath>
@@ -8,14 +7,8 @@
 
 namespace num::markov {
 
-/// @brief Single Metropolis sweep: n_sites random single-site updates.
-///
-/// The acceptance probability is min(1, exp(-beta * dE)) computed from
-/// the value returned by delta_energy(i).
-///
-/// @tparam DeltaE  Callable: idx -> real. Returns dE for proposing a flip at i.
-/// @tparam Apply   Callable: idx -> void. Applies the flip at site i.
-/// @tparam RNG     Random number generator (e.g., std::mt19937).
+/// @brief Metropolis sweep: `n_sites` updates, accepted with \f$\min(1, e^{-\beta \Delta E})\f$.
+/// `delta_energy(i)` returns \f$\Delta E\f$; `apply(i)` makes the move.
 template <energy_difference DeltaE, std::invocable<idx> Apply,
           std::uniform_random_bit_generator RNG>
 metropolis_stats metropolis_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip, real beta,
@@ -38,16 +31,7 @@ metropolis_stats metropolis_sweep(idx n_sites, DeltaE delta_energy, Apply apply_
     return stats;
 }
 
-/// @brief Metropolis sweep with caller-supplied acceptance probabilities.
-///
-/// Use this variant when acceptance probabilities are precomputed (e.g. a
-/// Boltzmann table for a discrete-dE system like the Ising model), avoiding
-/// a runtime exp() call per proposed flip.
-///
-/// @tparam ProbFn  Callable: idx -> real. Returns min(1, exp(-beta*dE)) for
-/// site i.
-/// @tparam Apply   Callable: idx -> void. Applies the flip at site i.
-/// @tparam RNG     Random number generator.
+/// @brief Metropolis sweep, precomputed: `prob(i)` gives \f$\min(1, e^{-\beta \Delta E})\f$.
 template <typename ProbFn, std::invocable<idx> Apply, std::uniform_random_bit_generator RNG>
 metropolis_stats metropolis_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply apply_flip,
                                        RNG &rng) {
@@ -68,17 +52,8 @@ metropolis_stats metropolis_sweep_prob(idx n_sites, ProbFn acceptance_prob, Appl
     return stats;
 }
 
-/// @brief Umbrella-sampled Metropolis sweep (dE variant).
-///
-/// Performs a sweep, measures the order parameter, then restores the saved
-/// state if the order parameter falls outside [window.lo, window.hi].
-///
-/// @tparam DeltaE   Callable: idx -> real
-/// @tparam Apply    Callable: idx -> void
-/// @tparam Save     Callable: () -> void. Saves system state before the sweep.
-/// @tparam Restore  Callable: () -> void. Restores saved state.
-/// @tparam Measure  Callable: () -> idx. Returns the order parameter.
-/// @tparam RNG      Random number generator.
+/// @brief Umbrella-sampled Metropolis sweep: rolled back if the order parameter leaves the window.
+/// `save()` and `restore()` bracket the sweep; `measure()` returns the order parameter.
 template <energy_difference DeltaE, std::invocable<idx> Apply, typename Save, typename Restore,
           typename Measure, std::uniform_random_bit_generator RNG>
 umbrella_stats umbrella_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip, Save save_state,
@@ -100,16 +75,7 @@ umbrella_stats umbrella_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip
     return stats;
 }
 
-/// @brief Umbrella-sampled Metropolis sweep (precomputed probability variant).
-///
-/// Same as umbrella_sweep but uses caller-supplied acceptance probabilities.
-///
-/// @tparam ProbFn   Callable: idx -> real
-/// @tparam Apply    Callable: idx -> void
-/// @tparam Save     Callable: () -> void
-/// @tparam Restore  Callable: () -> void
-/// @tparam Measure  Callable: () -> idx
-/// @tparam RNG      Random number generator.
+/// @brief Umbrella-sampled Metropolis sweep, precomputed acceptance.
 template <typename ProbFn, std::invocable<idx> Apply, typename Save, typename Restore,
           typename Measure, std::uniform_random_bit_generator RNG>
 umbrella_stats umbrella_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply apply_flip,

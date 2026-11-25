@@ -1,5 +1,5 @@
-/// @file lu.hpp
-/// @brief LU factorization, with partial pivoting or without, in any floating-point precision.
+/// @file linear/factorization/lu.hpp
+/// @brief LU factorization, pivoted or unpivoted, in any precision.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -24,15 +24,8 @@
 
 namespace num {
 
-/// @brief LU factorization \f$PA = LU\f$ with partial pivoting, packed in place.
-///
-/// On return `LU` holds the unit-lower factor below the diagonal and the upper
-/// factor on and above it; `piv[i]` is the row swapped with row i. Returns false
-/// when an exactly zero pivot column is found, i.e. when A is singular.
-///
-/// @param LU In/out packed factors, n*n row-major; pass a copy of A.
-/// @param piv Output pivot sequence, length n.
-/// @param n mat dimension.
+/// @brief LU factorization, partial pivoting, packed in place: \f$P A = L U\f$.
+/// Returns false on a zero pivot column.
 template <std::floating_point T, class Index>
 [[nodiscard]] inline bool lu_factor(T *NUM_K_RESTRICT LU, Index *NUM_K_RESTRICT piv,
                                     idx n) noexcept {
@@ -68,7 +61,7 @@ template <std::floating_point T, class Index>
     return nonsingular;
 }
 
-/// @brief Blocked variant of `lu_factor`: same packed \f$PA = LU\f$ contract, panel-at-a-time.
+/// @brief Blocked LU factorization, packed in place: \f$P A = L U\f$.
 template <std::floating_point T, class Index>
 [[nodiscard]] inline bool lu_factor_blocked(T *NUM_K_RESTRICT LU, Index *NUM_K_RESTRICT piv, idx n,
                                             idx block_size = 64) noexcept {
@@ -115,7 +108,7 @@ template <std::floating_point T, class Index>
     return nonsingular;
 }
 
-/// @brief Solve \f$A x = b\f$ from a packed \f$PA = LU\f$ factorization.
+/// @brief LU solve from packed factors: \f$x \leftarrow A^{-1} b\f$.
 template <std::floating_point T, class Index>
 inline void lu_solve(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT LU,
                      const Index *NUM_K_RESTRICT piv, const T *b, idx n) noexcept {
@@ -147,12 +140,8 @@ inline void lu_solve(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT LU,
     }
 }
 
-/// @brief Inverse from packed LU factors: `inverse <- A^{-1}`, one column at a time.
-///
-/// Column `j` of the inverse is the solve `A x = e_j`, so this is `n` calls
-/// of `lu_solve` written without the per-column copy. Out of place: every
-/// column's solve reads the whole factor, so the result cannot overwrite it.
-/// `work` holds `n` elements.
+/// @brief LU inverse from packed factors: \f$X \leftarrow A^{-1}\f$.
+/// Out of place; `work` holds `n` elements.
 template <std::floating_point T, class Index>
 inline void lu_invert(T *NUM_K_RESTRICT inverse, const T *NUM_K_RESTRICT LU,
                       const Index *NUM_K_RESTRICT piv, idx n, T *NUM_K_RESTRICT work) noexcept {
@@ -182,8 +171,8 @@ inline void lu_invert(T *NUM_K_RESTRICT inverse, const T *NUM_K_RESTRICT LU,
     }
 }
 
-/// @brief In-place LU without row pivoting, for matrices such as M-matrices whose pivots
-/// stay nonzero. Returns false if a pivot is exactly zero.
+/// @brief LU factorization, unpivoted, in place: \f$A = L U\f$.
+/// Returns false on a zero pivot.
 template <std::floating_point T>
 [[nodiscard]] inline bool lu_no_pivot(T *A, idx n) noexcept {
     bool nonsingular = true;
@@ -203,10 +192,7 @@ template <std::floating_point T>
     return nonsingular;
 }
 
-/// @brief Blocked in-place LU without row pivoting.
-///
-/// The diagonal panel uses ordinary elimination. The remaining panel and trailing matrix use
-/// triangular solve and matrix multiplication, respectively.
+/// @brief Blocked LU factorization, unpivoted, in place: \f$A = L U\f$.
 template <std::floating_point T>
 [[nodiscard]] inline bool lu_no_pivot_blocked(T *A, idx n, idx block_size = 64) noexcept {
     if (block_size == 0)
@@ -247,11 +233,7 @@ template <std::floating_point T>
     return nonsingular;
 }
 
-/// @brief Solves several right-hand sides from an unpivoted LU factor.
-///
-/// One right-hand side is the common case, and there each row of a substitution is a dot
-/// product over a contiguous row of the factor: `dot` keeps several partial sums, where an
-/// update of `X[i]` in memory at every step would chain each multiply-add to the last.
+/// @brief Unpivoted LU solve, multiple right-hand sides: \f$X \leftarrow A^{-1} X\f$.
 template <std::floating_point T>
 inline void lu_no_pivot_solve_multiple(T *X, const T *LU, idx n, idx columns) noexcept {
     if (columns == 1) {
@@ -284,12 +266,7 @@ inline void lu_no_pivot_solve_multiple(T *X, const T *LU, idx n, idx columns) no
     }
 }
 
-/// @brief Solves \f$A^T x = b\f$ for several right-hand sides from an unpivoted LU factor.
-///
-/// For one right-hand side, \f$U^T\f$ and \f$L^T\f$ are applied a row of the factor at a
-/// time: once \f$x_i\f$ is final, row \f$i\f$ of the factor times \f$x_i\f$ is subtracted from
-/// the entries still pending. That reads the factor with stride 1 and has no dependence
-/// between iterations, where the column-oriented form reads it with stride \f$n\f$.
+/// @brief Unpivoted LU transposed solve, multiple right-hand sides: \f$X \leftarrow A^{-T} X\f$.
 template <std::floating_point T>
 inline void lu_no_pivot_solve_transpose_multiple(T *X, const T *LU, idx n, idx columns) noexcept {
     if (columns == 1) {
@@ -337,14 +314,8 @@ inline void lu_no_pivot_solve_transpose_multiple(T *X, const T *LU, idx n, idx c
 
 namespace num {
 
-/// @brief The factorization \f$PA = LU\f$, in precision `T`.
-///
-/// Both factors share the matrix `LU`, the layout LAPACK `getrf` returns: \f$U\f$ on and
-/// above the diagonal, \f$L\f$ strictly below it. \f$L\f$ has a unit diagonal, which is not
-/// stored. `lower()` and `upper()` copy the two factors out.
-///
-/// \f$P\f$ is stored as the row swaps that built it: step `k` exchanged rows `k` and
-/// `swaps[k]`. `swaps` is empty when the factorization did not pivot, so \f$P = I\f$.
+/// @brief LU factorization result: \f$P A = L U\f$, packed as LAPACK `getrf`.
+/// \f$P\f$ is stored as row swaps; `swaps` is empty when unpivoted.
 template <std::floating_point T>
 struct lu_result {
     mat<T> LU;
@@ -361,16 +332,13 @@ struct lu_result {
     }
 };
 
-/// @brief The tag type of `num::no_pivot`.
+/// @brief Tag type of `num::no_pivot`.
 struct no_pivot_structure {};
-/// @brief Select LU without pivoting, for matrices whose structure keeps the pivots nonzero.
+/// @brief Select unpivoted LU.
 inline constexpr no_pivot_structure no_pivot{};
 
 namespace seq {
-/// Blocked partial-pivoting LU through `num::lu_factor_blocked`: panel
-/// factorization, then a `trsm` and a `gemm` per panel, so the bulk of the
-/// work runs at `gemm` speed. A pivot below `singular_tol` marks the result
-/// singular; the factorization still completes so the caller can inspect it.
+/// @brief Blocked LU factorization, partial pivoting: \f$P A = L U\f$.
 template <std::floating_point T>
 inline lu_result<T> lu(const mat<T> &A) {
     constexpr T singular_tol = T(1e-14);
@@ -418,13 +386,10 @@ inline lu_result<real> lu(const mat<real> &A) {
 }
 } // namespace lapack
 
-/// @brief Factor \f$PA = LU\f$ with partial pivoting.
-///
-/// In double precision, uses LAPACK `dgetrf` above `lapack_factor_threshold` when an optimized
-/// LAPACK is configured, else the in-tree blocked kernel; other precisions always use the
-/// kernel. Call `num::lapack::lu` or `num::seq::lu` to force one. A singular `A` sets
-/// `singular`; the factorization still completes.
+/// @brief LU factorization, partial pivoting: \f$P A = L U\f$.
+/// Uses LAPACK above `lapack_factor_threshold` in double precision.
 /// @throws std::invalid_argument If `A` is not square.
+/// @note A singular `A` sets `singular`; the factorization still completes.
 template <std::floating_point T>
 inline lu_result<T> lu(const mat<T> &A) {
     if (A.rows() != A.cols()) {
@@ -440,11 +405,9 @@ inline lu_result<T> lu(const mat<T> &A) {
     return seq::lu(A);
 }
 
-/// @brief Factor \f$A = LU\f$ without row swaps, for matrices such as diagonally dominant
-/// M-matrices whose pivots stay nonzero.
-///
-/// Saves the pivot search and row swap at every step. `singular` reports a zero pivot, but
-/// small pivots go unchecked, so use `lu(A)` without that structural guarantee.
+/// @brief LU factorization, unpivoted: \f$A = L U\f$.
+/// @warning Small pivots go unchecked; use only when the structure keeps pivots nonzero,
+/// as for diagonally dominant M-matrices.
 /// @throws std::invalid_argument If `A` is not square.
 template <std::floating_point T>
 inline lu_result<T> lu(const mat<T> &A, no_pivot_structure) {
@@ -457,15 +420,9 @@ inline lu_result<T> lu(const mat<T> &A, no_pivot_structure) {
     return f;
 }
 
-/// @brief Derivative of the packed factors in \f$A+sI=L_sU_s\f$ at \f$s=0\f$.
-///
-/// The returned matrix uses the same packed layout as `lu_result`: entries on and above
-/// the diagonal contain \f$\dot U\f$, and entries below it contain \f$\dot L\f$. Since
-/// \f$L_s\f$ is unit lower triangular, its diagonal derivative is zero and is not stored.
-/// This differentiates the Doolittle recurrence directly and costs one additional dense
-/// factorization pass; it does not form an inverse or refactor a shifted matrix.
-///
-/// @throws std::invalid_argument If `f` is singular or was computed with row pivoting.
+/// @brief LU shift derivative: \f$\dot{L}, \dot{U}\f$ at \f$s = 0\f$ for \f$A + s I = L_s U_s\f$.
+/// Packed like `lu_result`.
+/// @throws std::invalid_argument If `f` is singular or pivoted.
 template <std::floating_point T>
 [[nodiscard]] inline mat<T> lu_diagonal_shift_derivative(const lu_result<T> &f) {
     if (f.singular || f.LU.rows() != f.LU.cols()) {
@@ -531,7 +488,7 @@ inline void check_rhs(const lu_result<T> &f, idx rows) {
 
 } // namespace detail
 
-/// @brief Solve \f$Ax = b\f$. `x` may be `b`.
+/// @brief LU solve: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 template <std::floating_point T>
 inline void solve(const lu_result<T> &f, const std::type_identity_t<vec<T>> &b, vec<T> &x) {
     detail::check_rhs(f, b.size());
@@ -540,7 +497,7 @@ inline void solve(const lu_result<T> &f, const std::type_identity_t<vec<T>> &b, 
     num::lu_no_pivot_solve_multiple(x.data(), f.LU.data(), f.size(), 1);
 }
 
-/// @brief Solve \f$AX = B\f$. `X` may be `B`.
+/// @brief LU solve: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 template <std::floating_point T>
 inline void solve(const lu_result<T> &f, const std::type_identity_t<mat<T>> &B, mat<T> &X) {
     detail::check_rhs(f, B.rows());
@@ -559,9 +516,7 @@ inline void solve(const lu_result<T> &f, const std::type_identity_t<mat<T>> &B, 
     kernel::trsm_upper_inplace(X.data(), nrhs, f.LU.data(), n, n, nrhs);
 }
 
-/// @brief Solve \f$A^T x = b\f$. `x` may be `b`.
-///
-/// \f$A^T = U^T L^T P\f$, so \f$U^T Q = B\f$, \f$L^T Y = Q\f$, \f$X = P^T Y\f$.
+/// @brief LU transposed solve: \f$x \leftarrow A^{-T} b\f$. `x` may alias `b`.
 template <std::floating_point T>
 inline void solve_transpose(const lu_result<T> &f, const std::type_identity_t<vec<T>> &b,
                             vec<T> &x) {
@@ -571,7 +526,7 @@ inline void solve_transpose(const lu_result<T> &f, const std::type_identity_t<ve
     detail::undo_swaps(f, x.data(), 1);
 }
 
-/// @brief Solve \f$A^T X = B\f$. `X` may be `B`.
+/// @brief LU transposed solve: \f$X \leftarrow A^{-T} B\f$. `X` may alias `B`.
 template <std::floating_point T>
 inline void solve_transpose(const lu_result<T> &f, const std::type_identity_t<mat<T>> &B,
                             mat<T> &X) {
@@ -588,7 +543,7 @@ inline void solve_transpose(const lu_result<T> &f, const std::type_identity_t<ma
     detail::undo_swaps(f, X.data(), nrhs);
 }
 
-/// @brief \f$\det(A) = \det(P)^{-1}\prod_i U_{ii}\f$.
+/// @brief Determinant: \f$\det A = \det(P)^{-1} \prod_i u_{ii}\f$.
 template <std::floating_point T>
 inline T det(const lu_result<T> &f) {
     T product = T(1);
@@ -604,7 +559,7 @@ inline T det(const lu_result<T> &f) {
     return (exchanges % 2 == 0) ? product : -product;
 }
 
-/// @brief \f$A^{-1}\f$.
+/// @brief Inverse: \f$A^{-1}\f$.
 template <std::floating_point T>
 inline mat<T> inverse(const lu_result<T> &f) {
     const idx n = f.size();
@@ -631,7 +586,7 @@ inline mat<T> inverse(const lu_result<T> &f) {
     return inv;
 }
 
-/// @brief The unit-lower factor \f$L\f$, as a full matrix.
+/// @brief Unit lower factor \f$L\f$.
 template <std::floating_point T>
 inline mat<T> lower(const lu_result<T> &f) {
     const idx n = f.size();
@@ -645,7 +600,7 @@ inline mat<T> lower(const lu_result<T> &f) {
     return L;
 }
 
-/// @brief The upper factor \f$U\f$, as a full matrix.
+/// @brief Upper factor \f$U\f$.
 template <std::floating_point T>
 inline mat<T> upper(const lu_result<T> &f) {
     const idx n = f.size();

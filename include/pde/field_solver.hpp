@@ -1,5 +1,5 @@
 /// @file pde/field_solver.hpp
-/// @brief Elliptic solvers and vector calculus on 3D field containers.
+/// @brief Elliptic solves and vector calculus on 3D fields.
 #pragma once
 
 #include "core/types.hpp"
@@ -17,44 +17,40 @@ namespace num {
 /// @brief Poisson solves and vector calculus on 3D fields.
 class field_solver {
   public:
-    /// Dirichlet boundary condition: fix phi = value at grid node flat_idx.
+    /// @brief Dirichlet condition: \f$\phi = \mathrm{value}\f$ at node `flat_idx`.
     struct dirichlet_bc {
         int flat_idx; ///< k*ny*nx + j*nx + i
         double value;
     };
 
-    /// @brief Solve \f$\Delta\phi=s\f$ with zero Dirichlet boundaries.
-    /// @return `solver_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
+    /// @brief Poisson solve, zero Dirichlet: \f$\Delta \phi = s\f$.
     static solver_result solve_poisson(scalar_field_3d &phi, const scalar_field_3d &source,
                                       double tol = 1e-6, int max_iter = 500);
 
-    /// @brief Solve \f$\nabla\cdot(c\nabla\phi)=0\f$ with Dirichlet data.
-    /// @return `solver_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
+    /// @brief Variable-coefficient Poisson solve: \f$\nabla \cdot (c \nabla \phi) = 0\f$.
     static solver_result solve_var_poisson(scalar_field_3d &phi, const scalar_field_3d &coeff,
                                           const array<dirichlet_bc> &bcs, double tol = 1e-6,
                                           int max_iter = 500);
 
-    /// @brief Compute \f$\nabla\phi\f$.
+    /// @brief Gradient: \f$\nabla \phi\f$.
     static vector_field_3d gradient(const scalar_field_3d &phi);
 
-    /// @brief Compute \f$\nabla\cdot f\f$.
+    /// @brief Divergence: \f$\nabla \cdot f\f$.
     static scalar_field_3d divergence(const vector_field_3d &f);
 
-    /// @brief Compute \f$\nabla\times A\f$.
+    /// @brief Curl: \f$\nabla \times A\f$.
     static vector_field_3d curl(const vector_field_3d &A);
 };
 
-/// @brief The static magnetic field of a current density, by three Poisson solves.
+/// @brief Magnetostatics: \f$B = \nabla \times A\f$ from a current density.
 class magnetic_solver {
   public:
     static constexpr double MU0 = 1.2566370614e-6; ///< mu_0 [H/m]
 
-    /// Compute current density J = -sigma*grad(phi) [A/m^2].
+    /// @brief Current density: \f$J = -\sigma \nabla \phi\f$.
     static vector_field_3d current_density(const scalar_field_3d &sigma, const scalar_field_3d &phi);
 
-    /// Solve for static magnetic field B given current density J.
-    /// Solves Laplacian(A) = -mu0*J (Coulomb gauge, Dirichlet A=0) via three CG
-    /// solves, then returns B = curl(A).
+    /// @brief Magnetostatic field: \f$\Delta A = -\mu_0 J\f$, then \f$B = \nabla \times A\f$.
     static vector_field_3d solve_magnetic_field(const vector_field_3d &J, double tol = 1e-6,
                                               int max_iter = 500);
 };

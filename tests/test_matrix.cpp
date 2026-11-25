@@ -18,17 +18,23 @@ using namespace num;
 TEST(SparseBilinear, DenseBlocksAndComplexVectors) {
     const spmat A = spmat::from_triplets(2, 3, {0, 0, 1}, {0, 2, 1}, {2.0, 3.0, 4.0});
     mat<real> L(2, 2, 0.0), R(3, 2, 0.0);
-    L(0, 0) = 1.0; L(0, 1) = 2.0; L(1, 0) = 3.0; L(1, 1) = 4.0;
-    R(0, 0) = 5.0; R(0, 1) = 6.0; R(1, 0) = 7.0;
-    R(1, 1) = 8.0; R(2, 0) = 9.0; R(2, 1) = 10.0;
+    L(0, 0) = 1.0;
+    L(0, 1) = 2.0;
+    L(1, 0) = 3.0;
+    L(1, 1) = 4.0;
+    R(0, 0) = 5.0;
+    R(0, 1) = 6.0;
+    R(1, 0) = 7.0;
+    R(1, 1) = 8.0;
+    R(2, 0) = 9.0;
+    R(2, 1) = 10.0;
     EXPECT_DOUBLE_EQ(sparse_bilinear_trace(A, L, R), 333.0);
     EXPECT_THROW(sparse_bilinear_trace(A, R, L), std::invalid_argument);
     EXPECT_DOUBLE_EQ(sparse_bilinear(A, vec<real>{1.0, 2.0}, vec<real>{3.0, 4.0, 5.0}), 53.0);
 
     const vec<cplx> y{cplx(1.0, 1.0), cplx(2.0, -1.0)};
     const vec<cplx> x{cplx(2.0), cplx(3.0, 1.0), cplx(4.0, -1.0)};
-    EXPECT_EQ(sparse_bilinear(A, y, x),
-              2.0 * y[0] * x[0] + 3.0 * y[0] * x[2] + 4.0 * y[1] * x[1]);
+    EXPECT_EQ(sparse_bilinear(A, y, x), 2.0 * y[0] * x[0] + 3.0 * y[0] * x[2] + 4.0 * y[1] * x[1]);
     EXPECT_THROW(sparse_bilinear(A, x, y), std::invalid_argument);
 }
 
@@ -352,7 +358,8 @@ TEST(Trsm, AllVariantsInvertTheirProducts) {
                 }
             }
             const mat<real> X = make_test_matrix(n, nrhs);
-            const auto expect_equal = [&](const mat<real> &Y, const mat<real> &reference, const char *what) {
+            const auto expect_equal = [&](const mat<real> &Y, const mat<real> &reference,
+                                          const char *what) {
                 for (idx i = 0; i < Y.rows(); ++i) {
                     for (idx j = 0; j < Y.cols(); ++j) {
                         EXPECT_NEAR(Y(i, j), reference(i, j), 1e-9)
@@ -590,7 +597,7 @@ TEST(DenseProducts, GemmWithTransposesMatchesLoops) {
             B(i, j) = static_cast<real>(i + 2 * j) + 1.0;
         }
     }
-    for (idx i = 0; i < 4; ++i) {  // expected = 2 A^T B - C
+    for (idx i = 0; i < 4; ++i) { // expected = 2 A^T B - C
         for (idx j = 0; j < 2; ++j) {
             for (idx k = 0; k < 3; ++k) {
                 expected(i, j) += 2.0 * A(k, i) * B(k, j);
@@ -607,7 +614,7 @@ TEST(DenseProducts, GemmWithTransposesMatchesLoops) {
 }
 
 TEST(DenseProducts, GemvOnLeadingRowsAndTranspose) {
-    mat<real> Q(5, 3, 0.0);  // only the first 2 rows are used
+    mat<real> Q(5, 3, 0.0); // only the first 2 rows are used
     for (idx i = 0; i < 5; ++i) {
         for (idx j = 0; j < 3; ++j) {
             Q(i, j) = static_cast<real>(i * 3 + j) + 1.0;
@@ -615,21 +622,22 @@ TEST(DenseProducts, GemvOnLeadingRowsAndTranspose) {
     }
     const vec<real> w{1.0, -1.0, 2.0};
     vec<real> t(2, 0.0);
-    gemv(1.0, Q, false, w, 0.0, t, 2);  // t = Q_2 w
+    gemv(1.0, Q, false, w, 0.0, t, 2); // t = Q_2 w
     EXPECT_NEAR(t[0], 1.0 - 2.0 + 6.0, 1e-14);
     EXPECT_NEAR(t[1], 4.0 - 5.0 + 12.0, 1e-14);
     vec<real> y{1.0, 1.0, 1.0};
-    gemv(-1.0, Q, true, t, 1.0, y, 2);  // y = y - Q_2^T t
+    gemv(-1.0, Q, true, t, 1.0, y, 2); // y = y - Q_2^T t
     for (idx j = 0; j < 3; ++j) {
         EXPECT_NEAR(y[j], 1.0 - (Q(0, j) * t[0] + Q(1, j) * t[1]), 1e-13);
     }
 }
 
-TEST(SparseHelpers, ExplicitDiagonalShiftAndLinearCombination) {
-    const spmat A = spmat::from_triplets(3, 3, {0, 1, 2}, {1, 2, 0}, {1.0, 2.0, 3.0});  // no diagonal stored
+TEST(SparseHelpers, ExplicitDiagonalCharacteristicMatrixAndLinearCombination) {
+    const spmat A =
+        spmat::from_triplets(3, 3, {0, 1, 2}, {1, 2, 0}, {1.0, 2.0, 3.0}); // no diagonal stored
     const spmat D = with_explicit_diagonal(A);
     EXPECT_EQ(D.nnz(), 6u);
-    const spmat S = shifted(A, 2.5);  // 2.5 I - A
+    const spmat S = characteristic_matrix(A, 2.5); // 2.5 I - A
     EXPECT_DOUBLE_EQ(S(0, 0), 2.5);
     EXPECT_DOUBLE_EQ(S(0, 1), -1.0);
     EXPECT_DOUBLE_EQ(S(2, 0), -3.0);
@@ -642,7 +650,7 @@ TEST(SparseHelpers, ExplicitDiagonalShiftAndLinearCombination) {
 }
 
 TEST(SparseHelpers, Cgs2OnLeadingRows) {
-    mat<real> Q(4, 3, 0.0);  // first 2 rows orthonormal; rows 2-3 unused
+    mat<real> Q(4, 3, 0.0); // first 2 rows orthonormal; rows 2-3 unused
     Q(0, 0) = 1.0;
     Q(1, 1) = 1.0;
     vec<real> v{3.0, -2.0, 5.0};

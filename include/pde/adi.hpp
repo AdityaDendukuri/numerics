@@ -1,7 +1,6 @@
 /// @file pde/adi.hpp
-/// @brief Crank-Nicolson ADI sweeps for 2D parabolic systems.
-/// @todo Add real-valued diffusion ADI variants, variable coefficients, and
-/// boundary-condition parameterization.
+/// @brief Crank–Nicolson ADI for 2D parabolic problems.
+// TODO: real-valued ADI, variable coefficients, boundary-condition parameters.
 #pragma once
 
 #include "core/types.hpp"
@@ -13,8 +12,7 @@
 
 namespace num {
 
-/// @brief Crank--Nicolson time stepping by alternating direction implicit sweeps on an \f$N
-/// \times N\f$ grid.
+/// @brief Crank–Nicolson ADI step on an \f$N \times N\f$ grid: implicit sweeps in x, then y.
 struct crank_nicolson_adi {
     int N = 0;
     double dt = 0.0;

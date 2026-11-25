@@ -1,5 +1,5 @@
-/// @file math_adapters.hpp
-/// @brief Dense matrices as linear operators: their action and their spaces.
+/// @file linear/math_adapters.hpp
+/// @brief Dense matrices as linear operators.
 #pragma once
 
 #include "core/math/operations.hpp"
@@ -10,8 +10,7 @@
 
 namespace num {
 
-/// Dense storage participates in the map protocol without pretending that every
-/// matrix value is positive definite or even square.
+/// @brief Dense matrix as a linear map; claims no law.
 template <std::floating_point T>
 inline void tag_invoke(math::apply_t, const mat<T> &matrix, const vec<T> &x,
                        vec<T> &y) {
@@ -28,7 +27,7 @@ inline void tag_invoke(math::apply_t, const mat<T> &matrix, const vec<T> &x,
 
 namespace num::math::detail {
 
-/// A dense matrix maps vectors to vectors of its own scalar.
+/// @brief Dense matrix domain and codomain: `vec<T>`.
 template <std::floating_point T>
 struct domain_of<mat<T>> {
     using type = vec<T>;

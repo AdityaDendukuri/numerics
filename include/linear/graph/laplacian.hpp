@@ -1,13 +1,5 @@
 /// @file linear/graph/laplacian.hpp
-/// @brief Matrices produced from a graph.
-///
-/// A graph in `structures` carries no algebraic operations. The adjacency matrix,
-/// the Laplacian, and the Markov generator are matrices, so they are produced
-/// here, where matrix storage already lives.
-///
-/// The unnormalized Laplacian of an undirected weighted graph is
-/// \f$L = D - W\f$, symmetric positive semi-definite with \f$L\mathbf{1} = 0\f$.
-/// It is singular by construction, so tag it `assume_psd` rather than `assume_spd`.
+/// @brief Matrices of a graph: adjacency, Laplacian and Markov generator.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -19,7 +11,7 @@
 
 namespace num::linear {
 
-/// @brief The weighted adjacency matrix of a graph, in CSR form.
+/// @brief Adjacency matrix, sparse: \f$W_{ij} = w_{ij}\f$.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat to_sparse_adjacency(const graph<Weight, Index> &g) {
     array<idx> row_ptr(g.n_vertices() + 1, 0);
@@ -37,7 +29,7 @@ template <typename Weight = real, typename Index = idx>
                         std::move(values), std::move(col_idx), std::move(row_ptr));
 }
 
-/// @brief The weighted adjacency matrix of a graph, dense.
+/// @brief Adjacency matrix, dense: \f$W_{ij} = w_{ij}\f$.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat<real> to_dense_adjacency(const graph<Weight, Index> &g) {
     mat<real> A(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
@@ -74,7 +66,8 @@ template <typename Weight = real, typename Index = idx>
                                        static_cast<idx>(g.n_vertices()), rows, cols, vals);
 }
 
-/// @brief Laplacian of an implicit Cartesian grid without materializing adjacency lists.
+/// @brief Graph Laplacian of an implicit grid: \f$L = D - W\f$.
+/// @warning Singular, since \f$L \mathbf{1} = 0\f$: tag it `assume_psd`, not `assume_spd`.
 template <std::size_t D, typename Weight, std::integral Index>
 [[nodiscard]] inline spmat laplacian(const structured_grid_graph<D, Weight, Index> &g) {
     array<idx> rows;
@@ -100,7 +93,8 @@ template <std::size_t D, typename Weight, std::integral Index>
                                 rows, cols, vals);
 }
 
-/// @brief The graph Laplacian \f$L = D - W\f$, dense.
+/// @brief Graph Laplacian, dense: \f$L = D - W\f$.
+/// @warning Singular, since \f$L \mathbf{1} = 0\f$: tag it `assume_psd`, not `assume_spd`.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat<real> dense_laplacian(const graph<Weight, Index> &g) {
     mat<real> L(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
@@ -117,8 +111,7 @@ template <typename Weight = real, typename Index = idx>
     return L;
 }
 
-/// @brief The rate matrix of the Markov chain on a graph, whose off-diagonal entries are the
-/// edge weights.
+/// @brief Markov generator, sparse: \f$Q_{ij} = w_{ij}\f$, \f$Q_{ii} = -\sum_{j} w_{ij}\f$.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat markov_generator(const graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
@@ -149,7 +142,7 @@ template <typename Weight = real, typename Index = idx>
                                        static_cast<idx>(g.n_vertices()), rows, cols, vals);
 }
 
-/// @brief The rate matrix of the Markov chain on a graph, dense.
+/// @brief Markov generator, dense: \f$Q_{ij} = w_{ij}\f$, \f$Q_{ii} = -\sum_{j} w_{ij}\f$.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat<real> dense_markov_generator(const graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
@@ -163,7 +156,8 @@ template <typename Weight = real, typename Index = idx>
     return Q;
 }
 
-/// @brief Laplacian of a multigraph, summing parallel edge multiplicities.
+/// @brief Multigraph Laplacian: \f$L = D - W\f$, parallel edges summed.
+/// @warning Singular, since \f$L \mathbf{1} = 0\f$: tag it `assume_psd`, not `assume_spd`.
 [[nodiscard]] inline spmat laplacian(const structures::multigraph<real, idx> &g) {
     const idx n = g.n_vertices();
     array<idx> rows, cols;
@@ -186,7 +180,7 @@ template <typename Weight = real, typename Index = idx>
     return spmat::from_triplets(static_cast<idx>(n), static_cast<idx>(n), rows, cols, vals);
 }
 
-/// @brief Recover a multigraph from a Laplacian.
+/// @brief Multigraph from a Laplacian.
 [[nodiscard]] inline structures::multigraph<real, idx> to_multigraph(const spmat &L) {
     const idx n = L.n_rows();
     if (L.n_cols() != n) {

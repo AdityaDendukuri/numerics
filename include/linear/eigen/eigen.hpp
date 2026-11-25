@@ -1,5 +1,5 @@
 /// @file linear/eigen/eigen.hpp
-/// @brief Umbrella include for all eigenvalue solvers
+/// @brief Eigenvalue solvers.
 #pragma once
 
 #include "linear/eigen/jacobi_eig.hpp"

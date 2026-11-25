@@ -1,5 +1,5 @@
 /// @file structures/containers/degree_queue.hpp
-/// @brief O(1) amortized bucket priority queue for minimum degree elimination in graph algorithms.
+/// @brief Bucket priority queue by integer degree.
 #pragma once
 
 #include "core/types.hpp"
@@ -13,15 +13,14 @@
 
 namespace num::structures {
 
-/// @brief Bucket-based degree priority queue maintaining vertices ordered by integer degree.
-/// Provides O(1) insert, erase, rekey, and O(1) amortized pop_min for bounded integer degrees.
+/// @brief Degree queue: vertices bucketed by degree, \f$O(1)\f$ updates and amortized `pop_min`.
 template <std::integral Index = num::idx>
 class basic_degree_queue {
   public:
     using index_type = Index;
     static constexpr Index none = static_cast<Index>(-1);
 
-    /// Construct an empty queue with capacity for n vertices.
+    /// @brief Empty queue with capacity `n`.
     explicit basic_degree_queue(Index n = 0) {
         head_.assign(static_cast<std::size_t>(n) + 1, none);
         next_.assign(static_cast<std::size_t>(n), none);
@@ -31,7 +30,7 @@ class basic_degree_queue {
         size_ = 0;
     }
 
-    /// Construct and initialize from a container of degrees.
+    /// @brief Queue initialized from a range of degrees.
     template <typename DegreeRange>
     requires (!std::integral<DegreeRange>)
     explicit basic_degree_queue(const DegreeRange &degrees) {
@@ -48,7 +47,7 @@ class basic_degree_queue {
         }
     }
 
-    /// Insert vertex v with degree d.
+    /// @brief Insert vertex `v` with degree `d`.
     void insert(Index v, Index d) {
         debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "degree_queue::insert");
         if (d >= head_.size()) {
@@ -67,7 +66,7 @@ class basic_degree_queue {
         ++size_;
     }
 
-    /// Erase vertex v from the queue.
+    /// @brief Erase vertex `v`.
     void erase(Index v) {
         debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "degree_queue::erase");
         const Index d = degree_[v];
@@ -84,13 +83,13 @@ class basic_degree_queue {
         --size_;
     }
 
-    /// Update the degree of vertex v.
+    /// @brief Set the degree of `v` to `d`.
     void rekey(Index v, Index d) {
         erase(v);
         insert(v, d);
     }
 
-    /// Pop vertex with minimum degree.
+    /// @brief Pop a vertex of minimum degree.
     Index pop_min() {
         if (empty()) {
             throw std::runtime_error("degree_queue::pop_min: queue is empty");
@@ -106,13 +105,13 @@ class basic_degree_queue {
         return v;
     }
 
-    /// Degree of vertex v.
+    /// @brief Degree of `v`.
     [[nodiscard]] Index degree_of(Index v) const {
         debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "degree_queue::degree_of");
         return degree_[v];
     }
 
-    /// Current minimum degree.
+    /// @brief Minimum degree.
     [[nodiscard]] Index min_degree() const {
         if (empty()) {
             throw std::runtime_error("degree_queue::min_degree: queue is empty");
@@ -124,16 +123,16 @@ class basic_degree_queue {
         return l;
     }
 
-    /// Check if queue is empty.
+    /// @brief Whether the queue is empty.
     [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
 
-    /// Number of active elements.
+    /// @brief Number of queued vertices.
     [[nodiscard]] Index size() const noexcept { return size_; }
 
-    /// Total capacity.
+    /// @brief Capacity.
     [[nodiscard]] Index capacity() const noexcept { return static_cast<Index>(degree_.size()); }
 
-    /// Direct access to degree array for elimination updates.
+    /// @brief Degree array.
     [[nodiscard]] const array<Index> &degrees() const noexcept { return degree_; }
 
   private:

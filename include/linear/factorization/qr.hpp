@@ -1,5 +1,5 @@
-/// @file qr.hpp
-/// @brief QR factorization via Householder reflections.
+/// @file linear/factorization/qr.hpp
+/// @brief Householder QR factorization.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -19,12 +19,7 @@ namespace num {
 
 // Householder Reflections & Blocked QR
 
-/// @brief Computes elementary Householder reflector vector \f$\mathbf{v}\f$ and scalar \f$\beta\f$
-/// such that:
-/// \f[
-/// (I - \beta \mathbf{v} \mathbf{v}^T) \mathbf{x} = \mp \|\mathbf{x}\|_2 \mathbf{e}_1
-/// \f]
-/// \f$\mathbf{v}\f$ is sized \f$m\f$, with \f$v_0 = 1\f$ implicitly assigned.
+/// @brief Householder reflector: \f$(I - \beta v v^T) x = \mp \|x\|_2 e_1\f$, \f$v_0 = 1\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void householder_vector(T *NUM_K_RESTRICT v, T &beta, const T *NUM_K_RESTRICT x,
                                       idx m) noexcept {
@@ -55,12 +50,7 @@ NUM_K_AINLINE void householder_vector(T *NUM_K_RESTRICT v, T &beta, const T *NUM
     beta = T(2) / v_sq;
 }
 
-/// @brief Householder reflector for a strided column of a matrix.
-///
-/// The column is copied into `v` and the reflector formed there in place. Not
-/// a call to `householder_vector(v, beta, v, m)`: that passes one buffer as
-/// two `restrict` parameters, and at `-O3` the compiler is entitled to read
-/// `x[0]` after `v[0]` has been overwritten with 1.
+/// @brief Householder reflector of a strided column: \f$(I - \beta v v^T) x = \mp \|x\|_2 e_1\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void householder_vector_strided(T *NUM_K_RESTRICT v, T &beta,
                                               const T *NUM_K_RESTRICT A, idx lda, idx offset,
@@ -88,7 +78,7 @@ NUM_K_AINLINE void householder_vector_strided(T *NUM_K_RESTRICT v, T &beta,
     beta = T(2) / v_sq;
 }
 
-/// @brief Apply \f$I - \beta v v^T\f$ from the left to an \f$m \times n\f$ block of `A`.
+/// @brief Householder reflection, left: \f$A \leftarrow (I - \beta v v^T) A\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void householder_left(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K_RESTRICT v, T beta,
                                     idx m, idx n, T *NUM_K_RESTRICT work) noexcept;
@@ -96,18 +86,13 @@ NUM_K_AINLINE void householder_left(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K
 /// @brief Reflectors per block in `qr_factor_blocked`.
 inline constexpr idx qr_block = 32;
 
-/// @brief Workspace elements `qr_factor_blocked` needs for an `m x n` factorization.
+/// @brief Workspace elements for an `m x n` blocked QR.
 [[nodiscard]] constexpr idx qr_workspace(idx m, idx n) noexcept {
     const idx nb = std::min(qr_block, std::min(m, n));
     return (m * nb) + (nb * nb) + (nb * n) + m + n; // V, T, W, v, row work
 }
 
-/// @brief Form the compact-WY block reflector for columns `[k0, k0 + kb)`.
-///
-/// Reads the reflector tails stored below the diagonal of the factored panel
-/// and their scalars `tau`, and writes `V` (`(m - k0) x kb`, unit lower
-/// trapezoidal, row stride `kb`) and the upper triangular `T` (`kb x kb`)
-/// with \f$H_{k_0} \cdots H_{k_0 + k_b - 1} = I - V T V^T\f$.
+/// @brief Compact-WY block reflector: \f$H_{k_0} \cdots H_{k_0 + k_b - 1} = I - V T V^T\f$.
 template <std::floating_point T>
 inline void qr_form_block(T *NUM_K_RESTRICT V, T *NUM_K_RESTRICT Tm, const T *NUM_K_RESTRICT A,
                           idx lda, idx m, idx k0, idx kb, const T *NUM_K_RESTRICT tau) noexcept {
@@ -144,12 +129,8 @@ inline void qr_form_block(T *NUM_K_RESTRICT V, T *NUM_K_RESTRICT Tm, const T *NU
     }
 }
 
-/// @brief `C <- (I - V T' V^T) C` for a compact-WY block reflector.
-///
-/// `C` is `rows x cols`; `V` and `T` come from `qr_form_block` with `kb`
-/// reflectors; `T'` is `T^T` when `transpose` is set (the product
-/// \f$H_{k_b-1} \cdots H_0\f$, used when factoring) and `T` otherwise
-/// (\f$H_0 \cdots H_{k_b-1}\f$, used when forming Q). `W` holds `kb x cols`.
+/// @brief Block reflector application: \f$C \leftarrow (I - V T' V^T) C\f$.
+/// \f$T' = T^T\f$ when `transpose` is set.
 template <std::floating_point T>
 inline void qr_apply_block_left(T *NUM_K_RESTRICT C, idx ldc, idx rows, idx cols,
                                 const T *NUM_K_RESTRICT V, const T *NUM_K_RESTRICT Tm, idx kb,
@@ -179,11 +160,8 @@ inline void qr_apply_block_left(T *NUM_K_RESTRICT C, idx ldc, idx rows, idx cols
     kernel::gemm(C, ldc, V, kb, W, cols, T(-1), T(1), rows, cols, kb);
 }
 
-/// @brief Compact Householder QR factorization; reflector tails remain below R's diagonal.
-///
-/// Each panel of `qr_block` columns is aggregated into a compact-WY block and applied to the
-/// trailing columns with two `gemm`s. `tau` receives `min(m, n)` scalars; `work` holds
-/// `qr_workspace(m, n)` elements.
+/// @brief Blocked Householder QR, in place: \f$A = Q R\f$, reflectors stored below \f$R\f$.
+/// `tau` gets \f$\min(m, n)\f$ scalars; `work` holds `qr_workspace(m, n)`.
 template <std::floating_point T>
 inline void qr_factor_blocked(T *NUM_K_RESTRICT A, idx lda, idx m, idx n, T *NUM_K_RESTRICT tau,
                               T *NUM_K_RESTRICT work) noexcept {
@@ -248,8 +226,7 @@ NUM_K_AINLINE void householder_left(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K
     }
 }
 
-/// @brief Applies right Householder transformation \f$A \leftarrow A (I - \beta \mathbf{v}
-/// \mathbf{v}^T)\f$ on an \f$m \times n\f$ block with stride `lda`.
+/// @brief Householder reflection, right: \f$A \leftarrow A (I - \beta v v^T)\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void householder_right(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K_RESTRICT v,
                                      T beta, idx m, idx n) noexcept {
@@ -272,7 +249,7 @@ NUM_K_AINLINE void householder_right(T *NUM_K_RESTRICT A, idx lda, const T *NUM_
 
 namespace num {
 
-/// @brief QR factorization \f$A=QR\f$.
+/// @brief QR factorization result: \f$A = Q R\f$.
 struct qr_result {
     mat<real> Q; ///< Orthonormal factor.
     mat<real> R; ///< Upper-triangular factor.
@@ -284,20 +261,14 @@ struct qr_result {
     }
 };
 
-/// @brief Factor \f$A\in\mathbb{R}^{m\times n}\f$ as \f$A=QR\f$.
-///
-/// Picks LAPACK (`dgeqrf`/`dorgqr`) if configured, else the in-tree blocked
-/// Householder kernel. To force one explicitly, call `num::lapack::qr`/`num::seq::qr`.
-/// @return `qr_result`: `.Q` (orthogonal), `.R` (upper triangular), with `A = Q*R`.
+/// @brief QR factorization: \f$A = Q R\f$, \f$Q\f$ orthogonal, \f$R\f$ upper triangular.
 qr_result qr(const mat<real> &A);
 
-/// @brief Solve \f$\min_x \|Ax-b\|_2\f$, which is \f$Ax = b\f$ for square nonsingular \f$A\f$.
-/// `x` may be `b`.
+/// @brief Least-squares solve: \f$x \leftarrow \arg\min_x \|A x - b\|_2\f$. `x` may alias `b`.
 void solve(const qr_result &f, const vec<real> &b, vec<real> &x);
 
 namespace seq {
-/// Blocked Householder QR through `num::qr_factor_blocked`, with Q formed
-/// by applying the same compact-WY blocks, last to first, to the identity.
+/// @brief Blocked Householder QR: \f$A = Q R\f$.
 inline qr_result qr(const mat<real> &A) {
     const idx m = A.rows();
     const idx n = A.cols();
@@ -383,8 +354,8 @@ inline qr_result qr(const mat<real> &A) {
 }
 } // namespace lapack
 
-/// The blocked kernel QR; it measured faster than dgeqrf + dorgqr through
-/// LAPACKE at every size tried, and `num::lapack::qr` remains callable by name.
+/// @brief QR factorization: \f$A = Q R\f$, in-tree kernel.
+/// @note Measured faster than `dgeqrf` + `dorgqr`; `num::lapack::qr` stays callable.
 inline qr_result qr(const mat<real> &A) {
     return seq::qr(A);
 }

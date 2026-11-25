@@ -1,5 +1,5 @@
 /// @file linear/condition.hpp
-/// @brief Condition number estimates from any factorization.
+/// @brief Condition number estimates from factorizations.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// @brief \f$\|A\|_1\f$, the largest absolute column sum.
+/// @brief Matrix 1-norm: \f$\|A\|_1 = \max_j \sum_i |a_{ij}|\f$.
 template <std::floating_point T>
 [[nodiscard]] T opnorm1(const mat<T> &A) {
     // Accumulate all column sums in one pass over the rows: A is row-major, so this reads it
@@ -28,7 +28,7 @@ template <std::floating_point T>
     return column.empty() ? T(0) : *std::max_element(column.begin(), column.end());
 }
 
-/// @brief \f$\|A\|_1\f$ of a sparse matrix.
+/// @brief Sparse matrix 1-norm: \f$\|A\|_1\f$.
 [[nodiscard]] inline real opnorm1(const spmat &A) {
     array<real> column(A.n_cols(), 0.0);
     for (idx i = 0; i < A.n_rows(); ++i) {
@@ -39,16 +39,8 @@ template <std::floating_point T>
     return column.empty() ? 0.0 : *std::max_element(column.begin(), column.end());
 }
 
-/// @brief Estimate \f$\|A^{-1}\|_1\f$ from a factorization of the n-by-n matrix \f$A\f$.
-///
-/// Hager's method with Higham's refinements, as LAPACK's `dlacn2`: \f$\|A^{-1}\|_1\f$ is the
-/// maximum of \f$\|A^{-1}x\|_1\f$ over the unit 1-norm ball, a convex function maximized at a
-/// vertex \f$e_j\f$. Each step solves with \f$A\f$, then with \f$A^T\f$ to find the coordinate
-/// \f$j\f$ along which that norm grows fastest, and stops when no vertex improves. That costs
-/// a handful of solves, \f$O(n^2)\f$ for a dense factor, instead of the \f$O(n^3)\f$ of forming
-/// \f$A^{-1}\f$. The result is a lower bound, usually exact or within a factor of 3.
-///
-/// `T` is the precision of the solves, which lets a `float` factorization be measured too.
+/// @brief Inverse 1-norm estimate (Hager–Higham, as `dlacn2`): \f$\|A^{-1}\|_1\f$, a lower bound.
+/// @note Usually exact or within a factor of 3, for \f$O(n^2)\f$ work with a dense factor.
 template <class F, std::floating_point T = real>
 requires requires(const F &factor, const vec<T> &b, vec<T> &x) {
     solve(factor, b, x);
@@ -117,11 +109,8 @@ requires requires(const F &factor, const vec<T> &b, vec<T> &x) {
     return std::max(estimate, alternative);
 }
 
-/// @brief Estimate the reciprocal condition number \f$1 / (\|A\|_1 \|A^{-1}\|_1)\f$ from a
-/// factorization of \f$A\f$.
-///
-/// Near 1 for a well-conditioned matrix and near machine epsilon for a numerically singular
-/// one: a solve loses about \f$\log_{10}(1/\text{rcond})\f$ digits. 0 for a zero matrix.
+/// @brief Reciprocal condition estimate: \f$1 / (\|A\|_1 \|A^{-1}\|_1)\f$; 0 for a zero matrix.
+/// @note A solve loses about \f$\log_{10}(1 / \mathrm{rcond})\f$ digits.
 template <factorization F>
 [[nodiscard]] real rcond(const F &factor, const mat<real> &A) {
     const real norm = opnorm1(A);
@@ -131,7 +120,7 @@ template <factorization F>
     return 1.0 / (norm * inverse_norm1_estimate(factor, A.rows()));
 }
 
-/// @brief The reciprocal condition number estimate for a sparse \f$A\f$.
+/// @brief Reciprocal condition estimate of a sparse matrix: \f$1 / (\|A\|_1 \|A^{-1}\|_1)\f$.
 template <factorization F>
 [[nodiscard]] real rcond(const F &factor, const spmat &A) {
     const real norm = opnorm1(A);

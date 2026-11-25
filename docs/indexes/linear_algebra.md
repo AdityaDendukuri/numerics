@@ -6,13 +6,13 @@ Factorizations, solvers, eigenvalues and the SVD. Every factorization is solved 
 num::factorization num::solve_transpose
 
 ## LU <linear/factorization/lu.hpp>
-num::lu num::lu_result num::no_pivot num::no_pivot_structure num::lower num::upper num::det num::inverse num::seq::lu num::lapack::lu num::lu_factor num::lu_factor_blocked num::lu_solve num::lu_invert num::lu_no_pivot num::lu_no_pivot_solve_multiple num::lu_no_pivot_solve_transpose_multiple
+num::lu num::lu_result num::no_pivot num::no_pivot_structure num::lower num::upper num::det num::inverse num::seq::lu num::lapack::lu num::lu_factor num::lu_factor_blocked num::lu_no_pivot_blocked num::lu_solve num::lu_invert num::lu_no_pivot num::lu_no_pivot_solve_multiple num::lu_no_pivot_solve_transpose_multiple num::lu_diagonal_shift_derivative
 
 ## Mixed precision <linear/factorization/mixed_lu.hpp>
 num::mixed_lu num::mixed_precision num::mixed_precision_structure
 
 ## Cholesky <linear/factorization/cholesky.hpp>
-num::cholesky num::cholesky_result num::cholesky_update num::cholesky_downdate num::lapack::cholesky num::unsafe::cholesky num::linear::is_spd num::linear::make_spd num::cholesky_blocked num::cholesky_block num::cholesky_solve
+num::cholesky num::cholesky_result num::cholesky_update num::cholesky_downdate num::lapack::cholesky num::unsafe::cholesky num::linear::is_spd num::linear::make_spd num::cholesky_blocked num::cholesky_blocked_blas num::cholesky_block num::cholesky_solve
 
 ## QR <linear/factorization/qr.hpp>
 num::qr num::qr_result num::seq::qr num::lapack::qr num::householder_vector num::householder_vector_strided num::householder_left num::householder_right num::qr_factor_blocked num::qr_form_block num::qr_apply_block_left num::qr_workspace num::qr_block
@@ -36,16 +36,16 @@ num::block_lu_factor num::block_cholesky_factor num::factor_block_lu num::factor
 num::sparse num::sparse_structure num::blocks num::block_structure num::similar_factor
 
 ## Factor reuse <linear/factorization/reuse.hpp>
-num::corrected_lu num::suffix_block_lu
+num::corrected_factor num::corrected_lu num::corrected_cholesky num::suffix_block_lu num::suffix_block_cholesky
 
 ## Low-rank updates <linear/factorization/woodbury.hpp>
-num::woodbury_solver num::low_rank_difference num::low_rank_update num::update_inverse_rows num::inverse_rows_workspace
+num::woodbury_solver num::low_rank_difference num::orthogonalized_low_rank_difference num::low_rank_update num::update_inverse_rows num::inverse_rows_workspace
 
 ## Inverse diagonal <linear/factorization/inverse_diagonal.hpp>
 num::inverse_diagonal num::inverse_diagonal_workspace num::inverse_principal_block num::selected_inverse num::safe_add
 
 ## Probed inverse diagonal <linear/factorization/probed_inverse_diagonal.hpp>
-num::inverse_diagonal_options
+num::inverse_diagonal_options num::ac num::ac2 num::grounded_approxchol_factor
 
 ## Conditioning <linear/condition.hpp>
 num::rcond num::inverse_norm1_estimate num::opnorm1
@@ -96,13 +96,13 @@ num::auto_linear_solver num::auto_linear_options
 num::hessenberg_resolvent num::hessenberg_shifted_lu num::shift num::solve_batch
 
 ## Sparse resolvent <linear/solvers/sparse_resolvent.hpp>
-num::sparse_resolvent num::sparse_shifted_lu num::sparse_resolvent_options num::sparse_resolvent_available
+num::sparse_resolvent num::sparse_shifted_lu num::sparse_resolvent_available
 
 ## Automatic resolvent <linear/solvers/auto_resolvent.hpp>
 num::auto_resolvent num::auto_shifted_lu num::auto_resolvent_options
 
 ## Matrix exponential <linear/expv/expv.hpp>
-num::expv
+num::expv num::restarted_expv num::expv_options num::expm
 
 ## KLU <linear/sparse/klu.hpp>
 num::klu_factorization num::klu_available
@@ -123,7 +123,7 @@ num::power_iteration num::inverse_iteration num::rayleigh_iteration num::power_r
 num::svd num::svd_truncated num::svd_result num::seq::svd num::lapack::svd
 
 ## Subspaces <linear/subspace.hpp>
-num::mgs_columns num::dispatch::subspace::mgs_orthogonalize num::dispatch::subspace::arnoldi_step
+num::mgs_columns num::cgs2_orthogonalize num::dispatch::subspace::mgs_orthogonalize num::dispatch::subspace::arnoldi_step
 
 ## Matrices from graphs <linear/graph/laplacian.hpp>
 num::linear::laplacian num::linear::dense_laplacian num::linear::markov_generator num::linear::dense_markov_generator num::linear::to_dense_adjacency num::linear::to_sparse_adjacency num::linear::to_multigraph

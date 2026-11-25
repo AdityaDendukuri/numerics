@@ -1,5 +1,5 @@
 /// @file linear/linear.hpp
-/// @brief Factorizations, iterative solvers, eigenvalues, the SVD and sparse matrices.
+/// @brief Linear algebra: factorizations, solvers, eigenvalues, SVD, sparse matrices.
 #pragma once
 
 #include "linear/banded/banded.hpp"

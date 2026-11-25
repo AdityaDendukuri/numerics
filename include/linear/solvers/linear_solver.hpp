@@ -1,5 +1,5 @@
 /// @file linear/solvers/linear_solver.hpp
-/// @brief Universal linear solver callable type.
+/// @brief Type-erased linear solver.
 #pragma once
 
 #include "container/vector.hpp"
@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief Callable that solves \f$Ax=\mathrm{rhs}\f$.
+/// @brief Linear solver: \f$x \leftarrow A^{-1} b\f$.
 using linear_solver = std::function<solver_result(const vec<real> &rhs, vec<real> &x)>;
 
 } // namespace num

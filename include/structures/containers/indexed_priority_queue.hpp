@@ -1,5 +1,5 @@
 /// @file structures/containers/indexed_priority_queue.hpp
-/// @brief Indexed binary heap supporting O(log N) push, pop, decrease_key, and element lookup.
+/// @brief Indexed binary heap.
 #pragma once
 
 #include "core/types.hpp"
@@ -12,10 +12,8 @@
 
 namespace num {
 
-/// @brief Addressable priority queue where each item is identified by a unique index in [0, capacity).
-/// @tparam Key The priority key type (e.g. double, float, int).
-/// @tparam Index The integer type for element indices (e.g. num::idx, uint32_t).
-/// @tparam Compare Comparator where comp(a, b) == true means a has higher priority (default std::less for min-heap).
+/// @brief Indexed priority queue: items in `[0, capacity)`, \f$O(\log n)\f$ push, pop and update.
+/// `comp(a, b)` true means `a` has priority; the default is a min-heap.
 template <typename Key = double, std::integral Index = num::idx, typename Compare = std::less<Key>>
 class indexed_priority_queue {
   public:
@@ -23,12 +21,12 @@ class indexed_priority_queue {
     using index_type = Index;
     using compare_type = Compare;
 
-    /// Construct an indexed priority queue for indices up to capacity.
+    /// @brief Empty queue for indices below `capacity`.
     explicit indexed_priority_queue(Index capacity = 0, Compare comp = Compare{})
         : comp_(comp), capacity_(capacity), size_(0),
           heap_(capacity + 1, 0), pos_(capacity, 0), keys_(capacity) {}
 
-    /// Insert index with associated priority key.
+    /// @brief Insert `index` with `key`.
     void push(Index index, const Key &key) {
         structures::debug::check_index_bounds(index, capacity_, "indexed_priority_queue::push");
         structures::debug::check_not_contains(contains(index), index, "indexed_priority_queue::push");
@@ -40,7 +38,7 @@ class indexed_priority_queue {
         swim(size_);
     }
 
-    /// Remove the top (highest-priority) element from the queue.
+    /// @brief Remove the top element.
     void pop() {
         if (empty()) {
             structures::debug::check_index_bounds(static_cast<Index>(0), static_cast<Index>(0),
@@ -54,7 +52,7 @@ class indexed_priority_queue {
         sink(1);
     }
 
-    /// Return the index of the highest-priority element.
+    /// @brief Index of the top element.
     [[nodiscard]] Index top_index() const {
         if (empty()) {
             structures::debug::check_index_bounds(static_cast<Index>(0), static_cast<Index>(0),
@@ -63,7 +61,7 @@ class indexed_priority_queue {
         return heap_[1];
     }
 
-    /// Return the key of the highest-priority element.
+    /// @brief Key of the top element.
     [[nodiscard]] const Key &top_key() const {
         if (empty()) {
             structures::debug::check_index_bounds(static_cast<Index>(0), static_cast<Index>(0),
@@ -72,20 +70,20 @@ class indexed_priority_queue {
         return keys_[heap_[1]];
     }
 
-    /// Check if index is currently present in the priority queue.
+    /// @brief Whether `index` is queued.
     [[nodiscard]] bool contains(Index index) const noexcept {
         if (index >= capacity_) return false;
         return pos_[index] != 0;
     }
 
-    /// Return the key associated with element index.
+    /// @brief Key of `index`.
     [[nodiscard]] const Key &key_of(Index index) const {
         structures::debug::check_index_bounds(index, capacity_, "indexed_priority_queue::key_of");
         structures::debug::check_contains(contains(index), index, "indexed_priority_queue::key_of");
         return keys_[index];
     }
 
-    /// Update the key of element index (re-heaps up or down as needed).
+    /// @brief Set the key of `index`.
     void update(Index index, const Key &new_key) {
         structures::debug::check_index_bounds(index, capacity_, "indexed_priority_queue::update");
         if (!contains(index)) {
@@ -97,7 +95,7 @@ class indexed_priority_queue {
         sink(pos_[index]);
     }
 
-    /// Decrease/increase key with priority improvement.
+    /// @brief Set the key of `index` to a higher-priority value.
     void improve_key(Index index, const Key &new_key) {
         structures::debug::check_index_bounds(index, capacity_, "indexed_priority_queue::improve_key");
         structures::debug::check_contains(contains(index), index, "indexed_priority_queue::improve_key");
@@ -107,7 +105,7 @@ class indexed_priority_queue {
         }
     }
 
-    /// Erase element index from the priority queue.
+    /// @brief Erase `index`.
     void erase(Index index) {
         structures::debug::check_index_bounds(index, capacity_, "indexed_priority_queue::erase");
         structures::debug::check_contains(contains(index), index, "indexed_priority_queue::erase");
@@ -121,16 +119,16 @@ class indexed_priority_queue {
         }
     }
 
-    /// Check whether the priority queue is empty.
+    /// @brief Whether the queue is empty.
     [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
 
-    /// Return the number of elements in the priority queue.
+    /// @brief Number of queued items.
     [[nodiscard]] Index size() const noexcept { return size_; }
 
-    /// Return maximum index capacity.
+    /// @brief Index capacity.
     [[nodiscard]] Index capacity() const noexcept { return capacity_; }
 
-    /// Clear all elements.
+    /// @brief Remove every item.
     void clear() noexcept {
         for (Index i = 1; i <= size_; ++i) {
             pos_[heap_[i]] = 0;
@@ -174,11 +172,11 @@ class indexed_priority_queue {
     array<Key> keys_;
 };
 
-/// Default Min-Indexed Priority Queue
+/// @brief Indexed min-heap.
 template <typename Key = double, std::integral Index = num::idx>
 using min_indexed_pq = indexed_priority_queue<Key, Index, std::less<Key>>;
 
-/// Max-Indexed Priority Queue
+/// @brief Indexed max-heap.
 template <typename Key = double, std::integral Index = num::idx>
 using max_indexed_pq = indexed_priority_queue<Key, Index, std::greater<Key>>;
 

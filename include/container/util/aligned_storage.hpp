@@ -1,7 +1,5 @@
 /// @file container/util/aligned_storage.hpp
 /// @brief Over-aligned owning storage for the dense containers.
-///
-/// The guarantee covers the base pointer only.
 #pragma once
 
 #include "core/types.hpp"
@@ -11,17 +9,14 @@
 #include <memory>
 #include <new>
 
-/// @brief Storage alignment in bytes, 64 by default: a cache line on x86-64 and a multiple of
-/// every common SIMD width. Override with `-DNUMERICS_STORAGE_ALIGNMENT=<n>`.
+/// @brief Default storage alignment in bytes: 64. Override with `-DNUMERICS_STORAGE_ALIGNMENT=<n>`.
 #ifndef NUMERICS_STORAGE_ALIGNMENT
 #define NUMERICS_STORAGE_ALIGNMENT 64
 #endif
 
 namespace num {
 
-/// @brief Alignment, in bytes, of the storage owned by every dense container. It enters the
-/// deallocation call, so it must match across translation units; the CMake target sets it
-/// `PUBLIC` for that reason.
+/// @brief Storage alignment in bytes; must match across translation units.
 inline constexpr std::size_t storage_alignment = NUMERICS_STORAGE_ALIGNMENT;
 
 static_assert(storage_alignment >= alignof(std::max_align_t),
@@ -31,8 +26,7 @@ static_assert((storage_alignment & (storage_alignment - 1)) == 0,
 
 namespace detail {
 
-/// @brief Releases storage obtained from `allocate_aligned`. It carries the count to run the
-/// destructors and call the matching aligned `operator delete`.
+/// @brief Deleter for `allocate_aligned` storage.
 template <class T>
 class aligned_deleter {
   public:
@@ -52,8 +46,8 @@ class aligned_deleter {
     idx count_ = 0;
 };
 
-/// @brief Obtain raw `storage_alignment`-aligned storage for `count` elements.
-/// @throws std::bad_alloc If the byte count overflows `idx`, or on allocation failure.
+/// @brief Raw aligned storage for `count` elements, unconstructed.
+/// @throws std::bad_alloc On overflow or allocation failure.
 template <class T>
 [[nodiscard]] inline T *allocate_aligned(idx count) {
     static_assert(storage_alignment >= alignof(T),
@@ -73,13 +67,11 @@ inline void deallocate_aligned(T *pointer, idx count) noexcept {
 
 } // namespace detail
 
-/// @brief Owning handle to `storage_alignment`-aligned storage for `T`.
+/// @brief Owning handle to aligned storage of `T`.
 template <class T>
 using aligned_array = std::unique_ptr<T[], detail::aligned_deleter<T>>;
 
-/// @brief Allocate `count` value-initialized elements on an aligned boundary.
-///
-/// Equivalent to `new T[count]()`, except for the alignment and the overflow check.
+/// @brief Aligned allocation of `count` value-initialized elements.
 /// @throws std::bad_alloc On overflow or allocation failure.
 template <class T>
 [[nodiscard]] inline aligned_array<T> make_aligned(idx count) {
@@ -96,9 +88,7 @@ template <class T>
     return aligned_array<T>(storage, detail::aligned_deleter<T>(count));
 }
 
-/// @brief Allocate `count` default-initialized elements on an aligned boundary, like
-/// `new T[count]`. Scalar contents are indeterminate, so use it only when the caller overwrites
-/// the whole buffer.
+/// @brief Aligned allocation of `count` default-initialized elements; overwrite before reading.
 /// @throws std::bad_alloc On overflow or allocation failure.
 template <class T>
 [[nodiscard]] inline aligned_array<T> make_aligned_for_overwrite(idx count) {
@@ -115,8 +105,7 @@ template <class T>
     return aligned_array<T>(storage, detail::aligned_deleter<T>(count));
 }
 
-/// @brief Restate a container's storage alignment for the optimizer. Valid only on the base
-/// pointer of storage obtained above; null passes through.
+/// @brief Alignment hint for the optimizer; valid only on a base pointer from above.
 template <class T>
 [[nodiscard]] inline T *assume_storage_aligned(T *pointer) noexcept {
     if (pointer == nullptr) {
@@ -125,9 +114,7 @@ template <class T>
     return std::assume_aligned<storage_alignment>(pointer);
 }
 
-/// @brief True when `pointer` sits on a `storage_alignment` boundary.
-///
-/// Diagnostic only; the containers guarantee this by construction.
+/// @brief Whether `pointer` is aligned to `storage_alignment`.
 template <class T>
 [[nodiscard]] inline bool is_storage_aligned(const T *pointer) noexcept {
     return (reinterpret_cast<std::uintptr_t>(pointer) % storage_alignment) == 0;

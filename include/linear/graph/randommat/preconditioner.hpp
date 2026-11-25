@@ -1,9 +1,5 @@
 /// @file linear/graph/randommat/preconditioner.hpp
-/// @brief Adapting the ApproxChol factorization to numerics' operator vocabulary.
-///
-/// `approxchol.hpp` needs only `num::structures` and can be lifted out alone. This header
-/// converts a `num::spmat` Laplacian to its graph and wraps the factor as a
-/// `num::preconditioner` for `num::pcg`.
+/// @brief Approximate Cholesky preconditioners for PCG.
 #pragma once
 
 #include "container/vector.hpp"
@@ -21,8 +17,7 @@
 namespace num {
 namespace randommat {
 
-/// @brief preconditioner adapter backed by Randomized Approximate Cholesky (ApproxChol).
-/// Satisfies the num::preconditioner concept for use with num::pcg and Krylov solvers.
+/// @brief Approximate Cholesky preconditioner: \f$M^{-1} = C^{-T} C^{-1}\f$.
 class approx_chol_preconditioner final {
   public:
     using domain_type = vec<real>;
@@ -31,17 +26,17 @@ class approx_chol_preconditioner final {
     // PCG on a compatible subspace needs `law::spd_on<S>`, which the caller attaches.
     using laws = law::list<law::psd>;
 
-    /// Construct from an existing factor.
+    /// @brief Preconditioner from an existing factor.
     explicit approx_chol_preconditioner(cholesky_factor<real, idx> factor)
         : factor_(std::move(factor)), n_(factor_.order.size()), scratch_(n_, 0.0) {}
 
-    /// Number of rows.
+    /// @brief Number of rows.
     [[nodiscard]] idx rows() const noexcept { return n_; }
 
-    /// Number of columns.
+    /// @brief Number of columns.
     [[nodiscard]] idx cols() const noexcept { return n_; }
 
-    /// Apply preconditioner z = M^-1 r via forward and backward substitution.
+    /// @brief Preconditioner application: \f$z \leftarrow C^{-T} C^{-1} r\f$.
     void apply(const vec<real> &r, vec<real> &z) const {
         if (r.size() != n_) {
             throw std::invalid_argument("approx_chol_preconditioner: dimension mismatch");
@@ -52,7 +47,7 @@ class approx_chol_preconditioner final {
         randommat::solve(factor_, r.data(), z.data(), scratch_);
     }
 
-    /// Access underlying factor.
+    /// @brief Underlying factor.
     [[nodiscard]] const cholesky_factor<real, idx> &factor() const noexcept { return factor_; }
 
   private:
@@ -61,9 +56,7 @@ class approx_chol_preconditioner final {
     mutable std::vector<real> scratch_;
 };
 
-/// Sparse approximate factor C of a grounded SDDM matrix, stored through the
-/// Cholesky factor of its one-vertex Laplacian extension.  The ground vertex is
-/// pinned last and omitted from all vector actions below.
+/// @brief Grounded approximate factor of an SDDM matrix: \f$A \approx C C^T\f$.
 class grounded_approx_chol_factor final {
   public:
     using domain_type = vec<real>;
@@ -82,7 +75,7 @@ class grounded_approx_chol_factor final {
     [[nodiscard]] idx rows() const noexcept { return n_; }
     [[nodiscard]] idx cols() const noexcept { return n_; }
 
-    /// Apply C, where the approximate grounded matrix is C C^T.
+    /// @brief Factor application: \f$y \leftarrow C x\f$.
     [[nodiscard]] vec<real> apply_lower(const vec<real> &x) const {
         check_dimension(x);
         const vec<real> permuted = permute(x);
@@ -97,7 +90,7 @@ class grounded_approx_chol_factor final {
         return inverse_permute(product);
     }
 
-    /// Apply C^{-1} by forward substitution.
+    /// @brief Forward substitution: \f$y \leftarrow C^{-1} b\f$.
     [[nodiscard]] vec<real> solve_lower(const vec<real> &b) const {
         check_dimension(b);
         vec<real> solution = permute(b);
@@ -112,7 +105,7 @@ class grounded_approx_chol_factor final {
         return inverse_permute(solution);
     }
 
-    /// Apply C^{-T} by backward substitution.
+    /// @brief Backward substitution: \f$y \leftarrow C^{-T} b\f$.
     [[nodiscard]] vec<real> solve_upper(const vec<real> &b) const {
         check_dimension(b);
         vec<real> solution = permute(b);
@@ -128,7 +121,7 @@ class grounded_approx_chol_factor final {
         return inverse_permute(solution);
     }
 
-    /// Apply the approximate inverse C^{-T} C^{-1} as an SPD preconditioner.
+    /// @brief Preconditioner application: \f$x \leftarrow C^{-T} C^{-1} b\f$.
     void apply(const vec<real> &b, vec<real> &x) const { x = solve_upper(solve_lower(b)); }
 
     [[nodiscard]] const cholesky_factor<real, idx> &factor() const noexcept { return factor_; }
@@ -167,27 +160,27 @@ class grounded_approx_chol_factor final {
 static_assert(linear_operator<approx_chol_preconditioner, vec<real>, vec<real>>);
 static_assert(math::spd_operator<grounded_approx_chol_factor, vec<real>>);
 
-/// Convert num::graph to randommat::adjacency_list.
+/// @brief Adjacency list of a graph.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline adjacency_list<real, idx> to_approxchol_graph(const graph<Weight, Index> &G) {
     const auto mg = structures::to_multigraph(G);
     return mg.adjacency();
 }
 
-/// Convert num::multigraph to randommat::adjacency_list.
+/// @brief Adjacency list of a multigraph.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline adjacency_list<real, idx>
 to_approxchol_graph(const structures::multigraph<Weight, Index> &mg) {
     return mg.adjacency();
 }
 
-/// Convert Laplacian spmat (CSR) to randommat::adjacency_list.
+/// @brief Adjacency list of a Laplacian.
 [[nodiscard]] inline adjacency_list<real, idx> to_approxchol_graph(const spmat &L) {
     const auto mg = num::linear::to_multigraph(L);
     return mg.adjacency();
 }
 
-/// Construct ApproxChol preconditioner from a randommat::adjacency_list.
+/// @brief Approximate Cholesky preconditioner of an adjacency list.
 template <detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
 approxchol_preconditioner(const adjacency_list<real, idx> &G, Algorithm algorithm,
@@ -197,7 +190,7 @@ approxchol_preconditioner(const adjacency_list<real, idx> &G, Algorithm algorith
     return approx_chol_preconditioner(std::move(factor));
 }
 
-/// Construct ApproxChol preconditioner from a num::graph.
+/// @brief Approximate Cholesky preconditioner of a graph.
 template <typename Weight, std::integral Index, detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
 approxchol_preconditioner(const graph<Weight, Index> &G, Algorithm algorithm,
@@ -206,7 +199,7 @@ approxchol_preconditioner(const graph<Weight, Index> &G, Algorithm algorithm,
     return approxchol_preconditioner(ac_G, algorithm, seed);
 }
 
-/// Construct ApproxChol preconditioner from a num::multigraph.
+/// @brief Approximate Cholesky preconditioner of a multigraph.
 template <typename Weight, std::integral Index, detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
 approxchol_preconditioner(const structures::multigraph<Weight, Index> &mg, Algorithm algorithm,
@@ -214,7 +207,7 @@ approxchol_preconditioner(const structures::multigraph<Weight, Index> &mg, Algor
     return approxchol_preconditioner(mg.adjacency(), algorithm, seed);
 }
 
-/// Construct ApproxChol preconditioner from a Laplacian spmat.
+/// @brief Approximate Cholesky preconditioner of a Laplacian.
 template <detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline approx_chol_preconditioner
 approxchol_preconditioner(const spmat &L, Algorithm algorithm, std::uint64_t seed = 42) {
@@ -222,8 +215,7 @@ approxchol_preconditioner(const spmat &L, Algorithm algorithm, std::uint64_t see
     return approxchol_preconditioner(ac_G, algorithm, seed);
 }
 
-/// Construct a sparse approximate factor of a symmetric diagonally dominant
-/// M-matrix by adding one ground vertex for the diagonal excess.
+/// @brief Grounded approximate Cholesky of an SDD M-matrix: \f$A \approx C C^T\f$.
 template <detail::gks_2023_algorithm Algorithm>
 [[nodiscard]] inline grounded_approx_chol_factor
 grounded_approxchol_factor(const spmat &A, Algorithm algorithm, std::uint64_t seed = 42) {

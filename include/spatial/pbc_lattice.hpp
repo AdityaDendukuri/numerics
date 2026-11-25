@@ -1,11 +1,5 @@
 /// @file spatial/pbc_lattice.hpp
-/// @brief Precomputed periodic-boundary neighbor arrays for a 2D square
-/// lattice.
-///
-/// pbc_lattice_2d builds up[i], dn[i], lt[i], rt[i] once from modulo arithmetic
-/// so the hot-path (Metropolis sweeps, BFS cluster detection) never calls %.
-///
-/// Flat layout: i = row * N + col,  row and col in [0, N).
+/// @brief Periodic 2D square lattice with precomputed neighbours.
 #pragma once
 
 #include "core/index_space.hpp"
@@ -14,7 +8,8 @@
 
 namespace num {
 
-/// 4-neighbor periodic-boundary index arrays for an NxN lattice.
+/// @brief Periodic \f$N \times N\f$ lattice with neighbour arrays `up`, `dn`, `lt`, `rt`.
+/// Site \f$(r, c)\f$ is \f$i = r N + c\f$.
 struct pbc_lattice_2d {
     int N; ///< Side length; total sites = N*N
     array<int> up, dn, lt,

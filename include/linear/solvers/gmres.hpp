@@ -1,5 +1,5 @@
 /// @file linear/solvers/gmres.hpp
-/// @brief Evidence-constrained restarted GMRES.
+/// @brief Restarted GMRES.
 #pragma once
 
 #include "core/math/concepts.hpp"
@@ -18,25 +18,15 @@
 
 namespace num {
 
-/// @brief Convergence options of `num::gmres`: tolerance, iteration limit, and restart length.
+/// @brief GMRES options: tolerance, iteration limit, restart length.
 struct gmres_options {
     real tolerance = 1e-6;
     idx max_iterations = 1000;
     idx restart = 30;
 };
 
-/// @brief Solve general unsymmetric linear systems \f$A x = b\f$ using restarted GMRES.
-///
-/// Constructs an orthogonal Arnoldi basis \f$V_m\f$ and solves the projected least-squares
-/// problem \f$\min \| \beta e_1 - \bar{H}_m y \|_2\f$ with Givens plane rotations.
-///
-/// @param A General square linear operator (dense, sparse, or matrix-free).
-/// @param b Right-hand side vector.
-/// @param x Solution vector (serves as initial guess on input, updated in place).
-/// @param options Tolerance on \f$\|b - A x\|_2\f$, iteration limit, and restart length.
-/// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
-/// @throws std::invalid_argument If dimensions do not match.
-/// @see cg, minres, pcg
+/// @brief Restarted GMRES: \f$A x = b\f$, minimizing \f$\|\beta e_1 - \bar{H}_m y\|_2\f$ per cycle.
+/// @throws std::invalid_argument If dimensions mismatch.
 template <class Op, class V>
 requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&
     std::same_as<math::scalar_t<V>, real> [[nodiscard]] solver_result
@@ -151,16 +141,8 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&
     return result;
 }
 
-/// @brief Right-preconditioned restarted GMRES: solves \f$A M^{-1} u = b\f$, \f$x = M^{-1} u\f$.
-///
-/// Right preconditioning keeps `result.residual` equal to \f$\|b - Ax\|_2\f$, so the stopping
-/// test does not depend on the scaling of `M`. `M` need not be symmetric, as with ILU(0).
-///
-/// @param A System operator.
-/// @param preconditioner Approximate inverse applied on the right.
-/// @param b Right-hand side.
-/// @param x Solution; initial guess on input.
-/// @param options Tolerance, restart length, and iteration limit.
+/// @brief Right-preconditioned GMRES: \f$A M^{-1} u = b\f$, \f$x = M^{-1} u\f$.
+/// @note `result.residual` is the true residual \f$\|b - A x\|_2\f$, whatever the scale of `M`.
 template <class Op, class M, class V>
 requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::linear_operator<M, V, V> &&
     std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
@@ -293,13 +275,7 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::
     return result;
 }
 
-/// @brief Solve sparse linear systems \f$A x = b\f$ using restarted GMRES.
-///
-/// @param A Square CSR sparse matrix.
-/// @param b Right-hand side vector.
-/// @param x Solution vector (serves as initial guess on input, updated in place).
-/// @param options Tolerance, iteration limit, and restart length.
-/// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
+/// @brief Restarted GMRES on a sparse matrix: \f$A x = b\f$.
 /// @throws std::invalid_argument If `A` is not square or dimensions mismatch.
 inline solver_result gmres(const spmat &A, const vec<real> &b, vec<real> &x, gmres_options options = {}) {
     if (A.n_rows() != A.n_cols()) {
@@ -310,13 +286,7 @@ inline solver_result gmres(const spmat &A, const vec<real> &b, vec<real> &x, gmr
         options);
 }
 
-/// @brief Solve dense linear systems \f$A x = b\f$ using restarted GMRES with hardware backend dispatch.
-///
-/// @param A Square dense matrix.
-/// @param b Right-hand side vector.
-/// @param x Solution vector (serves as initial guess on input, updated in place).
-/// @param options Tolerance, iteration limit, and restart length.
-/// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
+/// @brief Restarted GMRES on a dense matrix: \f$A x = b\f$.
 /// @throws std::invalid_argument If `A` is not square or dimensions mismatch.
 inline solver_result gmres(const mat<real> &A, const vec<real> &b, vec<real> &x, gmres_options options = {}) {
     if (A.rows() != A.cols()) {

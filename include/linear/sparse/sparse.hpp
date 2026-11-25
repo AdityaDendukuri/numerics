@@ -2,13 +2,13 @@
 /// @brief Compressed Sparse Row (CSR) matrix and operations
 #pragma once
 #include "container/concepts.hpp"
+#include "container/matrix.hpp"
+#include "container/vector.hpp"
+#include "core/types.hpp"
 #include "kernel/kernel.hpp"
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include "container/matrix.hpp"
-#include "core/types.hpp"
-#include "container/vector.hpp"
 #include <span>
 #include <stdexcept>
 #include <vector>
@@ -22,14 +22,13 @@ namespace num {
 class spmat {
   public:
     /// @brief Construct from raw CSR arrays (takes ownership)
-    spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx,
-                 array<idx> row_ptr);
+    spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx, array<idx> row_ptr);
 
     /// @brief Build from coordinate (COO / triplet) lists
     ///
     /// Duplicate (row, col) entries are summed. Entries need not be sorted.
     static spmat from_triplets(idx n_rows, idx n_cols, const array<idx> &rows,
-                                      const array<idx> &cols, const array<real> &vals);
+                               const array<idx> &cols, const array<real> &vals);
 
     /// @brief Build from zero-based compressed-column (CSC) arrays.
     ///
@@ -38,8 +37,7 @@ class spmat {
     /// Armadillo sparse serializer; only the first `col_ptrs.back()` entries
     /// are consumed.  All indices and pointers are zero-based.
     static spmat from_csc(idx n_rows, idx n_cols, const array<real> &vals,
-                                 const array<idx> &row_indices,
-                                 const array<idx> &col_ptrs);
+                          const array<idx> &row_indices, const array<idx> &col_ptrs);
 
     [[nodiscard]] idx n_rows() const { return n_rows_; }
     [[nodiscard]] idx n_cols() const { return n_cols_; }
@@ -78,7 +76,8 @@ class spmat {
     array<idx> row_ptr_; // size n_rows_ + 1
 };
 
-/// @brief Sparse matrix-vector product \f$\mathbf{y} \leftarrow A \mathbf{x}\f$ in \f$\mathcal{O}(\text{nnz})\f$ time.
+/// @brief Sparse matrix-vector product \f$\mathbf{y} \leftarrow A \mathbf{x}\f$ in
+/// \f$\mathcal{O}(\text{nnz})\f$ time.
 ///
 /// @param A Compressed Sparse Row (CSR) matrix.
 /// @param x Input vector of dimension \f$A.\text{cols()}\f$.
@@ -86,7 +85,8 @@ class spmat {
 /// @throws std::invalid_argument If dimensions do not match.
 void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y);
 
-/// @brief Return scaled sparse matrix \f$\alpha A\f$ while preserving the exact CSR sparsity structure.
+/// @brief Return scaled sparse matrix \f$\alpha A\f$ while preserving the exact CSR sparsity
+/// structure.
 /// @param A Input CSR matrix.
 /// @param alpha Scaling scalar.
 /// @return Scaled `spmat`.
@@ -103,7 +103,8 @@ void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y);
 /// @param A Input sparse matrix.
 /// @return vec of length \f$\min(m, n)\f$ containing diagonal entries (0 for unstored elements).
 
-/// @brief Compute diagonal similarity transform \f$D^{-1} A D\f$ where \f$D = \text{diag}(\mathbf{w})\f$.
+/// @brief Compute diagonal similarity transform \f$D^{-1} A D\f$ where \f$D =
+/// \text{diag}(\mathbf{w})\f$.
 /// @param A Square CSR matrix.
 /// @param weights Positive diagonal weight entries \f$w_i > 0\f$.
 /// @return Dense similarity transformed matrix \f$D^{-1} A D\f$.
@@ -137,10 +138,8 @@ void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y);
 /// @throws std::invalid_argument If dimensions mismatch.
 [[nodiscard]] spmat sparse_congruence(const spmat &A, view<const real> weights);
 
-
-
 inline spmat::spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx,
-                           array<idx> row_ptr)
+                    array<idx> row_ptr)
     : n_rows_(n_rows), n_cols_(n_cols), vals_(std::move(vals)), col_idx_(std::move(col_idx)),
       row_ptr_(std::move(row_ptr)) {
     if (row_ptr_.size() != n_rows_ + 1) {
@@ -152,8 +151,7 @@ inline spmat::spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx
 }
 
 inline spmat spmat::from_triplets(idx n_rows, idx n_cols, const array<idx> &rows,
-                                         const array<idx> &cols,
-                                         const array<real> &vals) {
+                                  const array<idx> &cols, const array<real> &vals) {
     if (rows.size() != cols.size() || rows.size() != vals.size()) {
         throw std::invalid_argument("spmat::from_triplets: inconsistent input sizes");
     }
@@ -235,13 +233,11 @@ inline spmat spmat::from_triplets(idx n_rows, idx n_cols, const array<idx> &rows
         }
     }
 
-    return spmat(n_rows, n_cols, std::move(out_vals), std::move(out_col),
-                        std::move(row_ptr));
+    return spmat(n_rows, n_cols, std::move(out_vals), std::move(out_col), std::move(row_ptr));
 }
 
 inline spmat spmat::from_csc(idx n_rows, idx n_cols, const array<real> &vals,
-                                    const array<idx> &row_indices,
-                                    const array<idx> &col_ptrs) {
+                             const array<idx> &row_indices, const array<idx> &col_ptrs) {
     if (col_ptrs.size() != n_cols + 1) {
         throw std::invalid_argument("spmat::from_csc: col_ptrs must have length n_cols+1");
     }
@@ -285,8 +281,7 @@ inline spmat spmat::from_csc(idx n_rows, idx n_cols, const array<real> &vals,
         }
     }
 
-    return spmat(n_rows, n_cols, std::move(out_vals), std::move(out_col),
-                        std::move(row_ptr));
+    return spmat(n_rows, n_cols, std::move(out_vals), std::move(out_col), std::move(row_ptr));
 }
 
 inline real spmat::operator()(idx i, idx j) const {
@@ -305,8 +300,7 @@ inline real spmat::operator()(idx i, idx j) const {
 /// stated over the concept rather than over `spmat`, it accepts any type exposing the CSR
 /// accessors -- an Eigen sparse matrix or a raw triple of buffers -- with no adapter.
 template <class M>
-requires repr::csr<M>
-inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
+requires repr::csr<M> inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
     if (A.n_cols() != x.size() || A.n_rows() != y.size()) {
         throw std::invalid_argument("Dimension mismatch in matvec");
     }
@@ -314,11 +308,12 @@ inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
 }
 
 /// @brief \f$y \leftarrow Ax\f$ for a sparse matrix. Prefer the unified `matvec`.
-inline void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y) { matvec(A, x, y); }
+inline void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y) {
+    matvec(A, x, y);
+}
 
 template <class M>
-requires repr::csr<M>
-inline spmat scaled(const M &A, real alpha) {
+requires repr::csr<M> inline spmat scaled(const M &A, real alpha) {
     array<real> values(A.values(), A.values() + A.nnz());
     for (real &value : values) {
         value *= alpha;
@@ -329,8 +324,7 @@ inline spmat scaled(const M &A, real alpha) {
 }
 
 template <class M>
-requires repr::csr<M>
-inline spmat transpose(const M &A) {
+requires repr::csr<M> inline spmat transpose(const M &A) {
     array<idx> column_ptr(A.n_cols() + 1, 0);
     for (idx entry = 0; entry < A.nnz(); ++entry) {
         ++column_ptr[A.col_idx()[entry] + 1];
@@ -354,8 +348,7 @@ inline spmat transpose(const M &A) {
 
 /// @brief Expand a CSR matrix into a dense one.
 template <class M>
-requires repr::csr<M>
-inline mat<real> dense(const M &A) {
+requires repr::csr<M> inline mat<real> dense(const M &A) {
     mat<real> result(A.n_rows(), A.n_cols(), 0.0);
     for (idx row = 0; row < A.n_rows(); ++row) {
         for (idx entry = A.row_ptr()[row]; entry < A.row_ptr()[row + 1]; ++entry) {
@@ -366,8 +359,7 @@ inline mat<real> dense(const M &A) {
 }
 
 template <class M>
-requires repr::csr<M>
-inline vec<real> diagonal(const M &A) {
+requires repr::csr<M> inline vec<real> diagonal(const M &A) {
     const idx n = std::min(A.n_rows(), A.n_cols());
     vec<real> result(n, 0.0);
     for (idx row = 0; row < n; ++row) {
@@ -452,8 +444,8 @@ inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
     return result;
 }
 
-/// @brief A with every diagonal entry stored explicitly (zeros added where absent), as the shifted
-/// factorizations (`sparse_resolvent`, `umfpack_shifted_lu`) require.
+/// @brief A with every diagonal entry stored explicitly (zeros added where absent), as the
+/// resolvent factorizations (`sparse_resolvent`, `umfpack_shifted_lu`) require.
 [[nodiscard]] inline spmat with_explicit_diagonal(const spmat &A) {
     array<idx> rows, cols;
     array<real> vals;
@@ -474,11 +466,12 @@ inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
     return spmat::from_triplets(A.n_rows(), A.n_cols(), rows, cols, vals);
 }
 
-/// @brief \f$sI - A\f$ for a real shift s, on A's sparsity pattern plus the diagonal.
-[[nodiscard]] inline spmat shifted(const spmat &A, real s) {
+/// @brief The characteristic matrix \f$sI - A\f$, on A's sparsity pattern plus the diagonal.
+[[nodiscard]] inline spmat characteristic_matrix(const spmat &A, real s) {
     const spmat D = with_explicit_diagonal(A);
     array<real> vals(D.nnz());
-    array<idx> cols(D.col_idx(), D.col_idx() + D.nnz()), ptr(D.row_ptr(), D.row_ptr() + D.n_rows() + 1);
+    array<idx> cols(D.col_idx(), D.col_idx() + D.nnz()),
+        ptr(D.row_ptr(), D.row_ptr() + D.n_rows() + 1);
     for (idx i = 0; i < D.n_rows(); ++i) {
         for (idx k = ptr[i]; k < ptr[i + 1]; ++k) {
             vals[k] = (cols[k] == i ? s : 0.0) - D.values()[k];
@@ -488,7 +481,8 @@ inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
 }
 
 /// @brief \f$\sum_k w_k T_k\f$ for sparse matrices of equal size, on the union of their patterns.
-[[nodiscard]] inline spmat sparse_linear_combination(const std::vector<spmat> &terms, const std::vector<real> &weights) {
+[[nodiscard]] inline spmat sparse_linear_combination(const std::vector<spmat> &terms,
+                                                     const std::vector<real> &weights) {
     if (terms.empty() || terms.size() != weights.size()) {
         throw std::invalid_argument("sparse_linear_combination: need one weight per term");
     }

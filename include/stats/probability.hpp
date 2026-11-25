@@ -1,5 +1,5 @@
 /// @file stats/probability.hpp
-/// @brief Probability-vector normalization utilities.
+/// @brief Probability-vector utilities.
 #pragma once
 
 #include "core/types.hpp"
@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// Sum weights times values produced by an index projection.
+/// @brief Weighted sum: \f$\sum_i w_i\, g(i)\f$.
 template <typename Projection>
 [[nodiscard]] real weighted_sum(view<const real> weights, Projection &&value) {
     real result = 0.0;
@@ -18,8 +18,8 @@ template <typename Projection>
     return result;
 }
 
-/// Clip negative entries to zero and normalize the remaining mass.
-/// Returns the mass after clipping and before normalization.
+/// @brief Clip and normalize: \f$p_i \leftarrow \max(p_i, 0) / \sum_j \max(p_j, 0)\f$.
+/// Returns the mass before normalizing.
 inline real clip_and_normalize_nonnegative(view<real> values) {
     real mass = 0.0;
     for (real &value : values) {

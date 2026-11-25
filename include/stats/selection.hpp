@@ -1,5 +1,5 @@
 /// @file stats/selection.hpp
-/// @brief Index selection by scalar score.
+/// @brief Index selection by score.
 #pragma once
 
 #include "core/types.hpp"
@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// Return the first index with the largest projected value.
+/// @brief Argmax: first \f$\arg\max_i s(i)\f$.
 template <typename Score>
 [[nodiscard]] idx argmax(idx count, Score &&score) {
     if (count == 0) {
@@ -31,15 +31,13 @@ template <typename Score>
     return best;
 }
 
-/// Return the first index of the largest value.
+/// @brief Argmax: first \f$\arg\max_i x_i\f$.
 template <typename T>
 [[nodiscard]] idx argmax(view<const T> values) {
     return argmax(values.size(), [&](idx index) -> const T & { return values[index]; });
 }
 
-/// Return the indices that sort `values` in increasing order, ties by index.
-///
-/// `values` is any container with `size()` and `operator[]`.
+/// @brief Argsort: the permutation sorting `values` ascending, ties by index.
 template <typename Values>
 [[nodiscard]] array<idx> argsort(const Values &values) {
     array<idx> indices(values.size());
@@ -49,7 +47,7 @@ template <typename Values>
     return indices;
 }
 
-/// Return the first `count` indices of `argsort(values)`, without sorting the rest.
+/// @brief Partial argsort: the first `count` indices of `argsort(values)`.
 template <typename Values>
 [[nodiscard]] array<idx> smallest_indices(const Values &values, idx count) {
     count = std::min(count, static_cast<idx>(values.size()));
@@ -69,7 +67,7 @@ template <typename Values>
     return indices;
 }
 
-/// Return the indices in [0, count) for which `keep(index)` is true, in increasing order.
+/// @brief Filter: indices \f$i < \mathrm{count}\f$ with `keep(i)`, ascending.
 template <typename Predicate>
 [[nodiscard]] array<idx> filter(idx count, Predicate &&keep) {
     array<idx> indices;
@@ -81,10 +79,7 @@ template <typename Predicate>
     return indices;
 }
 
-/// @brief Group the indices in [0, count) by `key(index)`.
-///
-/// Returns the distinct keys in order of first appearance, and for each index
-/// the position of its key among them.
+/// @brief Group by key: distinct keys by first appearance, and each index's key position.
 template <typename Key>
 [[nodiscard]] auto group_by(idx count, Key &&key) {
     using value = std::remove_cvref_t<decltype(key(idx{0}))>;

@@ -1,8 +1,5 @@
 /// @file omp/vector_ops.hpp
-/// @brief OpenMP-accelerated Level-1 vector operations and threaded block reduction.
-///
-/// Each thread takes a block and calls the matching `num::kernel` routine, so OpenMP only
-/// decides the slicing and the arithmetic has one implementation.
+/// @brief Vector operations threaded with OpenMP.
 #pragma once
 
 #include "container/vector.hpp"

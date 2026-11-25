@@ -5,6 +5,9 @@ Grouped by what each does. Types own their storage and are over-aligned; the fre
 ## Scalars and vocabulary <core/types.hpp>
 num::real num::idx num::cplx num::array num::static_array num::view num::unordered_map num::map num::unordered_set num::set num::append num::scalar_fn num::vector_fn num::to_idx
 
+## Precision limits and comparisons <core/types.hpp>
+num::eps num::unit_roundoff num::inf num::nan num::tiny num::huge num::max num::min num::close num::ulp_distance num::basic_tolerance num::tolerance
+
 ## Dense vectors <container/vector.hpp>
 num::vec num::vec2_view num::copy_to
 
@@ -18,7 +21,7 @@ num::scale num::axpy num::axpby num::axpbyz num::add num::dot num::norm
 num::sum num::l1_norm num::linf_norm
 
 ## Matrix arithmetic <container/matrix_ops.hpp>
-num::matmul num::matvec num::matadd
+num::matmul num::matvec num::matadd num::gemm num::gemv
 
 ## Rank-1 and triangular solves <container/dense.hpp>
 num::ger num::trsv_lower num::trsv_upper
@@ -36,7 +39,7 @@ num::scale_elements num::scale_rows num::divide_elements num::divide_rows num::a
 num::gather num::scatter
 
 ## Sparse matrices <linear/sparse/sparse.hpp>
-num::spmat num::spmat::from_triplets num::spmat::from_csc num::sparse_matvec num::dense num::spmat::nnz num::diagonal_similarity num::sparse_diagonal_similarity num::sparse_congruence num::symmetric_part num::with_explicit_diagonal num::shifted num::sparse_linear_combination
+num::spmat num::spmat::from_triplets num::spmat::from_csc num::sparse_matvec num::dense num::spmat::nnz num::diagonal_similarity num::sparse_diagonal_similarity num::sparse_congruence num::symmetric_part num::with_explicit_diagonal num::characteristic_matrix num::sparse_linear_combination
 
 ## Sparse bilinear contractions <linear/sparse/bilinear.hpp>
 num::sparse_bilinear num::sparse_bilinear_trace

@@ -1,6 +1,5 @@
 /// @file container/dense.hpp
-/// @brief Dense matrix inner kernels: `num::seq::ger`/`num::omp::ger`, and the
-/// untagged `num::ger`/`num::trsv_lower`/`num::trsv_upper`.
+/// @brief Rank-1 updates and triangular solves on `mat` and `vec`.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -13,7 +12,7 @@
 
 namespace num::seq {
 
-/// @brief Rank-1 matrix update \f$A \leftarrow A + \alpha \mathbf{x} \mathbf{y}^T\f$.
+/// @brief Rank-1 update (GER): \f$A \leftarrow A + \alpha x y^T\f$.
 inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) noexcept {
     kernel::ger(A.data(), x.data(), y.data(), alpha, x.size(), y.size());
 }
@@ -23,11 +22,7 @@ inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A
 #if defined(NUMERICS_HAS_OMP)
 namespace num::omp {
 
-/// @brief Rank-1 matrix update \f$A \leftarrow A + \alpha \mathbf{x} \mathbf{y}^T\f$.
-///
-/// Row-tiled rather than routed through `dispatch::parallel_apply`: see
-/// `omp/matrix_ops.hpp` for why row/matrix operations use their own tiling
-/// instead of the vector-element-tuned block helper.
+/// @brief Rank-1 update (GER), OpenMP: \f$A \leftarrow A + \alpha x y^T\f$.
 inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) {
     constexpr idx block_size = 64;
     const idx m = x.size();
@@ -47,7 +42,7 @@ inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A
 
 namespace num {
 
-/// @brief The rank-1 update \f$A \leftarrow A + \alpha x y^T\f$.
+/// @brief Rank-1 update (GER): \f$A \leftarrow A + \alpha x y^T\f$.
 inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) {
 #if defined(NUMERICS_HAS_OMP)
     omp::ger(alpha, x, y, A);
@@ -56,7 +51,7 @@ inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A
 #endif
 }
 
-/// @brief Forward substitution solving lower triangular system \f$L \mathbf{x} = \mathbf{b}\f$.
+/// @brief Lower triangular solve: \f$x \leftarrow L^{-1} b\f$.
 inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
     const idx n = L.rows();
     if (L.cols() != n || b.size() != n) {
@@ -68,7 +63,7 @@ inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
     kernel::trsv_lower(kernel::contract::alias_safe, x.data(), L.data(), b.data(), n);
 }
 
-/// @brief Back substitution solving upper triangular system \f$U \mathbf{x} = \mathbf{b}\f$.
+/// @brief Upper triangular solve: \f$x \leftarrow U^{-1} b\f$.
 inline void trsv_upper(const mat<real> &U, const vec<real> &b, vec<real> &x) {
     const idx n = U.rows();
     if (U.cols() != n || b.size() != n) {

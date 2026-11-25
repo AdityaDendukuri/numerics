@@ -1,13 +1,5 @@
 /// @file linear/solvers/ilu.hpp
-/// @brief Incomplete LU preconditioner with zero fill-in, ILU(0).
-///
-/// L and U keep A's sparsity pattern, so they cost the matrix's memory and applying them is two
-/// triangular solves. Reliable on diagonally dominant and M-matrix systems; on others a pivot
-/// can vanish, which the constructor reports. It is not symmetric, so it cannot precondition
-/// PCG or MINRES.
-///
-/// The arithmetic is in the raw-pointer `ilu0_factor` and `csr_lu_solve` below, and the class
-/// owns the storage and the errors.
+/// @brief Incomplete LU preconditioner, zero fill: ILU(0).
 #pragma once
 
 #include "container/vector.hpp"
@@ -25,15 +17,8 @@ namespace num {
 // ILU(0) keeps A's pattern exactly, so it rewrites the value array in place. L's unit
 // diagonal is implicit, and L's strict lower part shares the array with U.
 
-/// @brief Locate each row's diagonal entry in a CSR pattern.
-///
-/// Requires column indices sorted within each row.
-///
-/// @param diagonal Output, size n: index into `col_idx` of entry (i,i).
-/// @param row_ptr CSR row offsets, size n+1.
-/// @param col_idx CSR column indices, sorted within each row.
-/// @param n Number of rows.
-/// @return False if some row has no diagonal entry, which ILU(0) cannot proceed without.
+/// @brief CSR diagonal positions; returns false if a row lacks a diagonal entry.
+/// Column indices must be sorted.
 template <std::integral Index>
 [[nodiscard]] NUM_K_AINLINE bool csr_diagonal_positions(Index *NUM_K_RESTRICT diagonal,
                                                         const Index *NUM_K_RESTRICT row_ptr,
@@ -56,18 +41,8 @@ template <std::integral Index>
     return true;
 }
 
-/// @brief In-place ILU(0) factorization of a CSR value array.
-///
-/// `scratch` maps columns to positions in the row being eliminated, so matching a pivot row's
-/// column is O(1). It is cleared on exit from each row.
-///
-/// @param val CSR values, overwritten with the combined factors.
-/// @param row_ptr CSR row offsets, size n+1. Not modified.
-/// @param col_idx CSR column indices, sorted within each row. Not modified.
-/// @param diagonal Diagonal positions from `csr_diagonal_positions`.
-/// @param scratch Workspace of size n; contents on entry and exit are irrelevant.
-/// @param n Number of rows.
-/// @return False if a pivot was zero or non-finite, leaving `val` partially overwritten.
+/// @brief ILU(0) factorization, in place: \f$A \approx L U\f$ on the pattern of \f$A\f$.
+/// Returns false on a zero or non-finite pivot.
 template <std::floating_point T, std::integral Index>
 [[nodiscard]] inline bool
 ilu0_factor(T *NUM_K_RESTRICT val, const Index *NUM_K_RESTRICT row_ptr,
@@ -114,10 +89,7 @@ ilu0_factor(T *NUM_K_RESTRICT val, const Index *NUM_K_RESTRICT row_ptr,
     return true;
 }
 
-/// @brief Solve \f$LUx = b\f$ for factors packed by `ilu0_factor`.
-///
-/// Forward substitution against the implicit unit-diagonal L, then backward
-/// substitution against U. `x` may alias `b`.
+/// @brief Sparse LU solve: \f$x \leftarrow U^{-1} L^{-1} b\f$. `x` may alias `b`.
 template <std::floating_point T, std::integral Index>
 NUM_K_AINLINE void
 csr_lu_solve(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT val, const Index *NUM_K_RESTRICT row_ptr,
@@ -143,10 +115,9 @@ csr_lu_solve(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT val, const Index *NUM_
 
 namespace num {
 
-/// @brief ILU(0) preconditioner: \f$M^{-1} r\f$ by two sparse triangular solves.
-///
-/// Holds its own copy of the factored values, so the source matrix need not
-/// outlive it. Allocates nothing after construction.
+/// @brief ILU(0) preconditioner: \f$M^{-1} r = (L U)^{-1} r\f$.
+/// @note Reliable on diagonally dominant and M-matrix systems; elsewhere a pivot can vanish.
+/// @warning Not symmetric, so it cannot precondition PCG or MINRES; use it with GMRES.
 class ilu0_preconditioner final {
   public:
     using domain_type = vec<real>;
@@ -155,9 +126,9 @@ class ilu0_preconditioner final {
     // for a symmetric A, so PCG and MINRES will not accept it -- which is the
     // correct outcome, enforced by the type system rather than by documentation.
 
-    /// @brief Factor `A` in place over its own pattern.
-    /// @throws std::invalid_argument If `A` is not square, or a row has no diagonal entry.
-    /// @throws std::runtime_error If the factorization reaches a zero or non-finite pivot.
+    /// @brief ILU(0) of `A`.
+    /// @throws std::invalid_argument If `A` is not square or a row lacks a diagonal entry.
+    /// @throws std::runtime_error On a zero or non-finite pivot.
     explicit ilu0_preconditioner(const spmat &A)
         : n_(A.n_rows()), values_(A.values(), A.values() + A.nnz()),
           col_idx_(A.col_idx(), A.col_idx() + A.nnz()),
@@ -185,7 +156,7 @@ class ilu0_preconditioner final {
     [[nodiscard]] idx cols() const noexcept { return n_; }
     [[nodiscard]] idx nnz() const noexcept { return values_.size(); }
 
-    /// @brief Apply \f$z \leftarrow (LU)^{-1} r\f$.
+    /// @brief Preconditioner application: \f$z \leftarrow (L U)^{-1} r\f$.
     void apply(const vec<real> &r, vec<real> &z) const {
         if (r.size() != n_) {
             throw std::invalid_argument("ilu0: dimension mismatch");
@@ -206,7 +177,7 @@ class ilu0_preconditioner final {
     array<idx> scratch_;
 };
 
-/// @brief Build an ILU(0) preconditioner for a sparse matrix.
+/// @brief ILU(0) preconditioner of `A`.
 [[nodiscard]] inline ilu0_preconditioner make_ilu0_preconditioner(const spmat &A) {
     return ilu0_preconditioner(A);
 }

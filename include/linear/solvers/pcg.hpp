@@ -1,5 +1,5 @@
 /// @file linear/solvers/pcg.hpp
-/// @brief Preconditioned conjugate gradients for SPD operators.
+/// @brief Preconditioned conjugate gradients.
 #pragma once
 
 #include "container/vector.hpp"
@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// @brief Convergence options of `num::pcg`: tolerance and iteration limit.
+/// @brief PCG options: tolerance and iteration limit.
 struct pcg_options {
     num::tolerance tolerance{.rtol = 1e-10}; ///< On \f$\|b - Ax\|_2\f$ against \f$\|b\|_2\f$.
     idx max_iterations = 1000;
@@ -106,19 +106,9 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::
 
 } // namespace math_krylov_detail
 
-/// @brief Solve \f$A x = b\f$ using Preconditioned Conjugate Gradient (PCG).
-///
-/// Accelerates CG convergence using a symmetric positive-definite preconditioner \f$M \approx A^{-1}\f$.
-/// Both the system operator `A` and the preconditioner `M` must claim `law::spd`.
-///
-/// @param A Symmetric positive-definite linear operator or matrix wrapper.
-/// @param preconditioner preconditioner operator approximating \f$A^{-1}\f$ (e.g. Jacobi, Incomplete Cholesky).
-/// @param b Right-hand side vector.
-/// @param x Solution vector (serves as initial guess on input, updated in place).
-/// @param options Tolerance on the residual norm and iteration limit.
-/// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
-/// @throws std::invalid_argument If dimensions of `A`, `preconditioner`, `b`, and `x` do not match.
-/// @see cg, minres, gmres, approx_chol_preconditioner
+/// @brief Preconditioned conjugate gradients (PCG): \f$A x = b\f$ with \f$M \approx A^{-1}\f$.
+/// `A` and `M` must both be tagged SPD.
+/// @throws std::invalid_argument If dimensions mismatch.
 template <class Op, class M, class V>
 requires math::inner_product_space<V> &&math::spd_operator<Op, V> && math::spd_operator<M, V> &&
         std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
@@ -127,8 +117,7 @@ requires math::inner_product_space<V> &&math::spd_operator<Op, V> && math::spd_o
     return math_krylov_detail::pcg_recurrence(A, preconditioner, b, x, options, no_restriction);
 }
 
-/// PCG on a named invariant subspace. Evidence for A and M is tied to the exact
-/// same Subspace type, and membership is checked throughout the recurrence.
+/// @brief PCG on an invariant subspace \f$S\f$: \f$A x = b\f$ with \f$x, b \in S\f$.
 template <class Subspace, class Op, class M, class V>
 requires math::inner_product_space<V> &&math::linear_subspace_of<Subspace, V> &&
     math::linear_operator<Op, V, V> &&math::linear_operator<M, V, V> &&

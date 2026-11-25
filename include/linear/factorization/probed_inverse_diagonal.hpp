@@ -1,5 +1,5 @@
 /// @file linear/factorization/probed_inverse_diagonal.hpp
-/// @brief Randomized estimate of diag(A^-1) for a nonsingular M-matrix.
+/// @brief Randomized inverse diagonal of an M-matrix: \f$\mathrm{diag}(A^{-1})\f$.
 #pragma once
 
 #include "linear/eigen/lanczos.hpp"
@@ -14,11 +14,14 @@
 
 namespace num {
 
+/// @brief Approximate Cholesky sampler: Gao–Kyng–Spielman AC or AC2.
 enum class approximate_cholesky_preconditioner { ac, ac2 };
+/// @brief AC sampler: one sample per edge, cheaper.
 inline constexpr approximate_cholesky_preconditioner ac = approximate_cholesky_preconditioner::ac;
+/// @brief AC2 sampler: two samples per edge, more accurate. The default.
 inline constexpr approximate_cholesky_preconditioner ac2 = approximate_cholesky_preconditioner::ac2;
 
-/// Accuracy and sampling choices for an approximate inverse diagonal.
+/// @brief Inverse diagonal estimate options: probes, Lanczos steps, tolerance, seed.
 struct inverse_diagonal_options {
     approximate_cholesky_preconditioner preconditioner = ac2; ///< AC or AC2.
     idx probes = 40;                                          ///< Gaussian right-hand sides h.
@@ -27,6 +30,7 @@ struct inverse_diagonal_options {
     unsigned seed = 42;     ///< Seed for the probe block and the preconditioner.
 };
 
+/// @brief Grounded approximate Cholesky with the sampler chosen at run time: \f$A \approx C C^T\f$.
 [[nodiscard]] inline grounded_approx_chol_factor
 grounded_approxchol_factor(const spmat &matrix, approximate_cholesky_preconditioner method,
                            unsigned seed) {
@@ -38,8 +42,7 @@ grounded_approxchol_factor(const spmat &matrix, approximate_cholesky_preconditio
 
 namespace detail {
 
-/// \f$\tilde{S} = C^{-1} M C^{-T}\f$ for an approximate Cholesky factor C of M,
-/// applied without forming either the product or its square root.
+/// @brief Preconditioned operator: \f$\tilde{S} = C^{-1} M C^{-T}\f$, never formed.
 class preconditioned_symmetric_operator final {
   public:
     using domain_type = vec<real>;
@@ -98,10 +101,7 @@ inline vec<real> reversible_inverse_diagonal(const spmat &matrix, view<const rea
 
 } // namespace detail
 
-/// @brief Estimate the inverse diagonal of a reversible nonsingular M-matrix.
-///
-/// The supplied similarity weights make the problem symmetric, so this path uses only an
-/// approximate Cholesky factor, Gaussian probes, and inverse-square-root Lanczos actions.
+/// @brief Inverse diagonal of a reversible M-matrix: \f$\mathrm{diag}(A^{-1})\f$ by probed Lanczos.
 [[nodiscard]] inline vec<real> inverse_diagonal(const spmat &matrix, view<const real> symmetrizer,
                                                 inverse_diagonal_options options = {}) {
     const idx n = matrix.n_rows();
@@ -125,7 +125,7 @@ inline vec<real> reversible_inverse_diagonal(const spmat &matrix, view<const rea
     return detail::reversible_inverse_diagonal(matrix, symmetrizer, approximate, options);
 }
 
-/// Reuse an approximate Cholesky factor of the symmetrized grounded matrix.
+/// @brief Inverse diagonal of a reversible M-matrix, reusing an approximate factor.
 [[nodiscard]] inline vec<real> inverse_diagonal(const spmat &matrix, view<const real> symmetrizer,
                                                 const grounded_approx_chol_factor &approximate,
                                                 inverse_diagonal_options options = {}) {
@@ -136,18 +136,8 @@ inline vec<real> reversible_inverse_diagonal(const spmat &matrix, view<const rea
     return detail::reversible_inverse_diagonal(matrix, symmetrizer, approximate, options);
 }
 
-/// @brief Estimate \f$\operatorname{diag}(A^{-1})\f$ for a nonsingular M-matrix from one block
-/// of Gaussian probes, without one solve per entry.
-///
-/// A diagonal similarity makes the symmetric part positive definite, so each entry is a
-/// squared row norm, estimated without bias by the probe mean square.
-///
-/// @param factor A retained factorization of `matrix`.
-/// @param matrix The nonsingular M-matrix A, in CSR form.
-/// @param symmetrizer \f$\sqrt{\pi}\f$ when A is similar to a symmetric matrix through
-///        \f$\operatorname{Diag}(\sqrt{\pi})\f$, which saves the two scaling solves. Empty
-///        otherwise.
-/// @param options Probe count, Krylov depth, tolerance, and seed.
+/// @brief Probed inverse diagonal: \f$(A^{-1})_{jj} \approx \frac{1}{p} \sum_k (R z_k)_j^2\f$.
+/// `symmetrizer` is \f$\sqrt{\pi}\f$ when \f$A\f$ is symmetrizable by it, else empty.
 /// @throws std::invalid_argument If no probes are requested.
 /// @throws std::runtime_error If `matrix` is not a nonsingular M-matrix.
 template <factorization F>

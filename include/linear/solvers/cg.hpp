@@ -1,8 +1,5 @@
-/// @file cg.hpp
-/// @brief Conjugate gradient solvers.
-///
-/// Solves \f$Ax=b\f$ for symmetric positive definite \f$A\f$ using
-/// \f$\mathcal{K}_k(A,r_0)=\mathrm{span}\{r_0,Ar_0,\ldots,A^{k-1}r_0\}\f$.
+/// @file linear/solvers/cg.hpp
+/// @brief Conjugate gradients for SPD systems.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -28,7 +25,7 @@
 
 namespace num {
 
-/// @brief Iteration count, final residual norm, and convergence flag of the raw-pointer `cg`.
+/// @brief Krylov result: iterations, residual norm, convergence.
 template <std::floating_point T>
 struct krylov_result {
     idx iterations = 0;
@@ -36,17 +33,8 @@ struct krylov_result {
     bool converged = false;
 };
 
-/// @brief Conjugate gradients for symmetric positive definite \f$A\f$. Stops if some
-/// \f$p^T A p \leq 0\f$.
-///
-/// @param A        Callable `A(const T *x, T *y)` writing \f$y = Ax\f$.
-/// @param x        Solution, used as the initial guess on entry.
-/// @param b        Right-hand side, length n.
-/// @param n        System dimension.
-/// @param work     Caller-supplied scratch of length 3n.
-/// @param tol      Absolute tolerance on \f$\|r\|_2\f$.
-/// @param max_iter Iteration cap.
-/// @return `krylov_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
+/// @brief Conjugate gradients (CG), raw pointers: \f$A x = b\f$, \f$A\f$ SPD.
+/// `A(x, y)` writes \f$y = A x\f$; `work` holds \f$3n\f$. Stops if \f$p^T A p \le 0\f$.
 template <std::floating_point T, class MatVec>
 [[nodiscard]] inline krylov_result<T> cg(MatVec &&A, T *NUM_K_RESTRICT x, const T *b, idx n,
                                          T *NUM_K_RESTRICT work, T tol = T(1e-10),
@@ -98,30 +86,20 @@ template <std::floating_point T, class MatVec>
     return result;
 }
 
-/// @brief Preconditioned conjugate gradients. \f$M\f$ must be symmetric positive definite,
-/// since PCG is CG in the \f$M^{-1}\f$ inner product.
-///
 
 } // namespace num
 
 namespace num {
 
-/// @brief Convergence options of `num::cg`: an absolute tolerance on the residual norm and an
-/// iteration limit.
+/// @brief CG options: residual tolerance and iteration limit.
 struct cg_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;
 };
 
-/// @brief Solve \f$A x = b\f$ by conjugate gradients for an operator claiming `law::spd`.
-///
-/// @param A SPD operator, e.g. `num::assume_spd(A)`.
-/// @param b Right-hand side vector.
-/// @param x Solution vector (serves as initial guess on input, updated in place).
-/// @param options Tolerance on \f$\|b - A x\|_2\f$ and iteration limit.
-/// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
-/// @throws std::invalid_argument If dimensions of `A`, `b`, and `x` do not match.
-/// @see assume_spd, pcg, minres, gmres
+/// @brief Conjugate gradients (CG): \f$A x = b\f$, \f$A\f$ SPD.
+/// `x` is the initial guess.
+/// @throws std::invalid_argument If dimensions mismatch.
 template <class Op, class V>
 requires math::inner_product_space<V> &&math::spd_operator<Op, V> &&
         std::floating_point<math::scalar_t<V>> [[nodiscard]] solver_result
@@ -187,11 +165,8 @@ requires math::inner_product_space<V> &&math::spd_operator<Op, V> &&
 
 namespace unsafe {
 
-/// @brief Conjugate gradients on a stored matrix, without requiring the SPD invariant.
-///
-/// On an indefinite or non-symmetric matrix the iteration breaks down silently. Runs through
-/// `num::accel`; `num::unsafe::cuda::cg` works on device buffers.
-/// @return `solver_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
+/// @brief Conjugate gradients (CG) on a dense matrix, unchecked: \f$A x = b\f$.
+/// @warning On an indefinite or asymmetric matrix the iteration breaks down silently.
 inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg_options options = {}) {
     const idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {
@@ -218,13 +193,7 @@ inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg
 #if defined(NUMERICS_HAS_CUDA)
 namespace cuda {
 
-/// @brief Conjugate gradients entirely on the device.
-///
-/// The device path cannot share the host kernel: its vectors live on the
-/// device, so every level-1 operation is a device call rather than a loop over
-/// host memory. It therefore keeps the iteration written out, mirroring
-/// `num::unsafe::cg`'s structure with `num::cuda::*` in place of `num::accel::*`.
-/// @return `solver_result`: `.iterations`, `.residual` (final residual norm), `.converged`.
+/// @brief Conjugate gradients (CG) on the device: \f$A x = b\f$.
 inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg_options options = {}) {
     const idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {

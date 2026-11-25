@@ -1,9 +1,5 @@
 /// @file fields/grid2d.hpp
-/// @brief 2D uniform interior grid: geometry only, no field data.
-///
-/// grid2d describes the spatial discretization of [0,1]^2 into N x N
-/// interior nodes with spacing h = 1/(N+1).  It carries no field values
-/// and no boundary conditions -- those belong to the operator and the field.
+/// @brief 2D uniform interior grid on \f$[0, 1]^2\f$.
 #pragma once
 
 #include "core/index_space.hpp"
@@ -11,7 +7,7 @@
 
 namespace num {
 
-/// @brief A uniform \f$N \times N\f$ grid with spacing \f$h\f$.
+/// @brief Uniform \f$N \times N\f$ interior grid, \f$h = 1 / (N + 1)\f$.
 struct grid2d {
     int N;    ///< interior nodes per side
     double h; ///< grid spacing = 1/(N+1)

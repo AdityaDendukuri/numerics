@@ -1,5 +1,5 @@
 /// @file structures/algorithms/traversal.hpp
-/// @brief Fundamental graph algorithms: connectivity, Dijkstra, Kruskal MST, BFS, and DFS.
+/// @brief Graph algorithms: connectivity, shortest paths, spanning trees, BFS and DFS.
 #pragma once
 
 #include "core/types.hpp"
@@ -16,7 +16,7 @@
 
 namespace num::structures {
 
-/// Check if graph is connected.
+/// @brief Connectivity test: whether the graph has one component.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline bool is_connected(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
@@ -31,7 +31,7 @@ template <typename Weight, std::integral Index>
     return ds.count() == 1;
 }
 
-/// Compute connected components partition.
+/// @brief Connected components: a component label per vertex.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline array<array<Index>> connected_components(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
@@ -44,7 +44,7 @@ template <typename Weight, std::integral Index>
     return ds.components();
 }
 
-/// Compute single-source shortest path distances using Dijkstra with an Indexed Priority Queue.
+/// @brief Dijkstra shortest paths: \f$d(s, v) = \min_{\text{paths } s \to v} \sum w_e\f$.
 template <typename Weight, std::integral Index, std::integral Source = Index>
 [[nodiscard]] inline array<Weight> dijkstra(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
@@ -75,7 +75,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
     return dist;
 }
 
-/// Breadth-first search traversal order starting from source.
+/// @brief Breadth-first search order from `source`.
 template <typename Weight, std::integral Index, std::integral Source = Index>
 [[nodiscard]] inline array<Index> bfs(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
@@ -105,7 +105,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
     return order;
 }
 
-/// Depth-first search traversal order starting from source.
+/// @brief Depth-first search order from `source`.
 template <typename Weight, std::integral Index, std::integral Source = Index>
 [[nodiscard]] inline array<Index> dfs(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
@@ -135,7 +135,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
     return order;
 }
 
-/// Compute Minimum Spanning Tree (MST) using Kruskal's algorithm with disjoint_set.
+/// @brief Kruskal minimum spanning tree: \f$\arg\min_T \sum_{e \in T} w_e\f$.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline graph<Weight, Index> minimum_spanning_tree(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();

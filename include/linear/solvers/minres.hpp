@@ -1,5 +1,5 @@
 /// @file linear/solvers/minres.hpp
-/// @brief Evidence-constrained minimum residual iteration.
+/// @brief Minimum residual iteration.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -18,7 +18,7 @@
 
 namespace num {
 
-/// @brief Convergence options of `num::minres`: tolerance and iteration limit.
+/// @brief MINRES options: tolerance and iteration limit.
 struct minres_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;
@@ -45,18 +45,9 @@ inline vec<real> minres_projected_solve(const array<real> &alpha, const array<re
 
 } // namespace math_krylov_detail
 
-/// @brief Solve \f$A x = b\f$ using MINRES (Minimum Residual) for symmetric / self-adjoint systems.
-///
-/// Minimizes the 2-norm of the residual \f$\|b - A x_k\|_2\f$ over the Krylov subspace \f$\mathcal{K}_k(A, r_0)\f$.
-/// Unlike CG, MINRES converges stably on symmetric **indefinite** linear systems.
-///
-/// @param A Symmetric / self-adjoint linear operator (e.g. `num::assume_symmetric(A)`).
-/// @param b Right-hand side vector.
-/// @param x Solution vector (serves as initial guess on input, updated in place).
-/// @param options Tolerance on \f$\|b - A x\|_2\f$ and iteration limit.
-/// @return `solver_result` containing iteration count, final residual norm, and convergence boolean.
-/// @throws std::invalid_argument If dimensions of `A`, `b`, and `x` do not match.
-/// @see cg, gmres, pcg, assume_symmetric
+/// @brief MINRES: \f$A x = b\f$, minimizing \f$\|b - A x_k\|_2\f$.
+/// \f$A\f$ must be self-adjoint; it may be indefinite.
+/// @throws std::invalid_argument If dimensions mismatch.
 template <class Op, class V>
 requires math::inner_product_space<V> &&math::self_adjoint_operator<Op, V> &&
         std::same_as<math::scalar_t<V>, real> [[nodiscard]] solver_result

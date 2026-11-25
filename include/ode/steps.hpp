@@ -1,5 +1,5 @@
 /// @file ode/steps.hpp
-/// @brief Lazy accepted-step ranges for first- and second-order ODE integrators.
+/// @brief Lazy step ranges for first- and second-order integrators.
 #pragma once
 
 #include "container/vector.hpp"
@@ -21,14 +21,8 @@ inline real eps_guard(real t1) {
     return 1e-14 * std::abs(t1);
 }
 
-/// @brief Reject integration parameters that cannot produce a trajectory.
-///
-/// Every stepper advances by `min(h, t1 - t)` and stops once `t` reaches `t1`.
-/// Two parameter values break that silently rather than loudly: `h = 0` advances
-/// time by nothing, so the loop never terminates; and `tf < t0` satisfies the
-/// stop condition on the first call, so the integrator returns the initial
-/// condition and reports success. Backward integration is not supported — say so
-/// rather than appearing to do it.
+/// @brief Parameter check: \f$h > 0\f$ and \f$t_f \ge t_0\f$.
+/// @warning Backward integration (\f$t_f < t_0\f$) is not supported.
 inline void check_params(const ode_params &p, const char *method) {
     const std::string where = std::string(method) + ": ";
     if (!std::isfinite(p.t0) || !std::isfinite(p.tf)) {
@@ -64,7 +58,7 @@ static constexpr real rk45_e1 = 71.0 / 57600.0, rk45_e3 = -71.0 / 16695.0, rk45_
 
 } // namespace detail
 
-/// Lazy fixed-step forward Euler trajectory.
+/// @brief Forward Euler step range.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_euler_steps {
     RHS f_{};
@@ -126,7 +120,7 @@ class basic_euler_steps {
 
 using euler_steps = basic_euler_steps<ode_rhs_fn, vec<real>>;
 
-/// Lazy fixed-step classical fourth-order Runge-Kutta trajectory.
+/// @brief Classical Runge–Kutta (RK4) step range.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_rk4_steps {
     RHS f_{};
@@ -203,7 +197,7 @@ class basic_rk4_steps {
 
 using rk4_steps = basic_rk4_steps<ode_rhs_fn, vec<real>>;
 
-/// Lazy adaptive Dormand-Prince trajectory with accepted-step iteration.
+/// @brief Dormand–Prince RK45 step range, adaptive.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_rk45_steps {
     RHS f_{};
@@ -332,7 +326,7 @@ class basic_rk45_steps {
 
 using rk45_steps = basic_rk45_steps<ode_rhs_fn, vec<real>>;
 
-/// Lazy velocity-Verlet trajectory for q''=a(q).
+/// @brief Velocity Verlet step range: \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_verlet_steps {
     Accel accel_{};
@@ -405,7 +399,7 @@ class basic_verlet_steps {
 
 using verlet_steps = basic_verlet_steps<accel_fn, vec<real>>;
 
-/// Lazy fourth-order Yoshida symplectic trajectory for q''=a(q).
+/// @brief Yoshida fourth-order step range: \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_yoshida4_steps {
     Accel accel_{};
@@ -501,7 +495,7 @@ class basic_yoshida4_steps {
 
 using yoshida4_steps = basic_yoshida4_steps<accel_fn, vec<real>>;
 
-/// Lazy non-symplectic fourth-order trajectory for q''=a(q).
+/// @brief Runge–Kutta–Nyström fourth-order step range: \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_rk4_2nd_steps {
     Accel accel_{};

@@ -1,5 +1,5 @@
-/// @file banded.hpp
-/// @brief banded matrix storage and solvers.
+/// @file linear/banded/banded.hpp
+/// @brief Banded matrices and solvers.
 #pragma once
 
 #include "kernel/kernel.hpp"
@@ -17,15 +17,8 @@
 
 namespace num {
 
-/// @brief banded LU factorization with partial pivoting over LAPACK-compatible band storage,
-/// as LAPACK `gbtf2`.
-///
-/// `ab` is column-major with `ldab >= 2*kl + ku + 1` rows; \f$A_{ij}\f$ sits at band row
-/// `kl + ku + i - j`. A row swap can bring in entries up to `kl + ku` past the diagonal, so
-/// \f$U\f$ has bandwidth `kl + ku` and fills the first `kl` band rows, which are zeroed
-/// here. The multipliers of \f$L\f$ stay where each column's elimination wrote them: later
-/// swaps are not applied to them, so `banded_solve` interleaves the swaps with the forward
-/// substitution. Returns false if a pivot column is entirely zero.
+/// @brief Banded LU factorization, partial pivoting (GBTF2): \f$P A = L U\f$ in band storage.
+/// Needs `ldab >= 2 kl + ku + 1`. Returns false on a zero pivot column.
 template <std::floating_point T, class Index>
 [[nodiscard]] inline bool banded_factor(T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
                                         Index *NUM_K_RESTRICT ipiv) noexcept {
@@ -81,7 +74,7 @@ template <std::floating_point T, class Index>
     return true;
 }
 
-/// @brief Solve \f$Ax = b\f$ in place from `banded_factor`, as LAPACK `gbtrs`.
+/// @brief Banded LU solve (GBTRS), in place: \f$x \leftarrow A^{-1} b\f$.
 template <std::floating_point T, class Index>
 inline void banded_solve(T *x, const T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
                          const Index *NUM_K_RESTRICT ipiv) noexcept {
@@ -115,16 +108,13 @@ inline void banded_solve(T *x, const T *NUM_K_RESTRICT ab, idx ldab, idx n, idx 
 
 namespace num {
 
-/// @brief LAPACK-style band storage.
-///
-/// Stores \f$A_{ij}\f$ at \f$\text{band}(k_l+k_u+i-j,j)\f$ when
-/// \f$\max(0,j-k_u)\le i\le \min(n-1,j+k_l)\f$.
+/// @brief Banded matrix in LAPACK band storage: \f$a_{ij}\f$ at band row \f$k_l + k_u + i - j\f$.
 class band_mat {
   public:
-    /// Construct a zero-filled n-by-n matrix with lower/upper bandwidths kl/ku.
+    /// @brief Zero \f$n \times n\f$ band matrix with bandwidths \f$k_l, k_u\f$.
     band_mat(idx n, idx kl, idx ku);
 
-    /// Construct a banded matrix with every stored entry initialized to val.
+    /// @brief Constant \f$n \times n\f$ band matrix with bandwidths \f$k_l, k_u\f$.
     band_mat(idx n, idx kl, idx ku, real val);
 
     ~band_mat();
@@ -134,35 +124,35 @@ class band_mat {
     band_mat &operator=(const band_mat &);
     band_mat &operator=(band_mat &&) noexcept;
 
-    /// Return the square matrix order.
+    /// @brief Order \f$n\f$.
     [[nodiscard]] idx size() const { return n_; }
     [[nodiscard]] idx rows() const { return n_; }
     [[nodiscard]] idx cols() const { return n_; }
 
-    /// Return the lower bandwidth.
+    /// @brief Lower bandwidth \f$k_l\f$.
     [[nodiscard]] idx kl() const { return kl_; }
 
-    /// Return the upper bandwidth.
+    /// @brief Upper bandwidth \f$k_u\f$.
     [[nodiscard]] idx ku() const { return ku_; }
 
-    /// Return the number of mathematical diagonals in the band.
+    /// @brief Number of diagonals: \f$k_l + k_u + 1\f$.
     [[nodiscard]] idx bandwidth() const { return kl_ + ku_ + 1; }
 
-    /// Return the leading dimension of the LAPACK-compatible storage.
+    /// @brief Leading dimension of the band storage.
     [[nodiscard]] idx ldab() const { return ldab_; }
 
-    /// Access a mathematical matrix entry inside the stored band.
+    /// @brief Entry \f$a_{ij}\f$ inside the band.
     real &operator()(idx i, idx j);
     real operator()(idx i, idx j) const;
 
-    /// Access an entry by physical band-storage coordinates.
+    /// @brief Entry by band-storage coordinates.
     real &band(idx band_row, idx col);
     [[nodiscard]] real band(idx band_row, idx col) const;
 
     real *data() { return data_.get(); }
     [[nodiscard]] const real *data() const { return data_.get(); }
 
-    /// Test whether mathematical entry (i,j) is explicitly stored.
+    /// @brief Whether \f$a_{ij}\f$ is inside the band.
     [[nodiscard]] bool in_band(idx i, idx j) const;
 
     void to_gpu();
@@ -180,11 +170,7 @@ class band_mat {
     real *d_data_ = nullptr;
 };
 
-/// @brief The banded factorization \f$PA = LU\f$.
-///
-/// `LU` holds both factors in band storage: \f$U\f$, with the fill pivoting adds, in the
-/// rows above the diagonal row, and the multipliers of \f$L\f$ below it. \f$L\f$ has a unit
-/// diagonal, which is not stored. Step `k` exchanged rows `k` and `swaps[k]`.
+/// @brief Banded LU result: \f$P A = L U\f$ in band storage.
 struct banded_lu_result {
     band_mat LU;
     array<idx> swaps;
@@ -193,22 +179,23 @@ struct banded_lu_result {
     [[nodiscard]] idx size() const { return LU.size(); }
 };
 
-/// @brief Factor \f$PA = LU\f$ with partial pivoting. Pass an rvalue to factor in place.
+/// @brief Banded LU factorization, partial pivoting: \f$P A = L U\f$.
+/// Pass an rvalue to factor in place.
 banded_lu_result lu(band_mat A);
 
-/// @brief Solve \f$Ax = b\f$. `x` may be `b`.
+/// @brief Banded LU solve: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 void solve(const banded_lu_result &f, const vec<real> &b, vec<real> &x);
 
-/// @brief Solve \f$AX = B\f$, one right-hand side per column. `X` may be `B`.
+/// @brief Banded LU solve: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 void solve(const banded_lu_result &f, const mat<real> &B, mat<real> &X);
 
-/// @brief Compute \f$y=Ax\f$.
+/// @brief Banded matrix-vector product: \f$y \leftarrow A x\f$.
 void banded_matvec(const band_mat &A, const vec<real> &x, vec<real> &y);
 
-/// @brief Compute \f$y=\alpha Ax+\beta y\f$.
+/// @brief Banded matrix-vector product (GBMV): \f$y \leftarrow \alpha A x + \beta y\f$.
 void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y);
 
-/// @brief Compute \f$\|A\|_1\f$.
+/// @brief Banded 1-norm: \f$\|A\|_1\f$.
 real banded_norm1(const band_mat &A);
 
 inline band_mat::band_mat(idx n, idx kl, idx ku)

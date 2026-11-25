@@ -1,11 +1,5 @@
 /// @file container/vector_ops.hpp
-/// @brief Untagged Level-1 vector operations: resolve through `num::accel`.
-///
-/// A caller who wants a specific backend calls it by name — `num::omp::dot`,
-/// `num::blas::axpy`, `num::cuda::scale` — directly; there is no tag or enum
-/// layer between the caller and the namespace. These untagged overloads exist
-/// only for call sites that do not care which backend runs, and simply forward
-/// to whichever `num::accel` resolved to at configure time.
+/// @brief Vector operations through the default backend.
 #pragma once
 
 #include "core/types.hpp"
@@ -31,9 +25,7 @@
 
 namespace num::seq {
 
-/// @brief Thin vec-aware wrappers over `num::kernel`, used when no
-/// accelerator (BLAS/OMP/CUDA) was configured. `num::kernel` itself cannot
-/// serve this role: it only knows raw pointers, never `vec<real>`.
+/// @brief Vector scaling, sequential: \f$v \leftarrow \alpha v\f$.
 inline void scale(vec<real> &v, real alpha) noexcept { kernel::scale(v.data(), alpha, v.size()); }
 
 inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept {
@@ -53,12 +45,12 @@ inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept {
     }
 }
 
-/// @brief Computes scaled vector update \f$y_i \leftarrow a x_i + b y_i\f$.
+/// @brief Scaled vector update (AXPBY): \f$y \leftarrow a x + b y\f$.
 inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
     kernel::axpby(y.data(), x.data(), a, b, x.size());
 }
 
-/// @brief Computes linear combination \f$z_i \leftarrow a x_i + b y_i\f$.
+/// @brief Vector linear combination: \f$z \leftarrow a x + b y\f$.
 inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<real> &z) noexcept {
     kernel::axpbyz(z.data(), x.data(), y.data(), a, b, x.size());
 }
@@ -67,15 +59,15 @@ inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<r
 
 namespace num {
 
-/// @brief \f$v \leftarrow \alpha v\f$, through the build's default backend.
+/// @brief Vector scaling (SCAL): \f$v \leftarrow \alpha v\f$.
 inline void scale(vec<real> &v, real alpha) noexcept { accel::scale(v, alpha); }
 
-/// @brief \f$y \leftarrow y + \alpha x\f$, through the build's default backend.
+/// @brief Scaled vector addition (AXPY): \f$y \leftarrow \alpha x + y\f$.
 inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept { accel::axpy(alpha, x, y); }
 
 [[nodiscard]] inline real dot(const vec<real> &x, const vec<real> &y) noexcept { return accel::dot(x, y); }
 
-/// @brief Sequential dot product over non-owning spans.
+/// @brief Dot product over views: \f$x^T y\f$.
 [[nodiscard]] inline real dot(view<const real> x, view<const real> y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("dot: vector sizes must match");
@@ -83,12 +75,12 @@ inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept { accel:
     return kernel::dot(x.data(), y.data(), x.size());
 }
 
-/// @brief The Euclidean norm \f$\|x\|_2\f$, through the build's default backend.
+/// @brief Euclidean norm: \f$\|x\|_2\f$.
 [[nodiscard]] inline real norm(const vec<real> &x) noexcept { return accel::norm(x); }
 
 inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept { accel::add(x, y, z); }
 
-/// @brief Computes scaled vector update \f$y_i \leftarrow a x_i + b y_i\f$.
+/// @brief Scaled vector update (AXPBY): \f$y \leftarrow a x + b y\f$.
 inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
 #if defined(NUMERICS_HAS_OMP)
     omp::axpby(a, x, b, y);
@@ -97,7 +89,7 @@ inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
 #endif
 }
 
-/// @brief Computes linear combination \f$z_i \leftarrow a x_i + b y_i\f$.
+/// @brief Vector linear combination: \f$z \leftarrow a x + b y\f$.
 inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<real> &z) noexcept {
 #if defined(NUMERICS_HAS_OMP)
     omp::axpbyz(a, x, b, y, z);

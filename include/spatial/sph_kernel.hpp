@@ -1,5 +1,5 @@
 /// @file spatial/sph_kernel.hpp
-/// @brief Dimension-generic SPH smoothing kernels.
+/// @brief SPH smoothing kernels in 2D and 3D.
 #pragma once
 
 #include "core/types.hpp"
@@ -51,20 +51,13 @@ struct SpikyDW<3> {
 
 } // namespace detail
 
-/// @brief Smoothed Particle Hydrodynamics (SPH) smoothing kernel and gradient evaluations in 2D / 3D.
-///
-/// Implements standard Monaghan cubic spline kernel \f$W(r, h)\f$ and Desbrun Spiky pressure kernel gradients.
-/// Compact support is strictly within \f$r \in [0, 2h]\f$.
-///
-/// @tparam Dim Spatial dimension (2 or 3).
+/// @brief SPH kernels: Monaghan cubic spline \f$W(r, h)\f$ and Desbrun spiky gradient.
+/// Support is \f$r \le 2h\f$.
 template <int Dim>
 struct sph_kernel {
     static_assert(Dim == 2 || Dim == 3, "sph_kernel: Dim must be 2 or 3");
 
-    /// @brief Evaluate Monaghan cubic spline kernel \f$W(r, h)\f$ at distance \f$r\f$ with smoothing length \f$h\f$.
-    /// @param r Radial distance between particles \f$\|\mathbf{r}_i - \mathbf{r}_j\|\f$.
-    /// @param h Smoothing radius.
-    /// @return Kernel value \f$W(r, h)\f$ normalized so that \f$\int W(r, h)\,\mathrm{d}V = 1\f$.
+    /// @brief Cubic spline kernel: \f$W(r, h)\f$, \f$\int W\, dV = 1\f$.
     static float W(float r, float h) {
         const float sigma = detail::CubicSigma<Dim>::compute(h);
         const float q = r / h;
@@ -78,10 +71,7 @@ struct sph_kernel {
         return 0.0f;
     }
 
-    /// @brief Evaluate radial derivative of the cubic spline kernel \f$\frac{\partial W}{\partial r}\f$.
-    /// @param r Radial distance.
-    /// @param h Smoothing radius.
-    /// @return scalar derivative \f$\frac{\partial W}{\partial r}\f$.
+    /// @brief Cubic spline radial derivative: \f$\partial W / \partial r\f$.
     static float dW_dr(float r, float h) {
         const float sigma = detail::CubicSigma<Dim>::compute(h);
         const float q = r / h;
@@ -95,17 +85,10 @@ struct sph_kernel {
         return 0.0f;
     }
 
-    /// @brief Evaluate radial derivative of the Desbrun Spiky pressure kernel.
-    /// @param r Radial distance.
-    /// @param h Smoothing radius.
-    /// @return Spiky kernel derivative \f$\frac{\partial W_{\text{spiky}}}{\partial r}\f$.
+    /// @brief Spiky kernel radial derivative: \f$\partial W_{\mathrm{spiky}} / \partial r\f$.
     static float Spiky_dW_dr(float r, float h) { return detail::SpikyDW<Dim>::compute(r, h); }
 
-    /// @brief Evaluate Spiky pressure kernel gradient vector \f$\nabla W_{\text{spiky}}(\mathbf{r}_{ij}, h)\f$.
-    /// @param r_vec Relative position vector \f$\mathbf{r}_{ij} = \mathbf{r}_i - \mathbf{r}_j\f$.
-    /// @param r Norm \f$\|\mathbf{r}_{ij}\|\f$.
-    /// @param h Smoothing radius.
-    /// @return Gradient vector in \f$\mathbb{R}^{\text{Dim}}\f$.
+    /// @brief Spiky kernel gradient: \f$\nabla W_{\mathrm{spiky}}(r_{ij}, h)\f$.
     static std::array<float, Dim> Spiky_gradW(std::array<float, Dim> r_vec, float r, float h) {
         std::array<float, Dim> g{};
         if (r < 1e-10f || r >= 2.0f * h) {

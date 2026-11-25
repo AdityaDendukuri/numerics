@@ -1,5 +1,5 @@
-/// @file multinomial.hpp
-/// @brief Exact multinomial count sampling from nonnegative weights.
+/// @file stochastic/multinomial.hpp
+/// @brief Multinomial sampling.
 #pragma once
 
 #include "core/types.hpp"
@@ -10,10 +10,8 @@
 
 namespace num {
 
-/// @brief Draw multinomial counts by a sequence of conditional binomial draws.
-///
-/// The weights need not be normalized. The returned counts have the same length as
-/// `weights` and sum exactly to `draws`.
+/// @brief Multinomial sample: counts \f$n_k\f$ with \f$P(k) \propto w_k\f$.
+/// The counts sum to `draws`.
 template <std::uniform_random_bit_generator RNG>
 [[nodiscard]] array<idx> sample_multinomial(view<const real> weights, idx draws, RNG &random) {
     array<idx> count(weights.size(), 0);

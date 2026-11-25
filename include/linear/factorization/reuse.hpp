@@ -1,19 +1,5 @@
 /// @file linear/factorization/reuse.hpp
-/// @brief Factor R again from the factor of a matrix that differs at a few slots.
-///
-/// Each overload takes the factor of the previous matrix, or null, and the
-/// slots whose row and column changed; the two matrices agree everywhere else.
-///
-/// - `no_pivot`: Woodbury corrections against the last complete factorization
-///   while at most `corrected_lu::max_changed` slots differ from it and the
-///   correction's condition number times machine epsilon stays below
-///   `corrected_lu::tolerance`.
-/// - dense Cholesky: the same Woodbury policy against a retained factorization
-///   of a symmetric diagonal similarity.
-/// - `blocks(levels)`: the unchanged block prefix is copied and the suffix
-///   refactored.
-///
-/// Every other case factors R from scratch; `reused()` says which happened.
+/// @brief Refactorization after a few rows and columns change, reusing the previous factor.
 #pragma once
 
 #include "linear/factorization/factor.hpp"
@@ -90,15 +76,14 @@ inline real skeel_condition(const mat<real> &A) {
 
 } // namespace detail
 
-/// A factor of R, held as the last complete factorization and corrected by
-/// Woodbury for the slots that changed since.
+/// @brief Woodbury-corrected factor: the last full factorization plus a low-rank correction.
 template <factorization Base>
 class corrected_factor {
   public:
     static constexpr idx max_changed = 64;
     static constexpr real tolerance = 1e-8;
 
-    /// True when R was not factored from scratch.
+    /// @brief Whether the factor was reused rather than recomputed.
     [[nodiscard]] bool reused() const { return reused_; }
     [[nodiscard]] idx size() const { return base_R_->n_rows(); }
 
@@ -206,7 +191,7 @@ class corrected_factor {
 using corrected_lu = corrected_factor<lu_result<real>>;
 using corrected_cholesky = corrected_factor<similar_factor<cholesky_result>>;
 
-/// @brief No-pivot LU of R, corrected from `previous` when few slots differ.
+/// @brief Unpivoted LU, Woodbury-corrected from `previous` when few slots change: \f$A = L U\f$.
 inline corrected_lu lu(const spmat &R, no_pivot_structure, const corrected_lu *previous,
                        view<const idx> changed) {
     return corrected_lu::update(R, previous, changed, [&] {
@@ -218,14 +203,13 @@ inline corrected_lu lu(const spmat &R, no_pivot_structure, const corrected_lu *p
     });
 }
 
-/// @brief Dense Cholesky of a symmetric similarity of R, corrected from
-/// `previous` when only a few slots differ.
+/// @brief Cholesky of a diagonal similarity, Woodbury-corrected: \f$H A H^{-1} = L L^T\f$.
 inline corrected_cholesky cholesky(const spmat &R, view<const real> h,
                                    const corrected_cholesky *previous, view<const idx> changed) {
     return corrected_cholesky::update(R, previous, changed, [&] { return cholesky(R, h); });
 }
 
-/// A block LU of R and the number of leading blocks copied from the previous factor.
+/// @brief Block LU with the number of reused leading blocks.
 struct suffix_block_lu {
     block_lu_factor factor;
     idx reused_blocks = 0;
@@ -234,7 +218,7 @@ struct suffix_block_lu {
     [[nodiscard]] idx size() const { return factor.size; }
 };
 
-/// @brief Block LU of R, copying the unchanged prefix of `previous`.
+/// @brief Block LU reusing the unchanged prefix of `previous`.
 inline suffix_block_lu lu(const spmat &R, block_structure structure,
                           const suffix_block_lu *previous, view<const idx> changed) {
     const idx n = R.n_rows();
@@ -263,7 +247,7 @@ inline void solve_transpose(const suffix_block_lu &Z, const RHS &rhs, RHS &out) 
     solve_transpose(Z.factor, rhs, out);
 }
 
-/// Block Cholesky of a diagonal similarity of R and the number of leading blocks reused.
+/// @brief Block Cholesky with the number of reused leading blocks.
 struct suffix_block_cholesky {
     similar_factor<block_cholesky_factor> factor;
     idx reused_blocks = 0;
@@ -272,7 +256,7 @@ struct suffix_block_cholesky {
     [[nodiscard]] idx size() const { return factor.factor.size; }
 };
 
-/// @brief Block Cholesky of H R H^-1, copying the unchanged prefix of `previous`.
+/// @brief Block Cholesky of \f$H A H^{-1}\f$, reusing the unchanged prefix of `previous`.
 inline suffix_block_cholesky cholesky(const spmat &R, block_structure structure, view<const real> h,
                                       const suffix_block_cholesky *previous,
                                       view<const idx> changed) {

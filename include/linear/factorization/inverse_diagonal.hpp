@@ -1,5 +1,5 @@
 /// @file linear/factorization/inverse_diagonal.hpp
-/// @brief Diagonal of an inverse from reusable factorizations.
+/// @brief Inverse diagonals and selected inverse entries from factorizations.
 #pragma once
 
 #include "core/types.hpp"
@@ -11,13 +11,13 @@
 
 namespace num {
 
-/// Reusable dense buffers for blocked and selected inverse extraction.
+/// @brief Reusable buffers for inverse extraction.
 struct inverse_diagonal_workspace {
     mat<real> right_hand_sides; ///< Reused block of selected identity columns.
     mat<real> solutions;        ///< Reused solution block.
 };
 
-/// @brief Perform x += y, track accumulated floating-point error, and verify precision acceptability.
+/// @brief Checked accumulation: \f$x \leftarrow x + y\f$, tracking rounding error.
 template <class T>
 inline bool safe_add(T &x, T &err, T y, T tolerance = 1e-6) {
     x += y;
@@ -28,51 +28,50 @@ inline bool safe_add(T &x, T &err, T y, T tolerance = 1e-6) {
     return (err / x) < tolerance;
 }
 
-/// Compute diag(A^-1) through blocked identity solves.
+/// @brief Inverse diagonal from LU: \f$\mathrm{diag}(A^{-1})\f$.
 void inverse_diagonal(const lu_result<real> &factor, vec<real> &result, inverse_diagonal_workspace &workspace,
                       idx block_size = 64);
-/// Compute diag(A^-1) from a Cholesky factor using blocked identity solves.
+/// @brief Inverse diagonal from Cholesky: \f$\mathrm{diag}(A^{-1})\f$.
 void inverse_diagonal(const cholesky_result &factor, vec<real> &result,
                       inverse_diagonal_workspace &workspace, idx block_size = 64);
-/// Compute diag(A^-1) from a KLU factor using blocked identity solves.
+/// @brief Inverse diagonal from KLU: \f$\mathrm{diag}(A^{-1})\f$.
 void inverse_diagonal(const klu_factorization &factor, vec<real> &result, inverse_diagonal_workspace &workspace,
                       idx block_size = 64);
-/// Compute diag(A^-1) from an automatically selected reusable factor.
+/// @brief Inverse diagonal from an automatic factor: \f$\mathrm{diag}(A^{-1})\f$.
 void inverse_diagonal(const auto_linear_solver &factor, vec<real> &result,
                       inverse_diagonal_workspace &workspace, idx block_size = 64);
 
-/// Compute A^-1(rows[i], columns[i]) using only the requested inverse columns.
+/// @brief Selected inverse from LU: \f$(A^{-1})_{r_i c_i}\f$.
 void selected_inverse(const lu_result<real> &factor, view<const idx> rows,
                       view<const idx> columns, vec<real> &result,
                       inverse_diagonal_workspace &workspace);
-/// Compute selected inverse entries from a Cholesky factor.
+/// @brief Selected inverse from Cholesky: \f$(A^{-1})_{r_i c_i}\f$.
 void selected_inverse(const cholesky_result &factor, view<const idx> rows,
                       view<const idx> columns, vec<real> &result,
                       inverse_diagonal_workspace &workspace);
-/// Compute selected inverse entries from a KLU factor.
+/// @brief Selected inverse from KLU: \f$(A^{-1})_{r_i c_i}\f$.
 void selected_inverse(const klu_factorization &factor, view<const idx> rows,
                       view<const idx> columns, vec<real> &result,
                       inverse_diagonal_workspace &workspace);
-/// Compute selected inverse entries from an automatically selected factor.
+/// @brief Selected inverse from an automatic factor: \f$(A^{-1})_{r_i c_i}\f$.
 void selected_inverse(const auto_linear_solver &factor, view<const idx> rows,
                       view<const idx> columns, vec<real> &result,
                       inverse_diagonal_workspace &workspace);
 
-/// Extract A^-1(indices, indices), preserving the requested index order.
+/// @brief Principal inverse block from LU: \f$(A^{-1})_{I I}\f$.
 void inverse_principal_block(const lu_result<real> &factor, view<const idx> indices, mat<real> &result,
                              inverse_diagonal_workspace &workspace);
-/// Extract a principal inverse block from a Cholesky factor.
+/// @brief Principal inverse block from Cholesky: \f$(A^{-1})_{I I}\f$.
 void inverse_principal_block(const cholesky_result &factor, view<const idx> indices,
                              mat<real> &result, inverse_diagonal_workspace &workspace);
-/// Extract a principal inverse block from a KLU factor.
+/// @brief Principal inverse block from KLU: \f$(A^{-1})_{I I}\f$.
 void inverse_principal_block(const klu_factorization &factor, view<const idx> indices, mat<real> &result,
                              inverse_diagonal_workspace &workspace);
-/// Extract a principal inverse block from an automatically selected factor.
+/// @brief Principal inverse block from an automatic factor: \f$(A^{-1})_{I I}\f$.
 void inverse_principal_block(const auto_linear_solver &factor, view<const idx> indices,
                              mat<real> &result, inverse_diagonal_workspace &workspace);
 
-/// Convenience overload owning its result and workspace.
-/// Allocates; prefer the workspace form in hot loops.
+/// @brief Inverse diagonal: \f$\mathrm{diag}(A^{-1})\f$. Allocates.
 [[nodiscard]] inline vec<real> inverse_diagonal(const auto_linear_solver &factor, idx block_size = 64) {
     vec<real> result(factor.size(), 0.0);
     inverse_diagonal_workspace workspace;
@@ -80,8 +79,7 @@ void inverse_principal_block(const auto_linear_solver &factor, view<const idx> i
     return result;
 }
 
-/// Convenience overload owning its result and workspace.
-/// Allocates; prefer the workspace form in hot loops.
+/// @brief Principal inverse block: \f$(A^{-1})_{I I}\f$. Allocates.
 [[nodiscard]] inline mat<real> inverse_principal_block(const auto_linear_solver &factor,
                                                     view<const idx> indices) {
     mat<real> result;

@@ -1,5 +1,5 @@
 /// @file linear/factorization/mixed_lu.hpp
-/// @brief LU in single precision, refined to double-precision accuracy.
+/// @brief Mixed-precision LU: single-precision factors, double-precision solves.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -15,28 +15,18 @@
 
 namespace num {
 
-/// @brief The tag type of `num::mixed_precision`.
+/// @brief Tag type of `num::mixed_precision`.
 struct mixed_precision_structure {};
-/// @brief Select LU in `float` with iterative refinement to `double` accuracy.
+/// @brief Select mixed-precision LU.
 inline constexpr mixed_precision_structure mixed_precision{};
 
-/// @brief \f$A\f$ factored in single precision, solved to double-precision accuracy.
-///
-/// The \f$O(n^3)\f$ factorization runs in `float`, where a SIMD register holds twice as many
-/// values, so it moves half the memory and does about twice the arithmetic per instruction.
-/// Each solve then refines in `double`: with \f$x_0 = \hat{A}^{-1}b\f$ from the `float`
-/// factors, repeat \f$r = b - Ax_k\f$ in `double` (\f$O(n^2)\f$) and
-/// \f$x_{k+1} = x_k + \hat{A}^{-1}r\f$. Each step shrinks the error by about
-/// \f$\kappa(A)\,u_{\text{float}}\f$, so it reaches double accuracy in a few steps whenever
-/// \f$\kappa(A)\f$ is well below \f$1/u_{\text{float}} \approx 10^7\f$.
-///
-/// Construction checks that with `inverse_norm1_estimate` on the `float` factors. When
-/// \f$A\f$ is too ill-conditioned it also factors in `double`, and solves use that instead:
-/// `refined()` says which.
+/// @brief Mixed-precision LU: \f$\hat{A} = \hat{L} \hat{U}\f$ in `float`, refined in `double`.
+/// Refinement: \f$x_{k+1} = x_k + \hat{A}^{-1} (b - A x_k)\f$.
+/// Falls back to `double` factors when ill-conditioned.
 struct mixed_lu {
-    /// \f$\kappa(A)u_{\text{float}}\f$ above which refinement is not trusted to converge.
+    /// @brief Largest \f$\kappa(A)\, u_{\mathrm{float}}\f$ at which refinement is trusted.
     static constexpr real max_contraction = 0.1;
-    /// Refinement steps before a solve settles for its current iterate, as LAPACK `dsgesv`.
+    /// @brief Maximum refinement steps per solve.
     static constexpr int max_steps = 30;
 
     mat<real> A;
@@ -47,7 +37,7 @@ struct mixed_lu {
     real norm_inf = 0.0; ///< \f$\|A\|_\infty\f$, for the stopping test.
 
     [[nodiscard]] idx size() const { return A.rows(); }
-    /// True when solves refine the `float` factors; false when they use `fallback`.
+    /// @brief Whether solves refine the `float` factors rather than use `fallback`.
     [[nodiscard]] bool refined() const { return !fallback.has_value(); }
 };
 
@@ -148,7 +138,7 @@ inline void refine_columns(const mixed_lu &F, const mat<real> &B, mat<real> &X) 
 
 } // namespace detail
 
-/// @brief Factor \f$A\f$ in `float`, keeping \f$A\f$ in `double` for refinement.
+/// @brief Mixed-precision LU factorization: \f$P A = L U\f$ in `float`.
 /// @throws std::invalid_argument If `A` is not square.
 [[nodiscard]] inline mixed_lu lu(const mat<real> &A, mixed_precision_structure) {
     mixed_lu F{A, lu(detail::converted<float>(A)), std::nullopt, 0.0, 0.0, 0.0};
@@ -172,7 +162,7 @@ inline void refine_columns(const mixed_lu &F, const mat<real> &B, mat<real> &X) 
     return F;
 }
 
-/// @brief Solve \f$Ax = b\f$ to double-precision accuracy. `x` may be `b`.
+/// @brief Mixed-precision solve: \f$x \leftarrow A^{-1} b\f$ to double accuracy. `x` may alias `b`.
 inline void solve(const mixed_lu &F, const vec<real> &b, vec<real> &x) {
     if (F.fallback) {
         solve(*F.fallback, b, x);
@@ -181,7 +171,7 @@ inline void solve(const mixed_lu &F, const vec<real> &b, vec<real> &x) {
     detail::refine(F, false, b, x);
 }
 
-/// @brief Solve \f$AX = B\f$, refining each column. `X` may be `B`.
+/// @brief Mixed-precision solve: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 inline void solve(const mixed_lu &F, const mat<real> &B, mat<real> &X) {
     if (F.fallback) {
         solve(*F.fallback, B, X);
@@ -190,7 +180,7 @@ inline void solve(const mixed_lu &F, const mat<real> &B, mat<real> &X) {
     detail::refine_columns<false>(F, B, X);
 }
 
-/// @brief Solve \f$A^Tx = b\f$ to double-precision accuracy. `x` may be `b`.
+/// @brief Mixed-precision transposed solve: \f$x \leftarrow A^{-T} b\f$. `x` may alias `b`.
 inline void solve_transpose(const mixed_lu &F, const vec<real> &b, vec<real> &x) {
     if (F.fallback) {
         solve_transpose(*F.fallback, b, x);
@@ -199,7 +189,7 @@ inline void solve_transpose(const mixed_lu &F, const vec<real> &b, vec<real> &x)
     detail::refine(F, true, b, x);
 }
 
-/// @brief Solve \f$A^TX = B\f$, refining each column. `X` may be `B`.
+/// @brief Mixed-precision transposed solve: \f$X \leftarrow A^{-T} B\f$. `X` may alias `B`.
 inline void solve_transpose(const mixed_lu &F, const mat<real> &B, mat<real> &X) {
     if (F.fallback) {
         solve_transpose(*F.fallback, B, X);

@@ -1,5 +1,5 @@
 /// @file spectral/debug.hpp
-/// @brief Runtime verification of transform properties.
+/// @brief Runtime checks of transform properties.
 #pragma once
 
 #include "container/vector.hpp"
@@ -16,12 +16,7 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief Verify Parseval's identity for a forward transform.
-///
-/// \f[ \sum_n |x_n|^2 = \frac{1}{N} \sum_k |X_k|^2 \f]
-///
-/// A transform that violates it is not unitary after normalization, and a
-/// spectral method built on it will gain or lose energy every step.
+/// @brief Parseval check: \f$\sum_n |x_n|^2 = \frac{1}{N} \sum_k |X_k|^2\f$.
 template <class Plan>
 requires transform_plan<Plan> inline void
 verify_parseval(const Plan &plan, real tol = 1e-10,

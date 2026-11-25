@@ -1,5 +1,5 @@
 /// @file plot/gnuplot.hpp
-/// @brief Plot data helpers and a low-level owning gnuplot pipe.
+/// @brief Plot data helpers and a raw gnuplot pipe.
 #pragma once
 
 #include "core/types.hpp"
@@ -12,17 +12,17 @@
 
 namespace num {
 
-/// @brief An \f$(x, y)\f$ point of a plotted line.
+/// @brief Plot point: \f$(x, y)\f$.
 using plot_point = std::pair<double, double>;
 
-/// Ordered (x,y) samples accepted by the plotting helpers.
+/// @brief Plot series: ordered \f$(x, y)\f$ samples.
 struct series : array<plot_point> {
     using array<plot_point>::vector;
-    /// Append one sample.
+    /// @brief Append \f$(x, y)\f$.
     void store(double x, double y) { emplace_back(x, y); }
 };
 
-/// Extract one row as (x_j,u_j) plot data.
+/// @brief Row slice: \f$(x_j, u_{rj})\f$.
 inline series row_slice(const vec<real> &u, int N, double h, int row) {
     series result;
     result.reserve(static_cast<std::size_t>(N));
@@ -32,7 +32,7 @@ inline series row_slice(const vec<real> &u, int N, double h, int row) {
     return result;
 }
 
-/// Extract one column as (y_i,u_i) plot data.
+/// @brief Column slice: \f$(y_i, u_{ic})\f$.
 inline series col_slice(const vec<real> &u, int N, double h, int column) {
     series result;
     result.reserve(static_cast<std::size_t>(N));
@@ -42,22 +42,22 @@ inline series col_slice(const vec<real> &u, int N, double h, int column) {
     return result;
 }
 
-/// Extract one row from a field exposing as_vec(), N(), and h().
+/// @brief Row slice of a field.
 template <class Field>
 inline series row_slice(const Field &field, int row) {
     return row_slice(field.as_vec(), field.N(), field.h(), row);
 }
 
-/// Extract one column from a field exposing as_vec(), N(), and h().
+/// @brief Column slice of a field.
 template <class Field>
 inline series col_slice(const Field &field, int column) {
     return col_slice(field.as_vec(), field.N(), field.h(), column);
 }
 
-/// Owning pipe for issuing low-level commands directly to gnuplot.
+/// @brief Owning gnuplot pipe for raw commands.
 class gnuplot {
   public:
-    /// Launch gnuplot with optional command-line arguments.
+    /// @brief Launch gnuplot with `args`.
     explicit gnuplot(const std::string &args = "") {
         const std::string command = "gnuplot " + args;
         pipe_ = popen(command.c_str(), "w");
@@ -75,13 +75,13 @@ class gnuplot {
     gnuplot(const gnuplot &) = delete;
     gnuplot &operator=(const gnuplot &) = delete;
 
-    /// Send a raw gnuplot command.
+    /// @brief Send a raw command.
     gnuplot &operator<<(const std::string &command) {
         fputs(command.c_str(), pipe_);
         return *this;
     }
 
-    /// Send one inline two-column data block and flush it.
+    /// @brief Send an inline two-column data block.
     void send1d(const series &data) {
         for (const auto &[x, y] : data) {
             fprintf(pipe_, "%.15g %.15g\n", x, y);
@@ -90,14 +90,14 @@ class gnuplot {
         fflush(pipe_);
     }
 
-    /// Flush pending commands to gnuplot.
+    /// @brief Flush pending commands.
     void flush() { fflush(pipe_); }
 
   private:
     FILE *pipe_ = nullptr;
 };
 
-/// Apply SIAM-style line, grid, border, and legend settings.
+/// @brief SIAM style: lines, grid, border, legend.
 inline void apply_siam_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.8 lc rgb 'black'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.8 lc rgb 'black'\n"
@@ -113,7 +113,7 @@ inline void apply_siam_style(gnuplot &gp) {
        << "set key box lt 1 lw 0.5\n";
 }
 
-/// Apply GitHub Primer Light style (clean white canvas, primer borders and accents).
+/// @brief GitHub Primer light style.
 inline void apply_github_light_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.75 lc rgb '#0969da'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.75 lc rgb '#1a7f37'\n"
@@ -132,7 +132,7 @@ inline void apply_github_light_style(gnuplot &gp) {
        << "set key textcolor rgb '#1f2328'\n";
 }
 
-/// Apply GitHub Primer Dark style.
+/// @brief GitHub Primer dark style.
 inline void apply_github_dark_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.75 lc rgb '#58a6ff'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.75 lc rgb '#3fb950'\n"
@@ -151,17 +151,17 @@ inline void apply_github_dark_style(gnuplot &gp) {
        << "set key textcolor rgb '#e6edf3'\n";
 }
 
-/// Configure logarithmic x and y axes on a raw pipe.
+/// @brief Log-log axes.
 inline void set_loglog(gnuplot &gp) {
     gp << "set logscale xy\nset format x '10^{%L}'\nset format y '10^{%L}'\n";
 }
 
-/// Configure a logarithmic x axis on a raw pipe.
+/// @brief Logarithmic x axis.
 inline void set_logx(gnuplot &gp) {
     gp << "set logscale x\nset format x '10^{%L}'\n";
 }
 
-/// Configure PNG output on a raw pipe.
+/// @brief PNG output, `width x height`.
 inline void save_png(gnuplot &gp, const std::string &filename, int width = 900, int height = 600) {
     gp << "set terminal pngcairo size " + std::to_string(width) + "," + std::to_string(height) +
               " enhanced font 'Arial,11'\n"

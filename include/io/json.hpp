@@ -1,5 +1,5 @@
-/// @file json.hpp
-/// @brief Small JSON file helpers using nlohmann::json.
+/// @file io/json.hpp
+/// @brief JSON file helpers.
 #pragma once
 
 #include "core/types.hpp"
@@ -13,16 +13,16 @@
 
 namespace num::io {
 
-/// @brief The JSON value type, from nlohmann/json.
+/// @brief JSON value: `nlohmann::json`.
 using json = nlohmann::json;
 
-/// Parse a complete JSON document from disk.
+/// @brief Read a JSON file.
 [[nodiscard]] json read_json(const std::filesystem::path &path);
-/// Serialize a JSON value to disk.
+/// @brief Write a JSON file.
 void write_json(const json &value, const std::filesystem::path &path);
 
 template <typename T>
-/// Convert a JSON numeric array to an arithmetic vector.
+/// @brief JSON numeric array to an array.
 [[nodiscard]] inline array<T> json_vector(const json &value) {
     static_assert(std::is_arithmetic_v<T>);
     if (!value.is_array()) {
@@ -36,7 +36,7 @@ template <typename T>
 }
 
 template <typename T>
-/// Convert a JSON array of numeric arrays to a nested vector.
+/// @brief JSON array of numeric arrays to a nested array.
 [[nodiscard]] inline array<array<T>> json_matrix(const json &value) {
     if (!value.is_array()) {
         throw std::invalid_argument("JSON matrix must be an array");

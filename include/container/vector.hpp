@@ -1,5 +1,5 @@
-/// @file vector.hpp
-/// @brief Dense vector storage and operations.
+/// @file container/vector.hpp
+/// @brief Dense vector.
 #pragma once
 
 #include "container/concepts.hpp"
@@ -20,30 +20,30 @@
 
 namespace num {
 
-/// @brief Dense owning vector. `vec<real>` takes the CPU and GPU backends; other scalars stay on the host.
+/// @brief Dense vector \f$x \in \mathbb{K}^n\f$.
 template <typename T>
 class vec {
   public:
     using value_type = T;
 
-    /// Construct an empty vector.
+    /// @brief Empty vector.
     vec() : n_(0), data_(nullptr) {}
 
-    /// Construct n value-initialized elements.
+    /// @brief Zero vector of length `n`.
     explicit vec(idx n) : n_(n), data_(make_aligned<T>(n)) {}
 
-    /// Construct n elements initialized to val.
+    /// @brief Constant vector of length `n`, filled with `val`.
     vec(idx n, T val) : n_(n), data_(make_aligned_for_overwrite<T>(n)) {
         if (n_ > 0) std::fill_n(data_.get(), n_, val);
     }
 
-    /// Copy values from an initializer list.
+    /// @brief Vector from an initializer list.
     vec(std::initializer_list<T> init)
         : n_(init.size()), data_(make_aligned_for_overwrite<T>(init.size())) {
         if (n_ > 0) std::copy(init.begin(), init.end(), data_.get());
     }
 
-    /// Copy values from a non-owning span.
+    /// @brief Vector copied from a view.
     explicit vec(view<const T> values)
         : n_(values.size()), data_(make_aligned_for_overwrite<T>(values.size())) {
         if (n_ > 0) std::copy(values.begin(), values.end(), data_.get());
@@ -114,34 +114,25 @@ class vec {
         return *this;
     }
 
-    /// Return the element count.
+    /// @brief Length \f$n\f$.
     [[nodiscard]] constexpr idx size() const noexcept { return n_; }
 
-    /// Expose the vector itself for field-compatible generic code.
+    /// @brief The vector itself, for field-generic code.
     vec &as_vec() { return *this; }
     [[nodiscard]] const vec &as_vec() const { return *this; }
 
-    /// Return contiguous host storage, aligned to `num::storage_alignment`.
-    ///
-    /// The `assume_storage_aligned` wrapper is what carries the guarantee into
-    /// the caller's codegen; the aligned allocation on its own is invisible to
-    /// the optimizer across a function boundary.
+    /// @brief Host storage; aligned to `storage_alignment`.
     T *data() noexcept { return assume_storage_aligned(data_.get()); }
     [[nodiscard]] const T *data() const noexcept { return assume_storage_aligned(data_.get()); }
 
-    /// @brief A view over the whole vector, for interfaces that take `std::span`.
-    ///
-    /// The storage is contiguous, so this is a pointer and a length. It exists because
-    /// several routines (`sample_categorical`, `categorical_sampler`, the diagonal
-    /// helpers) accept a span, and spelling that out at every call site is noise.
+    /// @brief View of the whole vector.
     [[nodiscard]] view<T> span() noexcept { return {data(), n_}; }
     [[nodiscard]] view<const T> span() const noexcept { return {data(), n_}; }
 
     T &operator[](idx i) { return data_[i]; }
     T operator[](idx i) const { return data_[i]; }
 
-    /// @brief First and last elements. Undefined when the vector is empty, as for any
-    /// sequence container.
+    /// @brief First and last elements; the vector must be non-empty.
     T &front() { return data_[0]; }
     [[nodiscard]] const T &front() const { return data_[0]; }
     T &back() { return data_[n_ - 1]; }
@@ -152,7 +143,7 @@ class vec {
     [[nodiscard]] const T *begin() const { return data_.get(); }
     [[nodiscard]] const T *end() const { return data_.get() + n_; }
 
-    /// Copy host data to a lazily allocated device mirror.
+    /// @brief Copy to a device mirror, allocated on first use.
     void to_gpu() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
@@ -164,7 +155,7 @@ class vec {
 #endif
     }
 
-    /// Copy the device mirror back to host and release device storage.
+    /// @brief Copy back from the device mirror and release it.
     void to_cpu() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
@@ -177,7 +168,7 @@ class vec {
 #endif
     }
 
-    /// Return device storage, or null when no mirror exists.
+    /// @brief Device storage, or null without a mirror.
     real *gpu_data() { return d_data_; }
     [[nodiscard]] const real *gpu_data() const { return d_data_; }
     [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
@@ -189,7 +180,7 @@ class vec {
 };
 
 template <typename T>
-/// Copy an owning vector into an equally sized span.
+/// @brief Copy into an equally sized view.
 void copy_to(const vec<T> &source, view<T> destination) {
     if (source.size() != destination.size()) {
         throw std::invalid_argument("copy_to: vector sizes must match");
@@ -198,7 +189,7 @@ void copy_to(const vec<T> &source, view<T> destination) {
 }
 
 template <typename T>
-/// Copy an owning vector into an equally sized std::vector.
+/// @brief Copy into an equally sized `std::vector`.
 void copy_to(const vec<T> &source, std::vector<T> &destination) {
     copy_to(source, view<T>(destination));
 }
@@ -210,11 +201,11 @@ void copy_to(const vec<T> &source, std::vector<T> &destination) {
 extern template class vec<double>;
 #endif
 
-/// @brief Non-owning view of a flat vector as \f$(x_i,y_i)\f$ pairs.
+/// @brief Pair view: a flat vector as \f$(x_i, y_i)\f$ pairs.
 struct vec2_view {
     vec<real> &v;
 
-    /// Return the number of coordinate pairs.
+    /// @brief Number of pairs.
     [[nodiscard]] idx size() const noexcept { return v.size() / 2; }
 
     real &x(idx i) noexcept { return v[2 * i]; }

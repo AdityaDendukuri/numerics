@@ -1,5 +1,5 @@
 /// @file structures/graph/structured_grid.hpp
-/// @brief Implicit weighted graph for a uniform Cartesian grid.
+/// @brief Implicit graph of a uniform Cartesian grid.
 #pragma once
 
 #include "core/types.hpp"
@@ -12,15 +12,11 @@
 
 namespace num {
 
-/// Boundary policy for one axis of a structured grid graph.
+/// @brief Grid boundary per axis: reflecting or periodic.
 enum class grid_boundary { reflecting, periodic };
 
-/// An allocation-free graph view of a uniform D-dimensional Cartesian grid.
-///
-/// Vertices are cells, with axis 0 varying fastest. Edge weights are face
-/// transmissibilities A/h, so a finite-volume diffusion jump rate is
-/// `diffusivity * edge.weight / source_volume`. Reflecting boundaries omit the
-/// exterior edge; periodic boundaries wrap to the opposite cell.
+/// @brief Structured grid graph in \f$D\f$ dimensions, allocation-free.
+/// Edge weights are face transmissibilities \f$A / h\f$; axis 0 varies fastest.
 template <std::size_t D, typename Weight = double, std::integral Index = num::idx>
 class structured_grid_graph {
     static_assert(D > 0, "structured_grid_graph needs at least one dimension");

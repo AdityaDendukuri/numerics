@@ -41,3 +41,13 @@ add_custom_target(docs
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Generating the reference and building the documentation site"
     VERBATIM)
+
+# Reports doc comments that disagree with their declarations and public names missing from
+# docs/indexes; fails on any problem. Names without a comment are listed but do not fail.
+add_custom_target(docs-check
+    COMMAND ${CMAKE_COMMAND} -E env ${_refdoc_environment}
+            ${_docs_python} ${CMAKE_SOURCE_DIR}/tools/refdoc.py check
+    DEPENDS ${_docs_env_stamp}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Checking the doc comments and indexes"
+    VERBATIM)

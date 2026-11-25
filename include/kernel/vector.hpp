@@ -1,26 +1,19 @@
 /// @file kernel/vector.hpp
-/// @brief Raw-pointer kernels: BLAS-1 vector ops, Givens rotations and fused reductions.
+/// @brief Level-1 kernels over raw pointers: vector updates, reductions, norms, rotations.
 ///
 /// SPDX-License-Identifier: MIT
 /// Part of numerics, (c) 2026 Aditya Dendukuri.
 /// https://github.com/AdityaDendukuri/numerics
 ///
-/// Depends only on the standard library, so it can be copied into another project together
-/// with the NUM_K_* macros below. Please keep the attribution lines. The other kernel headers
-/// build on its macros, `contract` tags and `detail::reduce`.
+/// Standard library only; keep the attribution lines when copying.
 ///
-/// @section kernel_contract The contract every kernel in this tier assumes
+/// @section kernel_contract Kernel contract
 ///
-/// - Nothing is checked: violating a precondition is undefined behaviour, and the typed layers
-///   above establish the preconditions.
-/// - Buffers are caller-allocated and caller-sized; a kernel never allocates or keeps a pointer.
-/// - Pointers marked `NUM_K_RESTRICT` must not overlap. In-place use is allowed only where a
-///   function says so under `@aliasing`.
-/// - Everything is `noexcept`; routines that can fail numerically return `bool` or a result.
-/// - Reductions are not in source order unless a `contract::ordered` overload is chosen; see
-///   `detail::reduce`.
-///
-/// Complexity is quoted in elements touched, since the routines are bandwidth-bound.
+/// - Preconditions are unchecked; violating one is undefined behaviour.
+/// - Buffers are caller-allocated; no kernel allocates or keeps a pointer.
+/// - `NUM_K_RESTRICT` pointers must not overlap unless the function says they may alias.
+/// - Everything is `noexcept`; numerical failure is returned, never thrown.
+/// - Reductions reorder sums for speed; `contract::ordered` sums in index order.
 #pragma once
 
 #include <algorithm>
@@ -29,7 +22,7 @@
 #include <cstddef>
 
 namespace num {
-/// Index type, identical to the one in container/types.hpp, so this file stays self-contained.
+/// @brief Index type, as in core/types.hpp.
 using idx = std::size_t;
 } // namespace num
 
@@ -37,8 +30,7 @@ using idx = std::size_t;
 #define NUM_K_AINLINE [[gnu::always_inline]] inline
 #define NUM_K_RESTRICT __restrict__
 #define NUM_K_IVDEP _Pragma("GCC ivdep")
-// GCC/clang vector extension. Used only to give the reductions an accumulator
-// as wide as the target's registers; everything still compiles without it.
+// GCC/clang vector extensions: register-wide accumulators for the reductions.
 #define NUM_K_VECTOR_EXT 1
 #else
 #define NUM_K_AINLINE inline
@@ -46,8 +38,7 @@ using idx = std::size_t;
 #define NUM_K_IVDEP
 #endif
 
-// Bytes in the widest vector register the target actually has. Only consulted
-// on the NUM_K_VECTOR_EXT path.
+// Bytes in the target's widest vector register.
 #if defined(__AVX512F__)
 #define NUM_K_VECTOR_BYTES 64
 #elif defined(__AVX__)
@@ -56,38 +47,27 @@ using idx = std::size_t;
 #define NUM_K_VECTOR_BYTES 16
 #endif
 
-// Architectural vector registers on the target. Used to size `gemm`'s register
-// tile: the accumulators must live in registers for the whole inner loop, and a
-// tile that overflows the file spills to the stack and loses far more than the
-// blocking gained.
+// Vector registers on the target; sizes gemm's register tile so it never spills.
 #if defined(__AVX512F__) || defined(__aarch64__) || defined(_M_ARM64)
 #define NUM_K_VECTOR_REGISTERS 32
 #else
 #define NUM_K_VECTOR_REGISTERS 16
 #endif
 
-// Cache budgets that size `gemm`'s blocking. The defaults are the smallest
-// figures found on any mainstream core of the last decade, so a build that
-// knows nothing about its host is merely under-blocked, never wrong. The
-// numerics CMake configuration overrides them with the host's measured sizes;
-// a consumer of the bare headers may define them before including this file.
+// Cache sizes for gemm's blocking. Conservative defaults; CMake sets the host's sizes, or
+// define them before including this file.
 #ifndef NUM_K_L1_BYTES
 #define NUM_K_L1_BYTES 32768
 #endif
 #ifndef NUM_K_L2_BYTES
 #define NUM_K_L2_BYTES 524288
 #endif
-// The B panel `gemm` keeps resident across one sweep of rows. Measured on this
-// tree, 1 MiB beat both 256 KiB (too little reuse) and 4 MiB (stops fitting).
+// B panel gemm keeps resident per sweep of rows; 1 MiB measured best.
 #ifndef NUM_K_GEMM_PANEL_BYTES
 #define NUM_K_GEMM_PANEL_BYTES 1048576
 #endif
 
-// Whether `a*b + c` compiles to one fused instruction. Without it every
-// multiply-add in `gemm` is two instructions and the ceiling halves; the
-// arithmetic is still correct. x86 needs `-mfma` (numerics' CMake adds it
-// with `-mavx2`); AArch64 always has it. GCC additionally needs
-// `-ffp-contract=fast`, because strict `-std=c++NN` turns contraction off.
+// Whether a*b + c is one fused instruction. x86 needs -mfma; GCC also -ffp-contract=fast.
 #if defined(__FMA__) || defined(__ARM_FEATURE_FMA) || defined(__aarch64__) || defined(_M_ARM64)
 #define NUM_K_HAS_FMA 1
 #else
@@ -96,34 +76,31 @@ using idx = std::size_t;
 
 namespace num::kernel {
 
-/// Contracts at the unchecked kernel boundary. The tags make an intentional relaxation visible
-/// at the call site without runtime state.
+/// @brief Call-site tags that relax or tighten the kernel contract.
 namespace contract {
 struct alias_safe_t final {};
 struct throughput_t final {};
 struct ordered_t final {};
 
-/// @brief Tag a call whose output may alias an input.
+/// @brief Tag: the output may alias an input.
 inline constexpr alias_safe_t alias_safe{};
-/// @brief Tag a call that may reorder floating-point sums for speed.
+/// @brief Tag: sums may be reordered for speed.
 inline constexpr throughput_t throughput{};
-/// @brief Tag a call that must sum in index order.
+/// @brief Tag: sums run in index order.
 inline constexpr ordered_t ordered{};
 } // namespace contract
 
 namespace detail {
 
-/// @brief Independent accumulation chains used by every reduction here. One accumulator runs at
-/// the adder's latency; several run at its throughput, measured three to four times faster.
+/// @brief Independent accumulator chains per reduction.
 inline constexpr idx reduction_lanes = 8;
 
 #if defined(NUM_K_VECTOR_EXT)
 
-/// @brief Independent *vector* accumulators on the vector-extension path.
+/// @brief Vector accumulators per reduction on the vector-extension path.
 inline constexpr idx reduction_accumulators = 4;
 
-/// @brief A native vector of `Bytes` bytes holding elements of type T. Naming the vector type
-/// makes the accumulator as wide as the hardware; a plain array stays at 128 bits under clang.
+/// @brief Native vector type of `Bytes` bytes over `T`.
 template <class T, idx Bytes>
 struct vector_of {
     typedef T type __attribute__((vector_size(Bytes)));
@@ -131,12 +108,10 @@ struct vector_of {
 
 #endif
 
-/// @brief Reduce `element(i)` over `[0, n)` with several accumulators in flight.
-///
-/// Each index is visited once, so `element` may have a side effect. The order is a permutation
-/// of source order whose grouping depends on the target's vector width. Its error grows like
-/// \f$O(n/K)\f$ instead of \f$O(n)\f$, but data whose signs repeat with period K cancels worse.
-/// Use `contract::ordered` for results reproducible across machines.
+/// @brief Blocked sum: \f$\sum_{i<n} \mathrm{element}(i)\f$.
+/// Visits each index once, so `element` may have side effects.
+/// @note The summation order depends on the vector width; use `contract::ordered` for
+/// results reproducible across machines.
 template <std::floating_point T, class Element>
 NUM_K_AINLINE T reduce(idx n, Element element) noexcept {
     idx i = 0;
@@ -158,9 +133,7 @@ NUM_K_AINLINE T reduce(idx n, Element element) noexcept {
             lane[a] += value;
         }
     }
-    // One vector at a time, so the scalar tail is shorter than a vector rather
-    // than shorter than a whole block. Without this a vector of 20 elements
-    // would be reduced entirely serially on a 512-bit target.
+    // One vector at a time, so the scalar tail is shorter than a vector.
     for (; i + width <= n; i += width) {
         vector value{};
         for (idx k = 0; k < width; ++k) {
@@ -177,8 +150,7 @@ NUM_K_AINLINE T reduce(idx n, Element element) noexcept {
         total += lane[0][k];
     }
 #else
-    // Portable fallback: independent scalar chains. Breaks the dependency, but
-    // leaves the compiler to choose the vector width on its own.
+    // Portable fallback: independent scalar chains.
     constexpr idx lanes = reduction_lanes;
     T lane[lanes]{};
     for (; i + lanes <= n; i += lanes) {
@@ -203,9 +175,7 @@ NUM_K_AINLINE T reduce(idx n, Element element) noexcept {
 
 } // namespace detail
 
-// vec Level-1 BLAS & Fused Kernels
-
-/// @brief Copies a vector, \f$y_i \leftarrow x_i\f$.
+/// @brief Vector copy: \f$y \leftarrow x\f$.
 template <typename T>
 NUM_K_AINLINE void copy(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, idx n) noexcept {
     NUM_K_IVDEP
@@ -214,7 +184,7 @@ NUM_K_AINLINE void copy(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, idx n) n
     }
 }
 
-/// @brief Fills a vector, \f$x_i \leftarrow value\f$.
+/// @brief Vector fill: \f$x_i \leftarrow \mathrm{value}\f$.
 template <typename T>
 NUM_K_AINLINE void fill(T *NUM_K_RESTRICT x, T value, idx n) noexcept {
     NUM_K_IVDEP
@@ -223,7 +193,7 @@ NUM_K_AINLINE void fill(T *NUM_K_RESTRICT x, T value, idx n) noexcept {
     }
 }
 
-/// @brief Copies strided vectors, \f$y_i \leftarrow x_i\f$.
+/// @brief Strided vector copy: \f$y \leftarrow x\f$.
 template <typename T>
 NUM_K_AINLINE void copy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RESTRICT x, idx incx,
                                 idx n) noexcept {
@@ -233,7 +203,7 @@ NUM_K_AINLINE void copy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RE
     }
 }
 
-/// @brief Copies and scales strided vectors, \f$y_i \leftarrow \alpha x_i\f$.
+/// @brief Strided scaled copy: \f$y \leftarrow \alpha x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void scale_copy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RESTRICT x,
                                       idx incx, T alpha, idx n) noexcept {
@@ -243,7 +213,7 @@ NUM_K_AINLINE void scale_copy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NU
     }
 }
 
-/// @brief Strided vector update, \f$y_i \leftarrow y_i + \alpha x_i\f$.
+/// @brief Strided scaled vector addition (AXPY): \f$y \leftarrow \alpha x + y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void axpy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RESTRICT x, idx incx,
                                 T alpha, idx n) noexcept {
@@ -253,20 +223,20 @@ NUM_K_AINLINE void axpy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RE
     }
 }
 
-/// @brief Squared Euclidean norm over a strided vector.
+/// @brief Strided squared Euclidean norm: \f$\|x\|_2^2\f$.
 template <std::floating_point T>
 NUM_K_AINLINE T norm_sq_strided(const T *NUM_K_RESTRICT x, idx incx, idx n) noexcept {
     return detail::reduce<T>(n, [x, incx](idx i) { return x[i * incx] * x[i * incx]; });
 }
 
-/// @brief Swaps two strided vectors elementwise.
+/// @brief Strided vector swap: \f$x \leftrightarrow y\f$.
 template <typename T>
 NUM_K_AINLINE void swap_strided(T *x, idx incx, T *y, idx incy, idx n) noexcept {
     for (idx i = 0; i < n; ++i)
         std::swap(x[i * incx], y[i * incy]);
 }
 
-/// @brief Computes in-place scalar scaling \f$x_i \leftarrow \alpha x_i\f$.
+/// @brief Vector scaling (SCAL): \f$x \leftarrow \alpha x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void scale(T *NUM_K_RESTRICT x, T alpha, idx n) noexcept {
     NUM_K_IVDEP
@@ -275,7 +245,7 @@ NUM_K_AINLINE void scale(T *NUM_K_RESTRICT x, T alpha, idx n) noexcept {
     }
 }
 
-/// @brief Computes vector update \f$y_i \leftarrow y_i + \alpha x_i\f$ (BLAS AXPY).
+/// @brief Scaled vector addition (AXPY): \f$y \leftarrow \alpha x + y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void axpy(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T alpha, idx n) noexcept {
     NUM_K_IVDEP
@@ -284,8 +254,7 @@ NUM_K_AINLINE void axpy(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T alpha,
     }
 }
 
-/// @brief Computes fused scaled vector update \f$y_i \leftarrow a x_i + b y_i\f$ in a single memory
-/// pass.
+/// @brief Scaled vector update (AXPBY): \f$y \leftarrow a x + b y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void axpby(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T a, T b, idx n) noexcept {
     NUM_K_IVDEP
@@ -294,7 +263,7 @@ NUM_K_AINLINE void axpby(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T a, T 
     }
 }
 
-/// @brief Computes vector linear combination \f$z_i \leftarrow a x_i + b y_i\f$.
+/// @brief Vector linear combination: \f$z \leftarrow a x + b y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void axpbyz(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y,
                           T a, T b, idx n) noexcept {
@@ -304,15 +273,15 @@ NUM_K_AINLINE void axpbyz(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x, const 
     }
 }
 
-/// @brief Dot product \f$\sum_{i=0}^{n-1} x_i y_i\f$, accumulated in `detail::reduction_lanes`
-/// chains. Use `contract::ordered` for source-order summation.
+/// @brief Dot product: \f$x^T y\f$.
+/// @note Sums are reordered for speed; the `contract::ordered` overload is reproducible.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T dot(const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y,
                                   idx n) noexcept {
     return detail::reduce<T>(n, [x, y](idx i) { return x[i] * y[i]; });
 }
 
-/// @brief Dot product summed strictly in index order, for bit-for-bit reproducibility.
+/// @brief Ordered dot product: \f$x^T y\f$, summed in index order.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T dot(contract::ordered_t, const T *NUM_K_RESTRICT x,
                                   const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -324,28 +293,26 @@ template <std::floating_point T>
     return s;
 }
 
-/// @brief The same kernel as the unqualified overload, kept for callers that name it.
+/// @brief Dot product: \f$x^T y\f$; same as the untagged overload.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T dot(contract::throughput_t, const T *NUM_K_RESTRICT x,
                                   const T *NUM_K_RESTRICT y, idx n) noexcept {
     return dot(x, y, n);
 }
 
-/// @brief Two inner products sharing the left operand, loading `x` once, as fused Krylov
-/// recurrences need.
+/// @brief Result of `dot2`: \f$x^T y\f$ and \f$x^T z\f$.
 template <std::floating_point T>
 struct dot2_result {
     T xy;
     T xz;
 };
 
-/// @brief Two inner products \f$(x^T y, x^T z)\f$ in one pass over \f$x\f$.
+/// @brief Fused double dot product: \f$(x^T y,\ x^T z)\f$ in one pass.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE dot2_result<T> dot2(const T *NUM_K_RESTRICT x,
                                                 const T *NUM_K_RESTRICT y,
                                                 const T *NUM_K_RESTRICT z, idx n) noexcept {
-    // Half the usual chain count per result: two reductions share the register
-    // budget, and the shared load of x already supplies part of the parallelism.
+    // Half the chains per result: two reductions share the registers.
     constexpr idx lanes = detail::reduction_lanes / 2;
     T xy[lanes]{};
     T xz[lanes]{};
@@ -374,14 +341,14 @@ template <std::floating_point T>
     return {sum_xy, sum_xz};
 }
 
-/// @brief Computes an inner product and squared norm in one memory pass.
+/// @brief Result of `dot_norm_sq`: \f$x^T y\f$ and \f$\|y\|_2^2\f$.
 template <std::floating_point T>
 struct dot_norm_result {
     T dot;
     T norm_sq;
 };
 
-/// @brief \f$x^T y\f$ and \f$\|y\|_2^2\f$ in one pass.
+/// @brief Fused dot product and squared norm: \f$(x^T y,\ \|y\|_2^2)\f$ in one pass.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE dot_norm_result<T>
 dot_norm_sq(const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -413,7 +380,7 @@ dot_norm_sq(const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y, idx n) noexcep
     return {sum_xy, sum_yy};
 }
 
-/// @brief `y <- y + alpha*x`, returning the new \f$\|y\|^2\f$ from the same traversal.
+/// @brief Fused AXPY and squared norm: \f$y \leftarrow \alpha x + y\f$, returns \f$\|y\|_2^2\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T axpy_norm_sq(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T alpha,
                                            idx n) noexcept {
@@ -424,7 +391,7 @@ template <std::floating_point T>
     });
 }
 
-/// @brief Returns \f$\|a x + b y\|_2^2\f$ without materializing the combination.
+/// @brief Squared norm of a linear combination: \f$\|a x + b y\|_2^2\f$, never formed.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T linear_combination_norm_sq(const T *NUM_K_RESTRICT x, T a,
                                                          const T *NUM_K_RESTRICT y, T b,
@@ -435,21 +402,18 @@ template <std::floating_point T>
     });
 }
 
-/// @brief Computes squared Euclidean norm \f$\|\mathbf{x}\|_2^2 = \sum_{i=0}^{n-1} x_i^2\f$.
+/// @brief Squared Euclidean norm: \f$\|x\|_2^2\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T norm_sq(const T *NUM_K_RESTRICT x, idx n) noexcept {
     return detail::reduce<T>(n, [x](idx i) { return x[i] * x[i]; });
 }
 
-// Declared here so the rescaled path in `norm` can reach it; a pointer to a
-// fundamental type has no associated namespace, so ADL cannot find it later.
+// Declared early for norm's rescaled path; ADL cannot find it later.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T linf_norm(const T *NUM_K_RESTRICT x, idx n) noexcept;
 
-/// @brief Euclidean norm \f$\|x\|_2\f$, safe from overflow and underflow.
-///
-/// It uses `sqrt(norm_sq(x, n))` when that sum is finite and nonzero, and a rescaled second pass
-/// otherwise, since squaring overflows past about `1.3e154` and underflows below `1.5e-154`.
+/// @brief Euclidean norm: \f$\|x\|_2\f$.
+/// Rescales to avoid overflow and underflow.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T norm(const T *NUM_K_RESTRICT x, idx n) noexcept {
     const T squared = norm_sq(x, n);
@@ -459,8 +423,7 @@ template <std::floating_point T>
     if (std::isnan(squared)) {
         return squared;
     }
-    // Either the sum overflowed, or every term underflowed to zero. Both are
-    // fixed by factoring out the largest magnitude before squaring.
+    // Overflow or underflow: factor out the largest magnitude before squaring.
     const T scale = linf_norm(x, n);
     if (scale == T(0) || !std::isfinite(scale)) {
         return scale;
@@ -472,13 +435,13 @@ template <std::floating_point T>
     return scale * std::sqrt(scaled);
 }
 
-/// @brief Computes \f$L_1\f$ norm \f$\|\mathbf{x}\|_1 = \sum_{i=0}^{n-1} |x_i|\f$.
+/// @brief 1-norm: \f$\|x\|_1 = \sum_i |x_i|\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T l1_norm(const T *NUM_K_RESTRICT x, idx n) noexcept {
     return detail::reduce<T>(n, [x](idx i) { return std::abs(x[i]); });
 }
 
-/// @brief Computes \f$L_\infty\f$ norm \f$\|\mathbf{x}\|_\infty = \max_{0 \le i < n} |x_i|\f$.
+/// @brief Infinity norm: \f$\|x\|_\infty = \max_i |x_i|\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T linf_norm(const T *NUM_K_RESTRICT x, idx n) noexcept {
     T mx = T(0);
@@ -491,13 +454,13 @@ template <std::floating_point T>
     return mx;
 }
 
-/// @brief Computes scalar vector sum \f$\sum_{i=0}^{n-1} x_i\f$.
+/// @brief Vector sum: \f$\sum_i x_i\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T sum(const T *NUM_K_RESTRICT x, idx n) noexcept {
     return detail::reduce<T>(n, [x](idx i) { return x[i]; });
 }
 
-/// @brief In-place vector element clamp \f$x_i \leftarrow \min(\max(x_i, x_{\min}), x_{\max})\f$.
+/// @brief Elementwise clamp: \f$x_i \leftarrow \min(\max(x_i, \mathrm{lo}), \mathrm{hi})\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void clamp(T *NUM_K_RESTRICT x, T lo, T hi, idx n) noexcept {
     NUM_K_IVDEP
@@ -506,7 +469,7 @@ NUM_K_AINLINE void clamp(T *NUM_K_RESTRICT x, T lo, T hi, idx n) noexcept {
     }
 }
 
-/// @brief Computes elementwise vector sum \f$z_i = x_i + y_i\f$.
+/// @brief Vector addition: \f$z \leftarrow x + y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void add(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y,
                        idx n) noexcept {
@@ -516,7 +479,7 @@ NUM_K_AINLINE void add(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x, const T *
     }
 }
 
-/// @brief Computes elementwise Hadamard product \f$z_i = x_i \cdot y_i\f$.
+/// @brief Elementwise (Hadamard) product: \f$z_i \leftarrow x_i y_i\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void hadamard_mul(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x,
                                 const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -526,7 +489,7 @@ NUM_K_AINLINE void hadamard_mul(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x,
     }
 }
 
-/// @brief Computes elementwise division \f$z_i = x_i / y_i\f$.
+/// @brief Elementwise division: \f$z_i \leftarrow x_i / y_i\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void hadamard_div(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x,
                                 const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -536,7 +499,7 @@ NUM_K_AINLINE void hadamard_div(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x,
     }
 }
 
-/// @brief Computes elementwise reciprocal \f$y_i = 1 / x_i\f$ (e.g. for Jacobi preconditioners).
+/// @brief Elementwise reciprocal: \f$y_i \leftarrow 1 / x_i\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void inv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, idx n) noexcept {
     NUM_K_IVDEP
@@ -545,10 +508,7 @@ NUM_K_AINLINE void inv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, idx n) no
     }
 }
 
-// Row / Column Swaps & Search
-
-/// @brief Swaps vector buffers \f$\mathbf{x} \leftrightarrow \mathbf{y}\f$ of length \f$n\f$
-/// in-place.
+/// @brief Vector swap: \f$x \leftrightarrow y\f$.
 template <typename T>
 NUM_K_AINLINE void swap(T *NUM_K_RESTRICT x, T *NUM_K_RESTRICT y, idx n) noexcept {
     NUM_K_IVDEP
@@ -557,8 +517,8 @@ NUM_K_AINLINE void swap(T *NUM_K_RESTRICT x, T *NUM_K_RESTRICT y, idx n) noexcep
     }
 }
 
-/// @brief Returns index of element with maximum absolute value \f$\arg\max_i |x_i|\f$ in vector
-/// \f$\mathbf{x}\f$.
+/// @brief Index of largest magnitude (IAMAX): \f$\arg\max_i |x_i|\f$.
+/// Returns 0 when `n` is 0.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE idx argmax_abs(const T *NUM_K_RESTRICT x, idx n) noexcept {
     if (n == 0) {
@@ -576,11 +536,7 @@ template <std::floating_point T>
     return best_idx;
 }
 
-/// @brief Constructs Givens rotation parameters \f$(c, s)\f$ such that:
-/// \f[
-/// \begin{bmatrix} c & s \\ -s & c \end{bmatrix} \begin{bmatrix} a \\ b \end{bmatrix} =
-/// \begin{bmatrix} r \\ 0 \end{bmatrix}, \qquad c^2 + s^2 = 1
-/// \f]
+/// @brief Givens rotation setup (ROTG): \f$c, s\f$ with \f$(c a + s b,\ c b - s a) = (r, 0)\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void rotg(T a, T b, T &c, T &s) noexcept {
     if (b == T(0)) {
@@ -596,11 +552,7 @@ NUM_K_AINLINE void rotg(T a, T b, T &c, T &s) noexcept {
     }
 }
 
-/// @brief Applies Givens plane rotation in-place:
-/// \f[
-/// \begin{bmatrix} x_i \\ y_i \end{bmatrix} \leftarrow \begin{bmatrix} c & s \\ -s & c
-/// \end{bmatrix} \begin{bmatrix} x_i \\ y_i \end{bmatrix}
-/// \f]
+/// @brief Givens rotation (ROT): \f$(x_i, y_i) \leftarrow (c x_i + s y_i,\ c y_i - s x_i)\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void rot(T *NUM_K_RESTRICT x, T *NUM_K_RESTRICT y, T c, T s, idx n) noexcept {
     NUM_K_IVDEP

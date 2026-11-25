@@ -1,5 +1,5 @@
 /// @file operator/dense.hpp
-/// @brief Dense mat adapter for the operator protocol.
+/// @brief Dense matrix operator adapter.
 #pragma once
 
 #include "container/matrix_ops.hpp"
@@ -12,15 +12,16 @@
 
 namespace num::operators {
 
-/// @brief Adapt a dense mat to the operator protocol.
+/// @brief Dense operator: \f$y \leftarrow A x\f$ for a `mat`.
 struct dense_op final {
     using domain_type = vec<real>;
     using codomain_type = vec<real>;
 
-    /// Store a non-owning matrix reference.
+    /// @brief Non-owning view of `A`.
+    /// @warning `A` must outlive the operator.
     explicit dense_op(const mat<real> &A) : A_(A) {}
 
-    /// Compute y=A*x using `num::accel` (the build's best available backend).
+    /// @brief Operator application: \f$y \leftarrow A x\f$.
     void apply(const vec<real> &x, vec<real> &y) const;
 
     [[nodiscard]] idx rows() const noexcept { return A_.rows(); }

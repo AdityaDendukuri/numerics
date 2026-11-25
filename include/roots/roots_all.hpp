@@ -1,5 +1,5 @@
 /// @file roots/roots_all.hpp
-/// @brief Umbrella for root finding.
+/// @brief Root finding.
 #pragma once
 
 #include "roots/concepts.hpp"

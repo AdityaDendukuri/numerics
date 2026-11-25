@@ -1,11 +1,5 @@
 /// @file linear/solvers/chebyshev.hpp
-/// @brief Matrix-free Chebyshev polynomial preconditioner.
-///
-/// Approximates \f$A^{-1}\f$ by the degree-m polynomial minimizing
-/// \f$\max_{\lambda \in [\ell, h]} |1 - \lambda p(\lambda)|\f$, using only the operator's
-/// action. The caller supplies bounds with \f$0 < \ell \le \lambda_{\min}\f$ and
-/// \f$\lambda_{\max} \le h\f$; bounds that miss part of the spectrum make the preconditioner
-/// indefinite.
+/// @brief Chebyshev polynomial preconditioner, matrix-free.
 #pragma once
 
 #include "container/vector.hpp"
@@ -19,11 +13,7 @@
 
 namespace num {
 
-/// @brief Estimate \f$\lambda_{\max}\f$ of a self-adjoint operator by power iteration.
-///
-/// The starting vector is fixed, so repeated calls agree. Power iteration approaches
-/// \f$\lambda_{\max}\f$ from below, so the result is multiplied by `safety`, 10% headroom
-/// by default. Returns 0 for an empty operator.
+/// @brief Largest eigenvalue estimate by power iteration: \f$\lambda_{\max}\f$, times `safety`.
 template <class Op>
 [[nodiscard]] inline real estimate_largest_eigenvalue(const Op &A, idx iterations = 25,
                                                       real safety = 1.1) {
@@ -57,22 +47,21 @@ template <class Op>
     return std::abs(lambda) * safety;
 }
 
-/// @brief Chebyshev polynomial preconditioner \f$M^{-1} = p_m(A)\f$.
-///
-/// Each application costs `degree` operator applications and allocates nothing. It holds a
-/// reference to the operator, which must outlive it. `Op` must be SPD: this class declares
-/// `law::spd`, which holds only when \f$A\f$ is SPD.
+/// @brief Chebyshev preconditioner: \f$M^{-1} = p_m(A)\f$.
+/// \f$p_m\f$ minimizes \f$\max_{\lambda \in [\ell, h]} |1 - \lambda p(\lambda)|\f$.
+/// @warning SPD only if \f$[\ell, h]\f$ encloses the spectrum; otherwise PCG may diverge.
+/// @warning References `A`; it must outlive the preconditioner.
 template <class Op>
 requires math::spd_operator<Op>
 class chebyshev_preconditioner final {
   public:
     using domain_type = vec<real>;
     using codomain_type = vec<real>;
-    /// Valid only for bounds that enclose the spectrum; see the file comment.
+    /// @brief Declared SPD; valid only when the bounds enclose the spectrum.
     using laws = law::list<law::spd>;
 
-    /// @brief Build a degree-`degree` Chebyshev preconditioner for the spectrum \f$[lo, hi]\f$.
-    /// @throws std::invalid_argument If the interval is not a positive, non-degenerate range.
+    /// @brief Chebyshev preconditioner of degree `degree` on \f$[\ell, h]\f$.
+    /// @throws std::invalid_argument If \f$0 < \ell < h\f$ fails.
     chebyshev_preconditioner(const Op &A, real lo, real hi, idx degree)
         : op_(&A), lo_(lo), hi_(hi), degree_(degree), n_(static_cast<idx>(A.rows())),
           residual_(n_, 0.0), direction_(n_, 0.0), work_(n_, 0.0) {
@@ -92,7 +81,7 @@ class chebyshev_preconditioner final {
     [[nodiscard]] idx cols() const noexcept { return n_; }
     [[nodiscard]] idx degree() const noexcept { return degree_; }
 
-    /// @brief Apply \f$z \leftarrow p_m(A)\, r\f$.
+    /// @brief Preconditioner application: \f$z \leftarrow p_m(A) r\f$.
     void apply(const vec<real> &r, vec<real> &z) const {
         if (r.size() != n_) {
             throw std::invalid_argument("chebyshev: dimension mismatch");
@@ -149,10 +138,7 @@ class chebyshev_preconditioner final {
     mutable vec<real> work_;
 };
 
-/// @brief Build a Chebyshev preconditioner over an explicit spectral interval.
-///
-/// The returned object asserts positive definiteness, which holds only when
-/// \f$[lo, hi]\f$ encloses the spectrum. See the file comment.
+/// @brief Chebyshev preconditioner on \f$[\ell, h]\f$.
 template <class Op>
 requires math::spd_operator<Op>
 [[nodiscard]] inline chebyshev_preconditioner<Op> make_chebyshev_preconditioner(const Op &A, real lo,
@@ -161,15 +147,10 @@ requires math::spd_operator<Op>
     return chebyshev_preconditioner<Op>(A, lo, hi, degree);
 }
 
-/// @brief Build a Chebyshev preconditioner from a known \f$\lambda_{\min}\f$, estimating
-/// \f$\lambda_{\max}\f$ by power iteration.
-///
-/// `lambda_min` must be a true lower bound on the spectrum; it is not inferred from a condition
-/// number, since too large a value makes the polynomial indefinite.
-///
-/// @param A SPD operator.
-/// @param lambda_min Lower bound on the spectrum.
-/// @param degree Polynomial degree, and operator applications per solve.
+/// @brief Chebyshev preconditioner on \f$[\lambda_{\min}, \hat{\lambda}_{\max}]\f$.
+/// \f$\lambda_{\max}\f$ is estimated by power iteration.
+/// @warning `lambda_min` must be a true lower bound; too large a value makes the
+/// polynomial indefinite.
 template <class Op>
 [[nodiscard]] inline chebyshev_preconditioner<Op>
 chebyshev_preconditioner_from_below(const Op &A, real lambda_min, idx degree = 4) {

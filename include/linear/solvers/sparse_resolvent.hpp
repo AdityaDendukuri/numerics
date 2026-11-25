@@ -1,5 +1,5 @@
-/// @file sparse_resolvent.hpp
-/// @brief Shifted sparse solves through an available direct backend.
+/// @file linear/solvers/sparse_resolvent.hpp
+/// @brief Shifted sparse solves through a direct backend.
 #pragma once
 
 #include "container/vector.hpp"
@@ -11,21 +11,17 @@
 
 namespace num {
 
-/// True when numerics was built with SuiteSparse KLU, which factors the shifted systems.
+/// @brief Whether KLU is available for shifted factorizations.
 [[nodiscard]] bool sparse_resolvent_available() noexcept;
 
 class sparse_shifted_lu;
 
-/// @brief The sparsity of \f$sI - A\f$ analyzed once, ready to factor it for any shift.
-///
-/// Factored by KLU's complex interface: the symbolic analysis (block triangular form and AMD
-/// ordering) is computed once, and each `shift` does only the numeric factorization. `shift` may
-/// be called concurrently on one analysis, so independent shifts (Talbot nodes, say) factor in
-/// parallel; one factor serves one thread at a time. Without KLU, `shift` throws rather than
-/// silently densifying a large matrix. Copies share the analysis.
+/// @brief Sparse resolvent: symbolic analysis of \f$s I - A\f$ once, numeric factor per shift.
+/// Requires KLU; `shift` is thread-safe on one analysis.
+/// @note Without KLU, `shift` throws rather than densifying a large matrix.
 class sparse_resolvent {
   public:
-    /// Analyze A's sparsity pattern. A must store its diagonal explicitly.
+    /// @brief Analyze the pattern of `A`; its diagonal must be stored.
     explicit sparse_resolvent(const spmat &A);
 
     [[nodiscard]] idx size() const noexcept;
@@ -38,7 +34,7 @@ class sparse_resolvent {
     friend sparse_shifted_lu shift(const sparse_resolvent &R, cplx s);
 };
 
-/// @brief \f$sI - A\f$ for one shift \f$s\f$, factored by the available sparse backend.
+/// @brief Shifted sparse factor: \f$s I - A\f$ for one \f$s\f$.
 class sparse_shifted_lu {
   public:
     ~sparse_shifted_lu();
@@ -57,10 +53,10 @@ class sparse_shifted_lu {
     friend void solve(const sparse_shifted_lu &F, const vec<cplx> &b, vec<cplx> &x);
 };
 
-/// @brief Factor \f$sI - A\f$ numerically, reusing the symbolic analysis.
+/// @brief Factor \f$s I - A\f$, reusing the analysis.
 [[nodiscard]] sparse_shifted_lu shift(const sparse_resolvent &R, cplx s);
 
-/// @brief Solve \f$(sI - A)x = b\f$. `x` may be `b`.
+/// @brief Shifted solve: \f$x \leftarrow (s I - A)^{-1} b\f$. `x` may alias `b`.
 void solve(const sparse_shifted_lu &F, const vec<cplx> &b, vec<cplx> &x);
 
 } // namespace num

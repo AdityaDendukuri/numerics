@@ -1,8 +1,5 @@
 /// @file algebra/debug.hpp
-/// @brief Runtime sampling of the operator laws.
-///
-/// Sampling can only reject violations. Basis probes test a necessary condition exactly, and
-/// randomized probes with a fixed seed sample away from the axes, so a failure reproduces.
+/// @brief Runtime sampling of operator laws.
 #pragma once
 
 #include "algebra/scalar.hpp"
@@ -20,20 +17,20 @@ namespace num::debug {
 
 // Randomized probing for sampled property tests
 
-/// @brief Number of random probe vectors drawn per sampled property test.
+/// @brief Random probes per sampled property test.
 inline idx g_probe_count = 6;
 
-/// @brief Relative tolerance override for sampled property tests; 0 selects sqrt(eps).
+/// @brief Relative tolerance for sampled tests; 0 selects \f$\sqrt{\epsilon}\f$.
 inline double g_property_tol = 0.0;
 
-/// @brief Relative tolerance used when comparing sampled quantities over field T.
+/// @brief Relative tolerance for sampled tests over field `T`.
 template <class T>
 [[nodiscard]] inline scalars::real_t<T> property_tol() noexcept {
     return g_property_tol > 0.0 ? static_cast<scalars::real_t<T>>(g_property_tol)
                                 : scalars::sampling_tol<T>();
 }
 
-/// @brief Deterministic xorshift generator, so a reported violation reproduces exactly.
+/// @brief Deterministic xorshift generator, so violations reproduce.
 struct probe_rng {
     std::uint64_t state;
 
@@ -47,13 +44,13 @@ struct probe_rng {
         return state;
     }
 
-    /// Uniform sample in [-1, 1).
+    /// @brief Uniform sample: \f$U[-1, 1)\f$.
     constexpr double uniform() noexcept {
         return ((static_cast<double>(next() >> 11) / 9007199254740992.0) * 2.0) - 1.0;
     }
 };
 
-/// @brief Overwrite v with a reproducible random probe over its own scalar field.
+/// @brief Random probe: fill `v` reproducibly over its own field.
 template <class VectorType>
 inline void fill_probe(VectorType &v, probe_rng &rng) {
     using T = num::scalar_t<VectorType>;
@@ -67,7 +64,7 @@ inline void fill_probe(VectorType &v, probe_rng &rng) {
     }
 }
 
-/// @brief Overwrite v with the i-th basis vector e_i.
+/// @brief Basis probe: \f$v \leftarrow e_i\f$.
 template <class VectorType>
 inline void fill_basis(VectorType &v, idx i) {
     using T = num::scalar_t<VectorType>;
@@ -77,21 +74,20 @@ inline void fill_basis(VectorType &v, idx i) {
     v[i] = T(1);
 }
 
-/// @brief Inner product \f$\langle x,y \rangle = \sum_i \overline{x_i} y_i\f$, through the type's
-/// own `inner`, so a probe exercises the shipped implementation.
+/// @brief Inner product through the type's own `inner`: \f$\langle x, y \rangle\f$.
 template <class VectorType>
 [[nodiscard]] inline num::scalar_t<VectorType> probe_inner(const VectorType &x,
                                                            const VectorType &y) {
     return math::inner(x, y);
 }
 
-/// @brief Induced norm \f$\|x\| = \sqrt{\langle x,x \rangle}\f$.
+/// @brief Induced norm: \f$\|x\| = \sqrt{\langle x, x \rangle}\f$.
 template <class VectorType>
 [[nodiscard]] inline scalars::real_t<num::scalar_t<VectorType>> probe_norm(const VectorType &x) {
     return std::sqrt(scalars::re(probe_inner(x, x)));
 }
 
-/// @brief Stride giving at most `cap` basis probes across dimension n.
+/// @brief Basis-probe stride: at most `cap` probes across dimension `n`.
 [[nodiscard]] inline idx probe_stride(idx n, idx cap = 8) noexcept {
     const idx s = n / cap;
     return s == 0 ? idx(1) : s;
@@ -101,10 +97,7 @@ template <class VectorType>
 //
 // Generic over anything exposing `apply(x, y)` and `cols()`.
 
-/// @brief Estimate {lambda_min, lambda_max} of a self-adjoint operator by power iteration.
-///
-/// The minimum comes from power-iterating \f$\lambda_{max} I - A\f$. Only this separates a
-/// definite operator from a semidefinite one, since random probes never land in a null space.
+/// @brief Power-iteration spectral bounds of self-adjoint A: \f$\lambda_{\min}, \lambda_{\max}\f$.
 template <class Op, class VectorType>
 [[nodiscard]] inline auto estimate_spectrum_bounds(const Op &A, idx n, idx iterations = 64) {
     using T = num::scalar_t<VectorType>;
@@ -152,11 +145,7 @@ template <class Op, class VectorType>
     return bounds{lambda_max - shifted, lambda_max};
 }
 
-/// @brief Sampled test for positive definiteness \f$\langle x, A x \rangle > 0\ \forall x \neq
-/// 0\f$.
-///
-/// Basis probes check the necessary condition \f$A_{ii} > 0\f$ exactly; randomized
-/// probes then sample the quadratic form away from the axes.
+/// @brief Sampled positive-definiteness test: \f$\langle x, A x \rangle > 0\f$.
 template <class Op, class VectorType>
 inline void verify_spd_sample(const Op &A, idx n,
                               std::source_location loc = std::source_location::current()) {
@@ -215,10 +204,8 @@ inline void verify_spd_sample(const Op &A, idx n,
     }
 }
 
-/// @brief Check strict diagonal dominance exactly, \f$|a_{ii}| > \sum_{j \neq i} |a_{ij}|\f$.
-///
-/// Reading every entry is the size of the matrix, so it is decided, not sampled. It needs
-/// entrywise access; an operator exposing only `apply` is left unchecked.
+/// @brief Diagonal dominance test, exact: \f$|a_{ii}| > \sum_{j \ne i} |a_{ij}|\f$.
+/// Skipped for operators without entrywise access.
 template <class Mat>
 inline void
 verify_diagonal_dominance(const Mat &A,
@@ -254,8 +241,7 @@ verify_diagonal_dominance(const Mat &A,
     }
 }
 
-/// @brief Sampled test for positive semidefiniteness \f$\langle x, A x \rangle \geq 0\f$, which
-/// admits a null space as Gram matrices and graph Laplacians need.
+/// @brief Sampled positive-semidefiniteness test: \f$\langle x, A x \rangle \ge 0\f$.
 template <class Op, class VectorType>
 inline void verify_psd_sample(const Op &A, idx n,
                               std::source_location loc = std::source_location::current()) {
@@ -303,11 +289,7 @@ inline void verify_psd_sample(const Op &A, idx n,
     }
 }
 
-/// @brief Sampled test for self-adjointness \f$\langle x, A y \rangle = \overline{\langle y, A x
-/// \rangle}\f$.
-///
-/// On a real field this is symmetry \f$A = A^T\f$; on a complex field it is the
-/// Hermitian condition \f$A = A^*\f$, which conjugate-free comparison would miss.
+/// @brief Sampled self-adjointness test: \f$\langle x, Ay \rangle = \langle Ax, y \rangle\f$.
 template <class Op, class VectorType>
 inline void verify_symmetry_sample(const Op &A, idx n,
                                    std::source_location loc = std::source_location::current()) {
@@ -348,8 +330,7 @@ inline void verify_symmetry_sample(const Op &A, idx n,
     }
 }
 
-/// @brief Sampled test for linearity \f$A(\alpha x + \beta y) = \alpha A x + \beta A y\f$, which every
-/// law presupposes.
+/// @brief Sampled linearity test: \f$A(\alpha x + \beta y) = \alpha A x + \beta A y\f$.
 template <class Op, class VectorType>
 inline void verify_linearity_sample(const Op &A, idx n,
                                     std::source_location loc = std::source_location::current()) {

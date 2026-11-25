@@ -1,5 +1,5 @@
 /// @file roots/roots.hpp
-/// @brief Pure template root-finding methods for scalar equations \f$f(x^*) = 0\f$.
+/// @brief Scalar root finding: \f$f(x^*) = 0\f$.
 #pragma once
 
 #include "core/types.hpp"
@@ -12,7 +12,7 @@
 
 namespace num {
 
-/// @brief The root found, the iterations taken, the final residual, and whether it converged.
+/// @brief Root-finding result: root, iterations, residual, convergence.
 template <typename Float>
 struct root_result {
     Float root{};
@@ -30,20 +30,8 @@ struct root_result {
 };
 
 
-/// @brief Bisection method for finding a root on a bracketing interval \f$[a, b]\f$ where \f$f(a) f(b) \le 0\f$.
-///
-/// Guaranteed linear convergence halving the interval width at each step: \f$|x_k - x^*| \le \frac{b-a}{2^k}\f$.
-///
-/// @tparam Float scalar floating-point type (`double`, `float`).
-/// @tparam Func Function callable `Float(Float x)`.
-/// @param f Target continuous function.
-/// @param a Left interval endpoint.
-/// @param b Right interval endpoint.
-/// @param tol Error tolerance on interval radius and residual \f$|f(x)|\f$ (default: 1e-10).
-/// @param max_iter Maximum iterations (default: 1000).
-/// @return `root_result<Float>` with root approximation, iteration count, final residual, and convergence status.
-/// @throws std::invalid_argument If \f$f(a)\f$ and \f$f(b)\f$ have the same sign.
-/// @see brent, newton, secant
+/// @brief Bisection: \f$|x_k - x^*| \le (b - a) / 2^k\f$, given \f$f(a) f(b) \le 0\f$.
+/// @throws std::invalid_argument If \f$f(a)\f$ and \f$f(b)\f$ share a sign.
 template <typename Float = double, bracketable_function<Float> Func = scalar_fn>
 inline root_result<Float> bisection(Func &&f, Float a, Float b, Float tol = Float{1e-10},
                                     idx max_iter = 1000) {
@@ -70,20 +58,7 @@ inline root_result<Float> bisection(Func &&f, Float a, Float b, Float tol = Floa
     return {mid, max_iter, std::abs(f(mid)), false};
 }
 
-/// @brief Newton–Raphson method with quadratic convergence using analytical derivative \f$f'(x)\f$.
-///
-/// Iteratively computes \f$x_{k+1} = x_k - \frac{f(x_k)}{f'(x_k)}\f$. Achieves quadratic convergence \f$\mathcal{O}(\epsilon^2)\f$ near simple roots.
-///
-/// @tparam Float Floating point type.
-/// @tparam Func Target function callable `Float(Float x)`.
-/// @tparam DFunc Derivative function callable `Float(Float x)`.
-/// @param f Target function \f$f(x)\f$.
-/// @param df Derivative function \f$f'(x)\f$.
-/// @param x0 Initial root estimate.
-/// @param tol Residual convergence tolerance \f$|f(x)| < \text{tol}\f$ (default: 1e-10).
-/// @param max_iter Maximum iterations (default: 1000).
-/// @return `root_result<Float>` with root estimate and convergence info.
-/// @see secant, brent, bisection
+/// @brief Newton–Raphson iteration: \f$x_{k+1} = x_k - f(x_k) / f'(x_k)\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn,
           std::invocable<Float> DFunc = scalar_fn>
 inline root_result<Float> newton(Func &&f, DFunc &&df, Float x0,
@@ -103,19 +78,7 @@ inline root_result<Float> newton(Func &&f, DFunc &&df, Float x0,
     return {x, max_iter, std::abs(f(x)), false};
 }
 
-/// @brief Secant quasi-Newton root-finding method requiring two initial guesses \f$x_0, x_1\f$.
-///
-/// Replaces the exact derivative with a finite difference chord: \f$x_{k+1} = x_k - f(x_k) \frac{x_k - x_{k-1}}{f(x_k) - f(x_{k-1})}\f$. Superlinear convergence order \f$\approx 1.618\f$.
-///
-/// @tparam Float Floating point type.
-/// @tparam Func Target function callable.
-/// @param f Target function.
-/// @param x0 First initial guess.
-/// @param x1 Second initial guess.
-/// @param tol Residual tolerance (default: 1e-10).
-/// @param max_iter Maximum iterations (default: 1000).
-/// @return `root_result<Float>` with root estimate and convergence metadata.
-/// @see newton, brent
+/// @brief Secant iteration: \f$x_{k+1} = x_k - f(x_k) \frac{x_k - x_{k-1}}{f(x_k) - f(x_{k-1})}\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline root_result<Float> secant(Func &&f, Float x0, Float x1,
                                      Float tol = Float{1e-10}, idx max_iter = 1000) {
@@ -137,21 +100,8 @@ inline root_result<Float> secant(Func &&f, Float x0, Float x1,
     return {x1, max_iter, std::abs(f1), false};
 }
 
-/// @brief Brent's hybrid root solver (bisection + secant + inverse quadratic interpolation).
-///
-/// Combines the guaranteed convergence of bisection with the superlinear speed of secant and IQI methods.
-/// Standard choice for derivative-free robust 1D root-finding.
-///
-/// @tparam Float Floating point type.
-/// @tparam Func Target function callable.
-/// @param f Target function.
-/// @param a Left interval endpoint.
-/// @param b Right interval endpoint.
-/// @param tol Convergence tolerance on bracket width and residual (default: 1e-10).
-/// @param max_iter Maximum iterations (default: 1000).
-/// @return `root_result<Float>` with root estimate and convergence metadata.
-/// @throws std::invalid_argument If \f$f(a) f(b) > 0\f$ (no sign change).
-/// @see bisection, newton, secant
+/// @brief Brent's method: bisection, secant and inverse quadratic interpolation on \f$[a, b]\f$.
+/// @throws std::invalid_argument If \f$f(a) f(b) > 0\f$.
 template <typename Float = double, bracketable_function<Float> Func = scalar_fn>
 inline root_result<Float> brent(Func &&f, Float a, Float b, Float tol = Float{1e-10},
                                 idx max_iter = 1000) {

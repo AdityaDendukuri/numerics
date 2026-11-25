@@ -1,5 +1,5 @@
 /// @file spatial/connected_components.hpp
-/// @brief Iterative BFS connected-component labelling.
+/// @brief Connected-component labelling by BFS.
 #pragma once
 
 #include "core/types.hpp"
@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief Per-site cluster labels, the size of each cluster, and the largest cluster.
+/// @brief Cluster labels, cluster sizes and the largest cluster.
 struct cluster_result {
     array<int> id;    ///< Per-site label: -2 excluded, >=0 cluster index
     array<int> sizes; ///< sizes[c] = number of sites in cluster c
@@ -23,13 +23,8 @@ struct cluster_result {
     }
 };
 
-/// @brief Label connected components by BFS over one flat queue.
-///
-/// @param n_sites    Total number of sites
-/// @param in_cluster bool(int i): include site i?
-/// @param neighbors  void(int i, auto&& visit): call visit(nb) per neighbor of i
-/// @return id[i] is -2 for an excluded site and the cluster index otherwise; also the
-///         cluster sizes and the largest cluster.
+/// @brief Connected components by BFS: label sites where `in_cluster(i)`, -2 elsewhere.
+/// `neighbors(i, visit)` calls `visit(j)` for each neighbour of `i`.
 template <typename InCluster, typename Neighbors>
 cluster_result connected_components(int n_sites, InCluster &&in_cluster, Neighbors &&neighbors) {
     cluster_result res;

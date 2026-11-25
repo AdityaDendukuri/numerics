@@ -1,9 +1,7 @@
-/// @file umfpack.hpp
-/// @brief Optional SuiteSparse UMFPACK factorizations (real, and complex shifted), with transposed solves.
-///
-/// UMFPACK is multifrontal with dense BLAS kernels, so it factors high-fill sparse matrices several
-/// times faster than KLU. It is GPL-2.0-or-later: the backend is off unless numerics is configured with
-/// `-DNUMERICS_USE_UMFPACK=ON`, and binaries built with it are subject to the GPL when distributed.
+/// @file linear/sparse/umfpack.hpp
+/// @brief Sparse LU through SuiteSparse UMFPACK, real and complex-shifted.
+/// @warning UMFPACK is GPL-2.0-or-later: binaries built with `-DNUMERICS_USE_UMFPACK=ON`
+/// are subject to the GPL.
 #pragma once
 
 #include "container/vector.hpp"
@@ -13,15 +11,14 @@
 
 namespace num {
 
-/// True when numerics was built with the optional UMFPACK backend.
+/// @brief Whether UMFPACK is available.
 [[nodiscard]] bool umfpack_available() noexcept;
 
-/// @brief Sparse LU of a square real matrix by UMFPACK.
-///
-/// No iterative refinement; the solve workspace is preallocated, so one factor serves one thread at a time.
+/// @brief UMFPACK sparse LU: \f$P A Q = L U\f$. One factor serves one thread at a time.
 class umfpack_factorization {
   public:
-    /// Factor a square CSR matrix; throws when UMFPACK is unavailable or the matrix is singular.
+    /// @brief Factor a square sparse matrix.
+    /// @throws std::runtime_error If UMFPACK is unavailable or `A` is singular.
     explicit umfpack_factorization(const spmat &matrix);
     ~umfpack_factorization();
     umfpack_factorization(umfpack_factorization &&) noexcept;
@@ -38,15 +35,13 @@ class umfpack_factorization {
     std::unique_ptr<Impl> impl_;
 };
 
-/// @brief Solve \f$Ax = b\f$.
+/// @brief UMFPACK solve: \f$x \leftarrow A^{-1} b\f$.
 void solve(const umfpack_factorization &factor, const vec<real> &b, vec<real> &x);
-/// @brief Solve \f$A^T x = b\f$.
+/// @brief UMFPACK transposed solve: \f$x \leftarrow A^{-T} b\f$.
 void solve_transpose(const umfpack_factorization &factor, const vec<real> &b, vec<real> &x);
 
-/// @brief Sparse LU of \f$sI - A\f$ for a real A and complex shift s, by UMFPACK's complex interface.
-///
-/// A must store its diagonal explicitly. The transposed solve is the non-conjugate transpose, so one
-/// factorization serves both a forward resolvent and its adjoint.
+/// @brief UMFPACK shifted LU: \f$s I - A = L U\f$, real \f$A\f$, complex \f$s\f$.
+/// The diagonal of `A` must be stored.
 class umfpack_shifted_lu {
   public:
     umfpack_shifted_lu(const spmat &A, cplx s);
@@ -65,9 +60,9 @@ class umfpack_shifted_lu {
     std::unique_ptr<Impl> impl_;
 };
 
-/// @brief Solve \f$(sI - A)x = b\f$.
+/// @brief Shifted solve: \f$x \leftarrow (s I - A)^{-1} b\f$.
 void solve(const umfpack_shifted_lu &factor, const vec<cplx> &b, vec<cplx> &x);
-/// @brief Solve \f$(sI - A)^T x = b\f$ (no conjugation).
+/// @brief Shifted transposed solve, unconjugated: \f$x \leftarrow (s I - A)^{-T} b\f$.
 void solve_transpose(const umfpack_shifted_lu &factor, const vec<cplx> &b, vec<cplx> &x);
 
 } // namespace num

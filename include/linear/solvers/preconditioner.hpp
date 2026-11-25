@@ -1,7 +1,6 @@
 /// @file linear/solvers/preconditioner.hpp
-/// @brief preconditioner concept and diagonal preconditioners.
-/// @todo Add SSOR, incomplete Cholesky, ILU(0), and block-Jacobi
-/// preconditioners for sparse systems.
+/// @brief Diagonal preconditioners.
+// TODO: SSOR, incomplete Cholesky and block-Jacobi preconditioners.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -19,14 +18,14 @@
 
 namespace num {
 
-/// Diagonal inverse preconditioner.
+/// @brief Jacobi preconditioner: \f$M^{-1} = D^{-1}\f$.
 class jacobi_preconditioner final {
   public:
     using domain_type = vec<real>;
     using codomain_type = vec<real>;
     using laws = law::list<law::spd>;
 
-    /// Take ownership of a precomputed inverse diagonal.
+    /// @brief Jacobi preconditioner from \f$D^{-1}\f$.
     explicit jacobi_preconditioner(vec<real> inv_diag) : inv_diag_(std::move(inv_diag)) {
         for (const real value : inv_diag_) {
             if (!(value > 0.0) || !std::isfinite(value)) {
@@ -39,7 +38,7 @@ class jacobi_preconditioner final {
     [[nodiscard]] idx rows() const noexcept { return inv_diag_.size(); }
     [[nodiscard]] idx cols() const noexcept { return inv_diag_.size(); }
 
-    /// Compute z=D^-1 r.
+    /// @brief Preconditioner application: \f$z \leftarrow D^{-1} r\f$.
     void apply(const vec<real> &r, vec<real> &z) const {
         const idx n = inv_diag_.size();
         if (r.size() != n) {
@@ -55,7 +54,7 @@ class jacobi_preconditioner final {
     vec<real> inv_diag_;
 };
 
-/// Construct a Jacobi preconditioner from a dense matrix diagonal.
+/// @brief Jacobi preconditioner of a dense matrix.
 [[nodiscard]] inline jacobi_preconditioner make_jacobi_preconditioner(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("jacobi_preconditioner: matrix must be square");
@@ -70,7 +69,7 @@ class jacobi_preconditioner final {
     return jacobi_preconditioner(std::move(inv));
 }
 
-/// Construct a Jacobi preconditioner from a sparse matrix diagonal.
+/// @brief Jacobi preconditioner of a sparse matrix.
 [[nodiscard]] inline jacobi_preconditioner make_jacobi_preconditioner(const spmat &A) {
     if (A.n_rows() != A.n_cols()) {
         throw std::invalid_argument("jacobi_preconditioner: matrix must be square");

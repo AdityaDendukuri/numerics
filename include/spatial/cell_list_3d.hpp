@@ -1,5 +1,5 @@
-/// @file cell_list_3d.hpp
-/// @brief Cache-coherent 3D cell list for O(1) amortized neighbour queries
+/// @file spatial/cell_list_3d.hpp
+/// @brief 3D cell list for neighbour queries.
 #pragma once
 
 #include "core/types.hpp"
@@ -14,10 +14,10 @@
 namespace num {
 
 template <field scalar>
-/// Counting-sorted 3D spatial bins for local-neighbor iteration.
+/// @brief 3D cell list: particles binned by counting sort.
 class cell_list_3d {
   public:
-    /// Cover the bounding box with padded cubic cells.
+    /// @brief Cell list over the bounding box with cubic cells of side `cell_size`.
     cell_list_3d(scalar cell_size, scalar xmin, scalar xmax, scalar ymin, scalar ymax, scalar zmin,
                scalar zmax)
         : cs_(cell_size), xmin_(xmin), ymin_(ymin), zmin_(zmin),
@@ -30,7 +30,7 @@ class cell_list_3d {
         count_.assign(total, 0);
     }
 
-    /// @brief Rebuild by counting-sort over cell ids.
+    /// @brief Rebuild the bins by counting sort.
     template <position_accessor_2d<scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n) {
         sorted_.resize(n);
@@ -54,7 +54,7 @@ class cell_list_3d {
         }
     }
 
-    /// @brief Call f(j) for candidate particles near (px, py, pz).
+    /// @brief Neighbour query: `f(j)` for each candidate near \f$(p_x, p_y, p_z)\f$.
     template <typename F>
     void query(scalar px, scalar py, scalar pz, F &&f) const {
         const int cx = cell_x(px);
@@ -84,7 +84,7 @@ class cell_list_3d {
         }
     }
 
-    /// @brief Visit each candidate pair once.
+    /// @brief Pair visit: `f(i, j)` once per candidate pair.
     template <typename F>
     void iterate_pairs(F &&f) const {
         // Half-shell offsets cover all neighboring cell pairs once.
@@ -135,7 +135,7 @@ class cell_list_3d {
         }
     }
 
-    /// Return cell-grid dimensions and stored particle count.
+    /// @brief Grid dimensions and particle count.
     [[nodiscard]] int nx() const noexcept { return nx_; }
     [[nodiscard]] int ny() const noexcept { return ny_; }
     [[nodiscard]] int nz() const noexcept { return nz_; }

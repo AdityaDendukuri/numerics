@@ -1,5 +1,5 @@
-/// @file gauss_seidel.hpp
-/// @brief Gauss-Seidel iterative solver
+/// @file linear/solvers/gauss_seidel.hpp
+/// @brief Gauss–Seidel iteration.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -12,18 +12,10 @@
 
 namespace num {
 
-/// @brief Gauss-Seidel iterative solver for Ax = b.
-///
-/// Requires strictly diagonally dominant or SPD A; the two are incomparable, so pass
-/// `num::assume_diagonally_dominant(A)` or `num::assume_spd(A)`. The sweep is sequential;
-/// `Parallel` threads only the residual. Use `num::jacobi<true>` for a parallel sweep.
-///
-/// @param A_in     Square matrix claiming the law
-/// @param b        Right-hand side vector
-/// @param x        Solution vector (initial guess on input, solution on output)
-/// @param tol      Convergence tolerance on residual norm (default 1e-10)
-/// @param max_iter Maximum iterations (default 1000)
-/// @return solver_result with convergence info
+/// @brief Gauss–Seidel iteration: \f$x_i \leftarrow (b_i - \sum_{j \ne i} a_{ij} x_j) / a_{ii}\f$.
+/// Requires `A` tagged diagonally dominant or SPD.
+/// @note The sweep is sequential; `Parallel` threads only the residual. Use `jacobi<true>`
+/// for a parallel sweep.
 template <class Mat = with_law<mat<real>, law::diagonally_dominant>, bool Parallel = has_omp>
 requires claims<Mat, law::diagonally_dominant> || claims<Mat, law::spd>
 inline solver_result gauss_seidel(const Mat &A_in, const vec<real> &b, vec<real> &x, real tol = 1e-10,

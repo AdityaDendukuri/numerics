@@ -1,5 +1,5 @@
-/// @file projected.hpp
-/// @brief Operator adapter that projects every output onto a linear subspace.
+/// @file operator/projected.hpp
+/// @brief Projected operators: \f$P_S A\f$.
 #pragma once
 
 #include "core/math/associated.hpp"
@@ -10,11 +10,7 @@
 
 namespace num::operators {
 
-/// @brief The law of \f$P_S A\f$ on S for an operator A claiming a self-adjoint law.
-///
-/// \f$P_S A\f$ is not self-adjoint even when A is, but \f$P_S A x = P_S A P_S x\f$ for
-/// \f$x \in S\f$, and \f$P_S A P_S\f$ keeps A's law on S. This lets `num::pcg` solve with a
-/// graph Laplacian on the zero-sum subspace without a second assertion.
+/// @brief Law of \f$P_S A\f$ on \f$S\f$: the law of \f$A\f$ restricted to \f$S\f$.
 template <class Op, class Subspace>
 using restricted_laws = std::conditional_t<
     claims<Op, law::spd>, law::list<law::spd_on<Subspace>>,
@@ -22,7 +18,8 @@ using restricted_laws = std::conditional_t<
                        std::conditional_t<claims<Op, law::self_adjoint>,
                                           law::list<law::self_adjoint_on<Subspace>>, law::list<>>>>;
 
-/// Non-owning representation of P_S A, where P_S is projection onto S.
+/// @brief Projected operator: \f$y \leftarrow P_S A x\f$. Non-owning.
+/// @warning Holds `A` by reference; it must outlive the projected operator.
 template <class Op, class Subspace>
 requires math::linear_operator<Op>
     &&math::linear_subspace_of<Subspace, math::codomain_t<Op>> class projected_op final {
@@ -48,8 +45,7 @@ requires math::linear_operator<Op>
     Subspace subspace_;
 };
 
-/// @brief \f$P_S A\f$, which carries the law of `A` onto the subspace `S`. It holds `A` by
-/// reference.
+/// @brief Projected operator: \f$P_S A\f$, carrying the law of \f$A\f$ onto \f$S\f$.
 template <class Op, class Subspace>
 [[nodiscard]] auto projected(const Op &op, Subspace subspace) {
     return projected_op<Op, Subspace>(op, std::move(subspace));

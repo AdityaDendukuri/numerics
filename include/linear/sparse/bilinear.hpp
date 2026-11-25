@@ -1,5 +1,5 @@
 /// @file linear/sparse/bilinear.hpp
-/// @brief Sparse bilinear contractions without dense intermediate matrices.
+/// @brief Sparse bilinear forms without dense intermediates.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -9,7 +9,7 @@
 
 namespace num {
 
-/// y^T A x for vectors and a real CSR matrix; no conjugation is applied.
+/// @brief Sparse bilinear form: \f$y^T A x\f$, unconjugated.
 template <typename T>
 inline T sparse_bilinear(const spmat &A, const vec<T> &y, const vec<T> &x) {
     if (y.size() != A.n_rows() || x.size() != A.n_cols()) {
@@ -24,7 +24,7 @@ inline T sparse_bilinear(const spmat &A, const vec<T> &y, const vec<T> &x) {
     return result;
 }
 
-/// trace(L^T A R), where L and R are row-major dense matrices with equal column counts.
+/// @brief Sparse bilinear trace: \f$\mathrm{tr}(L^T A R)\f$.
 inline real sparse_bilinear_trace(const spmat &A, const mat<real> &L, const mat<real> &R) {
     if (L.rows() != A.n_rows() || R.rows() != A.n_cols() || L.cols() != R.cols()) {
         throw std::invalid_argument("sparse_bilinear_trace: dimension mismatch");

@@ -29,6 +29,9 @@ jobs:
             -DNUMERICS_BUILD_BENCHMARKS=OFF \
             -DNUMERICS_BUILD_DOCS=ON
 
+      - name: Check doc comments and indexes
+        run: cmake --build build --target docs-check
+
       - name: Build docs
         run: cmake --build build --target docs
 

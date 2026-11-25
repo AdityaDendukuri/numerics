@@ -1,5 +1,5 @@
 /// @file linear/svd/svd.hpp
-/// @brief Dense and randomized truncated SVD.
+/// @brief Dense and randomized SVD.
 #pragma once
 
 #include "container/matrix.hpp"
@@ -17,7 +17,7 @@
 
 namespace num {
 
-/// Singular value decomposition and convergence metadata.
+/// @brief SVD result: \f$A = U \Sigma V^T\f$ and convergence.
 struct svd_result {
     mat<real> U;                  ///< Left singular vectors.
     vec<real> S;                  ///< Singular values in descending order.
@@ -34,36 +34,17 @@ struct svd_result {
     }
 };
 
-/// @brief Compute full singular value decomposition \f$A = U \Sigma V^T\f$.
-///
-/// Uses LAPACK `dgesdd` when configured, else in-tree one-sided Jacobi sweeps. Call
-/// `num::lapack::svd` or `num::seq::svd` to force one.
-///
-/// @param A Input \f$m \times n\f$ dense matrix.
-/// @param tol Orthogonality tolerance for Jacobi sweeps (default: 1e-12).
-/// @param max_sweeps Maximum one-sided Jacobi sweeps (default: 100).
-/// @return `svd_result` with left singular vectors \f$U\f$, singular values \f$\Sigma\f$, and
-/// transposed right vectors \f$V^T\f$.
-/// @see svd_truncated, eig_sym, qr
+/// @brief Singular value decomposition (SVD): \f$A = U \Sigma V^T\f$.
+/// Uses LAPACK `dgesdd` when available, else one-sided Jacobi.
 svd_result svd(const mat<real> &A, real tol = 1e-12, idx max_sweeps = 100);
 
-/// @brief Randomized rank-\f$k\f$ SVD \f$A \approx U_k \Sigma_k V_k^T\f$, from a Gaussian range
-/// finder of dimension \f$k + \text{oversampling}\f$.
-///
-/// @param A Input \f$m \times n\f$ dense matrix.
-/// @param k Target rank (\f$0 < k \le \min(m, n)\f$).
-/// @param oversampling Extra random test vectors (default: 10).
-/// @param rng Optional generator for reproducible sampling.
-/// @return `svd_result` containing rank-\f$k\f$ truncated factors \f$U_k, \Sigma_k, V_k^T\f$.
+/// @brief Randomized truncated SVD: \f$A \approx U_k \Sigma_k V_k^T\f$.
 /// @throws std::invalid_argument If \f$k\f$ is out of range.
-/// @see svd, lanczos
 svd_result svd_truncated(const mat<real> &A, idx k, idx oversampling = 10, rng_state *rng = nullptr);
 
 namespace seq {
-/// One-sided Jacobi (Hestenes) SVD on the transpose.
-///
-/// It rotates rows of \f$A^T\f$, which are contiguous, and carries the norms through each
-/// sweep. It is slower than bidiagonalization but accurate for small singular values.
+/// @brief One-sided Jacobi (Hestenes) SVD: \f$A = U \Sigma V^T\f$.
+/// @note Slower than bidiagonalization but accurate for small singular values.
 inline svd_result svd(const mat<real> &A_in, real tol, idx max_sweeps) {
     constexpr real tiny = 1e-300;
     const idx m = A_in.rows(), n = A_in.cols();
