@@ -21,9 +21,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install documentation tools
-        run: python -m pip install libclang mkdocs-material
-
       - name: Configure
         run: |
           cmake -B build \

@@ -1,0 +1,6 @@
+# Python packages for the documentation build. docs/CMakeLists.txt installs these into a
+# private virtual environment under the build directory; nobody installs them by hand.
+# Bump a version here and the next docs build reinstalls.
+mkdocs==1.6.1
+mkdocs-material==9.8.2
+libclang==18.1.1

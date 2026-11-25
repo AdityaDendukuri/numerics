@@ -47,6 +47,7 @@ nav:
 exclude_docs: |
   indexes/
   CMakeLists.txt
+  requirements.txt
 
 # Links every mention of a public name to its reference page; see tools/autolink.py.
 hooks:
