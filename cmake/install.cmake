@@ -21,7 +21,7 @@ set(NUMERICS_INSTALL_TARGETS
 if(TARGET numerics_cuda)
     list(APPEND NUMERICS_INSTALL_TARGETS numerics_cuda)
 endif()
-if(TARGET numerics_io)
+if(TARGET numerics_io AND NUMERICS_IO_INSTALLED)
     list(APPEND NUMERICS_INSTALL_TARGETS numerics_io)
 endif()
 install(TARGETS ${NUMERICS_INSTALL_TARGETS}
