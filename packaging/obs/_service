@@ -1,0 +1,8 @@
+<services>
+  <!-- Fetches the release tarball named in the spec and PKGBUILD as numerics-<version>.tar.gz. -->
+  <service name="download_url">
+    <param name="protocol">https</param>
+    <param name="host">github.com</param>
+    <param name="path">/AdityaDendukuri/numerics/archive/v1.1.0/numerics-1.1.0.tar.gz</param>
+  </service>
+</services>

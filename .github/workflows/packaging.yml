@@ -1,0 +1,131 @@
+name: Packaging
+
+# Builds the Linux packages in packaging/ inside each distribution's own container,
+# installs them, and compiles packaging/test against the installed package. The packages
+# build from the release tarball their version names, so bump packaging/ with each tag.
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']          # tag pushes ignore the path filter, so every release runs
+    paths: ['packaging/**', '.github/workflows/packaging.yml']
+  pull_request:
+    paths: ['packaging/**', '.github/workflows/packaging.yml']
+  workflow_dispatch:
+
+jobs:
+  arch:
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: pacman -Syu --noconfirm --needed base-devel cmake sudo
+      - name: Build and install with makepkg
+        run: |
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+          cp -r packaging/arch /home/builder/pkg
+          chown -R builder /home/builder/pkg
+          su builder -c 'cd ~/pkg && makepkg -si --noconfirm'
+      - name: Check the package contents
+        run: |
+          pacman -Ql numerics | grep -q '/usr/include/numerics/numerics.hpp'
+          pacman -Ql numerics | grep -q '/usr/lib/libnumerics.a'
+      - name: Consumer test
+        run: |
+          cmake -S packaging/test -B /tmp/consumer
+          cmake --build /tmp/consumer
+          test "$(/tmp/consumer/test_numerics)" = 5
+
+  debian:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['debian:bookworm', 'debian:trixie', 'ubuntu:24.04']
+    container: ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential cmake debhelper dpkg-dev curl ca-certificates
+      - name: Build the .deb
+        run: |
+          version=$(dpkg-parsechangelog -l packaging/debian/changelog -S Version | cut -d- -f1)
+          mkdir -p /tmp/deb && cd /tmp/deb
+          curl -fsSL -o "numerics_${version}.orig.tar.gz" \
+            "https://github.com/AdityaDendukuri/numerics/archive/v${version}/numerics-${version}.tar.gz"
+          tar -xzf "numerics_${version}.orig.tar.gz"
+          cp -r "$GITHUB_WORKSPACE/packaging/debian" "numerics-${version}/debian"
+          cd "numerics-${version}" && dpkg-buildpackage -us -uc -b
+      - name: Install and check the package contents
+        run: |
+          apt-get install -y /tmp/deb/libnumerics-dev_*.deb
+          dpkg -L libnumerics-dev | grep -q '/usr/include/numerics/numerics.hpp'
+          dpkg -L libnumerics-dev | grep -q 'libnumerics.a'
+      - name: Consumer test
+        run: |
+          cmake -S packaging/test -B /tmp/consumer
+          cmake --build /tmp/consumer
+          test "$(/tmp/consumer/test_numerics)" = 5
+
+  rpm:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['fedora:latest', 'opensuse/tumbleweed']
+    container: ${{ matrix.image }}
+    steps:
+      - name: Install rpm tooling
+        run: |
+          if command -v dnf >/dev/null; then
+            dnf -y install rpm-build curl tar git 'dnf-command(builddep)'
+          else
+            zypper --non-interactive install rpm-build curl tar git
+          fi
+      - uses: actions/checkout@v4
+      - name: Install the spec's build dependencies
+        run: |
+          if command -v dnf >/dev/null; then
+            dnf -y builddep packaging/rpm/numerics.spec
+          else
+            rpmspec -q --buildrequires packaging/rpm/numerics.spec | tr -d ' ' | xargs zypper --non-interactive install
+          fi
+      - name: Build the .rpm
+        run: |
+          version=$(sed -n 's/^Version: *//p' packaging/rpm/numerics.spec)
+          # Fedora and openSUSE keep sources and built packages in different places.
+          sources=$(rpm --eval '%{_sourcedir}')
+          mkdir -p "$sources"
+          curl -fsSL -o "$sources/numerics-${version}.tar.gz" \
+            "https://github.com/AdityaDendukuri/numerics/archive/v${version}/numerics-${version}.tar.gz"
+          # On failure, surface the tail of the log as an annotation, which is public.
+          if ! rpmbuild -bb packaging/rpm/numerics.spec > /tmp/rpmbuild.log 2>&1; then
+            tail -n 40 /tmp/rpmbuild.log
+            echo "::error title=rpmbuild failed::$(tail -n 15 /tmp/rpmbuild.log | tr '\n' '|')"
+            exit 1
+          fi
+      - name: Install and check the package contents
+        run: |
+          package=$(find "$(rpm --eval '%{_rpmdir}')" -name 'numerics-devel-*.rpm' | head -n 1)
+          echo "Installing $package"
+          if command -v dnf >/dev/null; then
+            dnf -y install "$package"
+          else
+            zypper --non-interactive --no-gpg-checks install --allow-unsigned-rpm "$package"
+          fi
+          files=$(rpm -ql numerics-devel)
+          for expected in /usr/include/numerics/numerics.hpp libnumerics.a numerics-config.cmake; do
+            if ! grep -q "$expected" <<< "$files"; then
+              echo "::error title=missing $expected::$(echo "$files" | grep -v '/include/numerics/' | tr '\n' '|')"
+              exit 1
+            fi
+          done
+      - name: Consumer test
+        run: |
+          cmake -S packaging/test -B /tmp/consumer
+          cmake --build /tmp/consumer
+          test "$(/tmp/consumer/test_numerics)" = 5

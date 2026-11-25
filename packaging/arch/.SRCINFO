@@ -1,0 +1,15 @@
+pkgbase = numerics
+	pkgdesc = C++20 library for scientific computing
+	pkgver = 1.1.0
+	pkgrel = 1
+	url = https://github.com/AdityaDendukuri/numerics
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	makedepends = cmake
+	options = staticlibs
+	options = !lto
+	source = numerics-1.1.0.tar.gz::https://github.com/AdityaDendukuri/numerics/archive/v1.1.0/numerics-1.1.0.tar.gz
+	sha256sums = 3b34633c1f51db13fa61b1ff44b1cb404fe617351363f750ec0af700639a7857
+
+pkgname = numerics
