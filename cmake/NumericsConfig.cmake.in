@@ -15,7 +15,7 @@ if("numerics" IN_LIST _numerics_components OR "backends" IN_LIST _numerics_compo
 endif()
 
 foreach(_component kernel core raw_kernel numerics backends blas lapack openmp fftw suitesparse
-                   mpi cuda)
+                   mpi cuda io)
     set(numerics_${_component}_FOUND TRUE)
 endforeach()
 
@@ -67,6 +67,14 @@ if(_numerics_need_full OR "fftw" IN_LIST _numerics_components)
     else()
         set(numerics_fftw_FOUND FALSE)
     endif()
+endif()
+
+# numerics::io carries nlohmann/json in its interface, so it must be found whenever the
+# target was installed, before the targets file names it.
+if(@NUMERICS_IO_INSTALLED@)
+    find_dependency(nlohmann_json 3.11)
+else()
+    set(numerics_io_FOUND FALSE)
 endif()
 
 if("cuda" IN_LIST _numerics_components)

@@ -83,14 +83,25 @@ include(cmake/stdsimd.cmake)
 include(cmake/apple.cmake)
 include(cmake/suitesparse.cmake)
 
+# nlohmann/json for numerics::io: an installed copy (vcpkg, Homebrew, a distribution package)
+# when there is one, else a download. Only the installed case can be installed with numerics,
+# since a downloaded copy is not installed alongside it.
+set(NUMERICS_IO_INSTALLED FALSE)
 if(NUMERICS_BUILD_IO)
-    include(FetchContent)
-    FetchContent_Declare(
-        nlohmann_json
-        URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-    FetchContent_MakeAvailable(nlohmann_json)
+    find_package(nlohmann_json 3.11 CONFIG QUIET)
+    if(nlohmann_json_FOUND)
+        set(NUMERICS_IO_INSTALLED TRUE)
+        message(STATUS "numerics: nlohmann/json ${nlohmann_json_VERSION} found; numerics::io is installed")
+    else()
+        include(FetchContent)
+        FetchContent_Declare(
+            nlohmann_json
+            URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        )
+        FetchContent_MakeAvailable(nlohmann_json)
+        message(STATUS "numerics: nlohmann/json downloaded; numerics::io is not installed")
+    endif()
 endif()
 
 # 3. The compatibility umbrella. Mostly headers; what remains compiled is listed in
@@ -141,14 +152,20 @@ endif()
 foreach(_alias solvers ode pde spectral plot)
     add_library(numerics_${_alias} INTERFACE)
     add_library(numerics::${_alias} ALIAS numerics_${_alias})
+    set_target_properties(numerics_${_alias} PROPERTIES EXPORT_NAME ${_alias})
     target_link_libraries(numerics_${_alias} INTERFACE numerics)
 endforeach()
 
 if(NUMERICS_BUILD_IO)
     add_library(numerics_io INTERFACE)
     add_library(numerics::io ALIAS numerics_io)
-    target_link_libraries(numerics_io INTERFACE numerics
-        $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>)
+    set_target_properties(numerics_io PROPERTIES EXPORT_NAME io)
+    if(NUMERICS_IO_INSTALLED)
+        target_link_libraries(numerics_io INTERFACE numerics nlohmann_json::nlohmann_json)
+    else()
+        target_link_libraries(numerics_io INTERFACE numerics
+            $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>)
+    endif()
 endif()
 
 add_custom_target(tags
