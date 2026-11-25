@@ -6,12 +6,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Symlink compile_commands.json to project root for clangd / Neovim LSP
-if(CMAKE_EXPORT_COMPILE_COMMANDS)
+# Symlink compile_commands.json to the source root for clangd and other editor tooling.
+# Only for a top-level build, and never fatal: package managers configure several build
+# trees from one source tree at once, and a subproject must not touch its parent's tree.
+if(CMAKE_EXPORT_COMPILE_COMMANDS AND PROJECT_IS_TOP_LEVEL)
     file(CREATE_LINK
         "${CMAKE_BINARY_DIR}/compile_commands.json"
         "${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json"
-        SYMBOLIC COPY_ON_ERROR
+        RESULT _numerics_link_result
+        SYMBOLIC
     )
 endif()
 
