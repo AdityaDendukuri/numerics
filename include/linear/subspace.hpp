@@ -14,7 +14,8 @@
 
 namespace num {
 
-/// @brief Modified Gram–Schmidt: \f$v \leftarrow v - (q_j^T v) q_j\f$ for each column in turn.
+/// @brief Orthogonalize a vector against the columns of a basis by modified Gram–Schmidt:
+/// \f$v \leftarrow v - (q_j^T v) q_j\f$, each column in turn.
 template <std::floating_point T>
 inline void mgs_columns(T *NUM_K_RESTRICT v, const T *NUM_K_RESTRICT basis, idx ldb, idx rows,
                         idx columns, T *coefficients = nullptr) noexcept {
@@ -32,7 +33,8 @@ inline void mgs_columns(T *NUM_K_RESTRICT v, const T *NUM_K_RESTRICT basis, idx 
     }
 }
 
-/// @brief Classical Gram–Schmidt, twice (CGS2): \f$v \leftarrow (I - Q_k^T Q_k)^2 v\f$.
+/// @brief Orthogonalize a vector by classical Gram–Schmidt, applied twice (CGS2):
+/// \f$v \leftarrow (I - Q_k^T Q_k)^2 v\f$.
 /// Returns the coefficients; rows of \f$Q_k\f$ must be orthonormal.
 inline array<real> cgs2_orthogonalize(const mat<real> &Q, idx k, vec<real> &v) {
     array<real> h(k, 0.0);
@@ -51,14 +53,16 @@ inline array<real> cgs2_orthogonalize(const mat<real> &Q, idx k, vec<real> &v) {
 
 namespace num::dispatch::subspace {
 
-/// @brief Modified Gram–Schmidt against \f$v_0, \ldots, v_{k-1}\f$.
+/// @brief Orthogonalize a vector against \f$v_0, \ldots, v_{k-1}\f$ by modified Gram–Schmidt.
 [[nodiscard]] real mgs_orthogonalize(const array<vec<real>> &basis, vec<real> &v,
                                      array<real> &h, idx k);
 
-/// @brief Modified Gram–Schmidt against columns \f$0, \ldots, k-1\f$ of a row-major matrix.
+/// @brief Orthogonalize a vector against columns \f$0, \ldots, k-1\f$ of a row-major matrix by
+/// modified Gram–Schmidt.
 [[nodiscard]] real mgs_orthogonalize(const mat<real> &basis, idx k, vec<real> &v);
 
-/// @brief Arnoldi step: \f$A v_k = \sum_{j \le k+1} h_{jk} v_j\f$, extending the basis by one.
+/// @brief Extend a Krylov basis by one vector (Arnoldi step):
+/// \f$A v_k = \sum_{j \le k+1} h_{jk} v_j\f$.
 template <class Op>
 requires requires(const Op &A, const vec<real> &x, vec<real> &y) {
     A.apply(x, y);

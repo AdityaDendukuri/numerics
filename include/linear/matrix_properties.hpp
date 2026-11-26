@@ -15,7 +15,7 @@ namespace num {
 
 namespace linear {
 
-/// @brief Symmetry error: \f$\max_{ij} |a_{ij} - a_{ji}|\f$.
+/// @brief Compute the largest asymmetry: \f$\max_{ij} |a_{ij} - a_{ji}|\f$.
 [[nodiscard]] inline real symmetry_error(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("symmetry_error: matrix must be square");
@@ -29,7 +29,8 @@ namespace linear {
     return error;
 }
 
-/// @brief Relative symmetry error: \f$\max_{ij} |a_{ij} - a_{ji}| / \max_{i \ne j} |a_{ij}|\f$.
+/// @brief Compute the largest asymmetry relative to the largest entry:
+/// \f$\max_{ij} |a_{ij} - a_{ji}| / \max_{i \ne j} |a_{ij}|\f$.
 [[nodiscard]] inline real relative_symmetry_error(const mat<real> &A) {
     if (A.rows() != A.cols()) {
         throw std::invalid_argument("relative_symmetry_error: matrix must be square");
@@ -46,7 +47,7 @@ namespace linear {
     return error / scale;
 }
 
-/// @brief Symmetry test: \f$\max_{ij} |a_{ij} - a_{ji}| \le \mathrm{tol}\f$.
+/// @brief Test whether a matrix is symmetric: \f$\max_{ij} |a_{ij} - a_{ji}| \le \mathrm{tol}\f$.
 [[nodiscard]] inline bool is_symmetric(const mat<real> &A, real tol = 1e-12) {
     if (A.rows() != A.cols()) {
         return false;
@@ -62,7 +63,8 @@ namespace linear {
     return true;
 }
 
-/// @brief Make symmetric: verify \f$\max_{ij} |a_{ij} - a_{ji}| \le \mathrm{tol}\f$, then attach.
+/// @brief Verify that a matrix is symmetric, then tag it:
+/// \f$\max_{ij} |a_{ij} - a_{ji}| \le \mathrm{tol}\f$.
 /// @throws std::invalid_argument If `A` is not symmetric within `tol`.
 template <class Mat = mat<real>>
 [[nodiscard]] inline with_law<Mat, law::self_adjoint>

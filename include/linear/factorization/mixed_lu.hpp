@@ -17,10 +17,11 @@ namespace num {
 
 /// @brief Tag type of `num::mixed_precision`.
 struct mixed_precision_structure {};
-/// @brief Select mixed-precision LU.
+/// @brief Request LU in single precision, refined to double.
 inline constexpr mixed_precision_structure mixed_precision{};
 
-/// @brief Mixed-precision LU: \f$\hat{A} = \hat{L} \hat{U}\f$ in `float`, refined in `double`.
+/// @brief LU factors in `float` with the matrix in `double`, for solving to double accuracy:
+/// \f$\hat{A} = \hat{L} \hat{U}\f$.
 /// Refinement: \f$x_{k+1} = x_k + \hat{A}^{-1} (b - A x_k)\f$.
 /// Falls back to `double` factors when ill-conditioned.
 struct mixed_lu {
@@ -37,7 +38,7 @@ struct mixed_lu {
     real norm_inf = 0.0; ///< \f$\|A\|_\infty\f$, for the stopping test.
 
     [[nodiscard]] idx size() const { return A.rows(); }
-    /// @brief Whether solves refine the `float` factors rather than use `fallback`.
+    /// @brief Test whether solves refine the `float` factors rather than use `fallback`.
     [[nodiscard]] bool refined() const { return !fallback.has_value(); }
 };
 
@@ -138,7 +139,8 @@ inline void refine_columns(const mixed_lu &F, const mat<real> &B, mat<real> &X) 
 
 } // namespace detail
 
-/// @brief Mixed-precision LU factorization: \f$P A = L U\f$ in `float`.
+/// @brief Factor a matrix by LU in single precision, keeping it in double for refinement:
+/// \f$P A = L U\f$.
 /// @throws std::invalid_argument If `A` is not square.
 [[nodiscard]] inline mixed_lu lu(const mat<real> &A, mixed_precision_structure) {
     mixed_lu F{A, lu(detail::converted<float>(A)), std::nullopt, 0.0, 0.0, 0.0};
@@ -162,7 +164,8 @@ inline void refine_columns(const mixed_lu &F, const mat<real> &B, mat<real> &X) 
     return F;
 }
 
-/// @brief Mixed-precision solve: \f$x \leftarrow A^{-1} b\f$ to double accuracy. `x` may alias `b`.
+/// @brief Solve to double accuracy with single-precision factors:
+/// \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 inline void solve(const mixed_lu &F, const vec<real> &b, vec<real> &x) {
     if (F.fallback) {
         solve(*F.fallback, b, x);
@@ -171,7 +174,8 @@ inline void solve(const mixed_lu &F, const vec<real> &b, vec<real> &x) {
     detail::refine(F, false, b, x);
 }
 
-/// @brief Mixed-precision solve: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
+/// @brief Solve to double accuracy with single-precision factors:
+/// \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 inline void solve(const mixed_lu &F, const mat<real> &B, mat<real> &X) {
     if (F.fallback) {
         solve(*F.fallback, B, X);
@@ -180,7 +184,8 @@ inline void solve(const mixed_lu &F, const mat<real> &B, mat<real> &X) {
     detail::refine_columns<false>(F, B, X);
 }
 
-/// @brief Mixed-precision transposed solve: \f$x \leftarrow A^{-T} b\f$. `x` may alias `b`.
+/// @brief Solve the transposed system to double accuracy:
+/// \f$x \leftarrow A^{-T} b\f$. `x` may alias `b`.
 inline void solve_transpose(const mixed_lu &F, const vec<real> &b, vec<real> &x) {
     if (F.fallback) {
         solve_transpose(*F.fallback, b, x);
@@ -189,7 +194,8 @@ inline void solve_transpose(const mixed_lu &F, const vec<real> &b, vec<real> &x)
     detail::refine(F, true, b, x);
 }
 
-/// @brief Mixed-precision transposed solve: \f$X \leftarrow A^{-T} B\f$. `X` may alias `B`.
+/// @brief Solve the transposed system to double accuracy:
+/// \f$X \leftarrow A^{-T} B\f$. `X` may alias `B`.
 inline void solve_transpose(const mixed_lu &F, const mat<real> &B, mat<real> &X) {
     if (F.fallback) {
         solve_transpose(*F.fallback, B, X);

@@ -1,5 +1,5 @@
-/// @file 03_resolvent_and_expv.cpp
-/// @brief Shifted solves (sI - A)x = b at many shifts, and the action of the matrix exponential.
+/// @file 03_matrix_exponential.cpp
+/// @brief Solve (sI - A)x = b for many values of s, and compute exp(tA)v.
 ///
 /// `hessenberg_resolvent R(A)` reduces A to Hessenberg form once. After that, `shift(R, s)` factors
 /// sI - A in O(n^2), and `solve_batch` solves at many shifts in parallel. `expv(t, A, v)` computes

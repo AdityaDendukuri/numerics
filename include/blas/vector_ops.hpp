@@ -17,7 +17,7 @@
 
 namespace num::blas {
 
-/// @brief One-time warning that BLAS was requested but not configured.
+/// @brief Warn once that BLAS was requested but the build has none.
 inline void warn_unavailable() {
 #if !defined(NUMERICS_HAS_BLAS)
     static bool warned = false;
@@ -66,7 +66,7 @@ inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept {
 #endif
 }
 
-/// @brief Vector addition: \f$z \leftarrow x + y\f$.
+/// @brief Add two vectors: \f$z \leftarrow x + y\f$.
 inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept {
     const idx n = x.size();
     const real *xd = x.data();

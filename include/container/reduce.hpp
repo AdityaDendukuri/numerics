@@ -11,15 +11,15 @@
 
 namespace num::seq {
 
-/// @brief 1-norm: \f$\|x\|_1 = \sum_i |x_i|\f$.
+/// @brief Compute the 1-norm: \f$\|x\|_1 = \sum_i |x_i|\f$.
 [[nodiscard]] inline real l1_norm(const vec<real> &x) noexcept { return kernel::l1_norm(x.data(), x.size()); }
 
-/// @brief Infinity norm: \f$\|x\|_\infty = \max_i |x_i|\f$.
+/// @brief Compute the infinity norm: \f$\|x\|_\infty = \max_i |x_i|\f$.
 [[nodiscard]] inline real linf_norm(const vec<real> &x) noexcept {
     return kernel::linf_norm(x.data(), x.size());
 }
 
-/// @brief Vector sum: \f$\sum_i x_i\f$.
+/// @brief Sum the entries of a vector: \f$\sum_i x_i\f$.
 [[nodiscard]] inline real sum(const vec<real> &x) noexcept { return kernel::sum(x.data(), x.size()); }
 
 } // namespace num::seq
@@ -93,7 +93,7 @@ namespace num::omp {
 
 namespace num {
 
-/// @brief 1-norm: \f$\|x\|_1 = \sum_i |x_i|\f$.
+/// @brief Compute the 1-norm: \f$\|x\|_1 = \sum_i |x_i|\f$.
 [[nodiscard]] inline real l1_norm(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::l1_norm(x);
@@ -102,7 +102,7 @@ namespace num {
 #endif
 }
 
-/// @brief Infinity norm: \f$\|x\|_\infty = \max_i |x_i|\f$.
+/// @brief Compute the infinity norm: \f$\|x\|_\infty = \max_i |x_i|\f$.
 [[nodiscard]] inline real linf_norm(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::linf_norm(x);
@@ -111,7 +111,7 @@ namespace num {
 #endif
 }
 
-/// @brief Vector sum: \f$\sum_i x_i\f$.
+/// @brief Sum the entries of a vector: \f$\sum_i x_i\f$.
 [[nodiscard]] inline real sum(const vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
     return omp::sum(x);

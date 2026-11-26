@@ -19,7 +19,7 @@
 
 namespace num {
 
-/// @brief Cholesky factorization: \f$A = L L^T\f$.
+/// @brief Factor a symmetric positive definite matrix by Cholesky: \f$A = L L^T\f$.
 /// Reads the lower triangle; `L` and `A` may alias. Returns false at a non-positive pivot.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky(T *L, const T *A, idx n) noexcept {
@@ -45,7 +45,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Unblocked Cholesky, in place: \f$A = L L^T\f$, zeros above the diagonal.
+/// @brief Factor by Cholesky without blocking, in place: \f$A = L L^T\f$, zeros above the diagonal.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky_block(T *A, idx lda, idx n) noexcept {
     for (idx i = 0; i < n; ++i) {
@@ -70,7 +70,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Blocked Cholesky, in place: \f$A = L L^T\f$.
+/// @brief Factor by Cholesky by blocks, in place: \f$A = L L^T\f$.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky_blocked(T *A, idx lda, idx n, idx block_size) noexcept {
     for (idx kk = 0; kk < n; kk += block_size) {
@@ -101,7 +101,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Blocked Cholesky through level-3 BLAS: \f$A = L L^T\f$.
+/// @brief Factor by Cholesky by blocks, using level-3 BLAS: \f$A = L L^T\f$.
 [[nodiscard]] inline bool cholesky_blocked_blas(real *A, idx lda, idx n,
                                                 idx block_size = 256) noexcept {
     if (block_size == 0)
@@ -147,7 +147,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Blocked Cholesky, in place: \f$A \leftarrow L\f$ with \f$A = L L^T\f$.
+/// @brief Factor by Cholesky by blocks, in place: \f$A \leftarrow L\f$ with \f$A = L L^T\f$.
 template <std::floating_point T>
 [[nodiscard]] inline bool cholesky_blocked(T *A, idx n, idx block_size = 256) noexcept {
     if (n == 0) {
@@ -168,7 +168,7 @@ template <std::floating_point T>
     return true;
 }
 
-/// @brief Cholesky solve: \f$x \leftarrow L^{-T} L^{-1} b\f$. `x` and `b` may alias.
+/// @brief Solve with a Cholesky factor: \f$x \leftarrow L^{-T} L^{-1} b\f$. `x` and `b` may alias.
 template <std::floating_point T>
 inline void cholesky_solve(T *x, const T *L, const T *b, idx n) noexcept {
     // The public contract permits x == b, so select the explicitly alias-safe
@@ -183,7 +183,7 @@ namespace num {
 
 namespace linear {
 
-/// @brief SPD test by Cholesky: symmetric within `tol` and \f$A = L L^T\f$ succeeds.
+/// @brief Test whether a matrix is symmetric within `tol` and has a Cholesky factorization.
 [[nodiscard]] inline bool is_spd(const mat<real> &A, real tol = 1e-12) {
     if (!is_symmetric(A, tol)) {
         return false;
@@ -192,7 +192,7 @@ namespace linear {
     return num::cholesky(factor.data(), A.data(), A.rows());
 }
 
-/// @brief Make SPD: verify by Cholesky, then attach `law::spd`.
+/// @brief Verify by Cholesky that a matrix is symmetric positive definite, then tag it `law::spd`.
 /// @throws std::invalid_argument If `A` is not symmetric within `tol` or not positive definite.
 template <class Mat = mat<real>>
 [[nodiscard]] inline with_law<Mat, law::spd> make_spd(Mat A, real tol = 1e-12) {
@@ -206,12 +206,12 @@ template <class Mat = mat<real>>
 
 using linear::make_spd;
 
-/// @brief Cholesky factorization result: \f$A = L L^T\f$.
+/// @brief Result of a Cholesky factorization: \f$A = L L^T\f$.
 struct cholesky_result {
     mat<real> L;                    ///< Lower-triangular factor, valid when `positive_definite`.
     bool positive_definite = false; ///< False when a pivot was not positive.
 
-    /// @brief Order \f$n\f$.
+    /// @brief Return the order \f$n\f$.
     [[nodiscard]] idx size() const noexcept { return L.rows(); }
 
     friend std::ostream &operator<<(std::ostream &os, const cholesky_result &r) {
@@ -225,19 +225,19 @@ namespace detail {
 cholesky_result cholesky_impl(const mat<real> &A);
 }
 
-/// @brief Cholesky factorization of an SPD-tagged matrix: \f$A = L L^T\f$.
+/// @brief Factor a matrix tagged SPD by Cholesky: \f$A = L L^T\f$.
 cholesky_result cholesky(const with_law<mat<real>, law::spd> &A);
 
 namespace unsafe {
 
-/// @brief Cholesky factorization, unchecked: \f$A = L L^T\f$.
+/// @brief Factor by Cholesky without checking that the matrix is SPD: \f$A = L L^T\f$.
 /// Failure is reported in `positive_definite`.
 /// @warning Positive definiteness is taken on faith; prefer tagging `A` with `assume_spd`.
 cholesky_result cholesky(const mat<real> &A);
 
 } // namespace unsafe
 
-/// @brief Compile-time rejection of an untagged matrix; tag it SPD first.
+/// @brief Reject an untagged matrix at compile time; tag it SPD first.
 template <class M>
 requires matrix_space<M> && (!claims<M, law::spd>)
 cholesky_result cholesky(const M & /*untagged*/) {
@@ -249,24 +249,26 @@ cholesky_result cholesky(const M & /*untagged*/) {
     return {};
 }
 
-/// @brief Cholesky solve: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve with a Cholesky factor: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 void solve(const cholesky_result &f, const vec<real> &b, vec<real> &x);
-/// @brief Cholesky solve: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
+/// @brief Solve with a Cholesky factor: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 void solve(const cholesky_result &f, const mat<real> &B, mat<real> &X);
-/// @brief Cholesky transposed solve: \f$x \leftarrow A^{-T} b = A^{-1} b\f$.
+/// @brief Solve the transposed system with a Cholesky factor:
+/// \f$x \leftarrow A^{-T} b = A^{-1} b\f$.
 void solve_transpose(const cholesky_result &f, const vec<real> &b, vec<real> &x);
 void solve_transpose(const cholesky_result &f, const mat<real> &B, mat<real> &X);
 
-/// @brief Rank-1 Cholesky update: \f$A \leftarrow A + x x^T\f$, \f$O(n^2)\f$.
+/// @brief Update a Cholesky factor for a rank-1 change: \f$A \leftarrow A + x x^T\f$, \f$O(n^2)\f$.
 void cholesky_update(cholesky_result &factor, const vec<real> &update);
 
-/// @brief Rank-1 Cholesky downdate: \f$A \leftarrow A - x x^T\f$, \f$O(n^2)\f$.
+/// @brief Downdate a Cholesky factor for a rank-1 change:
+/// \f$A \leftarrow A - x x^T\f$, \f$O(n^2)\f$.
 /// @throws std::runtime_error If the result is not positive definite.
 void cholesky_downdate(cholesky_result &factor, const vec<real> &update);
 
 namespace lapack {
 
-/// @brief Cholesky factorization through LAPACK `dpotrf`: \f$A = L L^T\f$.
+/// @brief Factor by Cholesky through LAPACK `dpotrf`: \f$A = L L^T\f$.
 /// @note Not the default: the in-tree blocked kernel measured faster at every size tried.
 inline cholesky_result cholesky(const mat<real> &A) {
     if (A.rows() != A.cols()) {
@@ -293,7 +295,8 @@ inline cholesky_result cholesky(const mat<real> &A) {
 #endif
 }
 
-/// @brief Cholesky solve through LAPACK `dpotrs`: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
+/// @brief Solve with a Cholesky factor through LAPACK `dpotrs`:
+/// \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 inline void solve(const cholesky_result &f, const mat<real> &B, mat<real> &X) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = f.L.rows();
@@ -314,7 +317,8 @@ inline void solve(const cholesky_result &f, const mat<real> &B, mat<real> &X) {
 #endif
 }
 
-/// @brief Cholesky solve through LAPACK `dpotrs`: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve with a Cholesky factor through LAPACK `dpotrs`:
+/// \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 inline void solve(const cholesky_result &f, const vec<real> &b, vec<real> &x) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = f.L.rows();

@@ -1,5 +1,5 @@
-/// @file 16_factor_reuse.cpp
-/// @brief Reuse a matrix factorization after a few Markov states change.
+/// @file 16_updating_a_factorization.cpp
+/// @brief Update a factorization after a few rows and columns of the matrix change.
 #include <algorithm>
 #include <cmath>
 #include <io/json.hpp>

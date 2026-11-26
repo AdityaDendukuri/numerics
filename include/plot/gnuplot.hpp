@@ -12,17 +12,17 @@
 
 namespace num {
 
-/// @brief Plot point: \f$(x, y)\f$.
+/// @brief Point of a plot: \f$(x, y)\f$.
 using plot_point = std::pair<double, double>;
 
-/// @brief Plot series: ordered \f$(x, y)\f$ samples.
+/// @brief Series of points of a plot, in order.
 struct series : array<plot_point> {
     using array<plot_point>::vector;
-    /// @brief Append \f$(x, y)\f$.
+    /// @brief Append the point \f$(x, y)\f$.
     void store(double x, double y) { emplace_back(x, y); }
 };
 
-/// @brief Row slice: \f$(x_j, u_{rj})\f$.
+/// @brief Take a row of a field as a series: \f$(x_j, u_{rj})\f$.
 inline series row_slice(const vec<real> &u, int N, double h, int row) {
     series result;
     result.reserve(static_cast<std::size_t>(N));
@@ -32,7 +32,7 @@ inline series row_slice(const vec<real> &u, int N, double h, int row) {
     return result;
 }
 
-/// @brief Column slice: \f$(y_i, u_{ic})\f$.
+/// @brief Take a column of a field as a series: \f$(y_i, u_{ic})\f$.
 inline series col_slice(const vec<real> &u, int N, double h, int column) {
     series result;
     result.reserve(static_cast<std::size_t>(N));
@@ -42,22 +42,22 @@ inline series col_slice(const vec<real> &u, int N, double h, int column) {
     return result;
 }
 
-/// @brief Row slice of a field.
+/// @brief Row of a field.
 template <class Field>
 inline series row_slice(const Field &field, int row) {
     return row_slice(field.as_vec(), field.N(), field.h(), row);
 }
 
-/// @brief Column slice of a field.
+/// @brief Column of a field.
 template <class Field>
 inline series col_slice(const Field &field, int column) {
     return col_slice(field.as_vec(), field.N(), field.h(), column);
 }
 
-/// @brief Owning gnuplot pipe for raw commands.
+/// @brief Pipe to a gnuplot process, for sending commands.
 class gnuplot {
   public:
-    /// @brief Launch gnuplot with `args`.
+    /// @brief Start gnuplot with `args`.
     explicit gnuplot(const std::string &args = "") {
         const std::string command = "gnuplot " + args;
         pipe_ = popen(command.c_str(), "w");
@@ -75,13 +75,13 @@ class gnuplot {
     gnuplot(const gnuplot &) = delete;
     gnuplot &operator=(const gnuplot &) = delete;
 
-    /// @brief Send a raw command.
+    /// @brief Send a command.
     gnuplot &operator<<(const std::string &command) {
         fputs(command.c_str(), pipe_);
         return *this;
     }
 
-    /// @brief Send an inline two-column data block.
+    /// @brief Send a block of two-column data.
     void send1d(const series &data) {
         for (const auto &[x, y] : data) {
             fprintf(pipe_, "%.15g %.15g\n", x, y);
@@ -90,14 +90,14 @@ class gnuplot {
         fflush(pipe_);
     }
 
-    /// @brief Flush pending commands.
+    /// @brief Flush the commands sent so far.
     void flush() { fflush(pipe_); }
 
   private:
     FILE *pipe_ = nullptr;
 };
 
-/// @brief SIAM style: lines, grid, border, legend.
+/// @brief Set the SIAM style: lines, grid, border, legend.
 inline void apply_siam_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.8 lc rgb 'black'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.8 lc rgb 'black'\n"
@@ -113,7 +113,7 @@ inline void apply_siam_style(gnuplot &gp) {
        << "set key box lt 1 lw 0.5\n";
 }
 
-/// @brief GitHub Primer light style.
+/// @brief Set the GitHub Primer light style.
 inline void apply_github_light_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.75 lc rgb '#0969da'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.75 lc rgb '#1a7f37'\n"
@@ -132,7 +132,7 @@ inline void apply_github_light_style(gnuplot &gp) {
        << "set key textcolor rgb '#1f2328'\n";
 }
 
-/// @brief GitHub Primer dark style.
+/// @brief Set the GitHub Primer dark style.
 inline void apply_github_dark_style(gnuplot &gp) {
     gp << "set style line 1 lt 1 lw 2 pt 7  ps 0.75 lc rgb '#58a6ff'\n"
        << "set style line 2 lt 2 lw 2 pt 5  ps 0.75 lc rgb '#3fb950'\n"
@@ -151,17 +151,17 @@ inline void apply_github_dark_style(gnuplot &gp) {
        << "set key textcolor rgb '#e6edf3'\n";
 }
 
-/// @brief Log-log axes.
+/// @brief Use logarithmic x and y axes.
 inline void set_loglog(gnuplot &gp) {
     gp << "set logscale xy\nset format x '10^{%L}'\nset format y '10^{%L}'\n";
 }
 
-/// @brief Logarithmic x axis.
+/// @brief Use a logarithmic x axis.
 inline void set_logx(gnuplot &gp) {
     gp << "set logscale x\nset format x '10^{%L}'\n";
 }
 
-/// @brief PNG output, `width x height`.
+/// @brief Write a PNG of `width x height`.
 inline void save_png(gnuplot &gp, const std::string &filename, int width = 900, int height = 600) {
     gp << "set terminal pngcairo size " + std::to_string(width) + "," + std::to_string(height) +
               " enhanced font 'Arial,11'\n"

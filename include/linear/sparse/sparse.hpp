@@ -1,5 +1,5 @@
-/// @file sparse.hpp
-/// @brief Compressed Sparse Row (CSR) matrix and operations
+/// @file linear/sparse/sparse.hpp
+/// @brief Sparse matrices in compressed sparse row (CSR) format, and operations on them.
 #pragma once
 #include "container/concepts.hpp"
 #include "container/matrix.hpp"
@@ -15,27 +15,20 @@
 
 namespace num {
 
-/// @brief Sparse matrix in Compressed Sparse Row (CSR) format
-///
-/// Non-zero values for row i are stored in vals_[row_ptr_[i] .. row_ptr_[i+1]).
-/// Corresponding column indices are in col_idx_[row_ptr_[i] .. row_ptr_[i+1]).
+/// @brief Sparse matrix in compressed sparse row (CSR) format.
+/// Row `i` holds its values and column indices in positions `[row_ptr[i], row_ptr[i+1])`.
 class spmat {
   public:
-    /// @brief Construct from raw CSR arrays (takes ownership)
+    /// @brief Construct a matrix from CSR arrays, taking ownership of them.
     spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx, array<idx> row_ptr);
 
-    /// @brief Build from coordinate (COO / triplet) lists
-    ///
-    /// Duplicate (row, col) entries are summed. Entries need not be sorted.
+    /// @brief Construct a matrix from (row, column, value) triplets.
+    /// Duplicate entries are summed; the triplets need not be sorted.
     static spmat from_triplets(idx n_rows, idx n_cols, const array<idx> &rows,
                                const array<idx> &cols, const array<real> &vals);
 
-    /// @brief Build from zero-based compressed-column (CSC) arrays.
-    ///
-    /// The returned matrix is stored in Numerics' native CSR format.  The
-    /// payload arrays may contain a trailing unused entry, as produced by the
-    /// Armadillo sparse serializer; only the first `col_ptrs.back()` entries
-    /// are consumed.  All indices and pointers are zero-based.
+    /// @brief Construct a matrix from zero-based compressed column (CSC) arrays.
+    /// Only the first `col_ptrs.back()` entries of the value and index arrays are read.
     static spmat from_csc(idx n_rows, idx n_cols, const array<real> &vals,
                           const array<idx> &row_indices, const array<idx> &col_ptrs);
 
@@ -45,15 +38,15 @@ class spmat {
     [[nodiscard]] idx cols() const noexcept { return n_cols_; }
     [[nodiscard]] idx nnz() const { return vals_.size(); }
 
-    /// @brief Element access A(i,j); returns 0 if outside stored pattern  --
-    /// O(nnz/n)
+    /// @brief Return the entry \f$a_{ij}\f$, or 0 if it is not stored. Costs
+    /// \f$O(\mathrm{nnz}/n)\f$.
     real operator()(idx i, idx j) const;
 
     [[nodiscard]] const real *values() const { return vals_.data(); }
     [[nodiscard]] const idx *col_idx() const { return col_idx_.data(); }
     [[nodiscard]] const idx *row_ptr() const { return row_ptr_.data(); }
 
-    /// Operator protocol application: y <- A * x
+    /// @brief Apply the matrix: \f$y \leftarrow A x\f$.
     template <class X = vec<real>, class Y = vec<real>>
     void apply(const X &x, Y &y) const {
         if constexpr (std::is_same_v<X, vec<real>> && std::is_same_v<Y, vec<real>>) {
@@ -76,66 +69,28 @@ class spmat {
     array<idx> row_ptr_; // size n_rows_ + 1
 };
 
-/// @brief Sparse matrix-vector product \f$\mathbf{y} \leftarrow A \mathbf{x}\f$ in
-/// \f$\mathcal{O}(\text{nnz})\f$ time.
-///
-/// @param A Compressed Sparse Row (CSR) matrix.
-/// @param x Input vector of dimension \f$A.\text{cols()}\f$.
-/// @param y Output vector of dimension \f$A.\text{rows()}\f$.
-/// @throws std::invalid_argument If dimensions do not match.
+/// @brief Multiply a sparse matrix and a vector: \f$y \leftarrow A x\f$, in \f$O(\mathrm{nnz})\f$.
+/// @throws std::invalid_argument If the dimensions do not agree.
 void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y);
 
-/// @brief Return scaled sparse matrix \f$\alpha A\f$ while preserving the exact CSR sparsity
-/// structure.
-/// @param A Input CSR matrix.
-/// @param alpha Scaling scalar.
-/// @return Scaled `spmat`.
-
-/// @brief Return the CSR transpose \f$A^T\f$ computed in \f$\mathcal{O}(\text{nnz} + n)\f$ time.
-/// @param A Input CSR matrix.
-/// @return Transposed `spmat` in CSR format.
-
-/// @brief Convert a sparse matrix in CSR format to dense matrix storage.
-/// @param A Input CSR matrix.
-/// @return Dense `mat<real>` of dimension \f$m \times n\f$.
-
-/// @brief Extract the main diagonal entries of a sparse matrix: \f$d_i = A_{ii}\f$.
-/// @param A Input sparse matrix.
-/// @return vec of length \f$\min(m, n)\f$ containing diagonal entries (0 for unstored elements).
-
-/// @brief Compute diagonal similarity transform \f$D^{-1} A D\f$ where \f$D =
-/// \text{diag}(\mathbf{w})\f$.
-/// @param A Square CSR matrix.
-/// @param weights Positive diagonal weight entries \f$w_i > 0\f$.
-/// @return Dense similarity transformed matrix \f$D^{-1} A D\f$.
-/// @throws std::invalid_argument If dimensions mismatch or any weight is non-positive.
+/// @brief Scale the rows and columns of a sparse matrix, returning a dense one:
+/// \f$D^{-1} A D\f$, \f$D = \mathrm{diag}(w)\f$.
+/// @throws std::invalid_argument If the dimensions disagree or a weight is not positive.
 [[nodiscard]] mat<real> diagonal_similarity(const spmat &A, view<const real> weights);
 
-/// @brief Compute \f$D^{-1} A D\f$ without leaving the sparse representation.
-///
-/// A diagonal similarity rescales entries in place, so the result carries the
-/// pattern of `A`. Use this form when the transformed matrix is factored or
-/// multiplied rather than inspected, since `diagonal_similarity` densifies it.
-/// @param A Square CSR matrix.
-/// @param weights Positive diagonal weight entries \f$w_i > 0\f$.
-/// @return CSR matrix \f$D^{-1} A D\f$ with the pattern of `A`.
-/// @throws std::invalid_argument If dimensions mismatch or any weight is non-positive.
+/// @brief Scale the rows and columns of a sparse matrix, keeping it sparse: \f$D^{-1} A D\f$.
+/// The result has the pattern of `A`.
+/// @throws std::invalid_argument If the dimensions disagree or a weight is not positive.
 [[nodiscard]] spmat sparse_diagonal_similarity(const spmat &A, view<const real> weights);
 
-/// @brief Compute \f$(A + A^{T})/2\f$, the symmetric part of a square matrix.
-/// @param A Square CSR matrix.
-/// @return CSR matrix whose pattern is that of `A` unioned with its transpose.
+/// @brief Compute the symmetric part of a square matrix: \f$(A + A^T) / 2\f$.
 /// @throws std::invalid_argument If `A` is not square.
 [[nodiscard]] spmat symmetric_part(const spmat &A);
 
-/// @brief Compute the congruence \f$W A W\f$ where \f$W = \text{diag}(\mathbf{w})\f$.
-///
-/// Unlike a similarity, a congruence does not preserve the spectrum; it preserves
-/// inertia, so it carries a symmetric positive-definite matrix to another one.
-/// @param A Square CSR matrix.
-/// @param weights Diagonal weight entries.
-/// @return CSR matrix \f$WAW\f$ with the pattern of `A`.
-/// @throws std::invalid_argument If dimensions mismatch.
+/// @brief Scale the rows and columns of a sparse matrix by the same weights:
+/// \f$W A W\f$, \f$W = \mathrm{diag}(w)\f$.
+/// The result has the pattern of `A`.
+/// @throws std::invalid_argument If the dimensions disagree.
 [[nodiscard]] spmat sparse_congruence(const spmat &A, view<const real> weights);
 
 inline spmat::spmat(idx n_rows, idx n_cols, array<real> vals, array<idx> col_idx,
@@ -293,12 +248,8 @@ inline real spmat::operator()(idx i, idx j) const {
     return 0.0;
 }
 
-/// @brief \f$y \leftarrow Ax\f$ for any compressed-sparse-row matrix.
-///
-/// The counterpart to the dense overload in `container/matrix_ops.hpp`: same name,
-/// selected by @ref num::repr::csr instead of @ref num::repr::dense_row_major. Being
-/// stated over the concept rather than over `spmat`, it accepts any type exposing the CSR
-/// accessors -- an Eigen sparse matrix or a raw triple of buffers -- with no adapter.
+/// @brief Multiply any CSR sparse matrix and a vector: \f$y \leftarrow A x\f$.
+/// Accepts any type with the CSR accessors, not only `spmat`.
 template <class M>
 requires repr::csr<M> inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
     if (A.n_cols() != x.size() || A.n_rows() != y.size()) {
@@ -307,11 +258,13 @@ requires repr::csr<M> inline void matvec(const M &A, const vec<real> &x, vec<rea
     kernel::spmv(y.data(), A.values(), A.row_ptr(), A.col_idx(), x.data(), A.n_rows());
 }
 
-/// @brief \f$y \leftarrow Ax\f$ for a sparse matrix. Prefer the unified `matvec`.
+/// @brief Multiply a sparse matrix and a vector:
+/// \f$y \leftarrow A x\f$. Prefer the general `matvec`.
 inline void sparse_matvec(const spmat &A, const vec<real> &x, vec<real> &y) {
     matvec(A, x, y);
 }
 
+/// @brief Scale a sparse matrix, keeping its pattern: \f$\alpha A\f$.
 template <class M>
 requires repr::csr<M> inline spmat scaled(const M &A, real alpha) {
     array<real> values(A.values(), A.values() + A.nnz());
@@ -323,6 +276,7 @@ requires repr::csr<M> inline spmat scaled(const M &A, real alpha) {
             array<idx>(A.row_ptr(), A.row_ptr() + A.n_rows() + 1)};
 }
 
+/// @brief Transpose a sparse matrix, in \f$O(\mathrm{nnz} + n)\f$: \f$A^T\f$.
 template <class M>
 requires repr::csr<M> inline spmat transpose(const M &A) {
     array<idx> column_ptr(A.n_cols() + 1, 0);
@@ -346,7 +300,7 @@ requires repr::csr<M> inline spmat transpose(const M &A) {
     return {A.n_cols(), A.n_rows(), std::move(values), std::move(columns), std::move(column_ptr)};
 }
 
-/// @brief Expand a CSR matrix into a dense one.
+/// @brief Convert a CSR matrix to a dense one.
 template <class M>
 requires repr::csr<M> inline mat<real> dense(const M &A) {
     mat<real> result(A.n_rows(), A.n_cols(), 0.0);
@@ -358,6 +312,8 @@ requires repr::csr<M> inline mat<real> dense(const M &A) {
     return result;
 }
 
+/// @brief Return the main diagonal of a sparse matrix, with 0 for entries not stored:
+/// \f$d_i = a_{ii}\f$.
 template <class M>
 requires repr::csr<M> inline vec<real> diagonal(const M &A) {
     const idx n = std::min(A.n_rows(), A.n_cols());
@@ -444,7 +400,7 @@ inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
     return result;
 }
 
-/// @brief A with every diagonal entry stored explicitly (zeros added where absent).
+/// @brief Return A with every diagonal entry stored, adding zeros where absent.
 [[nodiscard]] inline spmat with_explicit_diagonal(const spmat &A) {
     array<idx> rows, cols;
     array<real> vals;
@@ -465,7 +421,7 @@ inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
     return spmat::from_triplets(A.n_rows(), A.n_cols(), rows, cols, vals);
 }
 
-/// @brief The characteristic matrix \f$sI - A\f$, on A's sparsity pattern plus the diagonal.
+/// @brief Construct \f$sI - A\f$ on the sparsity pattern of A plus the diagonal.
 [[nodiscard]] inline spmat characteristic_matrix(const spmat &A, real s) {
     const spmat D = with_explicit_diagonal(A);
     array<real> vals(D.nnz());
@@ -479,7 +435,8 @@ inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
     return spmat(D.n_rows(), D.n_cols(), std::move(vals), std::move(cols), std::move(ptr));
 }
 
-/// @brief \f$\sum_k w_k T_k\f$ for sparse matrices of equal size, on the union of their patterns.
+/// @brief Form \f$\sum_k w_k T_k\f$ for sparse matrices of equal size, on the union of their
+/// patterns.
 [[nodiscard]] inline spmat sparse_linear_combination(const std::vector<spmat> &terms,
                                                      const std::vector<real> &weights) {
     if (terms.empty() || terms.size() != weights.size()) {

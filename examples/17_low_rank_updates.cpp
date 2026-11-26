@@ -1,5 +1,5 @@
-/// @file 17_woodbury_low_rank_update.cpp
-/// @brief Solve after a small matrix change without factoring from scratch.
+/// @file 17_low_rank_updates.cpp
+/// @brief Solve with a slightly changed matrix without factoring it again.
 #include <algorithm>
 #include <cmath>
 #include <io/json.hpp>

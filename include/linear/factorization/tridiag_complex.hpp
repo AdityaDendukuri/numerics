@@ -8,7 +8,8 @@
 
 namespace num {
 
-/// @brief Complex tridiagonal factor: \f$a x_{k-1} + b x_k + c x_{k+1} = d_k\f$.
+/// @brief Factor of a complex tridiagonal matrix with constant diagonals:
+/// \f$a x_{k-1} + b x_k + c x_{k+1} = d_k\f$.
 /// The coefficients \f$a, b, c\f$ are constant.
 struct complex_tri_diag {
     using cplx = std::complex<double>;

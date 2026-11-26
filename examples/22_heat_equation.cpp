@@ -1,5 +1,5 @@
-/// @file 22_heat_equation_fft.cpp
-/// @brief Evolve a periodic heat equation by damping its Fourier modes.
+/// @file 22_heat_equation.cpp
+/// @brief Solve the heat equation on a periodic domain by the Fourier transform.
 ///
 /// Each mode of u_t = diffusivity * u_xx decays by exp(-diffusivity * k^2 * t).
 /// The inverse FFT returns an unnormalized result, so divide by the grid size.

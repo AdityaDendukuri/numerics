@@ -76,31 +76,31 @@ using idx = std::size_t;
 
 namespace num::kernel {
 
-/// @brief Call-site tags that relax or tighten the kernel contract.
+/// @brief Tags that relax or tighten the kernel contract at a call site.
 namespace contract {
 struct alias_safe_t final {};
 struct throughput_t final {};
 struct ordered_t final {};
 
-/// @brief Tag: the output may alias an input.
+/// @brief Allow the output to alias an input.
 inline constexpr alias_safe_t alias_safe{};
-/// @brief Tag: sums may be reordered for speed.
+/// @brief Allow sums to be reordered for speed.
 inline constexpr throughput_t throughput{};
-/// @brief Tag: sums run in index order.
+/// @brief Require sums in index order.
 inline constexpr ordered_t ordered{};
 } // namespace contract
 
 namespace detail {
 
-/// @brief Independent accumulator chains per reduction.
+/// @brief Number of independent running sums in a reduction.
 inline constexpr idx reduction_lanes = 8;
 
 #if defined(NUM_K_VECTOR_EXT)
 
-/// @brief Vector accumulators per reduction on the vector-extension path.
+/// @brief Number of vector running sums in a reduction, when vector extensions are available.
 inline constexpr idx reduction_accumulators = 4;
 
-/// @brief Native vector type of `Bytes` bytes over `T`.
+/// @brief Native vector type of `Bytes` bytes holding `T`.
 template <class T, idx Bytes>
 struct vector_of {
     typedef T type __attribute__((vector_size(Bytes)));
@@ -108,7 +108,7 @@ struct vector_of {
 
 #endif
 
-/// @brief Blocked sum: \f$\sum_{i<n} \mathrm{element}(i)\f$.
+/// @brief Sum `element(i)` over \f$i < n\f$ in blocks: \f$\sum_{i<n} \mathrm{element}(i)\f$.
 /// Visits each index once, so `element` may have side effects.
 /// @note The summation order depends on the vector width; use `contract::ordered` for
 /// results reproducible across machines.
@@ -175,7 +175,7 @@ NUM_K_AINLINE T reduce(idx n, Element element) noexcept {
 
 } // namespace detail
 
-/// @brief Vector copy: \f$y \leftarrow x\f$.
+/// @brief Copy a vector: \f$y \leftarrow x\f$.
 template <typename T>
 NUM_K_AINLINE void copy(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, idx n) noexcept {
     NUM_K_IVDEP
@@ -184,7 +184,7 @@ NUM_K_AINLINE void copy(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, idx n) n
     }
 }
 
-/// @brief Vector fill: \f$x_i \leftarrow \mathrm{value}\f$.
+/// @brief Set every entry to `value`: \f$x_i \leftarrow \mathrm{value}\f$.
 template <typename T>
 NUM_K_AINLINE void fill(T *NUM_K_RESTRICT x, T value, idx n) noexcept {
     NUM_K_IVDEP
@@ -193,7 +193,7 @@ NUM_K_AINLINE void fill(T *NUM_K_RESTRICT x, T value, idx n) noexcept {
     }
 }
 
-/// @brief Strided vector copy: \f$y \leftarrow x\f$.
+/// @brief Copy a strided vector: \f$y \leftarrow x\f$.
 template <typename T>
 NUM_K_AINLINE void copy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RESTRICT x, idx incx,
                                 idx n) noexcept {
@@ -203,7 +203,7 @@ NUM_K_AINLINE void copy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RE
     }
 }
 
-/// @brief Strided scaled copy: \f$y \leftarrow \alpha x\f$.
+/// @brief Copy and scale a strided vector: \f$y \leftarrow \alpha x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void scale_copy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RESTRICT x,
                                       idx incx, T alpha, idx n) noexcept {
@@ -213,7 +213,7 @@ NUM_K_AINLINE void scale_copy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NU
     }
 }
 
-/// @brief Strided scaled vector addition (AXPY): \f$y \leftarrow \alpha x + y\f$.
+/// @brief Add a multiple of one strided vector to another (AXPY): \f$y \leftarrow \alpha x + y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void axpy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RESTRICT x, idx incx,
                                 T alpha, idx n) noexcept {
@@ -223,20 +223,20 @@ NUM_K_AINLINE void axpy_strided(T *NUM_K_RESTRICT y, idx incy, const T *NUM_K_RE
     }
 }
 
-/// @brief Strided squared Euclidean norm: \f$\|x\|_2^2\f$.
+/// @brief Compute the squared Euclidean norm of a strided vector: \f$\|x\|_2^2\f$.
 template <std::floating_point T>
 NUM_K_AINLINE T norm_sq_strided(const T *NUM_K_RESTRICT x, idx incx, idx n) noexcept {
     return detail::reduce<T>(n, [x, incx](idx i) { return x[i * incx] * x[i * incx]; });
 }
 
-/// @brief Strided vector swap: \f$x \leftrightarrow y\f$.
+/// @brief Swap two strided vectors: \f$x \leftrightarrow y\f$.
 template <typename T>
 NUM_K_AINLINE void swap_strided(T *x, idx incx, T *y, idx incy, idx n) noexcept {
     for (idx i = 0; i < n; ++i)
         std::swap(x[i * incx], y[i * incy]);
 }
 
-/// @brief Vector scaling (SCAL): \f$x \leftarrow \alpha x\f$.
+/// @brief Scale a vector (SCAL): \f$x \leftarrow \alpha x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void scale(T *NUM_K_RESTRICT x, T alpha, idx n) noexcept {
     NUM_K_IVDEP
@@ -245,7 +245,7 @@ NUM_K_AINLINE void scale(T *NUM_K_RESTRICT x, T alpha, idx n) noexcept {
     }
 }
 
-/// @brief Scaled vector addition (AXPY): \f$y \leftarrow \alpha x + y\f$.
+/// @brief Add a multiple of one vector to another (AXPY): \f$y \leftarrow \alpha x + y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void axpy(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T alpha, idx n) noexcept {
     NUM_K_IVDEP
@@ -254,7 +254,7 @@ NUM_K_AINLINE void axpy(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T alpha,
     }
 }
 
-/// @brief Scaled vector update (AXPBY): \f$y \leftarrow a x + b y\f$.
+/// @brief Scale and add (AXPBY): \f$y \leftarrow a x + b y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void axpby(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T a, T b, idx n) noexcept {
     NUM_K_IVDEP
@@ -263,7 +263,7 @@ NUM_K_AINLINE void axpby(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T a, T 
     }
 }
 
-/// @brief Vector linear combination: \f$z \leftarrow a x + b y\f$.
+/// @brief Form a linear combination of two vectors: \f$z \leftarrow a x + b y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void axpbyz(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y,
                           T a, T b, idx n) noexcept {
@@ -273,7 +273,7 @@ NUM_K_AINLINE void axpbyz(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x, const 
     }
 }
 
-/// @brief Dot product: \f$x^T y\f$.
+/// @brief Compute the dot product: \f$x^T y\f$.
 /// @note Sums are reordered for speed; the `contract::ordered` overload is reproducible.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T dot(const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y,
@@ -281,7 +281,7 @@ template <std::floating_point T>
     return detail::reduce<T>(n, [x, y](idx i) { return x[i] * y[i]; });
 }
 
-/// @brief Ordered dot product: \f$x^T y\f$, summed in index order.
+/// @brief Compute the dot product, summing in index order: \f$x^T y\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T dot(contract::ordered_t, const T *NUM_K_RESTRICT x,
                                   const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -293,7 +293,7 @@ template <std::floating_point T>
     return s;
 }
 
-/// @brief Dot product: \f$x^T y\f$; same as the untagged overload.
+/// @brief Compute the dot product: \f$x^T y\f$; the same as the untagged overload.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T dot(contract::throughput_t, const T *NUM_K_RESTRICT x,
                                   const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -307,7 +307,7 @@ struct dot2_result {
     T xz;
 };
 
-/// @brief Fused double dot product: \f$(x^T y,\ x^T z)\f$ in one pass.
+/// @brief Compute two dot products in one pass: \f$(x^T y,\ x^T z)\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE dot2_result<T> dot2(const T *NUM_K_RESTRICT x,
                                                 const T *NUM_K_RESTRICT y,
@@ -348,7 +348,7 @@ struct dot_norm_result {
     T norm_sq;
 };
 
-/// @brief Fused dot product and squared norm: \f$(x^T y,\ \|y\|_2^2)\f$ in one pass.
+/// @brief Compute a dot product and a squared norm in one pass: \f$(x^T y,\ \|y\|_2^2)\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE dot_norm_result<T>
 dot_norm_sq(const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -380,7 +380,7 @@ dot_norm_sq(const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y, idx n) noexcep
     return {sum_xy, sum_yy};
 }
 
-/// @brief Fused AXPY and squared norm: \f$y \leftarrow \alpha x + y\f$, returns \f$\|y\|_2^2\f$.
+/// @brief Add a multiple of one vector to another and return the new squared norm: \f$\|y\|_2^2\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T axpy_norm_sq(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, T alpha,
                                            idx n) noexcept {
@@ -391,7 +391,8 @@ template <std::floating_point T>
     });
 }
 
-/// @brief Squared norm of a linear combination: \f$\|a x + b y\|_2^2\f$, never formed.
+/// @brief Compute the squared norm of a linear combination without forming it:
+/// \f$\|a x + b y\|_2^2\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T linear_combination_norm_sq(const T *NUM_K_RESTRICT x, T a,
                                                          const T *NUM_K_RESTRICT y, T b,
@@ -402,7 +403,7 @@ template <std::floating_point T>
     });
 }
 
-/// @brief Squared Euclidean norm: \f$\|x\|_2^2\f$.
+/// @brief Compute the squared Euclidean norm: \f$\|x\|_2^2\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T norm_sq(const T *NUM_K_RESTRICT x, idx n) noexcept {
     return detail::reduce<T>(n, [x](idx i) { return x[i] * x[i]; });
@@ -412,7 +413,7 @@ template <std::floating_point T>
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T linf_norm(const T *NUM_K_RESTRICT x, idx n) noexcept;
 
-/// @brief Euclidean norm: \f$\|x\|_2\f$.
+/// @brief Compute the Euclidean norm: \f$\|x\|_2\f$.
 /// Rescales to avoid overflow and underflow.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T norm(const T *NUM_K_RESTRICT x, idx n) noexcept {
@@ -435,13 +436,13 @@ template <std::floating_point T>
     return scale * std::sqrt(scaled);
 }
 
-/// @brief 1-norm: \f$\|x\|_1 = \sum_i |x_i|\f$.
+/// @brief Compute the 1-norm: \f$\|x\|_1 = \sum_i |x_i|\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T l1_norm(const T *NUM_K_RESTRICT x, idx n) noexcept {
     return detail::reduce<T>(n, [x](idx i) { return std::abs(x[i]); });
 }
 
-/// @brief Infinity norm: \f$\|x\|_\infty = \max_i |x_i|\f$.
+/// @brief Compute the infinity norm: \f$\|x\|_\infty = \max_i |x_i|\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T linf_norm(const T *NUM_K_RESTRICT x, idx n) noexcept {
     T mx = T(0);
@@ -454,13 +455,14 @@ template <std::floating_point T>
     return mx;
 }
 
-/// @brief Vector sum: \f$\sum_i x_i\f$.
+/// @brief Sum the entries of a vector: \f$\sum_i x_i\f$.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE T sum(const T *NUM_K_RESTRICT x, idx n) noexcept {
     return detail::reduce<T>(n, [x](idx i) { return x[i]; });
 }
 
-/// @brief Elementwise clamp: \f$x_i \leftarrow \min(\max(x_i, \mathrm{lo}), \mathrm{hi})\f$.
+/// @brief Clamp each entry to an interval:
+/// \f$x_i \leftarrow \min(\max(x_i, \mathrm{lo}), \mathrm{hi})\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void clamp(T *NUM_K_RESTRICT x, T lo, T hi, idx n) noexcept {
     NUM_K_IVDEP
@@ -469,7 +471,7 @@ NUM_K_AINLINE void clamp(T *NUM_K_RESTRICT x, T lo, T hi, idx n) noexcept {
     }
 }
 
-/// @brief Vector addition: \f$z \leftarrow x + y\f$.
+/// @brief Add two vectors: \f$z \leftarrow x + y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void add(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y,
                        idx n) noexcept {
@@ -479,7 +481,7 @@ NUM_K_AINLINE void add(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x, const T *
     }
 }
 
-/// @brief Elementwise (Hadamard) product: \f$z_i \leftarrow x_i y_i\f$.
+/// @brief Multiply two vectors entry by entry: \f$z_i \leftarrow x_i y_i\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void hadamard_mul(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x,
                                 const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -489,7 +491,7 @@ NUM_K_AINLINE void hadamard_mul(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x,
     }
 }
 
-/// @brief Elementwise division: \f$z_i \leftarrow x_i / y_i\f$.
+/// @brief Divide two vectors entry by entry: \f$z_i \leftarrow x_i / y_i\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void hadamard_div(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x,
                                 const T *NUM_K_RESTRICT y, idx n) noexcept {
@@ -499,7 +501,7 @@ NUM_K_AINLINE void hadamard_div(T *NUM_K_RESTRICT z, const T *NUM_K_RESTRICT x,
     }
 }
 
-/// @brief Elementwise reciprocal: \f$y_i \leftarrow 1 / x_i\f$.
+/// @brief Take the reciprocal of each entry: \f$y_i \leftarrow 1 / x_i\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void inv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, idx n) noexcept {
     NUM_K_IVDEP
@@ -508,7 +510,7 @@ NUM_K_AINLINE void inv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT x, idx n) no
     }
 }
 
-/// @brief Vector swap: \f$x \leftrightarrow y\f$.
+/// @brief Swap two vectors: \f$x \leftrightarrow y\f$.
 template <typename T>
 NUM_K_AINLINE void swap(T *NUM_K_RESTRICT x, T *NUM_K_RESTRICT y, idx n) noexcept {
     NUM_K_IVDEP
@@ -517,7 +519,7 @@ NUM_K_AINLINE void swap(T *NUM_K_RESTRICT x, T *NUM_K_RESTRICT y, idx n) noexcep
     }
 }
 
-/// @brief Index of largest magnitude (IAMAX): \f$\arg\max_i |x_i|\f$.
+/// @brief Find the entry of largest magnitude (IAMAX): \f$\arg\max_i |x_i|\f$.
 /// Returns 0 when `n` is 0.
 template <std::floating_point T>
 [[nodiscard]] NUM_K_AINLINE idx argmax_abs(const T *NUM_K_RESTRICT x, idx n) noexcept {
@@ -536,7 +538,8 @@ template <std::floating_point T>
     return best_idx;
 }
 
-/// @brief Givens rotation setup (ROTG): \f$c, s\f$ with \f$(c a + s b,\ c b - s a) = (r, 0)\f$.
+/// @brief Construct a Givens rotation (ROTG):
+/// \f$c, s\f$ with \f$(c a + s b,\ c b - s a) = (r, 0)\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void rotg(T a, T b, T &c, T &s) noexcept {
     if (b == T(0)) {
@@ -552,7 +555,8 @@ NUM_K_AINLINE void rotg(T a, T b, T &c, T &s) noexcept {
     }
 }
 
-/// @brief Givens rotation (ROT): \f$(x_i, y_i) \leftarrow (c x_i + s y_i,\ c y_i - s x_i)\f$.
+/// @brief Apply a Givens rotation (ROT):
+/// \f$(x_i, y_i) \leftarrow (c x_i + s y_i,\ c y_i - s x_i)\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void rot(T *NUM_K_RESTRICT x, T *NUM_K_RESTRICT y, T c, T s, idx n) noexcept {
     NUM_K_IVDEP

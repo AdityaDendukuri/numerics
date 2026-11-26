@@ -22,7 +22,7 @@
 
 namespace num::seq {
 
-/// @brief Matrix-vector product, sequential: \f$y \leftarrow A x\f$.
+/// @brief Multiply a matrix and a vector, sequentially: \f$y \leftarrow A x\f$.
 inline void matvec(const mat<real> &A, const vec<real> &x, vec<real> &y) {
     kernel::matvec(y.data(), A.data(), x.data(), A.rows(), A.cols());
 }
@@ -39,7 +39,7 @@ inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) {
 
 namespace num {
 
-/// @brief Matrix-vector product for any row-major matrix: \f$y \leftarrow A x\f$.
+/// @brief Multiply any row-major matrix and a vector: \f$y \leftarrow A x\f$.
 template <class M>
 requires repr::dense_row_major<M>
 inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
@@ -52,14 +52,14 @@ inline void matvec(const M &A, const vec<real> &x, vec<real> &y) {
 
 inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) { accel::matmul(A, B, C); }
 
-/// @brief Matrix-matrix product (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
+/// @brief Multiply two matrices (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
 /// \f$op\f$ transposes when its flag is set.
 inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B, bool transB, real beta,
                  mat<real> &C) {
     blas::gemm(alpha, A, transA, B, transB, beta, C);
 }
 
-/// @brief Matrix-vector product (GEMV): \f$y \leftarrow \alpha\, op(A_r)\, x + \beta y\f$.
+/// @brief Multiply a matrix and a vector (GEMV): \f$y \leftarrow \alpha\, op(A_r)\, x + \beta y\f$.
 /// \f$A_r\f$ is the leading `rows` rows of A; `y` must already be sized.
 inline void gemv(real alpha, const mat<real> &A, bool transA, const vec<real> &x, real beta, vec<real> &y,
                  idx rows = static_cast<idx>(-1)) {
@@ -71,7 +71,7 @@ inline void gemv(real alpha, const mat<real> &A, bool transA, const vec<real> &x
     blas::gemm(alpha, A.data(), A.cols(), transA, x.data(), 1, false, beta, y.data(), 1, m, 1, k);
 }
 
-/// @brief Matrix linear combination: \f$C \leftarrow \alpha A + \beta B\f$.
+/// @brief Add multiples of two matrices: \f$C \leftarrow \alpha A + \beta B\f$.
 inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B, mat<real> &C) {
     if constexpr (requires { accel::matadd(alpha, A, beta, B, C); }) {
         accel::matadd(alpha, A, beta, B, C);

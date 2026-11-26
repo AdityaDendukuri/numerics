@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief Contour rule: nodes \f$s_k\f$ and weights \f$w_k\f$ on a complex contour.
+/// @brief Rule for integrating on a complex contour: nodes \f$s_k\f$ and weights \f$w_k\f$.
 template <class R, class T = real>
 concept contour_rule = field<T> && requires(const R &rule, T t) {
     { rule.nodes(t) };

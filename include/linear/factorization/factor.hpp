@@ -17,17 +17,18 @@
 
 namespace num {
 
-/// @brief Block-tridiagonal structure: one level label per row.
+/// @brief Level of each row, which makes a matrix block tridiagonal.
 struct block_structure {
     view<const idx> levels;
 };
 
-/// @brief Select block-tridiagonal factorization.
+/// @brief Request a block tridiagonal factorization.
 [[nodiscard]] inline block_structure blocks(view<const idx> levels) {
     return {levels};
 }
 
-/// @brief Factorization of a diagonal similarity: \f$H A H^{-1}\f$, with weights \f$h\f$.
+/// @brief Factorization of a matrix scaled by a diagonal similarity \f$H A H^{-1}\f$, with the
+/// weights \f$h\f$.
 template <class F>
 struct similar_factor {
     F factor;
@@ -72,7 +73,7 @@ inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
 
 } // namespace detail
 
-/// @brief Sparse LU, unpivoted, for an M-matrix: \f$A = L U\f$.
+/// @brief Factor a sparse M-matrix by LU without pivoting: \f$A = L U\f$.
 /// @throws std::runtime_error If a pivot is zero.
 [[nodiscard]] inline lu_result<real> lu(const spmat &R, no_pivot_structure) {
     lu_result<real> Z = lu(dense(R), no_pivot);
@@ -82,13 +83,14 @@ inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
     return Z;
 }
 
-/// @brief Block LU of a block-tridiagonal M-matrix: \f$P A P^T = \mathcal{L} \mathcal{U}\f$.
+/// @brief Factor a block tridiagonal M-matrix by block LU: \f$P A P^T = \mathcal{L} \mathcal{U}\f$.
 [[nodiscard]] inline block_lu_factor lu(const spmat &R, block_structure structure) {
     return factor_block_lu(R, structure.levels);
 }
 
 
-/// @brief Cholesky of a diagonal similarity: \f$H A H^{-1} = L L^T\f$, keeping \f$H\f$.
+/// @brief Factor a diagonally scaled matrix by Cholesky, keeping the scaling:
+/// \f$H A H^{-1} = L L^T\f$.
 [[nodiscard]] inline similar_factor<cholesky_result> cholesky(const spmat &R, view<const real> h) {
     vec<real> weights = detail::checked_weights(h);
     cholesky_result C =
@@ -99,7 +101,8 @@ inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
     return {std::move(C), std::move(weights)};
 }
 
-/// @brief Block Cholesky of a diagonal similarity: \f$H A H^{-1} = \mathcal{L} \mathcal{L}^T\f$.
+/// @brief Factor a diagonally scaled matrix by block Cholesky:
+/// \f$H A H^{-1} = \mathcal{L} \mathcal{L}^T\f$.
 [[nodiscard]] inline similar_factor<block_cholesky_factor>
 cholesky(const spmat &R, block_structure structure, view<const real> h) {
     vec<real> weights = detail::checked_weights(h);

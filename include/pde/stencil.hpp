@@ -14,7 +14,7 @@
 
 namespace num {
 
-/// @brief 5-point Laplacian, zero Dirichlet: \f$y \leftarrow h^2 \Delta_h x\f$.
+/// @brief Apply the 5-point Laplacian, zero boundary values: \f$y \leftarrow h^2 \Delta_h x\f$.
 template <typename T>
 void laplacian_stencil_2d(const vec<T> &x, vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
@@ -38,7 +38,7 @@ void laplacian_stencil_2d(const vec<T> &x, vec<T> &y, int N) {
     }
 }
 
-/// @brief 5-point Laplacian, periodic: \f$y \leftarrow h^2 \Delta_h x\f$.
+/// @brief Apply the 5-point Laplacian, periodic boundary: \f$y \leftarrow h^2 \Delta_h x\f$.
 template <typename T>
 void laplacian_stencil_2d_periodic(const vec<T> &x, vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
@@ -56,7 +56,7 @@ void laplacian_stencil_2d_periodic(const vec<T> &x, vec<T> &y, int N) {
     }
 }
 
-/// @brief Fourth-order Laplacian, 9-point cross: \f$y \leftarrow h^2 \Delta_h^{(4)} x\f$.
+/// @brief Apply the fourth-order 9-point Laplacian: \f$y \leftarrow h^2 \Delta_h^{(4)} x\f$.
 template <typename T>
 void laplacian_stencil_2d_4th(const vec<T> &x, vec<T> &y, int N) {
     for (int i = 0; i < N; ++i) {
@@ -96,7 +96,7 @@ void laplacian_stencil_2d_4th(const vec<T> &x, vec<T> &y, int N) {
     }
 }
 
-/// @brief Periodic bilinear interpolation at \f$(p_x, p_y)\f$.
+/// @brief Interpolate bilinearly on a periodic grid at \f$(p_x, p_y)\f$.
 /// Samples sit at \f$(i h + o_x,\ j h + o_y)\f$.
 inline real sample_2d_periodic(const vec<real> &field, idx N, real h, real px, real py, real ox,
                                real oy) {
@@ -118,7 +118,7 @@ inline real sample_2d_periodic(const vec<real> &field, idx N, real h, real px, r
            ((1 - fi) * fj * field[(i0 * N) + j1]) + (fi * fj * field[(i1 * N) + j1]);
 }
 
-/// @brief Apply `f` to each column.
+/// @brief Call `f` on each column.
 template <typename T, std::invocable<array<T> &> F>
 void col_fiber_sweep(vec<T> &data, int N, F &&f) {
     array<T> fiber(N);
@@ -133,7 +133,7 @@ void col_fiber_sweep(vec<T> &data, int N, F &&f) {
     }
 }
 
-/// @brief Apply `f` to each row.
+/// @brief Call `f` on each row.
 template <typename T, std::invocable<array<T> &> F>
 void row_fiber_sweep(vec<T> &data, int N, F &&f) {
     array<T> fiber(N);
@@ -148,7 +148,7 @@ void row_fiber_sweep(vec<T> &data, int N, F &&f) {
     }
 }
 
-/// @brief Grid fill: \f$u_{ij} = f((i + 1) h,\ (j + 1) h)\f$.
+/// @brief Set grid values from a function: \f$u_{ij} = f((i + 1) h,\ (j + 1) h)\f$.
 template <std::invocable<double, double> F>
 void fill_grid(vec<real> &u, int N, double h, F &&f) {
     for (int i = 0; i < N; ++i) {
@@ -177,7 +177,7 @@ inline real sample_2d_periodic(const scalar_field_2d &g, real px, real py, real 
     return sample_2d_periodic(g.as_vec(), static_cast<idx>(g.N()), g.h(), px, py, ox, oy);
 }
 
-/// @brief Negative 3D Laplacian: \f$y \leftarrow -\Delta_h x\f$.
+/// @brief Apply the negative 3D Laplacian: \f$y \leftarrow -\Delta_h x\f$.
 inline void neg_laplacian_3d(const vec<real> &x, vec<real> &y, int nx, int ny, int nz, double inv_dx2) {
     auto flat = [&](int i, int j, int k) -> idx {
         return static_cast<idx>((k * ny * nx) + (j * nx) + i);
@@ -207,7 +207,7 @@ inline void neg_laplacian_3d(const vec<real> &x, vec<real> &y, int nx, int ny, i
     }
 }
 
-/// @brief Gradient, central differences: \f$\nabla \phi\f$.
+/// @brief Compute the gradient by central differences: \f$\nabla \phi\f$.
 inline void gradient_3d(const scalar_field_3d &phi, scalar_field_3d &gx, scalar_field_3d &gy,
                         scalar_field_3d &gz) {
     int nx = phi.nx(), ny = phi.ny(), nz = phi.nz();
@@ -226,7 +226,7 @@ inline void gradient_3d(const scalar_field_3d &phi, scalar_field_3d &gx, scalar_
     }
 }
 
-/// @brief Divergence, central differences: \f$\nabla \cdot f\f$.
+/// @brief Compute the divergence by central differences: \f$\nabla \cdot f\f$.
 inline void divergence_3d(const scalar_field_3d &fx, const scalar_field_3d &fy, const scalar_field_3d &fz,
                           scalar_field_3d &out) {
     int nx = fx.nx(), ny = fx.ny(), nz = fx.nz();
@@ -245,7 +245,7 @@ inline void divergence_3d(const scalar_field_3d &fx, const scalar_field_3d &fy, 
     }
 }
 
-/// @brief Curl, central differences: \f$\nabla \times A\f$.
+/// @brief Compute the curl by central differences: \f$\nabla \times A\f$.
 inline void curl_3d(const scalar_field_3d &ax, const scalar_field_3d &ay, const scalar_field_3d &az,
                     scalar_field_3d &bx, scalar_field_3d &by, scalar_field_3d &bz) {
     int nx = ax.nx(), ny = ax.ny(), nz = ax.nz();

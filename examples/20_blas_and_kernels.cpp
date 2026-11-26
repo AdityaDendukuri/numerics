@@ -1,5 +1,5 @@
-/// @file 20_backends_and_kernel.cpp
-/// @brief Backend namespaces, the build's default, and the raw-pointer kernel on plain buffers.
+/// @file 20_blas_and_kernels.cpp
+/// @brief Choose between the built-in routines and BLAS, and call the low-level routines directly.
 ///
 /// Every accelerator is a namespace with the same signatures as the kernel, namely `num::seq`
 /// (portable), `num::omp`, `num::blas` and `num::lapack`. An untagged call such as `num::dot`

@@ -16,7 +16,7 @@ namespace num {
 
 // Cylindrical Bessel functions (POSIX / C99 / exact series)
 
-/// @brief Bessel function of the first kind: \f$J_\nu(x)\f$.
+/// @brief Evaluate the Bessel function of the first kind: \f$J_\nu(x)\f$.
 inline real bessel_j(real nu, real x) {
     int n = static_cast<int>(std::round(nu));
     if (std::abs(nu - static_cast<real>(n)) < 1e-12) {
@@ -42,7 +42,7 @@ inline real bessel_j(real nu, real x) {
     return sum;
 }
 
-/// @brief Bessel function of the second kind: \f$Y_\nu(x)\f$.
+/// @brief Evaluate the Bessel function of the second kind: \f$Y_\nu(x)\f$.
 inline real bessel_y(real nu, real x) {
     int n = static_cast<int>(std::round(nu));
     if (n == 0) {
@@ -54,7 +54,7 @@ inline real bessel_y(real nu, real x) {
     return ::yn(n, x);
 }
 
-/// @brief Modified Bessel function of the first kind: \f$I_\nu(x)\f$.
+/// @brief Evaluate the modified Bessel function of the first kind: \f$I_\nu(x)\f$.
 inline real bessel_i(real nu, real x) {
     real sum = 0.0;
     real term = std::pow(0.5 * x, nu) / std::tgamma(nu + 1.0);
@@ -71,7 +71,7 @@ inline real bessel_i(real nu, real x) {
 
 // Spherical Bessel functions
 
-/// @brief Spherical Bessel function of the first kind: \f$j_n(x)\f$.
+/// @brief Evaluate the spherical Bessel function of the first kind: \f$j_n(x)\f$.
 inline real sph_bessel_j(unsigned int n, real x) {
     if (std::abs(x) < 1e-14) {
         return (n == 0) ? 1.0 : 0.0;
@@ -92,7 +92,7 @@ inline real sph_bessel_j(unsigned int n, real x) {
     return j_curr;
 }
 
-/// @brief Spherical Bessel function of the second kind: \f$y_n(x)\f$.
+/// @brief Evaluate the spherical Bessel function of the second kind: \f$y_n(x)\f$.
 inline real sph_bessel_y(unsigned int n, real x) {
     if (n == 0) {
         return -std::cos(x) / x;
@@ -112,7 +112,7 @@ inline real sph_bessel_y(unsigned int n, real x) {
 
 // Orthogonal polynomials (evaluated via stable 3-term recurrence relations)
 
-/// @brief Legendre polynomial: \f$P_n(x)\f$.
+/// @brief Evaluate the Legendre polynomial: \f$P_n(x)\f$.
 inline real legendre(unsigned int n, real x) {
     if (n == 0) {
         return 1.0;
@@ -131,7 +131,7 @@ inline real legendre(unsigned int n, real x) {
     return p_curr;
 }
 
-/// @brief Associated Legendre polynomial: \f$P_n^m(x)\f$.
+/// @brief Evaluate the associated Legendre polynomial: \f$P_n^m(x)\f$.
 inline real assoc_legendre(unsigned int n, unsigned int m, real x) {
     if (m > n || std::abs(x) > 1.0) {
         return 0.0;
@@ -165,7 +165,7 @@ inline real assoc_legendre(unsigned int n, unsigned int m, real x) {
     return pll;
 }
 
-/// @brief Hermite polynomial, physicists': \f$H_n(x)\f$.
+/// @brief Evaluate the physicists' Hermite polynomial: \f$H_n(x)\f$.
 inline real hermite(unsigned int n, real x) {
     if (n == 0) {
         return 1.0;
@@ -183,7 +183,7 @@ inline real hermite(unsigned int n, real x) {
     return h_curr;
 }
 
-/// @brief Laguerre polynomial: \f$L_n(x)\f$.
+/// @brief Evaluate the Laguerre polynomial: \f$L_n(x)\f$.
 inline real laguerre(unsigned int n, real x) {
     if (n == 0) {
         return 1.0;
@@ -202,7 +202,7 @@ inline real laguerre(unsigned int n, real x) {
     return l_curr;
 }
 
-/// @brief Associated Laguerre polynomial: \f$L_n^m(x)\f$.
+/// @brief Evaluate the associated Laguerre polynomial: \f$L_n^m(x)\f$.
 inline real assoc_laguerre(unsigned int n, unsigned int m, real x) {
     if (n == 0) {
         return 1.0;
@@ -223,14 +223,14 @@ inline real assoc_laguerre(unsigned int n, unsigned int m, real x) {
     return l_curr;
 }
 
-/// @brief Beta function: \f$B(a, b) = \Gamma(a) \Gamma(b) / \Gamma(a + b)\f$.
+/// @brief Evaluate the beta function: \f$B(a, b) = \Gamma(a) \Gamma(b) / \Gamma(a + b)\f$.
 inline real beta(real a, real b) {
     return std::exp(std::lgamma(a) + std::lgamma(b) - std::lgamma(a + b));
 }
 
 // Sequence utilities (wrapping <numeric>)
 
-/// @brief Linear spacing: `n` values from `start` to `stop`, inclusive.
+/// @brief Return `n` evenly spaced values from `start` to `stop`, inclusive.
 [[nodiscard]] inline vec<real> linspace(real start, real stop, idx n) {
     assert(n >= 2);
     vec<real> out(n);
@@ -241,7 +241,7 @@ inline real beta(real a, real b) {
     return out;
 }
 
-/// @brief Logarithmic spacing: \f$b^t\f$ for `n` evenly spaced \f$t\f$ in `[start, stop]`.
+/// @brief Return `n` values \f$b^t\f$ with \f$t\f$ evenly spaced in `[start, stop]`.
 [[nodiscard]] inline vec<real> logspace(real start, real stop, idx n, real base = 10.0) {
     vec<real> out = linspace(start, stop, n);
     for (real &exponent : out) {
@@ -250,7 +250,7 @@ inline real beta(real a, real b) {
     return out;
 }
 
-/// @brief Integer range: \f$\mathrm{start}, \ldots, \mathrm{start} + n - 1\f$.
+/// @brief Return the integers \f$\mathrm{start}, \ldots, \mathrm{start} + n - 1\f$.
 inline array<int> int_range(int start, int n) {
     assert(n >= 0);
     array<int> out(static_cast<idx>(n));
@@ -260,34 +260,35 @@ inline array<int> int_range(int start, int n) {
 
 // Random number generation (wrapping the mt19937 boilerplate)
 
-/// @brief Seeded Mersenne Twister generator.
+/// @brief Random number generator (Mersenne Twister) with a seed.
 struct rng_state {
     std::mt19937 engine;
 
     explicit rng_state(uint32_t seed) : engine(seed) {}
 
-    /// @brief Generator seeded from hardware entropy.
+    /// @brief Seed the generator from hardware entropy.
     rng_state() : engine(std::random_device{}()) {}
 };
 
-/// @brief Uniform sample: \f$U[\mathrm{lo}, \mathrm{hi})\f$.
+/// @brief Draw a uniform sample from \f$[\mathrm{lo}, \mathrm{hi})\f$.
 inline real rng_uniform(rng_state *r, real lo, real hi) {
     return std::uniform_real_distribution<real>{lo, hi}(r->engine);
 }
 
-/// @brief Normal sample: \f$\mathcal{N}(\mu, \sigma^2)\f$.
+/// @brief Draw a normal sample: \f$\mathcal{N}(\mu, \sigma^2)\f$.
 inline real rng_normal(rng_state *r, real mean, real stddev) {
     return std::normal_distribution<real>{mean, stddev}(r->engine);
 }
 
-/// @brief Uniform integer sample in \f$[\mathrm{lo}, \mathrm{hi}]\f$.
+/// @brief Draw a uniform integer from \f$[\mathrm{lo}, \mathrm{hi}]\f$.
 inline int rng_int(rng_state *r, int lo, int hi) {
     return std::uniform_int_distribution<int>{lo, hi}(r->engine);
 }
 
 // Spatial distributions
 
-/// @brief Isotropic 2D Gaussian: \f$\exp(-((x - c_x)^2 + (y - c_y)^2) / 2\sigma^2)\f$.
+/// @brief Evaluate a 2D Gaussian centred at \f$(c_x, c_y)\f$:
+/// \f$\exp(-((x - c_x)^2 + (y - c_y)^2) / 2\sigma^2)\f$.
 inline real gaussian2d(real x, real y, real cx, real cy, real sigma) {
     real dx = x - cx, dy = y - cy;
     return std::exp(-((dx * dx) + (dy * dy)) / (2.0 * sigma * sigma));

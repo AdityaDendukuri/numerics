@@ -21,6 +21,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -98,7 +99,8 @@ def compile_flags():
         i += 1
     # The SIMD FFT backends hold no documentation, and their intrinsics headers belong to the
     # compiler that built the tree, which need not match libclang's version.
-    keep = [w for w in keep if w not in ("-DNUMERICS_HAS_NEON", "-DNUMERICS_HAS_AVX2")]
+    keep = [w for w in keep
+            if w not in ("-DNUMERICS_HAS_NEON", "-DNUMERICS_HAS_AVX2", "-DNUMERICS_HAS_STD_SIMD")]
     return ["-x", "c++"] + flags[3:] + keep
 
 
@@ -116,6 +118,11 @@ def system_flags():
         sdk = subprocess.run(["xcrun", "--show-sdk-path"], capture_output=True, text=True)
         if sdk.returncode == 0:
             flags += ["-isysroot", sdk.stdout.strip()]
+    # GCC keeps omp.h among its own headers, where libclang does not look. The headers use only
+    # `#pragma omp`, so an empty omp.h, searched last, stands in when no real one is found.
+    stub = Path(tempfile.mkdtemp(prefix="refdoc-"))
+    (stub / "omp.h").write_text("")
+    flags += ["-idirafter", str(stub)]
     return flags
 
 

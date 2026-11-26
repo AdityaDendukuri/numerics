@@ -20,13 +20,13 @@ concept sized_factorization = factorization<F> && requires(const F &factor) {
     { factor.size() } -> std::convertible_to<idx>;
 };
 
-/// @brief Reusable buffers for inverse extraction.
+/// @brief Reusable buffers for computing entries of the inverse.
 struct inverse_diagonal_workspace {
     mat<real> right_hand_sides; ///< Reused block of selected identity columns.
     mat<real> solutions;        ///< Reused solution block.
 };
 
-/// @brief Checked accumulation: \f$x \leftarrow x + y\f$, tracking rounding error.
+/// @brief Add to a positive sum and track the rounding error: \f$x \leftarrow x + y\f$.
 template <class T>
 inline bool safe_add(T &x, T &err, T y, T tolerance = 1e-6) {
     x += y;
@@ -122,7 +122,8 @@ inline void compute_principal_block(idx n, view<const idx> indices, mat<real> &r
 
 } // namespace detail
 
-/// @brief Inverse diagonal: \f$\mathrm{diag}(A^{-1})\f$, by blocks of identity columns.
+/// @brief Compute the diagonal of the inverse from a factorization, by blocks of identity columns:
+/// \f$\mathrm{diag}(A^{-1})\f$.
 template <sized_factorization F>
 inline void inverse_diagonal(const F &factor, vec<real> &result, inverse_diagonal_workspace &workspace,
                              idx block_size = 64) {
@@ -130,7 +131,7 @@ inline void inverse_diagonal(const F &factor, vec<real> &result, inverse_diagona
                     [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
-/// @brief Selected inverse entries: \f$(A^{-1})_{r_i c_i}\f$.
+/// @brief Compute selected entries of the inverse from a factorization: \f$(A^{-1})_{r_i c_i}\f$.
 template <sized_factorization F>
 inline void selected_inverse(const F &factor, view<const idx> rows, view<const idx> columns,
                              vec<real> &result, inverse_diagonal_workspace &workspace) {
@@ -138,7 +139,8 @@ inline void selected_inverse(const F &factor, view<const idx> rows, view<const i
                              [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
-/// @brief Principal inverse block: \f$(A^{-1})_{I I}\f$, in the order of `indices`.
+/// @brief Compute a principal block of the inverse, in the order of `indices`:
+/// \f$(A^{-1})_{I I}\f$.
 template <sized_factorization F>
 inline void inverse_principal_block(const F &factor, view<const idx> indices, mat<real> &result,
                                     inverse_diagonal_workspace &workspace) {
@@ -147,7 +149,8 @@ inline void inverse_principal_block(const F &factor, view<const idx> indices, ma
         [&](const mat<real> &rhs, mat<real> &solution) { solve(factor, rhs, solution); });
 }
 
-/// @brief Inverse diagonal: \f$\mathrm{diag}(A^{-1})\f$. Allocates.
+/// @brief Compute the diagonal of the inverse from a factorization:
+/// \f$\mathrm{diag}(A^{-1})\f$. Allocates.
 template <sized_factorization F>
 [[nodiscard]] inline vec<real> inverse_diagonal(const F &factor, idx block_size = 64) {
     vec<real> result(static_cast<idx>(factor.size()), 0.0);
@@ -156,7 +159,7 @@ template <sized_factorization F>
     return result;
 }
 
-/// @brief Principal inverse block: \f$(A^{-1})_{I I}\f$. Allocates.
+/// @brief Compute a principal block of the inverse: \f$(A^{-1})_{I I}\f$. Allocates.
 template <sized_factorization F>
 [[nodiscard]] inline mat<real> inverse_principal_block(const F &factor, view<const idx> indices) {
     mat<real> result;

@@ -11,7 +11,8 @@
 
 namespace num {
 
-/// @brief Gauss–Legendre rule on \f$[a, b]\f$ (Golub–Welsch): nodes \f$x_k\f$, weights \f$w_k\f$.
+/// @brief Compute the Gauss–Legendre nodes \f$x_k\f$ and weights \f$w_k\f$ on \f$[a, b]\f$
+/// (Golub–Welsch).
 /// The weights sum to \f$b - a\f$.
 inline std::pair<std::vector<real>, std::vector<real>> gauss_legendre_rule(idx order, real a = 0.0,
                                                                           real b = 1.0) {

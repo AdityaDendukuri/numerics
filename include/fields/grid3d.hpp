@@ -6,7 +6,8 @@
 
 namespace num {
 
-/// @brief Uniform 3D grid: `nx x ny x nz`, spacing `dx`; flat index \f$(k n_y + j) n_x + i\f$.
+/// @brief Uniform 3D grid, `nx x ny x nz`, spacing `dx`; point \f$(i, j, k)\f$ is stored at \f$(k
+/// n_y + j) n_x + i\f$.
 struct grid_3d {
     int nx{}, ny{}, nz{};                ///< nodes per axis
     double dx = 1.0;                     ///< uniform cell size

@@ -14,43 +14,45 @@
 
 namespace num {
 
-/// @brief Poisson solves and vector calculus on 3D fields.
+/// @brief Routines for the Poisson equation and vector calculus on 3D fields.
 class field_solver {
   public:
-    /// @brief Dirichlet condition: \f$\phi = \mathrm{value}\f$ at node `flat_idx`.
+    /// @brief Boundary value at one point: \f$\phi = \mathrm{value}\f$ at node `flat_idx`.
     struct dirichlet_bc {
         int flat_idx; ///< k*ny*nx + j*nx + i
         double value;
     };
 
-    /// @brief Poisson solve, zero Dirichlet: \f$\Delta \phi = s\f$.
+    /// @brief Solve the Poisson equation with zero boundary values: \f$\Delta \phi = s\f$.
     static solver_result solve_poisson(scalar_field_3d &phi, const scalar_field_3d &source,
                                       double tol = 1e-6, int max_iter = 500);
 
-    /// @brief Variable-coefficient Poisson solve: \f$\nabla \cdot (c \nabla \phi) = 0\f$.
+    /// @brief Solve the Poisson equation with a variable coefficient:
+    /// \f$\nabla \cdot (c \nabla \phi) = 0\f$.
     static solver_result solve_var_poisson(scalar_field_3d &phi, const scalar_field_3d &coeff,
                                           const array<dirichlet_bc> &bcs, double tol = 1e-6,
                                           int max_iter = 500);
 
-    /// @brief Gradient: \f$\nabla \phi\f$.
+    /// @brief Compute the gradient: \f$\nabla \phi\f$.
     static vector_field_3d gradient(const scalar_field_3d &phi);
 
-    /// @brief Divergence: \f$\nabla \cdot f\f$.
+    /// @brief Compute the divergence: \f$\nabla \cdot f\f$.
     static scalar_field_3d divergence(const vector_field_3d &f);
 
-    /// @brief Curl: \f$\nabla \times A\f$.
+    /// @brief Compute the curl: \f$\nabla \times A\f$.
     static vector_field_3d curl(const vector_field_3d &A);
 };
 
-/// @brief Magnetostatics: \f$B = \nabla \times A\f$ from a current density.
+/// @brief Routines for the magnetic field of a current: \f$B = \nabla \times A\f$.
 class magnetic_solver {
   public:
     static constexpr double MU0 = 1.2566370614e-6; ///< mu_0 [H/m]
 
-    /// @brief Current density: \f$J = -\sigma \nabla \phi\f$.
+    /// @brief Compute the current density: \f$J = -\sigma \nabla \phi\f$.
     static vector_field_3d current_density(const scalar_field_3d &sigma, const scalar_field_3d &phi);
 
-    /// @brief Magnetostatic field: \f$\Delta A = -\mu_0 J\f$, then \f$B = \nabla \times A\f$.
+    /// @brief Compute the magnetic field: solve \f$\Delta A = -\mu_0 J\f$, then \f$B = \nabla
+    /// \times A\f$.
     static vector_field_3d solve_magnetic_field(const vector_field_3d &J, double tol = 1e-6,
                                               int max_iter = 500);
 };

@@ -9,7 +9,7 @@
 
 namespace num {
 
-/// @brief Sparse-materializable operator: can produce its CSR matrix.
+/// @brief Operator that can produce its own CSR matrix.
 template <class Op>
 concept sparse_convertible = linear_operator<Op> && requires(const Op &A) {
     { A.to_sparse() };

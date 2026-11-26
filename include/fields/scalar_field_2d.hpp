@@ -8,19 +8,19 @@
 
 namespace num {
 
-/// @brief 2D scalar field: \f$u_{ij}\f$ at interior nodes.
+/// @brief Scalar field at the interior points of a 2D grid: \f$u_{ij}\f$.
 class scalar_field_2d {
   public:
-    /// @brief Zero field on `g`.
+    /// @brief Construct a zero field on `g`.
     explicit scalar_field_2d(grid2d g) : grid_(g), data_(static_cast<idx>(g.size())) {}
 
     template <typename F>
-    /// @brief Field sampled from `f(x, y)`.
+    /// @brief Construct a field from the values `f(x, y)`.
     scalar_field_2d(grid2d g, F &&f) : scalar_field_2d(g) {
         fill(std::forward<F>(f));
     }
 
-    /// @brief Grid geometry.
+    /// @brief Return the grid.
     [[nodiscard]] const grid2d &grid() const { return grid_; }
     [[nodiscard]] int N() const { return grid_.N; }
     [[nodiscard]] double h() const { return grid_.h; }
@@ -29,7 +29,7 @@ class scalar_field_2d {
     real operator()(int i, int j) const { return data_[(static_cast<idx>(i) * grid_.N) + j]; }
 
     template <typename F>
-    /// @brief Fill: \f$u_{ij} \leftarrow f(x_i, y_j)\f$.
+    /// @brief Set the values from a function: \f$u_{ij} \leftarrow f(x_i, y_j)\f$.
     void fill(F &&f) {
         for (int i = 0; i < grid_.N; ++i) {
             for (int j = 0; j < grid_.N; ++j) {
@@ -38,7 +38,7 @@ class scalar_field_2d {
         }
     }
 
-    /// @brief Values as a vector, row-major.
+    /// @brief Return the values as a vector, row-major.
     vec<real> &as_vec() { return data_; }
     [[nodiscard]] const vec<real> &as_vec() const { return data_; }
 

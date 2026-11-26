@@ -21,7 +21,7 @@ concept tag_invocable = requires(Tag tag, Args &&...args) {
     tag_invoke(tag, std::forward<Args>(args)...);
 };
 
-/// @brief Indexable sized container of scalars.
+/// @brief Sized container of scalars, indexed with `v[i]`.
 template <class V>
 concept indexable = requires(const V &cv, V &v, std::size_t i) {
     { cv.size() } -> std::integral;
@@ -61,7 +61,7 @@ struct dimension_t {
     }
 };
 
-/// @brief Dimension: number of coordinates of \f$x\f$.
+/// @brief Return the number of coordinates of \f$x\f$.
 inline constexpr dimension_t dimension{};
 
 struct zero_like_t {
@@ -138,9 +138,9 @@ struct inner_t {
     }
 };
 
-/// @brief Inner product: \f$\langle x, y \rangle = \sum_i \bar{x}_i y_i\f$.
+/// @brief Compute the inner product: \f$\langle x, y \rangle = \sum_i \bar{x}_i y_i\f$.
 inline constexpr inner_t inner{};
-/// @brief Scaled vector addition: \f$y \leftarrow a x + y\f$.
+/// @brief Add a multiple of one vector to another: \f$y \leftarrow a x + y\f$.
 inline constexpr axpy_t axpy{};
 
 struct axpy_norm_sq_t {
@@ -182,17 +182,17 @@ struct apply_t {
     }
 };
 
-/// @brief Zero vector of the same dimension: \f$0 \in V\f$.
+/// @brief Return the zero vector of the same dimension: \f$0 \in V\f$.
 inline constexpr zero_like_t zero_like{};
-/// @brief Vector scaling: \f$v \leftarrow a v\f$.
+/// @brief Scale a vector: \f$v \leftarrow a v\f$.
 inline constexpr scale_t scale{};
-/// @brief Linear combination: \f$y \leftarrow a x + b y\f$.
+/// @brief Form a linear combination: \f$y \leftarrow a x + b y\f$.
 inline constexpr linear_combination_t linear_combination{};
-/// @brief Fused AXPY and squared norm: \f$y \leftarrow a x + y\f$, returns \f$\|y\|_2^2\f$.
+/// @brief Add a multiple of one vector to another and return the new squared norm: \f$\|y\|_2^2\f$.
 inline constexpr axpy_norm_sq_t axpy_norm_sq{};
-/// @brief Induced norm: \f$\|x\| = \sqrt{\langle x, x \rangle}\f$.
+/// @brief Compute the norm from the inner product: \f$\|x\| = \sqrt{\langle x, x \rangle}\f$.
 inline constexpr norm_t norm{};
-/// @brief Operator application: \f$y \leftarrow A x\f$.
+/// @brief Apply an operator: \f$y \leftarrow A x\f$.
 inline constexpr apply_t apply{};
 
 } // namespace num::math

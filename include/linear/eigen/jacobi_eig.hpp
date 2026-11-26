@@ -17,7 +17,8 @@ namespace num {
 
 // Jacobi Rotations
 
-/// @brief Jacobi rotation: \f$(c, s)\f$ zeroing \f$a_{pq}\f$ of a symmetric \f$2 \times 2\f$ block.
+/// @brief Compute the Jacobi rotation \f$(c, s)\f$ that zeroes \f$a_{pq}\f$ of a symmetric \f$2
+/// \times 2\f$ block.
 template <std::floating_point T>
 NUM_K_AINLINE void jacobi_rotation(T app, T aqq, T apq, T &c, T &s) noexcept {
     if (std::abs(apq) < T(1e-15)) {
@@ -35,7 +36,7 @@ NUM_K_AINLINE void jacobi_rotation(T app, T aqq, T apq, T &c, T &s) noexcept {
 
 namespace num {
 
-/// @brief Symmetric eigendecomposition result: \f$A = V \Lambda V^T\f$.
+/// @brief Result of a symmetric eigendecomposition: \f$A = V \Lambda V^T\f$.
 struct eigen_result {
     vec<real> values;          ///< Eigenvalues in ascending order.
     mat<real> vectors;         ///< Corresponding eigenvectors stored as columns.
@@ -51,7 +52,8 @@ struct eigen_result {
     }
 };
 
-/// @brief Symmetric eigendecomposition: \f$A = V \Lambda V^T\f$, eigenvalues sorted.
+/// @brief Compute the eigenvalues and eigenvectors of a symmetric matrix:
+/// \f$A = V \Lambda V^T\f$, eigenvalues sorted.
 /// Uses LAPACK `dsyevd` when available, else cyclic Jacobi.
 eigen_result eig_sym(const with_law<mat<real>, law::self_adjoint> &A, real tol = 1e-12, idx max_sweeps = 100);
 
@@ -67,14 +69,15 @@ eigen_result eig_sym(const mat<real> &A);
 
 namespace unsafe {
 
-/// @brief Symmetric eigendecomposition, unchecked: \f$A = V \Lambda V^T\f$.
+/// @brief Compute the eigenvalues and eigenvectors of a matrix assumed symmetric, without checking:
+/// \f$A = V \Lambda V^T\f$.
 /// Reads the lower triangle.
 /// @warning An asymmetric matrix yields the spectrum of its symmetric part, not an error.
 eigen_result eig_sym(const mat<real> &A, real tol = 1e-12, idx max_sweeps = 100);
 
 } // namespace unsafe
 
-/// @brief Compile-time rejection of an untagged matrix; tag it symmetric first.
+/// @brief Reject an untagged matrix at compile time; tag it symmetric first.
 template <class M>
 requires matrix_space<M> && (!claims<M, law::self_adjoint>)
 eigen_result eig_sym(const M & /*untagged*/, real = 1e-12, idx = 100) {

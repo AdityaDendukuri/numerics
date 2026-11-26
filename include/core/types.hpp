@@ -103,7 +103,7 @@ inline constexpr real huge = huge_v<real>;
 /// NaN-propagating, unlike `std::max` and `std::min`.
 /// @{
 
-/// @brief NaN-propagating maximum: \f$\max(a, b)\f$, NaN if either is NaN.
+/// @brief Return the larger of `a` and `b`, or NaN if either is NaN.
 template <class T>
 [[nodiscard]] constexpr T max(T a, T b) noexcept {
     if constexpr (std::floating_point<T>) {
@@ -117,7 +117,7 @@ template <class T>
     return a < b ? b : a;
 }
 
-/// @brief NaN-propagating minimum: \f$\min(a, b)\f$, NaN if either is NaN.
+/// @brief Return the smaller of `a` and `b`, or NaN if either is NaN.
 template <class T>
 [[nodiscard]] constexpr T min(T a, T b) noexcept {
     if constexpr (std::floating_point<T>) {
@@ -131,7 +131,8 @@ template <class T>
     return b < a ? b : a;
 }
 
-/// @brief Closeness: \f$|a - b| \le \max(\mathrm{rtol} \max(|a|, |b|),\ \mathrm{atol})\f$.
+/// @brief Test whether two numbers are close:
+/// \f$|a - b| \le \max(\mathrm{rtol} \max(|a|, |b|),\ \mathrm{atol})\f$.
 /// With the default `atol = 0`, only zero is close to zero.
 template <std::floating_point T>
 [[nodiscard]] inline bool close(T a, T b, T rtol = T(1e-9), T atol = T(0)) noexcept {
@@ -145,7 +146,7 @@ template <std::floating_point T>
     return diff <= rtol * std::max(std::abs(a), std::abs(b)) || diff <= atol;
 }
 
-/// @brief ULP distance: representable values between `a` and `b`; max `uint64_t` for NaN.
+/// @brief Count the representable values between `a` and `b`; the largest `uint64_t` for NaN.
 /// @note `+0` and `-0` are 0 apart.
 [[nodiscard]] inline std::uint64_t ulp_distance(double a, double b) noexcept {
     if (a != a || b != b) {
@@ -178,7 +179,7 @@ struct basic_tolerance {
     [[nodiscard]] constexpr bool met(T error, T scale) const noexcept {
         return error <= bound(scale);
     }
-    /// @brief Whether the tolerance is attainable: finite, nonnegative, not both zero.
+    /// @brief Test whether the tolerance can be met: finite, nonnegative, not both zero.
     [[nodiscard]] constexpr bool valid() const noexcept {
         return rtol >= T(0) && atol >= T(0) && (rtol > T(0) || atol > T(0)) &&
                rtol < inf_v<T> && atol < inf_v<T>;
@@ -230,7 +231,7 @@ T &append(array<T, Alloc> &values, Args &&...args) {
 
 /// @}
 
-/// @brief Integer cast to `idx`.
+/// @brief Convert an integer to `idx`.
 template <class T>
 constexpr idx to_idx(T x) noexcept {
     return static_cast<idx>(x);

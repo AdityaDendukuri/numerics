@@ -15,7 +15,7 @@
 
 namespace num::operators {
 
-/// @brief Matrix-free 5-point Laplacian: \f$y \leftarrow \Delta_h x\f$.
+/// @brief 5-point Laplacian applied without storing a matrix: \f$y \leftarrow \Delta_h x\f$.
 class laplacian_2d final {
   public:
     using domain_type = vec<real>;
@@ -61,7 +61,7 @@ class laplacian_2d final {
     [[nodiscard]] idx cols() const noexcept { return static_cast<idx>(N_) * N_; }
     [[nodiscard]] int N() const noexcept { return N_; }
 
-    /// @brief The operator as a sparse matrix.
+    /// @brief Return the operator as a sparse matrix.
     [[nodiscard]] spmat to_sparse() const {
         const idx n = rows();
         array<idx> rows_idx, cols_idx;
@@ -104,7 +104,8 @@ class laplacian_2d final {
     int N_;
 };
 
-/// @brief Matrix-free backward Euler operator: \f$y \leftarrow (I - c\,\Delta_h) x\f$.
+/// @brief Backward Euler operator applied without storing a matrix:
+/// \f$y \leftarrow (I - c\,\Delta_h) x\f$.
 class backward_euler_2d final {
   public:
     using domain_type = vec<real>;
@@ -155,7 +156,7 @@ class backward_euler_2d final {
     [[nodiscard]] int N() const noexcept { return N_; }
     [[nodiscard]] double coeff() const noexcept { return coeff_; }
 
-    /// @brief The operator as a sparse matrix.
+    /// @brief Return the operator as a sparse matrix.
     [[nodiscard]] spmat to_sparse() const {
         const idx n = rows();
         array<idx> rows_idx, cols_idx;
@@ -200,7 +201,7 @@ class backward_euler_2d final {
     double coeff_;
 };
 
-/// @brief Sparse matrix of any `sparse_convertible` operator.
+/// @brief Return the sparse matrix of any `sparse_convertible` operator.
 template <sparse_convertible Op>
 [[nodiscard]] inline spmat to_sparse_matrix(const Op &op) {
     return op.to_sparse();

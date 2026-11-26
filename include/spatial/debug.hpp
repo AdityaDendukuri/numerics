@@ -15,7 +15,7 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief Kernel normalization check: \f$\int_0^{2h} W(r, h)\, 2\pi r\, dr = 1\f$.
+/// @brief Check that a kernel integrates to one: \f$\int_0^{2h} W(r, h)\, 2\pi r\, dr = 1\f$.
 template <class K, class Scalar = float>
 requires smoothing_kernel<K, Scalar> inline void
 verify_kernel_normalization(Scalar h, Scalar tol = Scalar(2e-2),
@@ -43,7 +43,7 @@ verify_kernel_normalization(Scalar h, Scalar tol = Scalar(2e-2),
     }
 }
 
-/// @brief Kernel support check: \f$W(r, h) = 0\f$ for \f$r > 2h\f$.
+/// @brief Check that a kernel vanishes outside its support: \f$W(r, h) = 0\f$ for \f$r > 2h\f$.
 template <class K, class Scalar = float>
 requires smoothing_kernel<K, Scalar> inline void
 verify_kernel_support(Scalar h, std::source_location loc = std::source_location::current()) {
@@ -59,7 +59,7 @@ verify_kernel_support(Scalar h, std::source_location loc = std::source_location:
     }
 }
 
-/// @brief Lattice neighbour check: up then down, and left then right, return to the start.
+/// @brief Check lattice neighbours: up then down, and left then right, return to the start.
 template <class P>
 requires periodic_neighbourhood_2d<P> inline void
 verify_lattice_symmetry(const P &lattice,

@@ -7,7 +7,7 @@
 
 namespace num {
 
-/// @brief Uniform \f$N \times N\f$ interior grid, \f$h = 1 / (N + 1)\f$.
+/// @brief Uniform grid of \f$N \times N\f$ interior points, \f$h = 1 / (N + 1)\f$.
 struct grid2d {
     int N;    ///< interior nodes per side
     double h; ///< grid spacing = 1/(N+1)

@@ -1,5 +1,5 @@
-/// @file 19_probed_inverse_diagonal.cpp
-/// @brief diag(A^{-1}) of a sparse M-matrix from a block of random probes.
+/// @file 19_diagonal_of_the_inverse.cpp
+/// @brief Estimate the diagonal of the inverse of a large sparse matrix.
 ///
 /// For a nonsingular M-matrix, `inverse_diagonal(F, A)` estimates every entry of
 /// \f$\operatorname{diag}(A^{-1})\f$ at once from a block of Gaussian probes. It first scales

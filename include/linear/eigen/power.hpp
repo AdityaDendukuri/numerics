@@ -15,7 +15,7 @@
 
 namespace num {
 
-/// @brief Single-eigenpair result: \f$(\lambda, v)\f$ and convergence.
+/// @brief Result of computing one eigenpair: \f$(\lambda, v)\f$ and convergence.
 struct power_result {
     real eigenvalue = 0.0;  ///< Converged eigenvalue (Rayleigh quotient)
     vec<real> eigenvector;     ///< Corresponding unit eigenvector
@@ -31,7 +31,7 @@ struct power_result {
 };
 
 namespace detail {
-/// @brief Normalize in place: \f$v \leftarrow v / \|v\|_2\f$; returns \f$\|v\|_2\f$.
+/// @brief Normalize a vector in place: \f$v \leftarrow v / \|v\|_2\f$; returns \f$\|v\|_2\f$.
 inline real normalise(vec<real> &v) {
     // nrm <- ||v||_2
     const real nrm = kernel::norm(v.data(), v.size());
@@ -43,13 +43,15 @@ inline real normalise(vec<real> &v) {
 }
 } // namespace detail
 
-/// @brief Power iteration: dominant eigenpair, \f$\max |\lambda|\f$.
+/// @brief Compute the eigenvalue of largest magnitude by power iteration: \f$\max |\lambda|\f$.
 power_result power_iteration(const mat<real> &A, real tol = 1e-10, idx max_iter = 1000);
 
-/// @brief Inverse iteration: eigenpair nearest \f$\sigma\f$, via \f$(A - \sigma I)^{-1}\f$.
+/// @brief Compute the eigenvalue nearest \f$\sigma\f$ by inverse iteration with \f$(A - \sigma
+/// I)^{-1}\f$.
 power_result inverse_iteration(const mat<real> &A, real sigma, real tol = 1e-10, idx max_iter = 1000);
 
-/// @brief Rayleigh quotient iteration: \f$\sigma_k = v_k^T A v_k\f$, cubically convergent.
+/// @brief Compute an eigenpair by Rayleigh quotient iteration, with shift \f$\sigma_k = v_k^T A
+/// v_k\f$.
 /// @note Refactors \f$A - \sigma_k I\f$ at every step.
 power_result rayleigh_iteration(const mat<real> &A, const vec<real> &x0, real tol = 1e-10,
                                idx max_iter = 50);

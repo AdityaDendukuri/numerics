@@ -10,7 +10,7 @@
 
 namespace num::operators {
 
-/// @brief Law of \f$P_S A\f$ on \f$S\f$: the law of \f$A\f$ restricted to \f$S\f$.
+/// @brief Law of \f$P_S A\f$ on \f$S\f$: the law of \f$A\f$, restricted to \f$S\f$.
 template <class Op, class Subspace>
 using restricted_laws = std::conditional_t<
     claims<Op, law::spd>, law::list<law::spd_on<Subspace>>,
@@ -18,7 +18,8 @@ using restricted_laws = std::conditional_t<
                        std::conditional_t<claims<Op, law::self_adjoint>,
                                           law::list<law::self_adjoint_on<Subspace>>, law::list<>>>>;
 
-/// @brief Projected operator: \f$y \leftarrow P_S A x\f$. Non-owning.
+/// @brief Operator followed by a projection onto a subspace:
+/// \f$y \leftarrow P_S A x\f$. Holds references.
 /// @warning Holds `A` by reference; it must outlive the projected operator.
 template <class Op, class Subspace>
 requires math::linear_operator<Op>
@@ -45,7 +46,7 @@ requires math::linear_operator<Op>
     Subspace subspace_;
 };
 
-/// @brief Projected operator: \f$P_S A\f$, carrying the law of \f$A\f$ onto \f$S\f$.
+/// @brief Project an operator onto a subspace, carrying its law over to \f$S\f$: \f$P_S A\f$.
 template <class Op, class Subspace>
 [[nodiscard]] auto projected(const Op &op, Subspace subspace) {
     return projected_op<Op, Subspace>(op, std::move(subspace));

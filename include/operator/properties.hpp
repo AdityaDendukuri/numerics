@@ -30,7 +30,7 @@ struct law_space<T> {
 
 } // namespace detail
 
-/// @brief Operator with a claimed law: `T` claiming `L`.
+/// @brief Operator `T` together with a law `L` it claims to satisfy.
 template <class T, class L>
 class with_law final {
   public:
@@ -38,10 +38,10 @@ class with_law final {
     using domain_type = typename detail::law_space<T>::type;
     using codomain_type = domain_type;
 
-    /// @brief Attach `L` unchecked; `assume` samples it first.
+    /// @brief Attach `L` without checking; `assume` checks it first on random vectors.
     explicit with_law(T value) : value_(std::move(value)) {}
 
-    /// @brief Conversion from a stronger law.
+    /// @brief Convert from a stronger law.
     template <class Stronger>
     requires std::derived_from<Stronger, L> && (!std::same_as<Stronger, L>)
     with_law(with_law<T, Stronger> stronger) : value_(std::move(stronger.value_)) {}
@@ -78,7 +78,7 @@ class with_law final {
     T value_;
 };
 
-/// @brief Sample law `L` and every law it implies on `A`.
+/// @brief Check law `L`, and every law it implies, on random vectors.
 /// @throws std::invalid_argument If `A` is not square.
 /// @note Sampling can only reject a violation; it never proves the law holds.
 template <class L, class T>
@@ -104,7 +104,7 @@ inline void verify(const T &A, call_site site = {}) {
     }
 }
 
-/// @brief Attach law `L` after sampling it.
+/// @brief Attach law `L` after checking it on random vectors.
 template <class L, class T>
 [[nodiscard]] inline with_law<T, L> assume(T A, call_site site = {}) {
     with_law<T, L> claimed(std::move(A));
@@ -112,25 +112,26 @@ template <class L, class T>
     return claimed;
 }
 
-/// @brief Attach self-adjointness: \f$A = A^*\f$.
+/// @brief Mark an operator self-adjoint: \f$A = A^*\f$.
 template <class T>
 [[nodiscard]] inline with_law<T, law::self_adjoint> assume_symmetric(T A, call_site site = {}) {
     return assume<law::self_adjoint>(std::move(A), site);
 }
 
-/// @brief Attach positive semidefiniteness: \f$\langle x, A x \rangle \ge 0\f$.
+/// @brief Mark an operator positive semidefinite: \f$\langle x, A x \rangle \ge 0\f$.
 template <class T>
 [[nodiscard]] inline with_law<T, law::psd> assume_psd(T A, call_site site = {}) {
     return assume<law::psd>(std::move(A), site);
 }
 
-/// @brief Attach positive definiteness: \f$\langle x, A x \rangle > 0\f$.
+/// @brief Mark an operator positive definite: \f$\langle x, A x \rangle > 0\f$.
 template <class T>
 [[nodiscard]] inline with_law<T, law::spd> assume_spd(T A, call_site site = {}) {
     return assume<law::spd>(std::move(A), site);
 }
 
-/// @brief Attach diagonal dominance: \f$|a_{ii}| > \sum_{j \ne i} |a_{ij}|\f$. Checked exactly.
+/// @brief Mark a matrix diagonally dominant, checked exactly:
+/// \f$|a_{ii}| > \sum_{j \ne i} |a_{ij}|\f$.
 template <class T>
 [[nodiscard]] inline with_law<T, law::diagonally_dominant>
 assume_diagonally_dominant(T A, call_site site = {}) {

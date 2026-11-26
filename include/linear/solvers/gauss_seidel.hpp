@@ -12,7 +12,8 @@
 
 namespace num {
 
-/// @brief Gauss–Seidel iteration: \f$x_i \leftarrow (b_i - \sum_{j \ne i} a_{ij} x_j) / a_{ii}\f$.
+/// @brief Solve a system by Gauss–Seidel iteration:
+/// \f$x_i \leftarrow (b_i - \sum_{j \ne i} a_{ij} x_j) / a_{ii}\f$.
 /// Requires `A` tagged diagonally dominant or SPD.
 /// @note The sweep is sequential; `Parallel` threads only the residual. Use `jacobi<true>`
 /// for a parallel sweep.

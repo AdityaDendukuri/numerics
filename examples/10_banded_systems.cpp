@@ -1,5 +1,5 @@
-/// @file 10_banded_and_spd_operators.cpp
-/// @brief Band storage, banded LU with pivoting, and solves with one or many right-hand sides.
+/// @file 10_banded_systems.cpp
+/// @brief Solve a banded system of linear equations.
 ///
 /// `band_mat(n, kl, ku)` stores the kl subdiagonals and ku superdiagonals in LAPACK band
 /// layout, with room for the fill that pivoting adds. `lu(band)` factors it with partial

@@ -15,7 +15,7 @@
 
 namespace num::kernel {
 
-/// @brief Real matrix, complex vector product: \f$x \leftarrow Q y\f$.
+/// @brief Multiply a real matrix and a complex vector: \f$x \leftarrow Q y\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void matvec_real_complex(std::complex<T> *NUM_K_RESTRICT x, const T *Q,
                                        const std::complex<T> *y, idx m, idx n) noexcept {
@@ -29,7 +29,8 @@ NUM_K_AINLINE void matvec_real_complex(std::complex<T> *NUM_K_RESTRICT x, const 
     }
 }
 
-/// @brief Real transposed matrix-vector product, complex result: \f$x \leftarrow Q^T y\f$.
+/// @brief Multiply a real matrix's transpose and a vector, with a complex result:
+/// \f$x \leftarrow Q^T y\f$.
 /// `y` may be real or complex.
 template <std::floating_point T, class In>
 NUM_K_AINLINE void matvec_transpose_into_complex(std::complex<T> *NUM_K_RESTRICT x, const T *Q,

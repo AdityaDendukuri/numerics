@@ -13,15 +13,15 @@
 namespace num {
 
 template <field scalar>
-/// @brief 2D Verlet list: neighbours within \f$r_c + r_s\f$.
+/// @brief List of each particle's neighbours within \f$r_c + r_s\f$, in 2D (Verlet list).
 /// Valid until a particle moves \f$r_s / 2\f$.
 class verlet_list_2d {
   public:
-    /// @brief Verlet list with cutoff \f$r_c\f$ and skin \f$r_s\f$.
+    /// @brief Construct an empty list with cutoff \f$r_c\f$ and skin \f$r_s\f$.
     verlet_list_2d(scalar cutoff, scalar skin)
         : cutoff_(cutoff), skin_(skin), ext_sq_((cutoff + skin) * (cutoff + skin)) {}
 
-    /// @brief Rebuild from a cell list.
+    /// @brief Build the list again from a cell list.
     template <position_accessor_2d<scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n, const cell_list_2d<scalar> &cl) {
         starts_.resize(n + 1);
@@ -50,7 +50,7 @@ class verlet_list_2d {
         }
     }
 
-    /// @brief Whether a particle moved more than \f$r_s / 2\f$ since the rebuild.
+    /// @brief Test whether a particle has moved more than \f$r_s / 2\f$ since the last build.
     template <position_accessor_2d<scalar> PosAccessor>
     bool needs_rebuild(PosAccessor &&get_pos, int n) const {
         if (ref_x_.empty()) {
@@ -68,16 +68,16 @@ class verlet_list_2d {
         return false;
     }
 
-    /// @brief Neighbours of particle `i`.
+    /// @brief Return the neighbours of particle `i`.
     [[nodiscard]] integer_range neighbors(int i) const noexcept {
         return {flat_.data() + starts_[i], flat_.data() + starts_[i + 1]};
     }
 
-    /// @brief Cutoff \f$r_c\f$.
+    /// @brief Return the cutoff \f$r_c\f$.
     scalar cutoff() const noexcept { return cutoff_; }
-    /// @brief Skin \f$r_s\f$.
+    /// @brief Return the skin \f$r_s\f$.
     scalar skin() const noexcept { return skin_; }
-    /// @brief Extended cutoff \f$r_c + r_s\f$.
+    /// @brief Return the extended cutoff \f$r_c + r_s\f$.
     scalar ext_cutoff() const noexcept { return cutoff_ + skin_; }
     [[nodiscard]] int n_particles() const noexcept {
         return starts_.empty() ? 0 : static_cast<int>(starts_.size()) - 1;

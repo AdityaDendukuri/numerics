@@ -7,7 +7,8 @@
 
 namespace num::markov {
 
-/// @brief Metropolis sweep: `n_sites` updates, accepted with \f$\min(1, e^{-\beta \Delta E})\f$.
+/// @brief Make one Metropolis sweep of `n_sites` updates, each accepted with probability
+/// \f$\min(1, e^{-\beta \Delta E})\f$.
 /// `delta_energy(i)` returns \f$\Delta E\f$; `apply(i)` makes the move.
 template <energy_difference DeltaE, std::invocable<idx> Apply,
           std::uniform_random_bit_generator RNG>
@@ -31,7 +32,7 @@ metropolis_stats metropolis_sweep(idx n_sites, DeltaE delta_energy, Apply apply_
     return stats;
 }
 
-/// @brief Metropolis sweep, precomputed: `prob(i)` gives \f$\min(1, e^{-\beta \Delta E})\f$.
+/// @brief Make one Metropolis sweep with tabulated acceptance probabilities `prob(i)`.
 template <typename ProbFn, std::invocable<idx> Apply, std::uniform_random_bit_generator RNG>
 metropolis_stats metropolis_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply apply_flip,
                                        RNG &rng) {
@@ -52,7 +53,8 @@ metropolis_stats metropolis_sweep_prob(idx n_sites, ProbFn acceptance_prob, Appl
     return stats;
 }
 
-/// @brief Umbrella-sampled Metropolis sweep: rolled back if the order parameter leaves the window.
+/// @brief Make one Metropolis sweep confined to a window, undoing moves that leave it (umbrella
+/// sampling).
 /// `save()` and `restore()` bracket the sweep; `measure()` returns the order parameter.
 template <energy_difference DeltaE, std::invocable<idx> Apply, typename Save, typename Restore,
           typename Measure, std::uniform_random_bit_generator RNG>
@@ -75,7 +77,7 @@ umbrella_stats umbrella_sweep(idx n_sites, DeltaE delta_energy, Apply apply_flip
     return stats;
 }
 
-/// @brief Umbrella-sampled Metropolis sweep, precomputed acceptance.
+/// @brief Make one Metropolis sweep confined to a window, with tabulated acceptance probabilities.
 template <typename ProbFn, std::invocable<idx> Apply, typename Save, typename Restore,
           typename Measure, std::uniform_random_bit_generator RNG>
 umbrella_stats umbrella_sweep_prob(idx n_sites, ProbFn acceptance_prob, Apply apply_flip,

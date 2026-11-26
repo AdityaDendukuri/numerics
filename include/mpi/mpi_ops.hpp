@@ -22,22 +22,22 @@ void init(int *argc, char ***argv);
 /// @brief Finalize MPI.
 void finalize();
 
-/// @brief Rank in `comm`.
+/// @brief Return this process's rank in `comm`.
 int rank(MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Size of `comm`.
+/// @brief Return the number of processes in `comm`.
 int size(MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Distributed dot product: \f$\sum_r x_r^T y_r\f$ over ranks.
+/// @brief Compute a dot product of vectors distributed over processes: \f$\sum_r x_r^T y_r\f$.
 real dot(const vec<real> &x, const vec<real> &y, MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Distributed Euclidean norm: \f$\|x\|_2\f$ over ranks.
+/// @brief Compute the 2-norm of a vector distributed over processes: \f$\|x\|_2\f$.
 real norm(const vec<real> &x, MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Allreduce sum: \f$x \leftarrow \sum_r x_r\f$.
+/// @brief Sum a vector over all processes (allreduce): \f$x \leftarrow \sum_r x_r\f$.
 void allreduce_sum(real *data, idx n, MPI_Comm comm = MPI_COMM_WORLD);
 
-/// @brief Broadcast from `root`.
+/// @brief Broadcast a vector from process `root`.
 void broadcast(real *data, idx n, int root = 0, MPI_Comm comm = MPI_COMM_WORLD);
 
 

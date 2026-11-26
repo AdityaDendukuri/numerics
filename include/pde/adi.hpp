@@ -12,7 +12,8 @@
 
 namespace num {
 
-/// @brief Crank–Nicolson ADI step on an \f$N \times N\f$ grid: implicit sweeps in x, then y.
+/// @brief Take one Crank–Nicolson step on an \f$N \times N\f$ grid by alternating directions:
+/// implicit in x, then in y.
 struct crank_nicolson_adi {
     int N = 0;
     double dt = 0.0;

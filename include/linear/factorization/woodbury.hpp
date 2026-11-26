@@ -22,7 +22,8 @@
 
 namespace num {
 
-/// @brief Low-rank update: \f$A_{\mathrm{new}} = A_{\mathrm{base}} + P Q^T\f$.
+/// @brief Change of a matrix by a low-rank product:
+/// \f$A_{\mathrm{new}} = A_{\mathrm{base}} + P Q^T\f$.
 struct low_rank_update {
     mat<real> left;  ///< P, of shape n by p.
     mat<real> right; ///< Q, of shape n by p.
@@ -73,7 +74,8 @@ struct thin_qr_blocks {
 
 } // namespace detail
 
-/// @brief Low-rank difference: \f$B - A = P Q^T\f$, rank \f$\le 2k\f$ for \f$k\f$ changed slots.
+/// @brief Write the difference of two matrices as a low-rank product:
+/// \f$B - A = P Q^T\f$, rank \f$\le 2k\f$ for \f$k\f$ changed rows and columns.
 [[nodiscard]] inline low_rank_update low_rank_difference(const spmat &base, const spmat &current,
                                                          view<const idx> changed) {
     const idx n = base.n_rows();
@@ -112,7 +114,8 @@ struct thin_qr_blocks {
     return {std::move(left), std::move(right)};
 }
 
-/// @brief Orthogonalized low-rank difference: \f$B - A = P Q^T\f$.
+/// @brief Write the difference of two matrices as a low-rank product with orthogonalized factors:
+/// \f$B - A = P Q^T\f$.
 [[nodiscard]] inline low_rank_update orthogonalized_low_rank_difference(const spmat &base,
                                                                         const spmat &current,
                                                                         view<const idx> changed) {
@@ -124,7 +127,8 @@ struct thin_qr_blocks {
     return {left.Q * core, std::move(right.Q)};
 }
 
-/// @brief Woodbury solver: \f$(A + P Q^T)^{-1} b\f$ from a factor of \f$A\f$.
+/// @brief Solver for a low-rank change of a factored matrix (Woodbury):
+/// \f$(A + P Q^T)^{-1} b\f$.
 /// \f$x = y - W G^{-1} P^T y\f$ with \f$G = I + P^T W\f$.
 /// @warning References the base factorization; it must outlive the solver.
 template <factorization F>
@@ -142,17 +146,17 @@ class woodbury_solver {
         }
     }
 
-    /// @brief Rank \f$p\f$ of the update.
+    /// @brief Return the rank \f$p\f$ of the change.
     [[nodiscard]] idx rank() const { return left_.cols(); }
-    /// @brief Order \f$n\f$.
+    /// @brief Return the order \f$n\f$.
     [[nodiscard]] idx size() const { return left_.rows(); }
 
-    /// @brief Left factor \f$P\f$.
+    /// @brief Return the left factor \f$P\f$.
     [[nodiscard]] const mat<real> &left() const { return left_; }
-    /// @brief \f$W = A^{-T} Q\f$.
+    /// @brief Return \f$W = A^{-T} Q\f$.
     [[nodiscard]] const mat<real> &transpose_right() const { return transpose_right_; }
 
-    /// @brief \f$A^{-1} P\f$, formed on first use.
+    /// @brief Return \f$A^{-1} P\f$, computed on first use.
     [[nodiscard]] const mat<real> &inverse_left() const {
         if (!inverse_left_) {
             inverse_left_.emplace();
@@ -161,7 +165,7 @@ class woodbury_solver {
         return *inverse_left_;
     }
 
-    /// @brief \f$A^{-T} W\f$, formed on first use.
+    /// @brief Return \f$A^{-T} W\f$, computed on first use.
     [[nodiscard]] const mat<real> &transpose_right_squared() const {
         if (!transpose_right_squared_) {
             transpose_right_squared_.emplace();
@@ -170,7 +174,7 @@ class woodbury_solver {
         return *transpose_right_squared_;
     }
 
-    /// @brief Right solve: \f$Y \leftarrow Y G^{-1}\f$.
+    /// @brief Solve from the right: \f$Y \leftarrow Y G^{-1}\f$.
     void right_solve(mat<real> &y, vec<real> &scratch) const {
         const idx p = rank();
         if (scratch.size() != p) {
@@ -186,7 +190,8 @@ class woodbury_solver {
         }
     }
 
-    /// @brief Woodbury solve: \f$x \leftarrow (A + P Q^T)^{-1} b\f$. `x` may alias `b`.
+    /// @brief Solve with the changed matrix:
+    /// \f$x \leftarrow (A + P Q^T)^{-1} b\f$. `x` may alias `b`.
     template <class RHS>
     friend void solve(const woodbury_solver &W, const RHS &b, RHS &x) {
         using namespace ops;
@@ -197,7 +202,8 @@ class woodbury_solver {
         x = y - W.inverse_left() * coefficients;
     }
 
-    /// @brief Woodbury transposed solve: \f$x \leftarrow (A + P Q^T)^{-T} b\f$. `x` may alias `b`.
+    /// @brief Solve the transposed system with the changed matrix:
+    /// \f$x \leftarrow (A + P Q^T)^{-T} b\f$. `x` may alias `b`.
     template <class RHS>
     friend void solve_transpose(const woodbury_solver &W, const RHS &b, RHS &x) {
         using namespace ops;
@@ -208,7 +214,8 @@ class woodbury_solver {
         x = y - W.transpose_right_ * coefficients;
     }
 
-    /// @brief Updated inverse diagonal: \f$\mathrm{diag}(A_{\mathrm{new}}^{-1})\f$.
+    /// @brief Update the diagonal of the inverse for the change:
+    /// \f$\mathrm{diag}(A_{\mathrm{new}}^{-1})\f$.
     [[nodiscard]] vec<real> inverse_diagonal(view<const real> base_diagonal) const {
         if (base_diagonal.size() != size()) {
             throw std::invalid_argument("the base diagonal has the wrong size");
@@ -243,7 +250,7 @@ struct inverse_rows_workspace {
     vec<real> scratch;
 };
 
-/// @brief Inverse row update across a low-rank change: rows of \f$A^{-1}\f$ and \f$A^{-2}\f$.
+/// @brief Update selected rows of \f$A^{-1}\f$ and \f$A^{-2}\f$ for a low-rank change.
 template <factorization F>
 void update_inverse_rows(const woodbury_solver<F> &correction, mat<real> &first, mat<real> &second,
                          inverse_rows_workspace &work) {

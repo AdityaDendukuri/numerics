@@ -2,7 +2,7 @@
 
 num::kernel: the BLAS layer, raw loops over pointers, templated on the scalar, allocating nothing.
 
-## Vector construction <kernel/vector.hpp>
+## Constructing vectors <kernel/vector.hpp>
 num::kernel::copy num::kernel::fill num::kernel::copy_strided num::kernel::scale_copy_strided num::kernel::swap num::kernel::swap_strided
 
 ## Givens rotations <kernel/vector.hpp>
@@ -14,7 +14,7 @@ num::kernel::scale num::kernel::axpy num::kernel::axpy_strided num::kernel::axpb
 ## Reductions <kernel/vector.hpp>
 num::kernel::dot num::kernel::sum num::kernel::norm num::kernel::norm_sq num::kernel::norm_sq_strided num::kernel::l1_norm num::kernel::linf_norm num::kernel::argmax_abs
 
-## Fused reductions <kernel/vector.hpp>
+## Two reductions in one pass <kernel/vector.hpp>
 num::kernel::axpy_norm_sq num::kernel::dot2 num::kernel::dot_norm_sq num::kernel::linear_combination_norm_sq num::kernel::dot2_result num::kernel::dot_norm_result
 
 ## Matrix-vector products <kernel/dense.hpp>

@@ -9,7 +9,7 @@
 
 namespace num {
 
-/// @brief Sparse bilinear form: \f$y^T A x\f$, unconjugated.
+/// @brief Evaluate a sparse bilinear form, without conjugation: \f$y^T A x\f$.
 template <typename T>
 inline T sparse_bilinear(const spmat &A, const vec<T> &y, const vec<T> &x) {
     if (y.size() != A.n_rows() || x.size() != A.n_cols()) {
@@ -24,7 +24,7 @@ inline T sparse_bilinear(const spmat &A, const vec<T> &y, const vec<T> &x) {
     return result;
 }
 
-/// @brief Sparse bilinear trace: \f$\mathrm{tr}(L^T A R)\f$.
+/// @brief Evaluate the trace of a product with a sparse matrix: \f$\mathrm{tr}(L^T A R)\f$.
 inline real sparse_bilinear_trace(const spmat &A, const mat<real> &L, const mat<real> &R) {
     if (L.rows() != A.n_rows() || R.rows() != A.n_cols() || L.cols() != R.cols()) {
         throw std::invalid_argument("sparse_bilinear_trace: dimension mismatch");

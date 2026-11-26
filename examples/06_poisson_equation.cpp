@@ -1,5 +1,5 @@
-/// @file 06_pde_poisson_solver.cpp
-/// @brief A 3D Poisson problem on scalar fields, converging at second order.
+/// @file 06_poisson_equation.cpp
+/// @brief Solve the Poisson equation in three dimensions, and measure the error as the grid is refined.
 ///
 /// `field_solver::solve_poisson(phi, s)` solves \f$\Delta\phi = s\f$ with zero Dirichlet
 /// boundaries. It runs CG on the 7-point Laplacian and uses the field's own storage as the solution

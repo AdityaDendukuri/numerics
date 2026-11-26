@@ -12,7 +12,8 @@
 namespace num {
 
 template <std::uniform_random_bit_generator RNG>
-/// @brief Categorical sample: \f$P(k) = w_k / \sum_j w_j\f$, one pass.
+/// @brief Draw an index with probability proportional to its weight, in one pass:
+/// \f$P(k) = w_k / \sum_j w_j\f$.
 [[nodiscard]] idx sample_categorical(view<const real> weights, RNG &rng) {
     real total = 0.0;
     for (real weight : weights) {
@@ -36,7 +37,8 @@ template <std::uniform_random_bit_generator RNG>
     return weights.size() - 1;
 }
 
-/// @brief Categorical sampler for repeated draws: \f$P(k) = w_k / \sum_j w_j\f$.
+/// @brief Sampler for drawing many indices with probability proportional to weight:
+/// \f$P(k) = w_k / \sum_j w_j\f$.
 class categorical_sampler {
   public:
     categorical_sampler() = default;

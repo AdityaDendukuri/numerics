@@ -26,7 +26,7 @@ static_assert((storage_alignment & (storage_alignment - 1)) == 0,
 
 namespace detail {
 
-/// @brief Deleter for `allocate_aligned` storage.
+/// @brief Free storage obtained from `allocate_aligned`.
 template <class T>
 class aligned_deleter {
   public:
@@ -46,7 +46,7 @@ class aligned_deleter {
     idx count_ = 0;
 };
 
-/// @brief Raw aligned storage for `count` elements, unconstructed.
+/// @brief Allocate aligned storage for `count` elements, without constructing them.
 /// @throws std::bad_alloc On overflow or allocation failure.
 template <class T>
 [[nodiscard]] inline T *allocate_aligned(idx count) {
@@ -58,7 +58,7 @@ template <class T>
     return static_cast<T *>(::operator new(count * sizeof(T), std::align_val_t{storage_alignment}));
 }
 
-/// @brief Release raw storage whose elements were never constructed.
+/// @brief Free storage whose elements were never constructed.
 template <class T>
 inline void deallocate_aligned(T *pointer, idx count) noexcept {
     (void)count; // see aligned_deleter
@@ -71,7 +71,7 @@ inline void deallocate_aligned(T *pointer, idx count) noexcept {
 template <class T>
 using aligned_array = std::unique_ptr<T[], detail::aligned_deleter<T>>;
 
-/// @brief Aligned allocation of `count` value-initialized elements.
+/// @brief Allocate `count` value-initialized elements on an aligned boundary.
 /// @throws std::bad_alloc On overflow or allocation failure.
 template <class T>
 [[nodiscard]] inline aligned_array<T> make_aligned(idx count) {
@@ -88,7 +88,8 @@ template <class T>
     return aligned_array<T>(storage, detail::aligned_deleter<T>(count));
 }
 
-/// @brief Aligned allocation of `count` default-initialized elements; overwrite before reading.
+/// @brief Allocate `count` default-initialized elements on an aligned boundary; overwrite before
+/// reading.
 /// @throws std::bad_alloc On overflow or allocation failure.
 template <class T>
 [[nodiscard]] inline aligned_array<T> make_aligned_for_overwrite(idx count) {
@@ -105,7 +106,7 @@ template <class T>
     return aligned_array<T>(storage, detail::aligned_deleter<T>(count));
 }
 
-/// @brief Alignment hint for the optimizer; valid only on a base pointer from above.
+/// @brief Tell the optimizer a pointer is aligned; valid only for a base pointer from above.
 template <class T>
 [[nodiscard]] inline T *assume_storage_aligned(T *pointer) noexcept {
     if (pointer == nullptr) {
@@ -114,7 +115,7 @@ template <class T>
     return std::assume_aligned<storage_alignment>(pointer);
 }
 
-/// @brief Whether `pointer` is aligned to `storage_alignment`.
+/// @brief Test whether `pointer` is aligned to `storage_alignment`.
 template <class T>
 [[nodiscard]] inline bool is_storage_aligned(const T *pointer) noexcept {
     return (reinterpret_cast<std::uintptr_t>(pointer) % storage_alignment) == 0;

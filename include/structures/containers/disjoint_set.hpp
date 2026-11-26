@@ -11,19 +11,19 @@
 
 namespace num {
 
-/// @brief Disjoint-set forest: near-\f$O(1)\f$ amortized `find` and `unite`.
+/// @brief Disjoint sets stored as a forest: `find` and `unite` in nearly \f$O(1)\f$ amortized time.
 template <std::integral Index = num::idx>
 class basic_disjoint_set {
   public:
     using index_type = Index;
 
-    /// @brief `n` singleton sets \f$\{0\}, \ldots, \{n-1\}\f$.
+    /// @brief Construct `n` sets of one element each: \f$\{0\}, \ldots, \{n-1\}\f$.
     explicit basic_disjoint_set(Index n = 0)
         : parent_(n), rank_(n, 0), size_(n, 1), count_(n) {
         std::iota(parent_.begin(), parent_.end(), static_cast<Index>(0));
     }
 
-    /// @brief Representative of \f$[u]\f$, compressing the path.
+    /// @brief Return the representative of \f$[u]\f$, shortening the path.
     Index find(Index u) {
         structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::find");
         Index root = u;
@@ -40,7 +40,7 @@ class basic_disjoint_set {
         return root;
     }
 
-    /// @brief Representative of \f$[u]\f$, without compression.
+    /// @brief Return the representative of \f$[u]\f$ without changing the forest.
     [[nodiscard]] Index find(Index u) const {
         structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::find");
         while (u != parent_[u]) {
@@ -49,7 +49,7 @@ class basic_disjoint_set {
         return u;
     }
 
-    /// @brief Union: merge \f$[u]\f$ and \f$[v]\f$; returns whether they were distinct.
+    /// @brief Merge \f$[u]\f$ and \f$[v]\f$; return whether they were different sets.
     bool unite(Index u, Index v) {
         structures::debug::check_index_bounds(u, static_cast<Index>(parent_.size()), "disjoint_set::unite u");
         structures::debug::check_index_bounds(v, static_cast<Index>(parent_.size()), "disjoint_set::unite v");
@@ -76,27 +76,27 @@ class basic_disjoint_set {
         return true;
     }
 
-    /// @brief Whether \f$u \sim v\f$.
+    /// @brief Test whether \f$u \sim v\f$.
     [[nodiscard]] bool connected(Index u, Index v) {
         return find(u) == find(v);
     }
 
-    /// @brief Size of \f$[u]\f$.
+    /// @brief Return the size of \f$[u]\f$.
     [[nodiscard]] Index component_size(Index u) {
         return size_[find(u)];
     }
 
-    /// @brief Number of sets.
+    /// @brief Return the number of sets.
     [[nodiscard]] Index count() const noexcept {
         return count_;
     }
 
-    /// @brief Number of elements.
+    /// @brief Return the number of elements.
     [[nodiscard]] Index size() const noexcept {
         return static_cast<Index>(parent_.size());
     }
 
-    /// @brief Reset to `n` singleton sets.
+    /// @brief Reset to `n` sets of one element each.
     void reset(Index n = 0) {
         if (n == 0) n = static_cast<Index>(parent_.size());
         parent_.resize(n);
@@ -106,7 +106,7 @@ class basic_disjoint_set {
         count_ = n;
     }
 
-    /// @brief All sets, as lists of elements.
+    /// @brief Return all sets, as lists of elements.
     [[nodiscard]] array<array<Index>> components() {
         array<array<Index>> comp_map(parent_.size());
         for (Index i = 0; i < static_cast<Index>(parent_.size()); ++i) {

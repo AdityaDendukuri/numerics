@@ -18,7 +18,7 @@
 
 namespace num::kernel {
 
-/// @brief Matrix-vector product (GEMV): \f$y \leftarrow A x\f$.
+/// @brief Multiply a matrix and a vector (GEMV): \f$y \leftarrow A x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void matvec(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT A, const T *NUM_K_RESTRICT x,
                           idx m, idx n) noexcept {
@@ -28,7 +28,7 @@ NUM_K_AINLINE void matvec(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT A, const 
     }
 }
 
-/// @brief Transposed matrix-vector product: \f$y \leftarrow A^T x\f$.
+/// @brief Multiply a matrix's transpose and a vector: \f$y \leftarrow A^T x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void matvec_transpose(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT A,
                                     const T *NUM_K_RESTRICT x, idx m, idx n) noexcept {
@@ -56,7 +56,7 @@ namespace detail {
 
 } // namespace detail
 
-/// @brief GEMM blocking for this target: an `mr x nr` microkernel over packed panels.
+/// @brief Block sizes GEMM uses on this target: an `mr x nr` inner kernel over packed panels.
 template <std::floating_point T>
 struct gemm_config {
 #if defined(NUM_K_VECTOR_EXT)
@@ -88,7 +88,7 @@ struct gemm_config {
     static constexpr idx workspace = (mc * kc) + (kc * nc);
 };
 
-/// @brief GEMM workspace in elements for an `m x n x k` product.
+/// @brief Return the GEMM workspace size, in elements, for an `m x n x k` product.
 template <std::floating_point T>
 [[nodiscard]] constexpr idx gemm_workspace(idx m, idx n, idx k) noexcept {
     using cfg = gemm_config<T>;
@@ -100,7 +100,7 @@ template <std::floating_point T>
 
 namespace detail {
 
-/// @brief GEMM A packing into `mr`-row tiles, scaled: \f$A_p \leftarrow \alpha A\f$.
+/// @brief Pack and scale a block of A into `mr`-row tiles for GEMM: \f$A_p \leftarrow \alpha A\f$.
 /// Element (i, p) is `A[i*row_stride + p*col_stride]`; padding rows are zero.
 template <std::floating_point T>
 inline void gemm_pack_a(T *NUM_K_RESTRICT dst, const T *NUM_K_RESTRICT A, idx row_stride,
@@ -140,7 +140,7 @@ inline void gemm_pack_a(T *NUM_K_RESTRICT dst, const T *NUM_K_RESTRICT A, idx ro
     }
 }
 
-/// @brief GEMM B packing into `nr`-column tiles: \f$B_p \leftarrow B\f$.
+/// @brief Pack a block of B into `nr`-column tiles for GEMM: \f$B_p \leftarrow B\f$.
 /// Element (p, j) is `B[p*row_stride + j*col_stride]`; padding columns are zero.
 template <std::floating_point T>
 inline void gemm_pack_b(T *NUM_K_RESTRICT dst, const T *NUM_K_RESTRICT B, idx row_stride,
@@ -187,7 +187,8 @@ inline void gemm_pack_b(T *NUM_K_RESTRICT dst, const T *NUM_K_RESTRICT B, idx ro
     }
 }
 
-/// @brief GEMM microkernel: \f$C \leftarrow C + A_p B_p\f$ on one packed `mr x nr` tile.
+/// @brief Multiply one packed `mr x nr` tile, the inner kernel of GEMM:
+/// \f$C \leftarrow C + A_p B_p\f$.
 /// Only the leading `rows x cols` of C are written.
 template <std::floating_point T>
 NUM_K_AINLINE void gemm_micro(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT Ap,
@@ -257,7 +258,7 @@ NUM_K_AINLINE void gemm_micro(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTR
 #endif
 }
 
-/// @brief Matrix scaling: \f$C \leftarrow \beta C\f$.
+/// @brief Scale a matrix: \f$C \leftarrow \beta C\f$.
 template <std::floating_point T>
 inline void gemm_scale_c(T *NUM_K_RESTRICT C, idx ldc, T beta, idx m, idx n) noexcept {
     if (beta == T(1)) {
@@ -272,7 +273,7 @@ inline void gemm_scale_c(T *NUM_K_RESTRICT C, idx ldc, T beta, idx m, idx n) noe
     }
 }
 
-/// @brief Strided GEMM: \f$C \leftarrow \alpha A B + \beta C\f$.
+/// @brief Multiply two strided matrices (GEMM): \f$C \leftarrow \alpha A B + \beta C\f$.
 /// Swapping a pair of strides transposes that operand; `work` holds `gemm_workspace<T>(m, n, k)`.
 template <std::floating_point T>
 inline void gemm_strided(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx a_rows,
@@ -309,7 +310,7 @@ inline void gemm_strided(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A
     }
 }
 
-/// @brief Per-thread GEMM workspace for the overloads that take none.
+/// @brief GEMM workspace kept per thread, for the overloads that take none.
 template <std::floating_point T>
 class gemm_scratch {
   public:
@@ -334,7 +335,7 @@ class gemm_scratch {
 
 } // namespace detail
 
-/// @brief General matrix-matrix product (GEMM): \f$C \leftarrow \alpha A B + \beta C\f$.
+/// @brief Multiply two matrices (GEMM): \f$C \leftarrow \alpha A B + \beta C\f$.
 /// A is `m x k`, B is `k x n`; `work` holds `gemm_workspace<T>(m, n, k)`. Nothing may overlap.
 /// @note Each entry sums over k in ascending order, bit-identical to the naive triple loop.
 template <std::floating_point T>
@@ -344,7 +345,7 @@ inline void gemm(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx ld
     detail::gemm_strided(C, ldc, A, lda, idx{1}, B, ldb, idx{1}, alpha, beta, m, n, k, work);
 }
 
-/// @brief General matrix-matrix product (GEMM): \f$C \leftarrow \alpha A B + \beta C\f$.
+/// @brief Multiply two matrices (GEMM): \f$C \leftarrow \alpha A B + \beta C\f$.
 /// Uses a per-thread workspace.
 template <std::floating_point T>
 inline void gemm(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda,
@@ -354,7 +355,7 @@ inline void gemm(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx ld
     gemm(C, ldc, A, lda, B, ldb, alpha, beta, m, n, k, scratch.get());
 }
 
-/// @brief Contiguous GEMM: \f$C \leftarrow \alpha A B + \beta C\f$.
+/// @brief Multiply two contiguous matrices (GEMM): \f$C \leftarrow \alpha A B + \beta C\f$.
 template <std::floating_point T>
 inline void gemm(T *NUM_K_RESTRICT C, const T *NUM_K_RESTRICT A, const T *NUM_K_RESTRICT B, T alpha,
                  T beta, idx m, idx n, idx k) noexcept {
@@ -363,7 +364,7 @@ inline void gemm(T *NUM_K_RESTRICT C, const T *NUM_K_RESTRICT A, const T *NUM_K_
 
 namespace detail {
 
-/// @brief Recursive strip step of `syrk_lower`.
+/// @brief Compute one strip of `syrk_lower`, recursively.
 template <std::floating_point T>
 inline void syrk_lower_strips(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda,
                               T alpha, T beta, idx rows, idx columns, idx strip,
@@ -394,7 +395,8 @@ inline void syrk_lower_strips(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTR
 
 } // namespace detail
 
-/// @brief Symmetric rank-k update (SYRK), lower: \f$C \leftarrow \alpha A A^T + \beta C\f$.
+/// @brief Update the lower triangle by a symmetric rank-k product (SYRK):
+/// \f$C \leftarrow \alpha A A^T + \beta C\f$.
 /// Only entries with \f$j \le i\f$ are written.
 template <std::floating_point T>
 inline void syrk_lower(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda, T alpha,
@@ -404,14 +406,14 @@ inline void syrk_lower(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, 
                               scratch.get());
 }
 
-/// @brief Contiguous SYRK, lower: \f$C \leftarrow \alpha A A^T + \beta C\f$.
+/// @brief Update the lower triangle by a symmetric rank-k product (SYRK), contiguous storage.
 template <std::floating_point T>
 inline void syrk_lower(T *NUM_K_RESTRICT C, const T *NUM_K_RESTRICT A, T alpha, T beta, idx rows,
                        idx columns) noexcept {
     syrk_lower(C, rows, A, columns, alpha, beta, rows, columns);
 }
 
-/// @brief Transposed-left matrix product: \f$C \leftarrow \alpha A^T B + \beta C\f$.
+/// @brief Multiply a matrix's transpose and a matrix: \f$C \leftarrow \alpha A^T B + \beta C\f$.
 template <std::floating_point T>
 inline void gemm_transpose_left(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RESTRICT A, idx lda,
                                 const T *NUM_K_RESTRICT B, idx ldb, T alpha, T beta, idx rows,
@@ -421,7 +423,7 @@ inline void gemm_transpose_left(T *NUM_K_RESTRICT C, idx ldc, const T *NUM_K_RES
                          scratch.get());
 }
 
-/// @brief Block projection: \f$h \leftarrow V^T w\f$.
+/// @brief Project a vector onto the columns of a basis: \f$h \leftarrow V^T w\f$.
 template <std::floating_point T>
 inline void project_columns(T *NUM_K_RESTRICT h, const T *NUM_K_RESTRICT V, idx ldv,
                             const T *NUM_K_RESTRICT w, idx rows, idx columns) noexcept {
@@ -436,7 +438,7 @@ inline void project_columns(T *NUM_K_RESTRICT h, const T *NUM_K_RESTRICT V, idx 
     }
 }
 
-/// @brief Block linear combination: \f$y \leftarrow \alpha V c + \beta y\f$.
+/// @brief Combine the columns of a basis: \f$y \leftarrow \alpha V c + \beta y\f$.
 template <std::floating_point T>
 inline void combine_columns(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT V, idx ldv,
                             const T *NUM_K_RESTRICT coefficients, T alpha, T beta, idx rows,
@@ -449,7 +451,7 @@ inline void combine_columns(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT V, idx 
     }
 }
 
-/// @brief Matrix transpose, out of place: \f$B \leftarrow A^T\f$.
+/// @brief Transpose a matrix into another: \f$B \leftarrow A^T\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void transpose(T *NUM_K_RESTRICT B, const T *NUM_K_RESTRICT A, idx m,
                              idx n) noexcept {
@@ -460,7 +462,7 @@ NUM_K_AINLINE void transpose(T *NUM_K_RESTRICT B, const T *NUM_K_RESTRICT A, idx
     }
 }
 
-/// @brief Rank-1 update (GER): \f$A \leftarrow A + \alpha x y^T\f$.
+/// @brief Update a matrix by a rank-1 product (GER): \f$A \leftarrow A + \alpha x y^T\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void ger(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K_RESTRICT x,
                        const T *NUM_K_RESTRICT y, T alpha, idx m, idx n) noexcept {
@@ -474,14 +476,15 @@ NUM_K_AINLINE void ger(T *NUM_K_RESTRICT A, idx lda, const T *NUM_K_RESTRICT x,
     }
 }
 
-/// @brief Rank-1 update (GER), contiguous: \f$A \leftarrow A + \alpha x y^T\f$.
+/// @brief Update a contiguous matrix by a rank-1 product (GER):
+/// \f$A \leftarrow A + \alpha x y^T\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void ger(T *NUM_K_RESTRICT A, const T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT y,
                        T alpha, idx m, idx n) noexcept {
     ger(A, n, x, y, alpha, m, n);
 }
 
-/// @brief Lower triangular solve (TRSV): \f$x \leftarrow L^{-1} b\f$.
+/// @brief Solve a lower triangular system (TRSV): \f$x \leftarrow L^{-1} b\f$.
 /// `x` and `b` must not alias; see the `alias_safe` overload.
 template <std::floating_point T>
 NUM_K_AINLINE void trsv_lower(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT L,
@@ -496,7 +499,7 @@ NUM_K_AINLINE void trsv_lower(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT L,
     }
 }
 
-/// @brief Lower triangular solve, in place: \f$x \leftarrow L^{-1} x\f$.
+/// @brief Solve a lower triangular system in place: \f$x \leftarrow L^{-1} x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void trsv_lower_inplace(T *x, const T *NUM_K_RESTRICT L, idx n) noexcept {
     for (idx i = 0; i < n; ++i) {
@@ -509,7 +512,8 @@ NUM_K_AINLINE void trsv_lower_inplace(T *x, const T *NUM_K_RESTRICT L, idx n) no
     }
 }
 
-/// @brief Lower triangular solve, alias-safe: \f$x \leftarrow L^{-1} b\f$.
+/// @brief Solve a lower triangular system, allowing `x` and `b` to alias:
+/// \f$x \leftarrow L^{-1} b\f$.
 /// `x` and `b` may alias.
 template <std::floating_point T>
 NUM_K_AINLINE void trsv_lower(contract::alias_safe_t, T *x, const T *NUM_K_RESTRICT L, const T *b,
@@ -528,7 +532,7 @@ namespace detail {
 /// @brief Diagonal block size of the blocked TRSM routines.
 inline constexpr idx trsm_block = 64;
 
-/// @brief Unblocked lower triangular solve: \f$X \leftarrow L^{-1} X\f$.
+/// @brief Solve a lower triangular system without blocking: \f$X \leftarrow L^{-1} X\f$.
 /// Element (i, j) of L is `L[i*row_stride + j*col_stride]`; `unit` takes the diagonal as 1.
 template <std::floating_point T>
 inline void trsm_lower_block(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L,
@@ -553,7 +557,7 @@ inline void trsm_lower_block(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRI
     }
 }
 
-/// @brief Unblocked transposed lower triangular solve: \f$X \leftarrow L^{-T} X\f$.
+/// @brief Solve a transposed lower triangular system without blocking: \f$X \leftarrow L^{-T} X\f$.
 template <std::floating_point T>
 inline void trsm_lower_transpose_block(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L,
                                        idx row_stride, idx col_stride, idx n, idx nrhs,
@@ -578,7 +582,7 @@ inline void trsm_lower_transpose_block(T *NUM_K_RESTRICT X, idx ldx, const T *NU
     }
 }
 
-/// @brief Blocked lower triangular solve: \f$X \leftarrow L^{-1} X\f$.
+/// @brief Solve a lower triangular system by blocks: \f$X \leftarrow L^{-1} X\f$.
 template <std::floating_point T>
 inline void trsm_lower_blocked(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L,
                                idx row_stride, idx col_stride, idx n, idx nrhs,
@@ -597,7 +601,7 @@ inline void trsm_lower_blocked(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_REST
     }
 }
 
-/// @brief Blocked transposed lower triangular solve: \f$X \leftarrow L^{-T} X\f$.
+/// @brief Solve a transposed lower triangular system by blocks: \f$X \leftarrow L^{-T} X\f$.
 template <std::floating_point T>
 inline void trsm_lower_transpose_blocked(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L,
                                          idx row_stride, idx col_stride, idx n, idx nrhs,
@@ -620,7 +624,8 @@ inline void trsm_lower_transpose_blocked(T *NUM_K_RESTRICT X, idx ldx, const T *
 /// @brief Rows per batch in `trsm_lower_transpose_right_block`.
 inline constexpr idx trsm_row_batch = 16;
 
-/// @brief Unblocked right-side transposed lower solve: \f$X \leftarrow X L^{-T}\f$.
+/// @brief Solve \f$X L^T = B\f$ for one diagonal block without blocking:
+/// \f$X \leftarrow X L^{-T}\f$.
 template <std::floating_point T>
 inline void trsm_lower_transpose_right_block(T *NUM_K_RESTRICT X, idx ldx,
                                              const T *NUM_K_RESTRICT L, idx ldl, idx rows,
@@ -665,14 +670,15 @@ inline void trsm_lower_transpose_right_block(T *NUM_K_RESTRICT X, idx ldx,
 
 } // namespace detail
 
-/// @brief Lower triangular solve, multiple right-hand sides (TRSM): \f$X \leftarrow L^{-1} X\f$.
+/// @brief Solve a lower triangular system with many right-hand sides (TRSM):
+/// \f$X \leftarrow L^{-1} X\f$.
 template <std::floating_point T>
 inline void trsm_lower_inplace(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L, idx n,
                                idx nrhs) noexcept {
     detail::trsm_lower_blocked(X, ldx, L, n, idx{1}, n, nrhs, false);
 }
 
-/// @brief Unit lower triangular solve (TRSM): \f$X \leftarrow L^{-1} X\f$.
+/// @brief Solve a unit lower triangular system (TRSM): \f$X \leftarrow L^{-1} X\f$.
 /// The diagonal is taken as 1.
 template <std::floating_point T>
 inline void trsm_unit_lower_inplace(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L,
@@ -680,14 +686,14 @@ inline void trsm_unit_lower_inplace(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K
     detail::trsm_lower_blocked(X, ldx, L, ldl, idx{1}, n, nrhs, true);
 }
 
-/// @brief Transposed lower triangular solve (TRSM): \f$X \leftarrow L^{-T} X\f$.
+/// @brief Solve a transposed lower triangular system (TRSM): \f$X \leftarrow L^{-T} X\f$.
 template <std::floating_point T>
 inline void trsm_lower_transpose_inplace(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT L,
                                          idx n, idx nrhs) noexcept {
     detail::trsm_lower_transpose_blocked(X, ldx, L, n, idx{1}, n, nrhs, false);
 }
 
-/// @brief Transposed unit lower triangular solve (TRSM): \f$X \leftarrow L^{-T} X\f$.
+/// @brief Solve a transposed unit lower triangular system (TRSM): \f$X \leftarrow L^{-T} X\f$.
 /// The diagonal is taken as 1.
 template <std::floating_point T>
 inline void trsm_unit_lower_transpose_inplace(T *NUM_K_RESTRICT X, idx ldx,
@@ -696,21 +702,21 @@ inline void trsm_unit_lower_transpose_inplace(T *NUM_K_RESTRICT X, idx ldx,
     detail::trsm_lower_transpose_blocked(X, ldx, L, ldl, idx{1}, n, nrhs, true);
 }
 
-/// @brief Upper triangular solve (TRSM): \f$X \leftarrow U^{-1} X\f$.
+/// @brief Solve an upper triangular system (TRSM): \f$X \leftarrow U^{-1} X\f$.
 template <std::floating_point T>
 inline void trsm_upper_inplace(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT U, idx ldu,
                                idx n, idx nrhs, bool unit = false) noexcept {
     detail::trsm_lower_transpose_blocked(X, ldx, U, idx{1}, ldu, n, nrhs, unit);
 }
 
-/// @brief Transposed upper triangular solve (TRSM): \f$X \leftarrow U^{-T} X\f$.
+/// @brief Solve a transposed upper triangular system (TRSM): \f$X \leftarrow U^{-T} X\f$.
 template <std::floating_point T>
 inline void trsm_upper_transpose_inplace(T *NUM_K_RESTRICT X, idx ldx, const T *NUM_K_RESTRICT U,
                                          idx ldu, idx n, idx nrhs, bool unit = false) noexcept {
     detail::trsm_lower_blocked(X, ldx, U, idx{1}, ldu, n, nrhs, unit);
 }
 
-/// @brief Right-side transposed lower triangular solve (TRSM): \f$X \leftarrow X L^{-T}\f$.
+/// @brief Solve \f$X L^T = B\f$ for X (TRSM, right side): \f$X \leftarrow X L^{-T}\f$.
 template <std::floating_point T>
 inline void trsm_lower_transpose_right_inplace(T *NUM_K_RESTRICT X, idx ldx,
                                                const T *NUM_K_RESTRICT L, idx ldl, idx rows,
@@ -728,7 +734,7 @@ inline void trsm_lower_transpose_right_inplace(T *NUM_K_RESTRICT X, idx ldx,
     }
 }
 
-/// @brief Upper triangular solve (TRSV): \f$x \leftarrow U^{-1} b\f$.
+/// @brief Solve an upper triangular system (TRSV): \f$x \leftarrow U^{-1} b\f$.
 /// `x` and `b` must not alias; see the `alias_safe` overload.
 template <std::floating_point T>
 NUM_K_AINLINE void trsv_upper(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT U,
@@ -743,7 +749,7 @@ NUM_K_AINLINE void trsv_upper(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT U,
     }
 }
 
-/// @brief Upper triangular solve, in place: \f$x \leftarrow U^{-1} x\f$.
+/// @brief Solve an upper triangular system in place: \f$x \leftarrow U^{-1} x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void trsv_upper_inplace(T *x, const T *NUM_K_RESTRICT U, idx n) noexcept {
     for (idx i = n; i-- > 0;) {
@@ -756,7 +762,8 @@ NUM_K_AINLINE void trsv_upper_inplace(T *x, const T *NUM_K_RESTRICT U, idx n) no
     }
 }
 
-/// @brief Upper triangular solve, alias-safe: \f$x \leftarrow U^{-1} b\f$.
+/// @brief Solve an upper triangular system, allowing `x` and `b` to alias:
+/// \f$x \leftarrow U^{-1} b\f$.
 /// `x` and `b` may alias.
 template <std::floating_point T>
 NUM_K_AINLINE void trsv_upper(contract::alias_safe_t, T *x, const T *NUM_K_RESTRICT U, const T *b,
@@ -770,7 +777,7 @@ NUM_K_AINLINE void trsv_upper(contract::alias_safe_t, T *x, const T *NUM_K_RESTR
     trsv_upper_inplace(x, U, n);
 }
 
-/// @brief Row swap: \f$A_{r_1,:} \leftrightarrow A_{r_2,:}\f$.
+/// @brief Swap two rows: \f$A_{r_1,:} \leftrightarrow A_{r_2,:}\f$.
 template <typename T>
 NUM_K_AINLINE void swap_rows(T *NUM_K_RESTRICT A, idx lda, idx r1, idx r2, idx n) noexcept {
     if (r1 != r2) {
@@ -778,7 +785,7 @@ NUM_K_AINLINE void swap_rows(T *NUM_K_RESTRICT A, idx lda, idx r1, idx r2, idx n
     }
 }
 
-/// @brief Transposed lower triangular solve, in place: \f$x \leftarrow L^{-T} x\f$.
+/// @brief Solve a transposed lower triangular system in place: \f$x \leftarrow L^{-T} x\f$.
 template <std::floating_point T>
 NUM_K_AINLINE void trsv_transpose_lower(T *NUM_K_RESTRICT x, const T *NUM_K_RESTRICT L, idx lda,
                                         idx n) noexcept {
@@ -791,7 +798,7 @@ NUM_K_AINLINE void trsv_transpose_lower(T *NUM_K_RESTRICT x, const T *NUM_K_REST
     }
 }
 
-/// @brief Banded matrix-vector product (GBMV): \f$y \leftarrow \alpha A x + \beta y\f$.
+/// @brief Multiply a banded matrix and a vector (GBMV): \f$y \leftarrow \alpha A x + \beta y\f$.
 /// A is in LAPACK band storage with `kl` sub- and `ku` superdiagonals.
 template <std::floating_point T>
 NUM_K_AINLINE void gbmv(T *NUM_K_RESTRICT y, T alpha, const T *NUM_K_RESTRICT ab, idx ldab, idx kl,

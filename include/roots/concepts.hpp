@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief Bracketable function: a sign change \f$f(a) f(b) < 0\f$ can be tested.
+/// @brief Function for which a sign change \f$f(a) f(b) < 0\f$ can be tested.
 template <class F, class T = real>
 concept bracketable_function = scalar_function<F, T> && std::totally_ordered<T>;
 

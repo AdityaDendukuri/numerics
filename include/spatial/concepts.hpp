@@ -10,13 +10,13 @@
 
 namespace num {
 
-/// @brief Position accessor: `pos(i)` returns \f$(x_i, y_i)\f$.
+/// @brief Function `pos(i)` that returns the position \f$(x_i, y_i)\f$.
 template <class A, class Scalar = real>
 concept position_accessor_2d = field<Scalar> && requires(const A &get_pos, int i) {
     { get_pos(i) } -> std::convertible_to<std::pair<Scalar, Scalar>>;
 };
 
-/// @brief Neighbour structure: `query(p, f)` calls `f(j)` for each candidate near \f$p\f$.
+/// @brief Structure whose `query(p, f)` calls `f(j)` for each particle that may be near \f$p\f$.
 template <class L, class Scalar = real>
 concept neighbor_query_2d = field<Scalar> &&
     requires(const L &list, Scalar px, Scalar py) {

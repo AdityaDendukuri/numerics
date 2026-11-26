@@ -30,10 +30,10 @@ cmake --preset dev && cmake --build --preset dev && ctest --preset dev
 
 ## Examples from my PhD work
 
-- [Refactor only a changed suffix](examples/16_factor_reuse.cpp) of a block matrix, reusing the unchanged prefix.
-- [Solve a diffusion problem](examples/15_diffusion_evidence_cg.cpp) with conjugate gradients.
-- [Estimate an inverse diagonal](examples/19_probed_inverse_diagonal.cpp) with random probes.
-- [Compare two ways to evolve a Markov model](examples/13_talbot_spectral_validation.cpp) using contour inversion and a Krylov method.
+- [Refactor only a changed suffix](examples/16_updating_a_factorization.cpp) of a block matrix, reusing the unchanged prefix.
+- [Solve a diffusion problem](examples/15_diffusion_equation.cpp) with conjugate gradients.
+- [Estimate an inverse diagonal](examples/19_diagonal_of_the_inverse.cpp) with random probes.
+- [Compare two ways to evolve a Markov model](examples/13_inverse_laplace_transform.cpp) using contour inversion and a Krylov method.
 - [Compute matrix exponential gradients with Krylov methods](https://github.com/AdityaDendukuri/krylov-gradients) in a separate research library built on `numerics`.
 
 ## License

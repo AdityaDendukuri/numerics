@@ -364,9 +364,11 @@ inline void title(const std::string &t) {
 inline void panel_label(const std::string &label) {
     detail::state().current.panel_label_ = label;
 }
+/// Set the tick marks of the x axis, as a gnuplot `set xtics` specification.
 inline void xtics(const std::string &specification) {
     detail::state().current.xtics_ = specification;
 }
+/// Set the tick marks of the y axis, as a gnuplot `set ytics` specification.
 inline void ytics(const std::string &specification) {
     detail::state().current.ytics_ = specification;
 }

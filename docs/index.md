@@ -1,32 +1,25 @@
 # numerics
 
-`numerics` is a C++ library I use to develop and test numerical methods for my research.
-It grew from code I had written for different projects and courses into a library I
-can reuse. I maintain it as my research develops, and some parts are more mature than
-others.
+numerics is my personal C++ library for numerical computation. I wrote it for my own research,
+and it grew out of code from different projects and courses. I keep it public because it may be
+useful to others, especially for teaching: the routines are short and follow the textbook
+methods closely.
 
-The best way to get started is to run a small example and change it.
+It is not a rigorously tested library. Most routines have tests, and the parts I use most are
+well exercised, but some parts are more developed than others. For production work, use a
+library like Eigen, Armadillo or PETSc.
 
-## Examples
+It has routines for linear equations (dense, banded, tridiagonal and sparse, by direct or
+iterative methods), least squares, eigenvalues and singular values; for ordinary and partial
+differential equations; for Fourier transforms; for roots and integrals; and for statistics,
+random sampling and graphs.
 
-- [Explore a Hessenberg resolvent](reference/examples/23_hessenberg_frequency_response.md) over many complex shifts.
-- [Solve the heat equation with FFT](reference/examples/22_heat_equation_fft.md) and watch a temperature profile smooth out.
-- [Solve a linear system](reference/examples/01_direct_factorizations.md) with a small matrix.
-- [Evolve a birth and death process](reference/examples/03_resolvent_and_expv.md) over time.
-- [Integrate an oscillator](reference/examples/05_symplectic_nbody_ode.md) and compare numerical time steps.
-- [Solve a diffusion problem](reference/examples/15_diffusion_evidence_cg.md) with conjugate gradients.
+It is written in C++20 and is header-only. It uses BLAS, LAPACK, OpenMP, MPI and CUDA when they
+are available, but needs none of them: every routine has its own implementation.
 
-## Examples from my PhD work
+## Installation
 
-- [Watch a reaction model's distribution evolve](markovkit/index.md#a-first-model) with finite state projection in `markovkit`.
-- [Refactor only a changed suffix](reference/examples/16_factor_reuse.md) of a block matrix, reusing the unchanged prefix.
-- [Estimate an inverse diagonal](reference/examples/19_probed_inverse_diagonal.md) with random probes.
-- [Compare two ways to evolve a Markov model](reference/examples/13_talbot_spectral_validation.md) using contour inversion and a Krylov method.
-- [Compute matrix exponential gradients with Krylov methods](https://github.com/AdityaDendukuri/krylov-gradients) in a separate research library built on `numerics`.
-
-See [all examples](reference/examples/index.md) or browse the [reference](reference/index.md).
-
-## Setup
+With CMake, numerics can be fetched as part of a project:
 
 ```cmake
 include(FetchContent)
@@ -37,6 +30,27 @@ FetchContent_MakeAvailable(numerics)
 target_link_libraries(my_program PRIVATE numerics::numerics)
 ```
 
-The full library is available through `numerics::numerics`. Use `numerics::core` for the containers and portable kernels.
+A program then includes the whole library with `#include <numerics.hpp>`. The target
+`numerics::core` provides only the containers and the basic routines.
 
-`#include <numerics.hpp>` includes the whole library.
+## Examples
+
+Each example is a short program that solves one problem.
+
+- [Solve a system of linear equations](reference/examples/01_linear_systems.md).
+- [Compute eigenvalues and singular values](reference/examples/04_eigenvalues.md).
+- [Integrate an ordinary differential equation](reference/examples/05_differential_equations.md).
+- [Solve the heat equation](reference/examples/22_heat_equation.md) by the Fourier transform.
+- [Solve a diffusion equation](reference/examples/15_diffusion_equation.md) by the conjugate gradient method.
+- [Compute the response of a system of oscillators](reference/examples/23_frequency_response.md) at many frequencies.
+
+## Examples from research
+
+- [Compute how a chemical reaction system evolves](markovkit/index.md#a-first-model), with `markovkit`.
+- [Update a factorization](reference/examples/16_updating_a_factorization.md) after part of the matrix changes.
+- [Estimate the diagonal of the inverse](reference/examples/19_diagonal_of_the_inverse.md) of a large sparse matrix.
+- [Compute a probability distribution in time two ways](reference/examples/13_inverse_laplace_transform.md), and check that they agree.
+- [Differentiate the matrix exponential](https://github.com/AdityaDendukuri/krylov-gradients), in a separate library built on numerics.
+
+The [list of examples](reference/examples/index.md) describes every example program, and the
+[reference](reference/index.md) describes every routine.

@@ -11,7 +11,7 @@
 
 namespace num::linear {
 
-/// @brief Adjacency matrix, sparse: \f$W_{ij} = w_{ij}\f$.
+/// @brief Construct the adjacency matrix of a graph, sparse: \f$W_{ij} = w_{ij}\f$.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat to_sparse_adjacency(const graph<Weight, Index> &g) {
     array<idx> row_ptr(g.n_vertices() + 1, 0);
@@ -29,7 +29,7 @@ template <typename Weight = real, typename Index = idx>
                         std::move(values), std::move(col_idx), std::move(row_ptr));
 }
 
-/// @brief Adjacency matrix, dense: \f$W_{ij} = w_{ij}\f$.
+/// @brief Construct the adjacency matrix of a graph, dense: \f$W_{ij} = w_{ij}\f$.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat<real> to_dense_adjacency(const graph<Weight, Index> &g) {
     mat<real> A(static_cast<idx>(g.n_vertices()), static_cast<idx>(g.n_vertices()), 0.0);
@@ -66,7 +66,7 @@ template <typename Weight = real, typename Index = idx>
                                        static_cast<idx>(g.n_vertices()), rows, cols, vals);
 }
 
-/// @brief Graph Laplacian of an implicit grid: \f$L = D - W\f$.
+/// @brief Construct the graph Laplacian of a grid without storing its edges: \f$L = D - W\f$.
 /// @warning Singular, since \f$L \mathbf{1} = 0\f$: tag it `assume_psd`, not `assume_spd`.
 template <std::size_t D, typename Weight, std::integral Index>
 [[nodiscard]] inline spmat laplacian(const structured_grid_graph<D, Weight, Index> &g) {
@@ -93,7 +93,7 @@ template <std::size_t D, typename Weight, std::integral Index>
                                 rows, cols, vals);
 }
 
-/// @brief Graph Laplacian, dense: \f$L = D - W\f$.
+/// @brief Construct the graph Laplacian, dense: \f$L = D - W\f$.
 /// @warning Singular, since \f$L \mathbf{1} = 0\f$: tag it `assume_psd`, not `assume_spd`.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat<real> dense_laplacian(const graph<Weight, Index> &g) {
@@ -111,7 +111,8 @@ template <typename Weight = real, typename Index = idx>
     return L;
 }
 
-/// @brief Markov generator, sparse: \f$Q_{ij} = w_{ij}\f$, \f$Q_{ii} = -\sum_{j} w_{ij}\f$.
+/// @brief Construct the generator of the Markov chain on a graph, sparse:
+/// \f$Q_{ij} = w_{ij}\f$, \f$Q_{ii} = -\sum_{j} w_{ij}\f$.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline spmat markov_generator(const graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
@@ -142,7 +143,8 @@ template <typename Weight = real, typename Index = idx>
                                        static_cast<idx>(g.n_vertices()), rows, cols, vals);
 }
 
-/// @brief Markov generator, dense: \f$Q_{ij} = w_{ij}\f$, \f$Q_{ii} = -\sum_{j} w_{ij}\f$.
+/// @brief Construct the generator of the Markov chain on a graph, dense:
+/// \f$Q_{ij} = w_{ij}\f$, \f$Q_{ii} = -\sum_{j} w_{ij}\f$.
 template <typename Weight = real, typename Index = idx>
 [[nodiscard]] inline mat<real> dense_markov_generator(const graph<Weight, Index> &g,
                                                    bool column_oriented = true) {
@@ -156,7 +158,7 @@ template <typename Weight = real, typename Index = idx>
     return Q;
 }
 
-/// @brief Multigraph Laplacian: \f$L = D - W\f$, parallel edges summed.
+/// @brief Construct the Laplacian of a multigraph, summing parallel edges: \f$L = D - W\f$.
 /// @warning Singular, since \f$L \mathbf{1} = 0\f$: tag it `assume_psd`, not `assume_spd`.
 [[nodiscard]] inline spmat laplacian(const structures::multigraph<real, idx> &g) {
     const idx n = g.n_vertices();
@@ -180,7 +182,7 @@ template <typename Weight = real, typename Index = idx>
     return spmat::from_triplets(static_cast<idx>(n), static_cast<idx>(n), rows, cols, vals);
 }
 
-/// @brief Multigraph from a Laplacian.
+/// @brief Construct a multigraph from a Laplacian.
 [[nodiscard]] inline structures::multigraph<real, idx> to_multigraph(const spmat &L) {
     const idx n = L.n_rows();
     if (L.n_cols() != n) {

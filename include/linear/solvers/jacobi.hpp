@@ -12,7 +12,8 @@
 
 namespace num {
 
-/// @brief Jacobi iteration: \f$x^{(k+1)}_i = (b_i - \sum_{j \ne i} a_{ij} x^{(k)}_j) / a_{ii}\f$.
+/// @brief Solve a system by Jacobi iteration:
+/// \f$x^{(k+1)}_i = (b_i - \sum_{j \ne i} a_{ij} x^{(k)}_j) / a_{ii}\f$.
 /// Requires `A` tagged diagonally dominant.
 template <class Mat = with_law<mat<real>, law::diagonally_dominant>, bool Parallel = has_omp>
 requires claims<Mat, law::diagonally_dominant>

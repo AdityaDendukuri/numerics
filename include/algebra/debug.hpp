@@ -17,20 +17,20 @@ namespace num::debug {
 
 // Randomized probing for sampled property tests
 
-/// @brief Random probes per sampled property test.
+/// @brief Number of random probes in each sampled test.
 inline idx g_probe_count = 6;
 
-/// @brief Relative tolerance for sampled tests; 0 selects \f$\sqrt{\epsilon}\f$.
+/// @brief Relative tolerance of sampled tests; 0 selects \f$\sqrt{\epsilon}\f$.
 inline double g_property_tol = 0.0;
 
-/// @brief Relative tolerance for sampled tests over field `T`.
+/// @brief Relative tolerance of sampled tests over field `T`.
 template <class T>
 [[nodiscard]] inline scalars::real_t<T> property_tol() noexcept {
     return g_property_tol > 0.0 ? static_cast<scalars::real_t<T>>(g_property_tol)
                                 : scalars::sampling_tol<T>();
 }
 
-/// @brief Deterministic xorshift generator, so violations reproduce.
+/// @brief Xorshift random generator with a fixed seed, so that failures repeat.
 struct probe_rng {
     std::uint64_t state;
 
@@ -44,13 +44,13 @@ struct probe_rng {
         return state;
     }
 
-    /// @brief Uniform sample: \f$U[-1, 1)\f$.
+    /// @brief Draw a uniform sample from \f$[-1, 1)\f$.
     constexpr double uniform() noexcept {
         return ((static_cast<double>(next() >> 11) / 9007199254740992.0) * 2.0) - 1.0;
     }
 };
 
-/// @brief Random probe: fill `v` reproducibly over its own field.
+/// @brief Fill `v` with reproducible random values over its own field.
 template <class VectorType>
 inline void fill_probe(VectorType &v, probe_rng &rng) {
     using T = num::scalar_t<VectorType>;
@@ -64,7 +64,7 @@ inline void fill_probe(VectorType &v, probe_rng &rng) {
     }
 }
 
-/// @brief Basis probe: \f$v \leftarrow e_i\f$.
+/// @brief Set `v` to a unit vector: \f$v \leftarrow e_i\f$.
 template <class VectorType>
 inline void fill_basis(VectorType &v, idx i) {
     using T = num::scalar_t<VectorType>;
@@ -74,20 +74,20 @@ inline void fill_basis(VectorType &v, idx i) {
     v[i] = T(1);
 }
 
-/// @brief Inner product through the type's own `inner`: \f$\langle x, y \rangle\f$.
+/// @brief Compute an inner product with the type's own `inner`: \f$\langle x, y \rangle\f$.
 template <class VectorType>
 [[nodiscard]] inline num::scalar_t<VectorType> probe_inner(const VectorType &x,
                                                            const VectorType &y) {
     return math::inner(x, y);
 }
 
-/// @brief Induced norm: \f$\|x\| = \sqrt{\langle x, x \rangle}\f$.
+/// @brief Compute the norm induced by the inner product: \f$\|x\| = \sqrt{\langle x, x \rangle}\f$.
 template <class VectorType>
 [[nodiscard]] inline scalars::real_t<num::scalar_t<VectorType>> probe_norm(const VectorType &x) {
     return std::sqrt(scalars::re(probe_inner(x, x)));
 }
 
-/// @brief Basis-probe stride: at most `cap` probes across dimension `n`.
+/// @brief Return the stride that tests at most `cap` unit vectors of dimension `n`.
 [[nodiscard]] inline idx probe_stride(idx n, idx cap = 8) noexcept {
     const idx s = n / cap;
     return s == 0 ? idx(1) : s;
@@ -97,7 +97,8 @@ template <class VectorType>
 //
 // Generic over anything exposing `apply(x, y)` and `cols()`.
 
-/// @brief Power-iteration spectral bounds of self-adjoint A: \f$\lambda_{\min}, \lambda_{\max}\f$.
+/// @brief Estimate the extreme eigenvalues of a self-adjoint A by power iteration:
+/// \f$\lambda_{\min}, \lambda_{\max}\f$.
 template <class Op, class VectorType>
 [[nodiscard]] inline auto estimate_spectrum_bounds(const Op &A, idx n, idx iterations = 64) {
     using T = num::scalar_t<VectorType>;
@@ -145,7 +146,7 @@ template <class Op, class VectorType>
     return bounds{lambda_max - shifted, lambda_max};
 }
 
-/// @brief Sampled positive-definiteness test: \f$\langle x, A x \rangle > 0\f$.
+/// @brief Test positive definiteness on random vectors: \f$\langle x, A x \rangle > 0\f$.
 template <class Op, class VectorType>
 inline void verify_spd_sample(const Op &A, idx n,
                               std::source_location loc = std::source_location::current()) {
@@ -204,7 +205,7 @@ inline void verify_spd_sample(const Op &A, idx n,
     }
 }
 
-/// @brief Diagonal dominance test, exact: \f$|a_{ii}| > \sum_{j \ne i} |a_{ij}|\f$.
+/// @brief Test strict diagonal dominance exactly: \f$|a_{ii}| > \sum_{j \ne i} |a_{ij}|\f$.
 /// Skipped for operators without entrywise access.
 template <class Mat>
 inline void
@@ -241,7 +242,7 @@ verify_diagonal_dominance(const Mat &A,
     }
 }
 
-/// @brief Sampled positive-semidefiniteness test: \f$\langle x, A x \rangle \ge 0\f$.
+/// @brief Test positive semidefiniteness on random vectors: \f$\langle x, A x \rangle \ge 0\f$.
 template <class Op, class VectorType>
 inline void verify_psd_sample(const Op &A, idx n,
                               std::source_location loc = std::source_location::current()) {
@@ -289,7 +290,8 @@ inline void verify_psd_sample(const Op &A, idx n,
     }
 }
 
-/// @brief Sampled self-adjointness test: \f$\langle x, Ay \rangle = \langle Ax, y \rangle\f$.
+/// @brief Test self-adjointness on random vectors:
+/// \f$\langle x, Ay \rangle = \langle Ax, y \rangle\f$.
 template <class Op, class VectorType>
 inline void verify_symmetry_sample(const Op &A, idx n,
                                    std::source_location loc = std::source_location::current()) {
@@ -330,7 +332,7 @@ inline void verify_symmetry_sample(const Op &A, idx n,
     }
 }
 
-/// @brief Sampled linearity test: \f$A(\alpha x + \beta y) = \alpha A x + \beta A y\f$.
+/// @brief Test linearity on random vectors: \f$A(\alpha x + \beta y) = \alpha A x + \beta A y\f$.
 template <class Op, class VectorType>
 inline void verify_linearity_sample(const Op &A, idx n,
                                     std::source_location loc = std::source_location::current()) {

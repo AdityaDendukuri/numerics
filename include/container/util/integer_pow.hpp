@@ -4,7 +4,7 @@
 
 namespace num {
 
-/// @brief Integer power: \f$x^N\f$ by repeated squaring.
+/// @brief Raise to an integer power by repeated squaring: \f$x^N\f$.
 template <int N, typename T>
 constexpr T ipow(T x) noexcept {
     static_assert(N >= 0, "ipow: exponent must be non-negative");

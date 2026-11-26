@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// @brief Argmax: first \f$\arg\max_i s(i)\f$.
+/// @brief Return the first index of the largest score: \f$\arg\max_i s(i)\f$.
 template <typename Score>
 [[nodiscard]] idx argmax(idx count, Score &&score) {
     if (count == 0) {
@@ -31,13 +31,13 @@ template <typename Score>
     return best;
 }
 
-/// @brief Argmax: first \f$\arg\max_i x_i\f$.
+/// @brief Return the first index of the largest entry: \f$\arg\max_i x_i\f$.
 template <typename T>
 [[nodiscard]] idx argmax(view<const T> values) {
     return argmax(values.size(), [&](idx index) -> const T & { return values[index]; });
 }
 
-/// @brief Argsort: the permutation sorting `values` ascending, ties by index.
+/// @brief Return the permutation that sorts `values` ascending, breaking ties by index.
 template <typename Values>
 [[nodiscard]] array<idx> argsort(const Values &values) {
     array<idx> indices(values.size());
@@ -47,7 +47,7 @@ template <typename Values>
     return indices;
 }
 
-/// @brief Partial argsort: the first `count` indices of `argsort(values)`.
+/// @brief Return the first `count` indices of `argsort(values)`.
 template <typename Values>
 [[nodiscard]] array<idx> smallest_indices(const Values &values, idx count) {
     count = std::min(count, static_cast<idx>(values.size()));
@@ -67,7 +67,7 @@ template <typename Values>
     return indices;
 }
 
-/// @brief Filter: indices \f$i < \mathrm{count}\f$ with `keep(i)`, ascending.
+/// @brief Return the indices \f$i < \mathrm{count}\f$ for which `keep(i)` holds, ascending.
 template <typename Predicate>
 [[nodiscard]] array<idx> filter(idx count, Predicate &&keep) {
     array<idx> indices;
@@ -79,7 +79,8 @@ template <typename Predicate>
     return indices;
 }
 
-/// @brief Group by key: distinct keys by first appearance, and each index's key position.
+/// @brief Group indices by key: the distinct keys in order of appearance, and each index's key
+/// position.
 template <typename Key>
 [[nodiscard]] auto group_by(idx count, Key &&key) {
     using value = std::remove_cvref_t<decltype(key(idx{0}))>;

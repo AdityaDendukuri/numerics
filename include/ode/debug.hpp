@@ -15,7 +15,7 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief Observed order of accuracy: \f$p \approx \log_2(e_h / e_{h/2})\f$.
+/// @brief Measure the order of accuracy by halving the step: \f$p \approx \log_2(e_h / e_{h/2})\f$.
 /// `advance(t0, t1, h, y0, y1)` integrates one interval.
 template <class Advance>
 inline void verify_order_of_accuracy(Advance &&advance, const vec<real> &y0, real t0, real t1,
@@ -67,7 +67,7 @@ inline void verify_order_of_accuracy(Advance &&advance, const vec<real> &y0, rea
     }
 }
 
-/// @brief Symplecticity check: one step preserves \f$\omega = dq \wedge dp\f$.
+/// @brief Check that one step preserves the symplectic form \f$\omega = dq \wedge dp\f$.
 /// `step(q, p, h, q1, p1)` takes one step.
 template <class Step>
 inline void verify_symplectic_2form(Step &&step, const vec<real> &q0, const vec<real> &p0, real h,

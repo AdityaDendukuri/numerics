@@ -15,7 +15,7 @@
 
 namespace num::structures {
 
-/// @brief Path graph \f$P_n\f$.
+/// @brief Construct the path graph \f$P_n\f$.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> path_graph(std::type_identity_t<Index> n,
                                                          Weight weight = Weight{1}) {
@@ -26,7 +26,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// @brief Cycle graph \f$C_n\f$.
+/// @brief Construct the cycle graph \f$C_n\f$.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> cycle_graph(std::type_identity_t<Index> n,
                                                           Weight weight = Weight{1}) {
@@ -37,7 +37,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// @brief Grid graph, `nx x ny`.
+/// @brief Construct the `nx x ny` grid graph.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> grid_2d(std::type_identity_t<Index> nx,
                                                       std::type_identity_t<Index> ny,
@@ -55,7 +55,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// @brief Complete graph \f$K_n\f$.
+/// @brief Construct the complete graph \f$K_n\f$.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> complete_graph(std::type_identity_t<Index> n,
                                                              Weight weight = Weight{1}) {
@@ -68,7 +68,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// @brief Star graph \f$S_n\f$, centred at vertex 0.
+/// @brief Construct the star graph \f$S_n\f$, centred at vertex 0.
 template <typename Weight = double, std::integral Index = num::idx>
 [[nodiscard]] inline graph<Weight, Index> star_graph(std::type_identity_t<Index> n,
                                                          Weight weight = Weight{1}) {
@@ -79,7 +79,7 @@ template <typename Weight = double, std::integral Index = num::idx>
     return G;
 }
 
-/// @brief Uniform random spanning tree on `n` vertices (Wilson's algorithm).
+/// @brief Draw a uniformly random spanning tree on `n` vertices (Wilson's algorithm).
 template <typename Weight = double, std::integral Index = num::idx, typename RNG>
 [[nodiscard]] inline graph<Weight, Index> random_spanning_tree(std::type_identity_t<Index> n,
                                                                    RNG &rng,
@@ -125,7 +125,7 @@ template <typename Weight = double, std::integral Index = num::idx, typename RNG
     return G;
 }
 
-/// @brief Erdős–Rényi random graph \f$G(n, p)\f$, optionally connected.
+/// @brief Draw an Erdős–Rényi random graph \f$G(n, p)\f$, optionally connected.
 template <typename Weight = double, std::integral Index = num::idx, typename RNG>
 [[nodiscard]] inline graph<Weight, Index> erdos_renyi(std::type_identity_t<Index> n,
                                                            double p, RNG &rng,

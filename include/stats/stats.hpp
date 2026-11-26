@@ -13,14 +13,14 @@
 
 namespace num {
 
-/// @brief Running mean and variance (Welford).
+/// @brief Mean and variance of a stream of samples, by Welford's method.
 template <typename Float = double, std::integral Index = num::idx>
 struct basic_running_stats {
     Float mean = Float{0};
     Float M2 = Float{0};
     Index count = 0;
 
-    /// @brief Add sample \f$x\f$.
+    /// @brief Add the sample \f$x\f$.
     void update(Float x) {
         ++count;
         Float delta = x - mean;
@@ -29,15 +29,15 @@ struct basic_running_stats {
         M2 += delta * delta2;
     }
 
-    /// @brief Unbiased sample variance: \f$s^2\f$; 0 with fewer than two samples.
+    /// @brief Return the unbiased sample variance: \f$s^2\f$; 0 with fewer than two samples.
     [[nodiscard]] Float variance() const {
         return (count < 2) ? Float{0} : M2 / static_cast<Float>(count - 1);
     }
 
-    /// @brief Sample standard deviation: \f$s\f$.
+    /// @brief Return the sample standard deviation: \f$s\f$.
     [[nodiscard]] Float std_dev() const { return std::sqrt(variance()); }
 
-    /// @brief Standard error of the mean: \f$s / \sqrt{n}\f$, uncorrelated samples.
+    /// @brief Return the standard error of the mean for uncorrelated samples: \f$s / \sqrt{n}\f$.
     [[nodiscard]] Float stderr_mean() const {
         return (count < 2) ? Float{0} : std_dev() / std::sqrt(static_cast<Float>(count));
     }
@@ -51,7 +51,7 @@ struct basic_running_stats {
 
 using running_stats = basic_running_stats<real, idx>;
 
-/// @brief Fixed-bin histogram over \f$[\ell, h)\f$.
+/// @brief Histogram with equal bins over \f$[\ell, h)\f$.
 template <typename Float = double, std::integral Index = num::idx>
 struct basic_histogram {
     array<Float> counts;
@@ -59,11 +59,11 @@ struct basic_histogram {
     Float hi = Float{0};
     Index nbins = 0;
 
-    /// @brief Histogram of `nbins` equal bins over \f$[\ell, h)\f$.
+    /// @brief Construct a histogram of `nbins` equal bins over \f$[\ell, h)\f$.
     basic_histogram(Index nbins, Float lo, Float hi)
         : counts(static_cast<std::size_t>(nbins), Float{0}), lo(lo), hi(hi), nbins(nbins) {}
 
-    /// @brief Bin of \f$x\f$, or `nbins` outside \f$[\ell, h)\f$.
+    /// @brief Return the bin of \f$x\f$, or `nbins` outside \f$[\ell, h)\f$.
     [[nodiscard]] Index bin(Float x) const {
         if (x < lo || x >= hi) {
             return nbins;
@@ -71,14 +71,14 @@ struct basic_histogram {
         return static_cast<Index>((x - lo) / (hi - lo) * static_cast<Float>(nbins));
     }
 
-    /// @brief Centre of bin \f$b\f$.
+    /// @brief Return the centre of bin \f$b\f$.
     [[nodiscard]] Float bin_centre(Index b) const {
         return lo + ((static_cast<Float>(b) + Float{0.5}) * (hi - lo) / static_cast<Float>(nbins));
     }
 
     [[nodiscard]] Float bin_width() const { return (hi - lo) / static_cast<Float>(nbins); }
 
-    /// @brief Add \f$x\f$ with `weight`, if inside the range.
+    /// @brief Add \f$x\f$ with weight `weight`, if it lies in the range.
     void fill(Float x, Float weight = Float{1.0}) {
         Index b = bin(x);
         if (b < nbins) {
@@ -88,7 +88,7 @@ struct basic_histogram {
 
     void reset() { std::fill(counts.begin(), counts.end(), Float{0}); }
 
-    /// @brief Total weight.
+    /// @brief Return the total weight.
     [[nodiscard]] Float total() const {
         Float s = Float{0};
         for (Float c : counts) {
@@ -97,7 +97,7 @@ struct basic_histogram {
         return s;
     }
 
-    /// @brief Probability density: counts normalized so \f$\int p = 1\f$.
+    /// @brief Return the counts scaled to a probability density: \f$\int p = 1\f$.
     [[nodiscard]] array<Float> pdf() const {
         Float norm = total() * bin_width();
         array<Float> p(static_cast<std::size_t>(nbins));
@@ -113,7 +113,8 @@ struct basic_histogram {
 using histogram = basic_histogram<real, idx>;
 
 // Autocorrelation time
-/// @brief Integrated autocorrelation time: \f$\tau = \tfrac{1}{2} + \sum_{t \ge 1} \rho(t)\f$.
+/// @brief Estimate the integrated autocorrelation time:
+/// \f$\tau = \tfrac{1}{2} + \sum_{t \ge 1} \rho(t)\f$.
 template <typename Float = double, std::integral Index = num::idx>
 inline Float autocorr_time(const Float *data, Index n, Float c = Float{6.0}) {
     if (n < 4) {

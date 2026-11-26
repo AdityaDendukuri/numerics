@@ -84,7 +84,7 @@ struct codomain_of<T> {
 
 } // namespace detail
 
-/// @brief Scalar type of a container: its `value_type` or the type of `v[i]`, else `void`.
+/// @brief Scalar type of a container: its `value_type`, or the type of `v[i]`, else `void`.
 template <class T>
 using scalar_t = typename detail::scalar_of<std::remove_cvref_t<T>>::type;
 

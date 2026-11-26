@@ -1,5 +1,5 @@
-/// @file 08_root_finding_and_quadrature.cpp
-/// @brief Root finding with bisection, Newton, secant and Brent, and five quadrature rules.
+/// @file 08_roots_and_integrals.cpp
+/// @brief Find a root of an equation, and compute a definite integral.
 ///
 /// Each root finder returns a `root_result<T>` holding the root, the iterations taken and the final
 /// residual. The quadrature rules integrate a callable over [a, b], and the saved result compares them on

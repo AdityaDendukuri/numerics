@@ -17,7 +17,8 @@ namespace num {
 
 struct hessenberg_shifted_lu;
 
-/// @brief Hessenberg resolvent: \f$A = Q H Q^T\f$ once, then \f$(s I - A)^{-1}\f$ per shift.
+/// @brief Matrix reduced once to Hessenberg form, for solving \f$(s I - A) x = b\f$ at many shifts
+/// \f$s\f$.
 class hessenberg_resolvent {
   public:
     explicit hessenberg_resolvent(const mat<real> &A);
@@ -34,7 +35,7 @@ class hessenberg_resolvent {
     friend hessenberg_shifted_lu shift(const hessenberg_resolvent &R, cplx s);
 };
 
-/// @brief Shifted factor: \f$s I - H\f$ in Hessenberg coordinates.
+/// @brief Factor of \f$s I - A\f$ for one shift, in Hessenberg coordinates.
 struct hessenberg_shifted_lu {
     std::shared_ptr<const hessenberg_decomposition> decomp;
     cplx s;
@@ -44,21 +45,22 @@ struct hessenberg_shifted_lu {
     [[nodiscard]] idx size() const noexcept { return decomp->size(); }
 };
 
-/// @brief Factor \f$s I - A\f$, \f$O(n^2)\f$.
+/// @brief Factor \f$s I - A\f$ for one shift, in \f$O(n^2)\f$.
 [[nodiscard]] hessenberg_shifted_lu shift(const hessenberg_resolvent &R, cplx s);
 
-/// @brief Shifted solve: \f$x \leftarrow (s I - A)^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve a shifted system: \f$x \leftarrow (s I - A)^{-1} b\f$. `x` may alias `b`.
 void solve(const hessenberg_shifted_lu &F, const vec<cplx> &b, vec<cplx> &x);
 
-/// @brief Shifted solve, real right-hand side: \f$x \leftarrow (s I - A)^{-1} b\f$.
+/// @brief Solve a shifted system with a real right-hand side: \f$x \leftarrow (s I - A)^{-1} b\f$.
 void solve(const hessenberg_shifted_lu &F, const vec<real> &b, vec<cplx> &x);
 [[nodiscard]] vec<cplx> solve(const hessenberg_shifted_lu &F, const vec<real> &b);
 
-/// @brief Batched shifted solve: \f$(s_k I - A)^{-1} b\f$ for each shift, in parallel.
+/// @brief Solve at many shifts in parallel: \f$(s_k I - A)^{-1} b\f$.
 [[nodiscard]] array<vec<cplx>> solve_batch(const hessenberg_resolvent &R,
                                            const array<cplx> &shifts, const vec<real> &b);
 
-/// @brief Batched shifted solve: \f$(s_k I - A)^{-1} b_j\f$, indexed `[shift][rhs]`.
+/// @brief Solve at many shifts for many right-hand sides:
+/// \f$(s_k I - A)^{-1} b_j\f$, indexed `[shift][rhs]`.
 [[nodiscard]] array<array<vec<cplx>>> solve_batch(const hessenberg_resolvent &R,
                                                   const array<cplx> &shifts,
                                                   const array<vec<real>> &rhs_list);

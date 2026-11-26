@@ -6,7 +6,7 @@
 
 namespace num {
 
-/// @brief Source location of the call site.
+/// @brief Location in the source of a function call.
 /// Pass as a defaulted `{}` argument; GCC <= 14 misrecords it in function templates.
 struct call_site {
     std::source_location location;

@@ -1,5 +1,5 @@
-/// @file 02_iterative_krylov_solvers.cpp
-/// @brief CG, preconditioned CG, MINRES and GMRES on sparse and matrix-free operators.
+/// @file 02_iterative_methods.cpp
+/// @brief Solve a large sparse system of linear equations by an iterative method.
 ///
 /// Each solver states its requirement as a concept. CG and PCG need an SPD operator, MINRES needs a
 /// self-adjoint one, and GMRES accepts any linear operator. A law is attached to an operator with

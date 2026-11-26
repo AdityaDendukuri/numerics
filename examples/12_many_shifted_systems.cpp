@@ -1,6 +1,5 @@
-/// @file examples/12_hessenberg_resolvent_benchmark.cpp
-/// @brief Benchmark comparing naive O(k*n^3) full LU batch resolvent against O(n^3 + k*n^2)
-/// Hessenberg resolvent.
+/// @file 12_many_shifted_systems.cpp
+/// @brief Time two ways of solving (sI - A)x = b for many values of s.
 #include <chrono>
 #include <cmath>
 #include <complex>

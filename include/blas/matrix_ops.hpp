@@ -30,7 +30,7 @@ inline void matmul(const mat<real> &A, const mat<real> &B, mat<real> &C) {
 #endif
 }
 
-/// @brief Matrix-matrix product (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
+/// @brief Multiply two matrices (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
 /// Row-major with leading dimensions; \f$op\f$ transposes when its flag is set.
 inline void gemm(real alpha, const real *A, idx lda, bool transA, const real *B, idx ldb,
                  bool transB, real beta, real *C, idx ldc, idx m, idx n, idx k) {
@@ -48,7 +48,7 @@ inline void gemm(real alpha, const real *A, idx lda, bool transA, const real *B,
 #endif
 }
 
-/// @brief Matrix-matrix product (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
+/// @brief Multiply two matrices (GEMM): \f$C \leftarrow \alpha\, op(A)\, op(B) + \beta C\f$.
 /// `C` must already be sized.
 inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B, bool transB,
                  real beta, mat<real> &C) {
@@ -62,7 +62,7 @@ inline void gemm(real alpha, const mat<real> &A, bool transA, const mat<real> &B
          n, k);
 }
 
-/// @brief Triangular solve, left side (TRSM): \f$X \leftarrow op(T)^{-1} X\f$.
+/// @brief Solve a triangular system from the left (TRSM): \f$X \leftarrow op(T)^{-1} X\f$.
 inline void trsm_left(const real *T, idx ldt, real *X, idx ldx, idx n, idx nrhs, bool upper,
                       bool transpose, bool unit_diagonal) {
 #if defined(NUMERICS_HAS_BLAS)
@@ -90,7 +90,7 @@ inline void trsm_left(const real *T, idx ldt, real *X, idx ldx, idx n, idx nrhs,
 #endif
 }
 
-/// @brief Triangular solve, right side (TRSM): \f$X \leftarrow X L^{-T}\f$.
+/// @brief Solve a triangular system from the right (TRSM): \f$X \leftarrow X L^{-T}\f$.
 inline void trsm_right_lower_transpose(const real *L, idx ldl, real *X, idx ldx, idx rows,
                                        idx n) {
 #if defined(NUMERICS_HAS_BLAS)
@@ -103,7 +103,8 @@ inline void trsm_right_lower_transpose(const real *L, idx ldl, real *X, idx ldx,
 #endif
 }
 
-/// @brief Symmetric rank-k update (SYRK), lower: \f$C \leftarrow \alpha A A^T + \beta C\f$.
+/// @brief Update the lower triangle by a symmetric rank-k product (SYRK):
+/// \f$C \leftarrow \alpha A A^T + \beta C\f$.
 inline void syrk_lower(real alpha, const real *A, idx lda, real beta, real *C, idx ldc, idx rows,
                        idx columns) {
 #if defined(NUMERICS_HAS_BLAS)
@@ -137,7 +138,7 @@ inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B
 #endif
 }
 
-/// @brief Rank-1 update (GER): \f$A \leftarrow A + \alpha x y^T\f$.
+/// @brief Add a rank-1 product to a matrix (GER): \f$A \leftarrow A + \alpha x y^T\f$.
 inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) {
     if (A.rows() != x.size() || A.cols() != y.size()) {
         throw std::invalid_argument("ger: dimensions do not agree");
@@ -164,7 +165,7 @@ inline idx trsv_prepare(const mat<real> &T, const vec<real> &b, vec<real> &x) {
 }
 } // namespace detail
 
-/// @brief Lower triangular solve (TRSV): \f$x \leftarrow L^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve a lower triangular system (TRSV): \f$x \leftarrow L^{-1} b\f$. `x` may alias `b`.
 inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
     const idx n = detail::trsv_prepare(L, b, x);
 #if defined(NUMERICS_HAS_BLAS)
@@ -176,7 +177,7 @@ inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
 #endif
 }
 
-/// @brief Upper triangular solve (TRSV): \f$x \leftarrow U^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve an upper triangular system (TRSV): \f$x \leftarrow U^{-1} b\f$. `x` may alias `b`.
 inline void trsv_upper(const mat<real> &U, const vec<real> &b, vec<real> &x) {
     const idx n = detail::trsv_prepare(U, b, x);
 #if defined(NUMERICS_HAS_BLAS)

@@ -10,7 +10,7 @@
 
 namespace num {
 
-/// @brief Graph-distance levels: \f$\ell_i = d(i, \mathrm{seeds})\f$.
+/// @brief Label each row by its graph distance from the seeds: \f$\ell_i = d(i, \mathrm{seeds})\f$.
 /// Grouping by level makes \f$A\f$ block tridiagonal.
 /// Empty `seeds` starts each component at its lowest row.
 /// @throws std::invalid_argument If `A` is not square or a seed is out of range.
@@ -70,7 +70,7 @@ namespace num {
     return level;
 }
 
-/// @brief Graph-distance levels from one seed: \f$\ell_i = d(i, s)\f$.
+/// @brief Label each row by its graph distance from one seed: \f$\ell_i = d(i, s)\f$.
 [[nodiscard]] inline array<idx> graph_distance_levels(const spmat &A, idx seed) {
     const array<idx> seeds{seed};
     return graph_distance_levels(A, seeds);

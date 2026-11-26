@@ -14,7 +14,7 @@
 
 namespace num::scalars {
 
-/// @brief Complex conjugate: \f$\bar{x}\f$; identity on reals.
+/// @brief Return the complex conjugate: \f$\bar{x}\f$; the identity on reals.
 template <class T>
 [[nodiscard]] constexpr T conj(const T &x) noexcept {
     if constexpr (is_complex_v<T>) {
@@ -24,7 +24,7 @@ template <class T>
     }
 }
 
-/// @brief Real part: \f$\mathrm{Re}(x)\f$; identity on reals.
+/// @brief Return the real part: \f$\mathrm{Re}(x)\f$; the identity on reals.
 template <class T>
 [[nodiscard]] constexpr real_t<T> re(const T &x) noexcept {
     if constexpr (is_complex_v<T>) {
@@ -34,7 +34,7 @@ template <class T>
     }
 }
 
-/// @brief Modulus: \f$|x|\f$.
+/// @brief Return the modulus: \f$|x|\f$.
 template <class T>
 [[nodiscard]] inline real_t<T> mag(const T &x) noexcept {
     if constexpr (is_complex_v<T>) {
@@ -50,7 +50,7 @@ template <class T>
     return std::numeric_limits<real_t<T>>::epsilon();
 }
 
-/// @brief Default tolerance for sampled tests: \f$\sqrt{\epsilon}\f$.
+/// @brief Default tolerance of sampled tests: \f$\sqrt{\epsilon}\f$.
 template <class T>
 [[nodiscard]] inline real_t<T> sampling_tol() noexcept {
     return std::sqrt(eps<T>());

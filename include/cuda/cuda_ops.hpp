@@ -7,37 +7,37 @@
 
 namespace num::cuda {
 
-/// @brief Device allocation of `n` elements.
+/// @brief Allocate `n` elements on the GPU.
 real *alloc(idx n);
 
-/// @brief Device deallocation.
+/// @brief Free memory on the GPU.
 void free(real *ptr);
 
-/// @brief Host-to-device copy.
+/// @brief Copy from the host to the GPU.
 void to_device(real *dst, const real *src, idx n);
 
-/// @brief Device-to-host copy.
+/// @brief Copy from the GPU to the host.
 void to_host(real *dst, const real *src, idx n);
 
-/// @brief Vector scaling: \f$v \leftarrow \alpha v\f$.
+/// @brief Scale a vector: \f$v \leftarrow \alpha v\f$.
 void scale(real *v, idx n, real alpha);
 
-/// @brief Vector addition: \f$z \leftarrow x + y\f$.
+/// @brief Add two vectors: \f$z \leftarrow x + y\f$.
 void add(const real *x, const real *y, real *z, idx n);
 
-/// @brief Scaled vector addition (AXPY): \f$y \leftarrow \alpha x + y\f$.
+/// @brief Add a multiple of one vector to another (AXPY): \f$y \leftarrow \alpha x + y\f$.
 void axpy(real alpha, const real *x, real *y, idx n);
 
-/// @brief Dot product: \f$x^T y\f$.
+/// @brief Compute the dot product: \f$x^T y\f$.
 real dot(const real *x, const real *y, idx n);
 
-/// @brief Matrix-vector product: \f$y \leftarrow A x\f$, A row-major.
+/// @brief Multiply a row-major matrix and a vector: \f$y \leftarrow A x\f$.
 void matvec(const real *A, const real *x, real *y, idx rows, idx cols);
 
-/// @brief Matrix-matrix product: \f$C \leftarrow A B\f$.
+/// @brief Multiply two matrices: \f$C \leftarrow A B\f$.
 void matmul(const real *A, const real *B, real *C, idx m, idx k, idx n);
 
-/// @brief Batched Thomas algorithm: solve `batch_size` tridiagonal systems \f$T_b x_b = d_b\f$.
+/// @brief Solve `batch_size` tridiagonal systems by the Thomas algorithm: \f$T_b x_b = d_b\f$.
 /// Diagonals and right-hand sides are packed consecutively per system.
 void thomas_batched(const real *a, const real *b, const real *c, const real *d, real *x, idx n,
                     idx batch_size);
@@ -46,7 +46,7 @@ void thomas_batched(const real *a, const real *b, const real *c, const real *d, 
 
 // Without a device build these are no-ops, so host code compiles and links
 // unchanged. The GPU backend tags fall back to seq in the same situation.
-/// @brief Error raised by device routines in a build without CUDA.
+/// @brief Raise an error from a GPU routine in a build without CUDA.
 [[noreturn]] static void no_cuda() {
     throw std::runtime_error("CUDA not available");
 }

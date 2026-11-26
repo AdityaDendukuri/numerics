@@ -19,7 +19,8 @@
 
 namespace num {
 
-/// @brief Banded LU factorization, partial pivoting (GBTF2): \f$P A = L U\f$ in band storage.
+/// @brief Factor a band matrix by LU with partial pivoting (GBTF2), in band storage:
+/// \f$P A = L U\f$.
 /// Needs `ldab >= 2 kl + ku + 1`. Returns false on a zero pivot column.
 template <std::floating_point T, class Index>
 [[nodiscard]] inline bool banded_factor(T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
@@ -76,7 +77,7 @@ template <std::floating_point T, class Index>
     return true;
 }
 
-/// @brief Banded LU solve (GBTRS), in place: \f$x \leftarrow A^{-1} b\f$.
+/// @brief Solve with a banded LU factor (GBTRS), in place: \f$x \leftarrow A^{-1} b\f$.
 template <std::floating_point T, class Index>
 inline void banded_solve(T *x, const T *NUM_K_RESTRICT ab, idx ldab, idx n, idx kl, idx ku,
                          const Index *NUM_K_RESTRICT ipiv) noexcept {
@@ -113,10 +114,10 @@ namespace num {
 /// @brief Banded matrix in LAPACK band storage: \f$a_{ij}\f$ at band row \f$k_l + k_u + i - j\f$.
 class band_mat {
   public:
-    /// @brief Zero \f$n \times n\f$ band matrix with bandwidths \f$k_l, k_u\f$.
+    /// @brief Construct an \f$n \times n\f$ band matrix of zeros with bandwidths \f$k_l, k_u\f$.
     band_mat(idx n, idx kl, idx ku);
 
-    /// @brief Constant \f$n \times n\f$ band matrix with bandwidths \f$k_l, k_u\f$.
+    /// @brief Construct an \f$n \times n\f$ band matrix with every band entry equal to `val`.
     band_mat(idx n, idx kl, idx ku, real val);
 
     ~band_mat();
@@ -126,35 +127,35 @@ class band_mat {
     band_mat &operator=(const band_mat &);
     band_mat &operator=(band_mat &&) noexcept;
 
-    /// @brief Order \f$n\f$.
+    /// @brief Return the order \f$n\f$.
     [[nodiscard]] idx size() const { return n_; }
     [[nodiscard]] idx rows() const { return n_; }
     [[nodiscard]] idx cols() const { return n_; }
 
-    /// @brief Lower bandwidth \f$k_l\f$.
+    /// @brief Return the lower bandwidth \f$k_l\f$.
     [[nodiscard]] idx kl() const { return kl_; }
 
-    /// @brief Upper bandwidth \f$k_u\f$.
+    /// @brief Return the upper bandwidth \f$k_u\f$.
     [[nodiscard]] idx ku() const { return ku_; }
 
-    /// @brief Number of diagonals: \f$k_l + k_u + 1\f$.
+    /// @brief Return the number of diagonals: \f$k_l + k_u + 1\f$.
     [[nodiscard]] idx bandwidth() const { return kl_ + ku_ + 1; }
 
-    /// @brief Leading dimension of the band storage.
+    /// @brief Return the leading dimension of the band storage.
     [[nodiscard]] idx ldab() const { return ldab_; }
 
-    /// @brief Entry \f$a_{ij}\f$ inside the band.
+    /// @brief Access the entry \f$a_{ij}\f$ inside the band.
     real &operator()(idx i, idx j);
     real operator()(idx i, idx j) const;
 
-    /// @brief Entry by band-storage coordinates.
+    /// @brief Access an entry by its row and column in the band storage.
     real &band(idx band_row, idx col);
     [[nodiscard]] real band(idx band_row, idx col) const;
 
     real *data() { return data_.get(); }
     [[nodiscard]] const real *data() const { return data_.get(); }
 
-    /// @brief Whether \f$a_{ij}\f$ is inside the band.
+    /// @brief Test whether \f$a_{ij}\f$ lies inside the band.
     [[nodiscard]] bool in_band(idx i, idx j) const;
 
     void to_gpu();
@@ -172,7 +173,7 @@ class band_mat {
     real *d_data_ = nullptr;
 };
 
-/// @brief Banded LU result: \f$P A = L U\f$ in band storage.
+/// @brief Result of a banded LU factorization: \f$P A = L U\f$ in band storage.
 struct banded_lu_result {
     band_mat LU;
     array<idx> swaps;
@@ -181,23 +182,23 @@ struct banded_lu_result {
     [[nodiscard]] idx size() const { return LU.size(); }
 };
 
-/// @brief Banded LU factorization, partial pivoting: \f$P A = L U\f$.
+/// @brief Factor a band matrix by LU with partial pivoting: \f$P A = L U\f$.
 /// Pass an rvalue to factor in place.
 banded_lu_result lu(band_mat A);
 
-/// @brief Banded LU solve: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve with a banded LU factor: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 void solve(const banded_lu_result &f, const vec<real> &b, vec<real> &x);
 
-/// @brief Banded LU solve: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
+/// @brief Solve with a banded LU factor: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 void solve(const banded_lu_result &f, const mat<real> &B, mat<real> &X);
 
-/// @brief Banded matrix-vector product: \f$y \leftarrow A x\f$.
+/// @brief Multiply a band matrix and a vector: \f$y \leftarrow A x\f$.
 void banded_matvec(const band_mat &A, const vec<real> &x, vec<real> &y);
 
-/// @brief Banded matrix-vector product (GBMV): \f$y \leftarrow \alpha A x + \beta y\f$.
+/// @brief Multiply a band matrix and a vector (GBMV): \f$y \leftarrow \alpha A x + \beta y\f$.
 void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y);
 
-/// @brief Banded 1-norm: \f$\|A\|_1\f$.
+/// @brief Compute the 1-norm of a band matrix: \f$\|A\|_1\f$.
 real banded_norm1(const band_mat &A);
 
 inline band_mat::band_mat(idx n, idx kl, idx ku)
@@ -305,7 +306,7 @@ inline void band_mat::to_cpu() {
 
 namespace seq {
 
-/// @brief Banded LU factorization, partial pivoting, in-tree: \f$P A = L U\f$.
+/// @brief Factor a band matrix by LU with partial pivoting, in-tree: \f$P A = L U\f$.
 inline banded_lu_result lu(band_mat A) {
     const idx n = A.size();
     banded_lu_result f{std::move(A), array<idx>(n), false};
@@ -314,7 +315,8 @@ inline banded_lu_result lu(band_mat A) {
     return f;
 }
 
-/// @brief Banded matrix-vector product (GBMV), in-tree: \f$y \leftarrow \alpha A x + \beta y\f$.
+/// @brief Multiply a band matrix and a vector (GBMV), in-tree:
+/// \f$y \leftarrow \alpha A x + \beta y\f$.
 inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y) {
     if (x.size() != A.size() || y.size() != A.size()) {
         throw std::invalid_argument("banded_gemv: dimension mismatch");
@@ -326,7 +328,8 @@ inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real 
 
 namespace blas {
 
-/// @brief Banded matrix-vector product through BLAS `dgbmv`: \f$y \leftarrow \alpha A x + \beta y\f$.
+/// @brief Multiply a band matrix and a vector through BLAS `dgbmv`:
+/// \f$y \leftarrow \alpha A x + \beta y\f$.
 inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y) {
     if (x.size() != A.size() || y.size() != A.size()) {
         throw std::invalid_argument("banded_gemv: dimension mismatch");
@@ -347,7 +350,7 @@ inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real 
 
 namespace lapack {
 
-/// @brief Banded LU factorization through LAPACK `dgbtrf`: \f$P A = L U\f$.
+/// @brief Factor a band matrix by LU through LAPACK `dgbtrf`: \f$P A = L U\f$.
 inline banded_lu_result lu(band_mat A) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = A.size();
@@ -372,7 +375,7 @@ inline banded_lu_result lu(band_mat A) {
 
 } // namespace lapack
 
-/// @brief Banded LU factorization, partial pivoting: \f$P A = L U\f$.
+/// @brief Factor a band matrix by LU with partial pivoting: \f$P A = L U\f$.
 /// Uses LAPACK when an optimized LAPACK is available.
 inline banded_lu_result lu(band_mat A) {
 #if defined(NUMERICS_LAPACK_DEFAULT)
@@ -480,7 +483,8 @@ inline array<lapack_int> banded_pivots(const banded_lu_result &f) {
 } // namespace detail
 #endif
 
-/// @brief Banded LU solve through LAPACK `dgbtrs`: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve with a banded LU factor through LAPACK `dgbtrs`:
+/// \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
 inline void solve(const banded_lu_result &f, const vec<real> &b, vec<real> &x) {
 #if defined(NUMERICS_HAS_LAPACK)
     if (b.size() != f.size()) {
@@ -499,7 +503,8 @@ inline void solve(const banded_lu_result &f, const vec<real> &b, vec<real> &x) {
 #endif
 }
 
-/// @brief Banded LU solve through LAPACK `dgbtrs`: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
+/// @brief Solve with a banded LU factor through LAPACK `dgbtrs`:
+/// \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
 inline void solve(const banded_lu_result &f, const mat<real> &B, mat<real> &X) {
 #if defined(NUMERICS_HAS_LAPACK)
     const idx n = f.size(), nrhs = B.cols();

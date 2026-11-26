@@ -1,5 +1,5 @@
-/// @file 05_symplectic_nbody_ode.cpp
-/// @brief Explicit, adaptive and symplectic integrators on the harmonic oscillator.
+/// @file 05_differential_equations.cpp
+/// @brief Integrate an ordinary differential equation, and compare how well methods conserve energy.
 ///
 /// `ode_rk4` and `ode_rk45` integrate y' = f(t, y). `ode_verlet` and `ode_yoshida4` integrate q'' =
 /// a(q), and because they are symplectic their energy error stays bounded over long times instead

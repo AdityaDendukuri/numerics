@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief Weighted sum: \f$\sum_i w_i\, g(i)\f$.
+/// @brief Compute a weighted sum: \f$\sum_i w_i\, g(i)\f$.
 template <typename Projection>
 [[nodiscard]] real weighted_sum(view<const real> weights, Projection &&value) {
     real result = 0.0;
@@ -18,7 +18,8 @@ template <typename Projection>
     return result;
 }
 
-/// @brief Clip and normalize: \f$p_i \leftarrow \max(p_i, 0) / \sum_j \max(p_j, 0)\f$.
+/// @brief Set negative entries to zero and scale to sum 1:
+/// \f$p_i \leftarrow \max(p_i, 0) / \sum_j \max(p_j, 0)\f$.
 /// Returns the mass before normalizing.
 inline real clip_and_normalize_nonnegative(view<real> values) {
     real mass = 0.0;

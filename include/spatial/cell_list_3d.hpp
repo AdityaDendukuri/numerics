@@ -14,10 +14,10 @@
 namespace num {
 
 template <field scalar>
-/// @brief 3D cell list: particles binned by counting sort.
+/// @brief Particles sorted into cubic cells of a 3D grid.
 class cell_list_3d {
   public:
-    /// @brief Cell list over the bounding box with cubic cells of side `cell_size`.
+    /// @brief Construct cells of side `cell_size` over the bounding box.
     cell_list_3d(scalar cell_size, scalar xmin, scalar xmax, scalar ymin, scalar ymax, scalar zmin,
                scalar zmax)
         : cs_(cell_size), xmin_(xmin), ymin_(ymin), zmin_(zmin),
@@ -30,7 +30,7 @@ class cell_list_3d {
         count_.assign(total, 0);
     }
 
-    /// @brief Rebuild the bins by counting sort.
+    /// @brief Sort the particles into cells again, by counting sort.
     template <position_accessor_2d<scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n) {
         sorted_.resize(n);
@@ -54,7 +54,7 @@ class cell_list_3d {
         }
     }
 
-    /// @brief Neighbour query: `f(j)` for each candidate near \f$(p_x, p_y, p_z)\f$.
+    /// @brief Call `f(j)` for each particle that may be near \f$(p_x, p_y, p_z)\f$.
     template <typename F>
     void query(scalar px, scalar py, scalar pz, F &&f) const {
         const int cx = cell_x(px);
@@ -84,7 +84,7 @@ class cell_list_3d {
         }
     }
 
-    /// @brief Pair visit: `f(i, j)` once per candidate pair.
+    /// @brief Call `f(i, j)` once for each pair of particles that may be near each other.
     template <typename F>
     void iterate_pairs(F &&f) const {
         // Half-shell offsets cover all neighboring cell pairs once.
@@ -135,7 +135,7 @@ class cell_list_3d {
         }
     }
 
-    /// @brief Grid dimensions and particle count.
+    /// @brief Return the grid dimensions and the number of particles.
     [[nodiscard]] int nx() const noexcept { return nx_; }
     [[nodiscard]] int ny() const noexcept { return ny_; }
     [[nodiscard]] int nz() const noexcept { return nz_; }

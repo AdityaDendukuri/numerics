@@ -14,7 +14,7 @@
 
 namespace num::structures {
 
-/// @brief Neighbours of `v`, parallel edges merged; returns their total weight.
+/// @brief Collect the neighbours of `v`, merging parallel edges; return their total weight.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>>
 inline Weight collect_neighbors(Index v, array<array<multi_edge<Weight, Index>>> &G,
@@ -59,7 +59,7 @@ inline Weight collect_neighbors(Index v, array<array<multi_edge<Weight, Index>>>
     return total_weight;
 }
 
-/// @brief Exact clique elimination: add \f$w_{ij} = c_i c_j / C\f$ among the neighbours of `v`.
+/// @brief Eliminate `v` exactly, joining its neighbours by edges \f$w_{ij} = c_i c_j / C\f$.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>>
 inline void add_exact_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
@@ -78,7 +78,7 @@ inline void add_exact_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &
     }
 }
 
-/// @brief Sampled clique elimination: at most `sample_limit` draws per neighbour.
+/// @brief Eliminate `v` approximately, with at most `sample_limit` samples per neighbour.
 template <typename Weight = double, std::integral Index = num::idx,
           typename Queue = structures::basic_degree_queue<Index>, typename Rng = rng64>
 inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
@@ -125,7 +125,8 @@ inline void sample_clique(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
 }
 
 
-/// @brief Spanning-tree clique sampling: \f$\mathbb{E}[\tilde{L}^{(v)}] = \mathrm{Sc}(L)\f$.
+/// @brief Eliminate `v` approximately by sampling a spanning tree of its neighbours:
+/// \f$\mathbb{E}[\tilde{L}^{(v)}] = \mathrm{Sc}(L)\f$.
 /// Edge \f$ij\f$ is kept with \f$p_{ij} = (c_i + c_j) / C\f$, weighted \f$c_i c_j / (c_i + c_j)\f$.
 template <typename Weight, std::integral Index, typename Queue, typename Rng>
 inline void sample_clique_tree(array<array<multi_edge<Weight, Index>>> &G, Queue &q,
@@ -218,7 +219,8 @@ inline void sample_clique_tree(array<array<multi_edge<Weight, Index>>> &G, Queue
 }
 
 
-/// @brief Biclique tree sampling for an LU pivot: \f$\mathbb{E}[\tilde{S}_v] = x y^T / a\f$.
+/// @brief Eliminate an LU pivot approximately by sampling a tree over its row and column:
+/// \f$\mathbb{E}[\tilde{S}_v] = x y^T / a\f$.
 /// Requires \f$x_i, y_j, a > 0\f$; `emit(i, j, w)` receives each directed fill edge.
 template <typename Weight, typename Rng, typename Emit>
 inline void sample_biclique_tree(const array<Weight> &x, const array<Weight> &y,

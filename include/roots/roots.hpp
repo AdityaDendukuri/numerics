@@ -12,7 +12,7 @@
 
 namespace num {
 
-/// @brief Root-finding result: root, iterations, residual, convergence.
+/// @brief Result of finding a root: root, iterations, residual, convergence.
 template <typename Float>
 struct root_result {
     Float root{};
@@ -30,7 +30,8 @@ struct root_result {
 };
 
 
-/// @brief Bisection: \f$|x_k - x^*| \le (b - a) / 2^k\f$, given \f$f(a) f(b) \le 0\f$.
+/// @brief Find a root by bisection, given \f$f(a) f(b) \le 0\f$:
+/// \f$|x_k - x^*| \le (b - a) / 2^k\f$.
 /// @throws std::invalid_argument If \f$f(a)\f$ and \f$f(b)\f$ share a sign.
 template <typename Float = double, bracketable_function<Float> Func = scalar_fn>
 inline root_result<Float> bisection(Func &&f, Float a, Float b, Float tol = Float{1e-10},
@@ -58,7 +59,7 @@ inline root_result<Float> bisection(Func &&f, Float a, Float b, Float tol = Floa
     return {mid, max_iter, std::abs(f(mid)), false};
 }
 
-/// @brief Newton–Raphson iteration: \f$x_{k+1} = x_k - f(x_k) / f'(x_k)\f$.
+/// @brief Find a root by Newton's method: \f$x_{k+1} = x_k - f(x_k) / f'(x_k)\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn,
           std::invocable<Float> DFunc = scalar_fn>
 inline root_result<Float> newton(Func &&f, DFunc &&df, Float x0,
@@ -78,7 +79,8 @@ inline root_result<Float> newton(Func &&f, DFunc &&df, Float x0,
     return {x, max_iter, std::abs(f(x)), false};
 }
 
-/// @brief Secant iteration: \f$x_{k+1} = x_k - f(x_k) \frac{x_k - x_{k-1}}{f(x_k) - f(x_{k-1})}\f$.
+/// @brief Find a root by the secant method:
+/// \f$x_{k+1} = x_k - f(x_k) \frac{x_k - x_{k-1}}{f(x_k) - f(x_{k-1})}\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline root_result<Float> secant(Func &&f, Float x0, Float x1,
                                      Float tol = Float{1e-10}, idx max_iter = 1000) {
@@ -100,7 +102,8 @@ inline root_result<Float> secant(Func &&f, Float x0, Float x1,
     return {x1, max_iter, std::abs(f1), false};
 }
 
-/// @brief Brent's method: bisection, secant and inverse quadratic interpolation on \f$[a, b]\f$.
+/// @brief Find a root in \f$[a, b]\f$ by Brent's method: bisection, secant and inverse quadratic
+/// interpolation.
 /// @throws std::invalid_argument If \f$f(a) f(b) > 0\f$.
 template <typename Float = double, bracketable_function<Float> Func = scalar_fn>
 inline root_result<Float> brent(Func &&f, Float a, Float b, Float tol = Float{1e-10},

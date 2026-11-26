@@ -8,10 +8,11 @@
 namespace num {
 namespace pde {
 
-/// @brief Poisson solve, finite-difference eigenvalues: \f$-\Delta_h u = f\f$.
+/// @brief Solve the discrete Poisson equation by sine transforms: \f$-\Delta_h u = f\f$.
 [[nodiscard]] mat<real> poisson2d_fd(const mat<real> &f, int N);
 
-/// @brief Poisson solve, continuous eigenvalues \f$(k\pi)^2\f$: \f$-\Delta u = f\f$.
+/// @brief Solve the Poisson equation by sine transforms with the exact eigenvalues \f$(k\pi)^2\f$:
+/// \f$-\Delta u = f\f$.
 [[nodiscard]] mat<real> poisson2d(const mat<real> &f, int N);
 
 } // namespace pde

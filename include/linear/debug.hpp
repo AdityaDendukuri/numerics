@@ -17,7 +17,7 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief CSR structure check: monotone row offsets, column indices in range.
+/// @brief Check a CSR matrix: row offsets increase and column indices are in range.
 template <class SparseType>
 inline void verify_sparse_structure(const SparseType &A,
                                     std::source_location loc = std::source_location::current()) {

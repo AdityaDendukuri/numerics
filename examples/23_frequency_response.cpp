@@ -1,5 +1,5 @@
-/// @file 23_hessenberg_frequency_response.cpp
-/// @brief Plot resonances with one Hessenberg reduction and many complex shifts.
+/// @file 23_frequency_response.cpp
+/// @brief Compute the response of a damped system of oscillators at many frequencies.
 ///
 /// A chain of three coupled oscillators responds to a periodic input. The real
 /// part of the shift controls damping; the imaginary part is the input frequency.

@@ -19,16 +19,16 @@
 
 namespace num::pde {
 
-/// @brief Matrix-free 2D Laplacian.
+/// @brief 2D Laplacian applied without storing a matrix.
 using matrix_free_laplacian_2d = operators::laplacian_2d;
 using matrix_free_backward_euler_2d = operators::backward_euler_2d;
 
-/// @brief 5-point Laplacian as a sparse matrix: \f$\Delta_h\f$.
+/// @brief Construct the 5-point Laplacian as a sparse matrix: \f$\Delta_h\f$.
 inline spmat laplacian_sparse_2d(int N) {
     return operators::laplacian_2d(N).to_sparse();
 }
 
-/// @brief Backward Euler matrix as a sparse matrix: \f$I - c\,\Delta_h\f$.
+/// @brief Construct the backward Euler matrix as a sparse matrix: \f$I - c\,\Delta_h\f$.
 inline spmat backward_euler_matrix(int N, double coeff) {
     return operators::backward_euler_2d(N, coeff).to_sparse();
 }
@@ -37,7 +37,7 @@ inline spmat backward_euler_matrix(const grid2d &grid, double coeff) {
     return backward_euler_matrix(grid.N, coeff);
 }
 
-/// @brief Backward Euler operator, preassembled: \f$I - c\,\Delta_h\f$.
+/// @brief Backward Euler matrix, assembled once: \f$I - c\,\Delta_h\f$.
 class backward_euler_operator_2d final {
   public:
     using domain_type = vec<real>;
@@ -63,21 +63,23 @@ class backward_euler_operator_2d final {
     spmat A_;
 };
 
-/// @brief Explicit diffusion step, periodic: \f$u \leftarrow u + c\,\Delta_h u\f$.
+/// @brief Take an explicit diffusion step, periodic boundary: \f$u \leftarrow u + c\,\Delta_h u\f$.
 inline void diffusion_step_2d(vec<real> &u, int N, double coeff) {
     vec<real> lap(u.size());
     laplacian_stencil_2d_periodic(u, lap, N);
     axpy(coeff, lap, u);
 }
 
-/// @brief Explicit diffusion step, zero Dirichlet: \f$u \leftarrow u + c\,\Delta_h u\f$.
+/// @brief Take an explicit diffusion step, zero boundary values:
+/// \f$u \leftarrow u + c\,\Delta_h u\f$.
 inline void diffusion_step_2d_dirichlet(vec<real> &u, int N, double coeff) {
     vec<real> lap(u.size());
     laplacian_stencil_2d(u, lap, N);
     axpy(coeff, lap, u);
 }
 
-/// @brief Explicit diffusion step, fourth order: \f$u \leftarrow u + c\,\Delta_h u\f$.
+/// @brief Take an explicit diffusion step with the fourth-order Laplacian:
+/// \f$u \leftarrow u + c\,\Delta_h u\f$.
 /// Zero Dirichlet boundaries.
 inline void diffusion_step_2d_4th_dirichlet(vec<real> &u, int N, double coeff) {
     vec<real> lap(u.size());
@@ -93,7 +95,7 @@ inline void diffusion_step_2d_4th_dirichlet(scalar_field_2d &g, double coeff) {
     diffusion_step_2d_4th_dirichlet(g.as_vec(), g.N(), coeff);
 }
 
-/// @brief Backward Euler operator on an \f$N \times N\f$ grid: \f$I - c\,\Delta_h\f$.
+/// @brief Construct the backward Euler operator on an \f$N \times N\f$ grid: \f$I - c\,\Delta_h\f$.
 inline backward_euler_operator_2d backward_euler_operator(int N, double coeff) {
     return backward_euler_operator_2d(N, coeff);
 }
@@ -102,7 +104,7 @@ inline backward_euler_operator_2d backward_euler_operator(const grid2d &grid, do
     return backward_euler_operator(grid.N, coeff);
 }
 
-/// @brief CG linear solver for `A`, held by reference.
+/// @brief Return a function that solves with `A` by conjugate gradients; it holds `A` by reference.
 inline linear_solver make_cg_solver(const spmat &A, real tol = 1e-6) {
     return [&A, tol](const vec<real> &rhs, vec<real> &x) {
         operators::sparse_op op(A);

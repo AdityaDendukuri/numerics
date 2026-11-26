@@ -12,7 +12,7 @@
 
 namespace num {
 
-/// @brief Grid operator with both an action and a sparse matrix.
+/// @brief Grid operator that can both be applied and be written as a sparse matrix.
 template <class Op>
 concept assemblable_grid_operator = linear_operator<Op> && requires(const Op &A) {
     { A.to_sparse() };

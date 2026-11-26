@@ -16,7 +16,7 @@
 
 namespace num::structures {
 
-/// @brief Connectivity test: whether the graph has one component.
+/// @brief Test whether a graph is connected.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline bool is_connected(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
@@ -31,7 +31,7 @@ template <typename Weight, std::integral Index>
     return ds.count() == 1;
 }
 
-/// @brief Connected components: a component label per vertex.
+/// @brief Label each vertex by its connected component.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline array<array<Index>> connected_components(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();
@@ -44,7 +44,8 @@ template <typename Weight, std::integral Index>
     return ds.components();
 }
 
-/// @brief Dijkstra shortest paths: \f$d(s, v) = \min_{\text{paths } s \to v} \sum w_e\f$.
+/// @brief Compute shortest path lengths by Dijkstra's algorithm:
+/// \f$d(s, v) = \min_{\text{paths } s \to v} \sum w_e\f$.
 template <typename Weight, std::integral Index, std::integral Source = Index>
 [[nodiscard]] inline array<Weight> dijkstra(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
@@ -75,7 +76,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
     return dist;
 }
 
-/// @brief Breadth-first search order from `source`.
+/// @brief Return the vertices in breadth-first order from `source`.
 template <typename Weight, std::integral Index, std::integral Source = Index>
 [[nodiscard]] inline array<Index> bfs(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
@@ -105,7 +106,7 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
     return order;
 }
 
-/// @brief Depth-first search order from `source`.
+/// @brief Return the vertices in depth-first order from `source`.
 template <typename Weight, std::integral Index, std::integral Source = Index>
 [[nodiscard]] inline array<Index> dfs(const graph<Weight, Index> &G, Source source_in) {
     const Index n = G.n_vertices();
@@ -135,7 +136,8 @@ template <typename Weight, std::integral Index, std::integral Source = Index>
     return order;
 }
 
-/// @brief Kruskal minimum spanning tree: \f$\arg\min_T \sum_{e \in T} w_e\f$.
+/// @brief Compute a minimum spanning tree by Kruskal's algorithm:
+/// \f$\arg\min_T \sum_{e \in T} w_e\f$.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline graph<Weight, Index> minimum_spanning_tree(const graph<Weight, Index> &G) {
     const Index n = G.n_vertices();

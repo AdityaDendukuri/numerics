@@ -1,5 +1,5 @@
-/// @file 18_mixed_precision_and_conditioning.cpp
-/// @brief Condition estimates from any factorization, and LU in float refined to double.
+/// @file 18_condition_numbers.cpp
+/// @brief Estimate the condition number of a matrix, and solve in single precision to double accuracy.
 ///
 /// `rcond(F, A)` estimates \f$1/(\|A\|_1\|A^{-1}\|_1)\f$ with a handful of solves against an
 /// existing factorization. `lu(A, mixed_precision)` factors in `float`, which is about twice as

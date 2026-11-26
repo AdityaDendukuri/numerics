@@ -35,7 +35,7 @@ num::verlet_list_2d
 ## Periodic lattices <spatial/pbc_lattice.hpp>
 num::pbc_lattice_2d
 
-## SPH kernels <spatial/sph_kernel.hpp>
+## Smoothing kernels <spatial/sph_kernel.hpp>
 num::sph_kernel
 
 ## Spatial checks <spatial/debug.hpp>

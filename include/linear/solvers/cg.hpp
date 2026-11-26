@@ -25,7 +25,7 @@
 
 namespace num {
 
-/// @brief Krylov result: iterations, residual norm, convergence.
+/// @brief Result of an iterative method: iterations, residual norm, convergence.
 template <std::floating_point T>
 struct krylov_result {
     idx iterations = 0;
@@ -33,7 +33,8 @@ struct krylov_result {
     bool converged = false;
 };
 
-/// @brief Conjugate gradients (CG), raw pointers: \f$A x = b\f$, \f$A\f$ SPD.
+/// @brief Solve a symmetric positive definite system by conjugate gradients, on raw pointers:
+/// \f$A x = b\f$.
 /// `A(x, y)` writes \f$y = A x\f$; `work` holds \f$3n\f$. Stops if \f$p^T A p \le 0\f$.
 template <std::floating_point T, class MatVec>
 [[nodiscard]] inline krylov_result<T> cg(MatVec &&A, T *NUM_K_RESTRICT x, const T *b, idx n,
@@ -91,13 +92,13 @@ template <std::floating_point T, class MatVec>
 
 namespace num {
 
-/// @brief CG options: residual tolerance and iteration limit.
+/// @brief Options for conjugate gradients: residual tolerance and iteration limit.
 struct cg_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;
 };
 
-/// @brief Conjugate gradients (CG): \f$A x = b\f$, \f$A\f$ SPD.
+/// @brief Solve a symmetric positive definite system by conjugate gradients: \f$A x = b\f$.
 /// `x` is the initial guess.
 /// @throws std::invalid_argument If dimensions mismatch.
 template <class Op, class V>
@@ -165,7 +166,7 @@ requires math::inner_product_space<V> &&math::spd_operator<Op, V> &&
 
 namespace unsafe {
 
-/// @brief Conjugate gradients (CG) on a dense matrix, unchecked: \f$A x = b\f$.
+/// @brief Solve a system by conjugate gradients without checking that it is SPD: \f$A x = b\f$.
 /// @warning On an indefinite or asymmetric matrix the iteration breaks down silently.
 inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg_options options = {}) {
     const idx n = b.size();
@@ -193,7 +194,7 @@ inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg
 #if defined(NUMERICS_HAS_CUDA)
 namespace cuda {
 
-/// @brief Conjugate gradients (CG) on the device: \f$A x = b\f$.
+/// @brief Solve a system by conjugate gradients on the GPU: \f$A x = b\f$.
 inline solver_result cg(const mat<real> &A, const vec<real> &b, vec<real> &x, cg_options options = {}) {
     const idx n = b.size();
     if (A.rows() != n || A.cols() != n || x.size() != n) {

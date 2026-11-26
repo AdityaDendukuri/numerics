@@ -7,7 +7,7 @@
 
 namespace num {
 
-/// @brief Solver result: iterations, residual norm, convergence.
+/// @brief Result of a linear solve: iterations, residual norm, convergence.
 struct solver_result {
     idx iterations = 0;     ///< Number of iterations performed
     real residual = 0.0;    ///< Final residual norm ||b - Ax||

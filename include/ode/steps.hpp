@@ -21,7 +21,7 @@ inline real eps_guard(real t1) {
     return 1e-14 * std::abs(t1);
 }
 
-/// @brief Parameter check: \f$h > 0\f$ and \f$t_f \ge t_0\f$.
+/// @brief Check the settings: \f$h > 0\f$ and \f$t_f \ge t_0\f$.
 /// @warning Backward integration (\f$t_f < t_0\f$) is not supported.
 inline void check_params(const ode_params &p, const char *method) {
     const std::string where = std::string(method) + ": ";
@@ -58,7 +58,7 @@ static constexpr real rk45_e1 = 71.0 / 57600.0, rk45_e3 = -71.0 / 16695.0, rk45_
 
 } // namespace detail
 
-/// @brief Forward Euler step range.
+/// @brief Steps of the forward Euler method.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_euler_steps {
     RHS f_{};
@@ -120,7 +120,7 @@ class basic_euler_steps {
 
 using euler_steps = basic_euler_steps<ode_rhs_fn, vec<real>>;
 
-/// @brief Classical Runge–Kutta (RK4) step range.
+/// @brief Steps of the classical Runge–Kutta method (RK4).
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_rk4_steps {
     RHS f_{};
@@ -197,7 +197,7 @@ class basic_rk4_steps {
 
 using rk4_steps = basic_rk4_steps<ode_rhs_fn, vec<real>>;
 
-/// @brief Dormand–Prince RK45 step range, adaptive.
+/// @brief Steps of the adaptive Dormand–Prince method (RK45).
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 class basic_rk45_steps {
     RHS f_{};
@@ -326,7 +326,7 @@ class basic_rk45_steps {
 
 using rk45_steps = basic_rk45_steps<ode_rhs_fn, vec<real>>;
 
-/// @brief Velocity Verlet step range: \f$\ddot{q} = a(q)\f$.
+/// @brief Steps of the velocity Verlet method: \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_verlet_steps {
     Accel accel_{};
@@ -399,7 +399,7 @@ class basic_verlet_steps {
 
 using verlet_steps = basic_verlet_steps<accel_fn, vec<real>>;
 
-/// @brief Yoshida fourth-order step range: \f$\ddot{q} = a(q)\f$.
+/// @brief Steps of Yoshida's fourth-order method: \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_yoshida4_steps {
     Accel accel_{};
@@ -495,7 +495,7 @@ class basic_yoshida4_steps {
 
 using yoshida4_steps = basic_yoshida4_steps<accel_fn, vec<real>>;
 
-/// @brief Runge–Kutta–Nyström fourth-order step range: \f$\ddot{q} = a(q)\f$.
+/// @brief Steps of the fourth-order Runge–Kutta–Nyström method: \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
 class basic_rk4_2nd_steps {
     Accel accel_{};

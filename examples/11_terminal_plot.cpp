@@ -1,5 +1,5 @@
-/// @file 11_terminal_ascii_plot.cpp
-/// @brief Plot a sampled sine wave.
+/// @file 11_terminal_plot.cpp
+/// @brief Plot a function in the terminal.
 #include <cmath>
 #include <numerics.hpp>
 

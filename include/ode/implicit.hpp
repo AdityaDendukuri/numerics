@@ -10,13 +10,14 @@
 namespace num {
 namespace ode {
 
-/// @brief Fixed-step implicit integration parameters.
+/// @brief Settings for implicit integration with a fixed step.
 struct implicit_params {
     int nstep; ///< number of time steps
     double dt; ///< step size (reported to observer as t)
 };
 
-/// @brief Backward Euler: \f$(I - \Delta t\, L) u_{n+1} = u_n\f$, `nstep` steps.
+/// @brief Integrate by the backward Euler method for `nstep` steps:
+/// \f$(I - \Delta t\, L) u_{n+1} = u_n\f$.
 /// `obs(step, t, u)` runs at step 0 and after each solve.
 template <vec_field field, typename Observer>
 void advance(field &u, const linear_solver &solver, implicit_params p, Observer &&obs) {
@@ -28,7 +29,8 @@ void advance(field &u, const linear_solver &solver, implicit_params p, Observer 
     }
 }
 
-/// @brief Backward Euler: \f$(I - \Delta t\, L) u_{n+1} = u_n\f$, `nstep` steps.
+/// @brief Integrate by the backward Euler method for `nstep` steps:
+/// \f$(I - \Delta t\, L) u_{n+1} = u_n\f$.
 template <vec_field field>
 void advance(field &u, const linear_solver &solver, implicit_params p) {
     for (int s = 0; s < p.nstep; ++s) {

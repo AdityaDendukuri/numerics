@@ -2,13 +2,13 @@
 
 Factorizations, solvers, eigenvalues and the SVD. Every factorization is solved by `solve(F, b, x)`, and the raw-pointer overloads work on caller-owned buffers.
 
-## The solve protocol <linear/solve.hpp>
+## Solving with a factorization <linear/solve.hpp>
 num::factorization num::solve_transpose num::transpose
 
 ## LU <linear/factorization/lu.hpp>
 num::lu num::lu_result num::no_pivot num::no_pivot_structure num::lower num::upper num::det num::inverse num::seq::inverse num::lapack::inverse num::seq::lu num::lapack::lu num::lu_factor num::lu_factor_blocked num::lu_no_pivot_blocked num::lu_solve num::lu_invert num::lu_no_pivot num::lu_no_pivot_solve_multiple num::lu_no_pivot_solve_transpose_multiple num::lu_diagonal_shift_derivative
 
-## Mixed precision <linear/factorization/mixed_lu.hpp>
+## LU in single precision, refined to double <linear/factorization/mixed_lu.hpp>
 num::mixed_lu num::mixed_precision num::mixed_precision_structure
 
 ## Cholesky <linear/factorization/cholesky.hpp>
@@ -35,25 +35,25 @@ num::block_lu_factor num::block_cholesky_factor num::factor_block_lu num::factor
 ## Choosing a factorization <linear/factorization/factor.hpp>
 num::blocks num::block_structure num::similar_factor
 
-## Factor reuse <linear/factorization/reuse.hpp>
+## Updating a factorization <linear/factorization/reuse.hpp>
 num::corrected_factor num::corrected_lu num::corrected_cholesky num::suffix_block_lu num::suffix_block_cholesky
 
 ## Low-rank updates <linear/factorization/woodbury.hpp>
 num::woodbury_solver num::low_rank_difference num::orthogonalized_low_rank_difference num::low_rank_update num::update_inverse_rows num::inverse_rows_workspace
 
-## Inverse diagonal <linear/factorization/inverse_diagonal.hpp>
+## Diagonal of the inverse <linear/factorization/inverse_diagonal.hpp>
 num::inverse_diagonal num::sized_factorization num::inverse_diagonal_workspace num::inverse_principal_block num::selected_inverse num::safe_add
 
-## Probed inverse diagonal <linear/factorization/probed_inverse_diagonal.hpp>
+## Estimating the diagonal of the inverse <linear/factorization/probed_inverse_diagonal.hpp>
 num::inverse_diagonal_options num::ac num::ac2 num::grounded_approxchol_factor
 
-## Conditioning <linear/condition.hpp>
+## Condition numbers <linear/condition.hpp>
 num::rcond num::inverse_norm1_estimate num::opnorm1
 
 ## Matrix properties <linear/matrix_properties.hpp>
 num::linear::is_symmetric num::linear::make_symmetric num::linear::symmetry_error num::linear::relative_symmetry_error
 
-## Sparse checks <linear/debug.hpp>
+## Checking sparse matrices <linear/debug.hpp>
 num::linear::debug::verify_sparse_structure
 
 ## Conjugate gradient <linear/solvers/cg.hpp>
@@ -68,34 +68,34 @@ num::minres num::minres_options
 ## GMRES <linear/solvers/gmres.hpp>
 num::gmres num::gmres_options
 
-## Stationary iterations <linear/solvers/jacobi.hpp>
+## Jacobi iteration <linear/solvers/jacobi.hpp>
 num::jacobi
 
 ## Gauss-Seidel <linear/solvers/gauss_seidel.hpp>
 num::gauss_seidel
 
-## Solver results <linear/solvers/solver_result.hpp>
+## Results of iterative methods <linear/solvers/solver_result.hpp>
 num::solver_result
 
-## Solver callables <linear/solvers/linear_solver.hpp>
+## Linear solvers as functions <linear/solvers/linear_solver.hpp>
 num::linear_solver
 
-## Diagonal preconditioners <linear/solvers/preconditioner.hpp>
+## Jacobi preconditioner <linear/solvers/preconditioner.hpp>
 num::jacobi_preconditioner num::make_jacobi_preconditioner
 
-## ILU(0) <linear/solvers/ilu.hpp>
+## Incomplete LU <linear/solvers/ilu.hpp>
 num::ilu0_preconditioner num::make_ilu0_preconditioner num::ilu0_factor num::csr_lu_solve num::csr_diagonal_positions
 
-## Chebyshev <linear/solvers/chebyshev.hpp>
+## Chebyshev preconditioner <linear/solvers/chebyshev.hpp>
 num::chebyshev_preconditioner num::chebyshev_preconditioner_from_below num::make_chebyshev_preconditioner num::estimate_largest_eigenvalue
 
-## Hessenberg resolvent <linear/solvers/hessenberg_resolvent.hpp>
+## Solving at many shifts <linear/solvers/hessenberg_resolvent.hpp>
 num::hessenberg_resolvent num::hessenberg_shifted_lu num::shift num::solve_batch
 
 ## Matrix exponential <linear/expv/expv.hpp>
 num::expv num::restarted_expv num::expv_options num::expm
 
-## Sparse operator <linear/sparse/sparse_op.hpp>
+## Sparse matrices as operators <linear/sparse/sparse_op.hpp>
 num::operators::sparse_op
 
 ## Symmetric eigenvalues <linear/eigen/jacobi_eig.hpp>
@@ -110,13 +110,13 @@ num::power_iteration num::inverse_iteration num::rayleigh_iteration num::power_r
 ## SVD <linear/svd/svd.hpp>
 num::svd num::svd_truncated num::svd_result num::seq::svd num::lapack::svd
 
-## Subspaces <linear/subspace.hpp>
+## Orthogonalization <linear/subspace.hpp>
 num::mgs_columns num::cgs2_orthogonalize num::dispatch::subspace::mgs_orthogonalize num::dispatch::subspace::arnoldi_step
 
 ## Matrices from graphs <linear/graph/laplacian.hpp>
 num::linear::laplacian num::linear::dense_laplacian num::linear::markov_generator num::linear::dense_markov_generator num::linear::to_dense_adjacency num::linear::to_sparse_adjacency num::linear::to_multigraph
 
-## Graph levels <linear/graph/levels.hpp>
+## Distances in a graph <linear/graph/levels.hpp>
 num::graph_distance_levels
 
 ## Approximate Cholesky <linear/graph/randommat/approxchol.hpp>
@@ -125,8 +125,8 @@ num::randommat::factorize num::randommat::exact num::randommat::ac1 num::randomm
 ## Approximate Cholesky preconditioner <linear/graph/randommat/preconditioner.hpp>
 num::approx_chol_preconditioner num::grounded_approx_chol_factor num::randommat::approx_chol_preconditioner num::randommat::approxchol_preconditioner num::randommat::grounded_approx_chol_factor num::randommat::grounded_approxchol_factor num::randommat::to_approxchol_graph
 
-## Approximate Cholesky solves <linear/graph/randommat/solve.hpp>
+## Solving with approximate Cholesky <linear/graph/randommat/solve.hpp>
 num::randommat::solve
 
-## Approximate Cholesky types <linear/graph/randommat/types.hpp>
+## Types for approximate Cholesky <linear/graph/randommat/types.hpp>
 num::randommat::cholesky_factor num::randommat::factor_column num::randommat::factor_entry num::randommat::get_entry num::randommat::graph_edge num::randommat::neighbor num::randommat::adjacency_list

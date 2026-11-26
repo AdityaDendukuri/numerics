@@ -14,14 +14,15 @@
 
 namespace num {
 
-/// @brief Approximate Cholesky sampler: Gao–Kyng–Spielman AC or AC2.
+/// @brief Sampler for the approximate Cholesky factor: Gao–Kyng–Spielman AC or AC2.
 enum class approximate_cholesky_preconditioner { ac, ac2 };
-/// @brief AC sampler: one sample per edge, cheaper.
+/// @brief Use the AC sampler: one sample per edge, cheaper.
 inline constexpr approximate_cholesky_preconditioner ac = approximate_cholesky_preconditioner::ac;
-/// @brief AC2 sampler: two samples per edge, more accurate. The default.
+/// @brief Use the AC2 sampler: two samples per edge, more accurate. The default.
 inline constexpr approximate_cholesky_preconditioner ac2 = approximate_cholesky_preconditioner::ac2;
 
-/// @brief Inverse diagonal estimate options: probes, Lanczos steps, tolerance, seed.
+/// @brief Options for estimating the diagonal of the inverse: probes, Lanczos steps, tolerance,
+/// seed.
 struct inverse_diagonal_options {
     approximate_cholesky_preconditioner preconditioner = ac2; ///< AC or AC2.
     idx probes = 40;                                          ///< Gaussian right-hand sides h.
@@ -30,7 +31,8 @@ struct inverse_diagonal_options {
     unsigned seed = 42;     ///< Seed for the probe block and the preconditioner.
 };
 
-/// @brief Grounded approximate Cholesky with the sampler chosen at run time: \f$A \approx C C^T\f$.
+/// @brief Compute an approximate Cholesky factor with a sampler chosen at run time:
+/// \f$A \approx C C^T\f$.
 [[nodiscard]] inline grounded_approx_chol_factor
 grounded_approxchol_factor(const spmat &matrix, approximate_cholesky_preconditioner method,
                            unsigned seed) {
@@ -42,7 +44,7 @@ grounded_approxchol_factor(const spmat &matrix, approximate_cholesky_preconditio
 
 namespace detail {
 
-/// @brief Preconditioned operator: \f$\tilde{S} = C^{-1} M C^{-T}\f$, never formed.
+/// @brief Operator \f$\tilde{S} = C^{-1} M C^{-T}\f$, applied without forming it.
 class preconditioned_symmetric_operator final {
   public:
     using domain_type = vec<real>;
@@ -101,7 +103,8 @@ inline vec<real> reversible_inverse_diagonal(const spmat &matrix, view<const rea
 
 } // namespace detail
 
-/// @brief Inverse diagonal of a reversible M-matrix: \f$\mathrm{diag}(A^{-1})\f$ by probed Lanczos.
+/// @brief Estimate the diagonal of the inverse of an M-matrix from random probes and Lanczos:
+/// \f$\mathrm{diag}(A^{-1})\f$.
 [[nodiscard]] inline vec<real> inverse_diagonal(const spmat &matrix, view<const real> symmetrizer,
                                                 inverse_diagonal_options options = {}) {
     const idx n = matrix.n_rows();
@@ -125,7 +128,8 @@ inline vec<real> reversible_inverse_diagonal(const spmat &matrix, view<const rea
     return detail::reversible_inverse_diagonal(matrix, symmetrizer, approximate, options);
 }
 
-/// @brief Inverse diagonal of a reversible M-matrix, reusing an approximate factor.
+/// @brief Estimate the diagonal of the inverse of a reversible M-matrix, reusing an approximate
+/// factor.
 [[nodiscard]] inline vec<real> inverse_diagonal(const spmat &matrix, view<const real> symmetrizer,
                                                 const grounded_approx_chol_factor &approximate,
                                                 inverse_diagonal_options options = {}) {
@@ -136,7 +140,8 @@ inline vec<real> reversible_inverse_diagonal(const spmat &matrix, view<const rea
     return detail::reversible_inverse_diagonal(matrix, symmetrizer, approximate, options);
 }
 
-/// @brief Probed inverse diagonal: \f$(A^{-1})_{jj} \approx \frac{1}{p} \sum_k (R z_k)_j^2\f$.
+/// @brief Estimate the diagonal of the inverse from random probes:
+/// \f$(A^{-1})_{jj} \approx \frac{1}{p} \sum_k (R z_k)_j^2\f$.
 /// `symmetrizer` is \f$\sqrt{\pi}\f$ when \f$A\f$ is symmetrizable by it, else empty.
 /// @throws std::invalid_argument If no probes are requested.
 /// @throws std::runtime_error If `matrix` is not a nonsingular M-matrix.

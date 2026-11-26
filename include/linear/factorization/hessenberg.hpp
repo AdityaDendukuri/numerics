@@ -20,7 +20,7 @@ namespace num {
 
 // Shifted Hessenberg resolvent
 
-/// @brief Shifted Hessenberg LU, in place: \f$s I - H = P L U\f$, \f$O(n^2)\f$.
+/// @brief Factor a shifted Hessenberg matrix by LU, in place: \f$s I - H = P L U\f$, \f$O(n^2)\f$.
 template <std::floating_point T, class Index>
 inline void hessenberg_shifted_factor(std::complex<T> *NUM_K_RESTRICT work,
                                       const T *NUM_K_RESTRICT H, std::complex<T> shift, idx n,
@@ -60,7 +60,8 @@ inline void hessenberg_shifted_factor(std::complex<T> *NUM_K_RESTRICT work,
     }
 }
 
-/// @brief Shifted Hessenberg substitution: \f$y \leftarrow (s I - H)^{-1} b\f$ from the factors.
+/// @brief Solve with the factors of a shifted Hessenberg matrix:
+/// \f$y \leftarrow (s I - H)^{-1} b\f$.
 /// `y` and `b` may alias.
 template <std::floating_point T, class Index>
 inline void hessenberg_shifted_substitute(std::complex<T> *y,
@@ -91,7 +92,7 @@ inline void hessenberg_shifted_substitute(std::complex<T> *y,
     }
 }
 
-/// @brief Shifted Hessenberg solve: \f$y \leftarrow (s I - H)^{-1} b\f$.
+/// @brief Solve a shifted Hessenberg system: \f$y \leftarrow (s I - H)^{-1} b\f$.
 template <std::floating_point T, class Index>
 inline void hessenberg_shifted_solve(std::complex<T> *y, const T *H, std::complex<T> shift,
                                      const std::complex<T> *b, idx n,
@@ -105,13 +106,13 @@ inline void hessenberg_shifted_solve(std::complex<T> *y, const T *H, std::comple
 
 namespace num {
 
-/// @brief Hessenberg decomposition: \f$A = Q H Q^T\f$, \f$H\f$ upper Hessenberg.
+/// @brief Reduction of a matrix to Hessenberg form: \f$A = Q H Q^T\f$, \f$H\f$ upper Hessenberg.
 class hessenberg_decomposition {
   public:
-    /// @brief Hessenberg decomposition, LAPACK when available: \f$A = Q H Q^T\f$.
+    /// @brief Reduce a matrix to Hessenberg form, using LAPACK when available: \f$A = Q H Q^T\f$.
     explicit hessenberg_decomposition(const mat<real> &A) : hessenberg_decomposition(A, has_lapack) {}
 
-    /// @brief Hessenberg decomposition with an explicit backend choice.
+    /// @brief Reduce a matrix to Hessenberg form, choosing LAPACK or the in-tree code explicitly.
     hessenberg_decomposition(const mat<real> &A, bool use_lapack);
 
     [[nodiscard]] idx size() const noexcept { return H_.rows(); }
@@ -123,7 +124,7 @@ class hessenberg_decomposition {
     mat<real> Q_;
 };
 
-/// @brief Hessenberg decomposition: \f$A = Q H Q^T\f$.
+/// @brief Reduce a matrix to Hessenberg form: \f$A = Q H Q^T\f$.
 [[nodiscard]] inline hessenberg_decomposition hessenberg(const mat<real> &A) {
     return hessenberg_decomposition(A);
 }
@@ -236,7 +237,8 @@ inline hessenberg_decomposition::hessenberg_decomposition(const mat<real> &A, bo
 }
 
 
-/// @brief Shifted Hessenberg solve: \f$y \leftarrow (s I - H)^{-1} \tilde{b}\f$, \f$O(n^2)\f$.
+/// @brief Solve a shifted Hessenberg system:
+/// \f$y \leftarrow (s I - H)^{-1} \tilde{b}\f$, \f$O(n^2)\f$.
 /// `M_buf` and `pivots` are reusable scratch.
 inline void hessenberg_shifted_solve(const mat<real> &H, cplx shift, const vec<cplx> &b_tilde,
                                      vec<cplx> &y, array<cplx> &M_buf, array<idx> &pivots) {
@@ -257,7 +259,7 @@ inline void hessenberg_shifted_solve(const mat<real> &H, cplx shift, const vec<c
                                   pivots.data());
 }
 
-/// @brief Projection onto the Hessenberg basis: \f$\tilde{b} = Q^T b\f$.
+/// @brief Transform a vector into Hessenberg coordinates: \f$\tilde{b} = Q^T b\f$.
 template <class Rhs>
 inline vec<cplx> hessenberg_project(const mat<real> &Q, const Rhs &b) {
     const idx n = Q.rows();
@@ -266,7 +268,7 @@ inline vec<cplx> hessenberg_project(const mat<real> &Q, const Rhs &b) {
     return b_tilde;
 }
 
-/// @brief Back-projection from the Hessenberg basis: \f$x = Q y\f$.
+/// @brief Transform a vector back from Hessenberg coordinates: \f$x = Q y\f$.
 inline void hessenberg_back_project(const mat<real> &Q, const vec<cplx> &y, vec<cplx> &x) {
     const idx n = Q.rows();
     if (x.size() != n) {

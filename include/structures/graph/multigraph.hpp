@@ -12,7 +12,7 @@
 
 namespace num::structures {
 
-/// @brief Multi-edge: target, weight and multiplicity.
+/// @brief Edge of a multigraph: target, weight and multiplicity.
 template <typename Weight = double, std::integral Index = num::idx>
 struct multi_edge {
     Index to{};
@@ -20,7 +20,7 @@ struct multi_edge {
     std::uint8_t count = 1;
 };
 
-/// @brief Weighted multigraph: parallel edges with counts.
+/// @brief Weighted graph that may have parallel edges, with counts.
 template <typename Weight, std::integral Index>
 class multigraph {
   public:
@@ -28,15 +28,15 @@ class multigraph {
     using index_type = Index;
     using edge_type = multi_edge<Weight, Index>;
 
-    /// @brief Multigraph on `n` vertices with no edges.
+    /// @brief Construct a multigraph on `n` vertices with no edges.
     explicit multigraph(Index n = 0) : adj_(n) {}
 
-    /// @brief Vertex count \f$|V|\f$.
+    /// @brief Return the number of vertices \f$|V|\f$.
     [[nodiscard]] Index n_vertices() const noexcept {
         return static_cast<Index>(adj_.size());
     }
 
-    /// @brief Add undirected multi-edge \f$\{u, v\}\f$.
+    /// @brief Add the undirected edge \f$\{u, v\}\f$.
     void add_edge(Index u, Index v, Weight weight = Weight{1}, std::uint8_t count = 1) {
         if (u >= adj_.size() || v >= adj_.size()) {
             throw std::out_of_range("multigraph::add_edge: vertex index out of range");
@@ -45,7 +45,7 @@ class multigraph {
         adj_[v].push_back({u, weight, count});
     }
 
-    /// @brief Add directed multi-edge \f$u \to v\f$.
+    /// @brief Add the directed edge \f$u \to v\f$.
     void add_directed_edge(Index u, Index v, Weight weight = Weight{1}, std::uint8_t count = 1) {
         if (u >= adj_.size() || v >= adj_.size()) {
             throw std::out_of_range("multigraph::add_directed_edge: vertex index out of range");
@@ -53,7 +53,7 @@ class multigraph {
         adj_[u].push_back({v, weight, count});
     }
 
-    /// @brief Edges incident to `u`.
+    /// @brief Return the edges at `u`.
     [[nodiscard]] const array<edge_type> &neighbors(Index u) const {
         if (u >= adj_.size()) {
             throw std::out_of_range("multigraph::neighbors: vertex index out of range");
@@ -61,7 +61,7 @@ class multigraph {
         return adj_[u];
     }
 
-    /// @brief Edges incident to `u`, mutable.
+    /// @brief Return the edges at `u`, for modification.
     [[nodiscard]] array<edge_type> &neighbors(Index u) {
         if (u >= adj_.size()) {
             throw std::out_of_range("multigraph::neighbors: vertex index out of range");
@@ -69,17 +69,17 @@ class multigraph {
         return adj_[u];
     }
 
-    /// @brief Adjacency lists.
+    /// @brief Return the adjacency lists.
     [[nodiscard]] const array<array<edge_type>> &adjacency() const noexcept {
         return adj_;
     }
 
-    /// @brief Adjacency lists, mutable.
+    /// @brief Return the adjacency lists, for modification.
     [[nodiscard]] array<array<edge_type>> &adjacency() noexcept {
         return adj_;
     }
 
-    /// @brief Edges incident to `u`.
+    /// @brief Return the edges at `u`.
     [[nodiscard]] const array<edge_type> &operator[](Index u) const {
         return adj_[u];
     }
@@ -87,7 +87,7 @@ class multigraph {
         return adj_[u];
     }
 
-    /// @brief Simple graph: parallel edges merged.
+    /// @brief Merge parallel edges into a simple graph.
     [[nodiscard]] graph<Weight, Index> to_simple_graph() const {
         const Index n = n_vertices();
         graph<Weight, Index> G(n);
@@ -106,7 +106,7 @@ class multigraph {
     array<array<edge_type>> adj_;
 };
 
-/// @brief Multigraph from a graph.
+/// @brief Construct a multigraph from a graph.
 template <typename Weight, std::integral Index>
 [[nodiscard]] inline multigraph<Weight, Index>
 to_multigraph(const graph<Weight, Index> &G) {

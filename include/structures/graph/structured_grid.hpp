@@ -12,10 +12,10 @@
 
 namespace num {
 
-/// @brief Grid boundary per axis: reflecting or periodic.
+/// @brief Boundary of a grid along one axis: reflecting or periodic.
 enum class grid_boundary { reflecting, periodic };
 
-/// @brief Structured grid graph in \f$D\f$ dimensions, allocation-free.
+/// @brief Graph of a structured grid in \f$D\f$ dimensions, stored without allocating.
 /// Edge weights are face transmissibilities \f$A / h\f$; axis 0 varies fastest.
 template <std::size_t D, typename Weight = double, std::integral Index = num::idx>
 class structured_grid_graph {

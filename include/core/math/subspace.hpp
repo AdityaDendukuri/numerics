@@ -32,9 +32,9 @@ struct project_t {
     }
 };
 
-/// @brief Membership: \f$x \in S\f$.
+/// @brief Test whether \f$x \in S\f$.
 inline constexpr contains_t contains{};
-/// @brief Projection onto a subspace, in place: \f$x \leftarrow P_S x\f$.
+/// @brief Project onto a subspace, in place: \f$x \leftarrow P_S x\f$.
 inline constexpr project_t project{};
 
 /// @brief Linear subspace \f$S \subseteq V\f$ with `contains` and `project`.

@@ -12,7 +12,7 @@
 
 namespace num::structures::debug {
 
-/// @brief Bounds check: \f$0 \le i < \mathrm{capacity}\f$.
+/// @brief Check that an index is in range: \f$0 \le i < \mathrm{capacity}\f$.
 template <std::integral Index>
 inline void check_index_bounds(Index index, Index capacity, std::string_view label = "Index",
                                std::source_location loc = std::source_location::current()) {
@@ -26,7 +26,7 @@ inline void check_index_bounds(Index index, Index capacity, std::string_view lab
     }
 }
 
-/// @brief Presence check: `index` is in the container.
+/// @brief Check that `index` is in the container.
 template <std::integral Index>
 inline void check_contains(bool exists, Index index,
                            std::string_view label = "indexed_priority_queue",
@@ -41,7 +41,7 @@ inline void check_contains(bool exists, Index index,
     }
 }
 
-/// @brief Absence check: `index` is not in the container.
+/// @brief Check that `index` is not in the container.
 template <std::integral Index>
 inline void check_not_contains(bool exists, Index index,
                                std::string_view label = "indexed_priority_queue",
@@ -56,7 +56,7 @@ inline void check_not_contains(bool exists, Index index,
     }
 }
 
-/// @brief Sampled union-find test: \f$\sim\f$ is an equivalence and agrees with `find`.
+/// @brief Test on random pairs that \f$\sim\f$ is an equivalence and agrees with `find`.
 template <class DS, std::integral Index = num::idx>
 inline void
 verify_equivalence_relation(DS &ds, Index n,
@@ -128,7 +128,7 @@ verify_equivalence_relation(DS &ds, Index n,
     }
 }
 
-/// @brief Heap test: the top key is minimal.
+/// @brief Test that the top key is the least.
 template <class PQ, class Key = double, std::integral Index = num::idx>
 inline void verify_heap_order(const PQ &pq, Index capacity,
                               std::source_location loc = std::source_location::current()) {
@@ -146,7 +146,7 @@ inline void verify_heap_order(const PQ &pq, Index capacity,
     }
 }
 
-/// @brief Vertex bounds check: \f$0 \le v < |V|\f$.
+/// @brief Check that a vertex is in range: \f$0 \le v < |V|\f$.
 template <std::integral Index>
 inline void check_vertex_bounds(Index u, Index n_vertices, std::string_view label = "graph::vertex",
                                 std::source_location loc = std::source_location::current()) {
@@ -160,7 +160,7 @@ inline void check_vertex_bounds(Index u, Index n_vertices, std::string_view labe
     }
 }
 
-/// @brief Edge weight check: \f$w > 0\f$.
+/// @brief Check that an edge weight is positive: \f$w > 0\f$.
 template <typename Weight>
 inline void check_positive_weight(const Weight &weight,
                                   std::string_view label = "graph::edge_weight",
@@ -174,7 +174,7 @@ inline void check_positive_weight(const Weight &weight,
     }
 }
 
-/// @brief Connectivity check: one component.
+/// @brief Check that a graph is connected.
 template <std::integral Index>
 inline void check_connected(Index n_components, std::string_view label = "graph",
                             std::source_location loc = std::source_location::current()) {
@@ -188,7 +188,7 @@ inline void check_connected(Index n_components, std::string_view label = "graph"
     }
 }
 
-/// @brief Degree check: `degree(u)` equals the size of `neighbors(u)`.
+/// @brief Check that `degree(u)` equals the number of `neighbors(u)`.
 template <class G, std::integral Index = num::idx>
 inline void verify_degree_consistency(const G &g,
                                       std::source_location loc = std::source_location::current()) {
@@ -210,7 +210,7 @@ inline void verify_degree_consistency(const G &g,
     }
 }
 
-/// @brief Handshake check: \f$\sum_u \deg(u) = 2|E|\f$.
+/// @brief Check that the degrees sum to twice the number of edges: \f$\sum_u \deg(u) = 2|E|\f$.
 template <class G, std::integral Index = num::idx>
 inline void verify_handshake_lemma(const G &g,
                                    std::source_location loc = std::source_location::current()) {
@@ -231,7 +231,8 @@ inline void verify_handshake_lemma(const G &g,
     }
 }
 
-/// @brief Graph Laplacian check: \f$L = D - W\f$ symmetric with \f$L \mathbf{1} = 0\f$.
+/// @brief Check that a graph Laplacian is symmetric with zero row sums:
+/// \f$L = D - W\f$, \f$L \mathbf{1} = 0\f$.
 template <class Mat>
 inline void verify_laplacian_structure(const Mat &L, double tol = 1e-9,
                                        std::source_location loc = std::source_location::current()) {

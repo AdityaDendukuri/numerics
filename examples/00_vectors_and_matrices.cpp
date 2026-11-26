@@ -1,5 +1,5 @@
-/// @file 00_core_storage_and_helpers.cpp
-/// @brief Vectors, matrices and sparse storage in a few operations.
+/// @file 00_vectors_and_matrices.cpp
+/// @brief Create vectors, matrices and sparse matrices, and combine them.
 #include <array>
 #include <io/sparse_json.hpp>
 #include <numerics.hpp>

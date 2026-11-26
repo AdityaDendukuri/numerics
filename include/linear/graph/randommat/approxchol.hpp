@@ -22,14 +22,14 @@ namespace num {
 
 namespace randommat {
 
-/// @brief Gao–Kyng–Spielman approximate elimination (2023, arXiv:2303.00709).
+/// @brief Approximate elimination of Gao, Kyng and Spielman (2023, arXiv:2303.00709).
 namespace gao_kyng_spielman_2023 {
 
 struct ac_t {};
 struct ac2_t {};
-/// @brief Select the AC sampler: one sample per edge.
+/// @brief Use the AC sampler: one sample per edge.
 inline constexpr ac_t ac{};
-/// @brief Select the AC2 sampler: two samples per edge.
+/// @brief Use the AC2 sampler: two samples per edge.
 inline constexpr ac2_t ac2{};
 
 } // namespace gao_kyng_spielman_2023
@@ -76,14 +76,14 @@ inline void permute_rows(cholesky_factor<Float, Index> &factor) {
 
 } // namespace detail
 
-/// @brief Clique sampler for each elimination's star-mesh clique.
+/// @brief How the clique left by each elimination is approximated.
 enum class clique_sampler : std::uint8_t {
     exact,    ///< Keep the full clique. Correct, and densifies.
     gks_2023, ///< Gao--Kyng--Spielman AC/AC2 connectivity-preserving sampler.
     tree,     ///< A random spanning tree of the clique, reweighted to stay unbiased.
 };
 
-/// @brief Approximate Cholesky of a multigraph Laplacian: \f$L \approx C C^T\f$.
+/// @brief Compute an approximate Cholesky factor of a multigraph Laplacian: \f$L \approx C C^T\f$.
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64,
           typename Queue = structures::basic_degree_queue<Index>>
 inline cholesky_factor<Float, Index> factorize(const adjacency_list<Float, Index> &input_G,
@@ -175,7 +175,8 @@ inline cholesky_factor<Float, Index> factorize(const adjacency_list<Float, Index
     return factor;
 }
 
-/// @brief Gao–Kyng–Spielman approximate Cholesky: \f$L \approx C C^T\f$.
+/// @brief Compute an approximate Cholesky factor by the method of Gao, Kyng and Spielman:
+/// \f$L \approx C C^T\f$.
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64,
           typename Queue = structures::basic_degree_queue<Index>,
           detail::gks_2023_algorithm Algorithm = gao_kyng_spielman_2023::ac_t>
@@ -187,7 +188,7 @@ inline cholesky_factor<Float, Index> factorize(const adjacency_list<Float, Index
         clique_sampler::gks_2023, pinned_vertex);
 }
 
-/// @brief AC approximate Cholesky, one sample per entry: \f$L \approx C C^T\f$.
+/// @brief Compute an approximate Cholesky factor, one sample per entry (AC): \f$L \approx C C^T\f$.
 template <typename Float = double, std::integral Index = num::idx>
 inline cholesky_factor<Float, Index> ac1(const adjacency_list<Float, Index> &G, std::uint64_t seed = 42) {
     rng64 rng(seed);
@@ -199,7 +200,8 @@ inline cholesky_factor<Float, Index> ac1(const adjacency_list<Float, Index> &G, 
     return factorize<Float, Index, Rng>(G, gao_kyng_spielman_2023::ac, &rng);
 }
 
-/// @brief AC2 approximate Cholesky, two samples per entry: \f$L \approx C C^T\f$.
+/// @brief Compute an approximate Cholesky factor, two samples per entry (AC2):
+/// \f$L \approx C C^T\f$.
 template <typename Float = double, std::integral Index = num::idx>
 inline cholesky_factor<Float, Index> ac2(const adjacency_list<Float, Index> &G, std::uint64_t seed = 42) {
     rng64 rng(seed);
@@ -211,14 +213,16 @@ inline cholesky_factor<Float, Index> ac2(const adjacency_list<Float, Index> &G, 
     return factorize<Float, Index, Rng>(G, gao_kyng_spielman_2023::ac2, &rng);
 }
 
-/// @brief Spanning-tree approximate Cholesky, one tree per elimination: \f$L \approx C C^T\f$.
+/// @brief Compute an approximate Cholesky factor, sampling one spanning tree per elimination:
+/// \f$L \approx C C^T\f$.
 template <typename Float = double, std::integral Index = num::idx, typename Rng = rng64>
 inline cholesky_factor<Float, Index> act(const adjacency_list<Float, Index> &G, Rng &rng,
                                          std::type_identity_t<Index> trees = 1) {
     return factorize<Float, Index, Rng>(G, trees, false, &rng, clique_sampler::tree);
 }
 
-/// @brief Exact sparse Cholesky by star-mesh elimination: \f$L = C C^T\f$.
+/// @brief Compute an exact sparse Cholesky factor by eliminating every clique exactly:
+/// \f$L = C C^T\f$.
 template <typename Float = double, std::integral Index = num::idx>
 inline cholesky_factor<Float, Index> exact(const adjacency_list<Float, Index> &G) {
     return factorize<Float, Index, rng64>(G, 1, true, nullptr);

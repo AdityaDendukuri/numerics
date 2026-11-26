@@ -13,14 +13,14 @@
 
 namespace num::structures {
 
-/// @brief Degree queue: vertices bucketed by degree, \f$O(1)\f$ updates and amortized `pop_min`.
+/// @brief Queue of vertices kept in buckets by degree: \f$O(1)\f$ updates, amortized `pop_min`.
 template <std::integral Index = num::idx>
 class basic_degree_queue {
   public:
     using index_type = Index;
     static constexpr Index none = static_cast<Index>(-1);
 
-    /// @brief Empty queue with capacity `n`.
+    /// @brief Construct an empty queue with room for `n` vertices.
     explicit basic_degree_queue(Index n = 0) {
         head_.assign(static_cast<std::size_t>(n) + 1, none);
         next_.assign(static_cast<std::size_t>(n), none);
@@ -30,7 +30,7 @@ class basic_degree_queue {
         size_ = 0;
     }
 
-    /// @brief Queue initialized from a range of degrees.
+    /// @brief Construct a queue from a range of degrees.
     template <typename DegreeRange>
     requires (!std::integral<DegreeRange>)
     explicit basic_degree_queue(const DegreeRange &degrees) {
@@ -66,7 +66,7 @@ class basic_degree_queue {
         ++size_;
     }
 
-    /// @brief Erase vertex `v`.
+    /// @brief Remove vertex `v`.
     void erase(Index v) {
         debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "degree_queue::erase");
         const Index d = degree_[v];
@@ -89,7 +89,7 @@ class basic_degree_queue {
         insert(v, d);
     }
 
-    /// @brief Pop a vertex of minimum degree.
+    /// @brief Remove and return a vertex of least degree.
     Index pop_min() {
         if (empty()) {
             throw std::runtime_error("degree_queue::pop_min: queue is empty");
@@ -105,13 +105,13 @@ class basic_degree_queue {
         return v;
     }
 
-    /// @brief Degree of `v`.
+    /// @brief Return the degree of `v`.
     [[nodiscard]] Index degree_of(Index v) const {
         debug::check_index_bounds(v, static_cast<Index>(degree_.size()), "degree_queue::degree_of");
         return degree_[v];
     }
 
-    /// @brief Minimum degree.
+    /// @brief Return the least degree.
     [[nodiscard]] Index min_degree() const {
         if (empty()) {
             throw std::runtime_error("degree_queue::min_degree: queue is empty");
@@ -123,16 +123,16 @@ class basic_degree_queue {
         return l;
     }
 
-    /// @brief Whether the queue is empty.
+    /// @brief Test whether the queue is empty.
     [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
 
-    /// @brief Number of queued vertices.
+    /// @brief Return the number of vertices in the queue.
     [[nodiscard]] Index size() const noexcept { return size_; }
 
-    /// @brief Capacity.
+    /// @brief Return the capacity.
     [[nodiscard]] Index capacity() const noexcept { return static_cast<Index>(degree_.size()); }
 
-    /// @brief Degree array.
+    /// @brief Return the array of degrees.
     [[nodiscard]] const array<Index> &degrees() const noexcept { return degree_; }
 
   private:

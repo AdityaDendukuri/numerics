@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief Factorization: applies \f$A^{-1}\f$ and \f$A^{-T}\f$; out-parameter forms may alias.
+/// @brief Factorization that solves with \f$A\f$ and \f$A^T\f$; the out-parameter forms may alias.
 template <class F>
 concept factorization =
     requires(const F &factor, const vec<real> &v, const mat<real> &m, vec<real> &vout,
@@ -19,7 +19,7 @@ concept factorization =
         solve_transpose(factor, m, mout);
     };
 
-/// @brief Solve: \f$x = A^{-1} b\f$. Allocates.
+/// @brief Solve with a factorization: \f$x = A^{-1} b\f$. Allocates.
 template <class F, class RHS>
 [[nodiscard]] RHS solve(const F &factor, const RHS &b) requires requires(RHS &x) {
     solve(factor, b, x);
@@ -30,7 +30,7 @@ template <class F, class RHS>
     return x;
 }
 
-/// @brief Transposed solve: \f$x = A^{-T} b\f$. Allocates.
+/// @brief Solve the transposed system with a factorization: \f$x = A^{-T} b\f$. Allocates.
 template <class F, class RHS>
 [[nodiscard]] RHS solve_transpose(const F &factor, const RHS &b) requires requires(RHS &x) {
     solve_transpose(factor, b, x);
@@ -50,7 +50,7 @@ struct transposed_factor {
 
 } // namespace detail
 
-/// @brief Transposed view: a factorization of \f$A\f$ as one of \f$A^T\f$. References `F`.
+/// @brief View a factorization of \f$A\f$ as one of \f$A^T\f$. References `F`.
 /// @warning References `F`; it must outlive the view.
 template <class F>
 requires requires(const F &factor, const vec<real> &b, vec<real> &x) {

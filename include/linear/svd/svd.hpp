@@ -17,7 +17,7 @@
 
 namespace num {
 
-/// @brief SVD result: \f$A = U \Sigma V^T\f$ and convergence.
+/// @brief Result of a singular value decomposition: \f$A = U \Sigma V^T\f$ and convergence.
 struct svd_result {
     mat<real> U;                  ///< Left singular vectors.
     vec<real> S;                  ///< Singular values in descending order.
@@ -34,16 +34,16 @@ struct svd_result {
     }
 };
 
-/// @brief Singular value decomposition (SVD): \f$A = U \Sigma V^T\f$.
+/// @brief Compute the singular value decomposition (SVD): \f$A = U \Sigma V^T\f$.
 /// Uses LAPACK `dgesdd` when available, else one-sided Jacobi.
 svd_result svd(const mat<real> &A, real tol = 1e-12, idx max_sweeps = 100);
 
-/// @brief Randomized truncated SVD: \f$A \approx U_k \Sigma_k V_k^T\f$.
+/// @brief Compute a truncated SVD by random sampling: \f$A \approx U_k \Sigma_k V_k^T\f$.
 /// @throws std::invalid_argument If \f$k\f$ is out of range.
 svd_result svd_truncated(const mat<real> &A, idx k, idx oversampling = 10, rng_state *rng = nullptr);
 
 namespace seq {
-/// @brief One-sided Jacobi (Hestenes) SVD: \f$A = U \Sigma V^T\f$.
+/// @brief Compute the SVD by one-sided Jacobi (Hestenes): \f$A = U \Sigma V^T\f$.
 /// @note Slower than bidiagonalization but accurate for small singular values.
 inline svd_result svd(const mat<real> &A_in, real tol, idx max_sweeps) {
     constexpr real tiny = 1e-300;

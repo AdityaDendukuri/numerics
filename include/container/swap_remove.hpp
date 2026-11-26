@@ -9,13 +9,13 @@
 
 namespace num {
 
-/// @brief One relocation: the element at `from` moves to `to`.
+/// @brief One move: the element at `from` goes to `to`.
 struct index_move {
     idx from;
     idx to;
 };
 
-/// @brief Swap-remove plan: the moves that fill each hole from the tail.
+/// @brief Plan the moves that fill each removed slot from the end of the array.
 /// `removed` must be distinct.
 /// @throws std::out_of_range If an index is not less than `n`.
 [[nodiscard]] inline array<index_move> swap_remove_plan(idx n, view<const idx> removed) {
@@ -45,7 +45,7 @@ struct index_move {
     return plan;
 }
 
-/// @brief Swap-remove: delete `removed` from `values` by moving tail elements in.
+/// @brief Remove the elements at `removed` by moving elements from the end into their places.
 /// @warning Moved elements change index; use `swap_remove_map` to repair indices held elsewhere.
 template <typename T> void swap_remove(array<T> &values, view<const idx> removed) {
     for (const index_move &move : swap_remove_plan(values.size(), removed)) {
@@ -54,7 +54,7 @@ template <typename T> void swap_remove(array<T> &values, view<const idx> removed
     values.resize(values.size() - removed.size());
 }
 
-/// @brief Order-preserving removal of `removed` from `values`.
+/// @brief Remove the elements at `removed`, keeping the others in order.
 /// @throws std::out_of_range If an index is not less than `values.size()`.
 template <typename T> void remove_indices(array<T> &values, view<const idx> removed) {
     array<bool> gone(values.size(), false);
@@ -79,7 +79,7 @@ template <typename T> void remove_indices(array<T> &values, view<const idx> remo
 /// @brief Index reported for a removed element by `swap_remove_map`.
 inline constexpr idx removed_index = static_cast<idx>(-1);
 
-/// @brief Swap-remove index map: old index to new, or `removed_index`.
+/// @brief Map each old index to its new one after a swap-remove, or to `removed_index`.
 [[nodiscard]] inline array<idx> swap_remove_map(idx n, view<const idx> removed) {
     array<idx> mapping(n);
     for (idx index = 0; index < n; ++index) {

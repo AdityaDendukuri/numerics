@@ -25,7 +25,7 @@
 
 namespace num::seq {
 
-/// @brief Vector scaling, sequential: \f$v \leftarrow \alpha v\f$.
+/// @brief Scale a vector, sequentially: \f$v \leftarrow \alpha v\f$.
 inline void scale(vec<real> &v, real alpha) noexcept { kernel::scale(v.data(), alpha, v.size()); }
 
 inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept {
@@ -45,12 +45,12 @@ inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept {
     }
 }
 
-/// @brief Scaled vector update (AXPBY): \f$y \leftarrow a x + b y\f$.
+/// @brief Scale and add (AXPBY): \f$y \leftarrow a x + b y\f$.
 inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
     kernel::axpby(y.data(), x.data(), a, b, x.size());
 }
 
-/// @brief Vector linear combination: \f$z \leftarrow a x + b y\f$.
+/// @brief Form a linear combination of two vectors: \f$z \leftarrow a x + b y\f$.
 inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<real> &z) noexcept {
     kernel::axpbyz(z.data(), x.data(), y.data(), a, b, x.size());
 }
@@ -59,15 +59,15 @@ inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<r
 
 namespace num {
 
-/// @brief Vector scaling (SCAL): \f$v \leftarrow \alpha v\f$.
+/// @brief Scale a vector (SCAL): \f$v \leftarrow \alpha v\f$.
 inline void scale(vec<real> &v, real alpha) noexcept { accel::scale(v, alpha); }
 
-/// @brief Scaled vector addition (AXPY): \f$y \leftarrow \alpha x + y\f$.
+/// @brief Add a multiple of one vector to another (AXPY): \f$y \leftarrow \alpha x + y\f$.
 inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept { accel::axpy(alpha, x, y); }
 
 [[nodiscard]] inline real dot(const vec<real> &x, const vec<real> &y) noexcept { return accel::dot(x, y); }
 
-/// @brief Dot product over views: \f$x^T y\f$.
+/// @brief Compute the dot product of two views: \f$x^T y\f$.
 [[nodiscard]] inline real dot(view<const real> x, view<const real> y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("dot: vector sizes must match");
@@ -75,12 +75,12 @@ inline void axpy(real alpha, const vec<real> &x, vec<real> &y) noexcept { accel:
     return kernel::dot(x.data(), y.data(), x.size());
 }
 
-/// @brief Euclidean norm: \f$\|x\|_2\f$.
+/// @brief Compute the Euclidean norm: \f$\|x\|_2\f$.
 [[nodiscard]] inline real norm(const vec<real> &x) noexcept { return accel::norm(x); }
 
 inline void add(const vec<real> &x, const vec<real> &y, vec<real> &z) noexcept { accel::add(x, y, z); }
 
-/// @brief Scaled vector update (AXPBY): \f$y \leftarrow a x + b y\f$.
+/// @brief Scale and add (AXPBY): \f$y \leftarrow a x + b y\f$.
 inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
 #if defined(NUMERICS_HAS_OMP)
     omp::axpby(a, x, b, y);
@@ -89,7 +89,7 @@ inline void axpby(real a, const vec<real> &x, real b, vec<real> &y) noexcept {
 #endif
 }
 
-/// @brief Vector linear combination: \f$z \leftarrow a x + b y\f$.
+/// @brief Form a linear combination of two vectors: \f$z \leftarrow a x + b y\f$.
 inline void axpbyz(real a, const vec<real> &x, real b, const vec<real> &y, vec<real> &z) noexcept {
 #if defined(NUMERICS_HAS_OMP)
     omp::axpbyz(a, x, b, y, z);

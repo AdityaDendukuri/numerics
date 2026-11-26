@@ -7,22 +7,22 @@
 
 namespace num {
 
-/// @brief Right-hand side: writes \f$\dot{y} = f(t, y)\f$.
+/// @brief Function that writes the right-hand side \f$\dot{y} = f(t, y)\f$.
 using ode_rhs_fn = std::function<void(real t, const vec<real> &y, vec<real> &dydt)>;
-/// @brief Acceleration: writes \f$a(q)\f$ for \f$\ddot{q} = a(q)\f$.
+/// @brief Function that writes the acceleration \f$a(q)\f$ for \f$\ddot{q} = a(q)\f$.
 using accel_fn = std::function<void(const vec<real> &q, vec<real> &acc)>;
-/// @brief First-order step observer: `(t, y)`.
+/// @brief Function called after each step of a first-order method with `(t, y)`.
 using observer_fn = std::function<void(real t, const vec<real> &y)>;
-/// @brief Second-order step observer: `(t, q, v)`.
+/// @brief Function called after each step of a second-order method with `(t, q, v)`.
 using symp_observer_fn = std::function<void(real t, const vec<real> &q, const vec<real> &v)>;
 
-/// @brief First-order step snapshot: \f$(t, y)\f$.
+/// @brief State after one step of a first-order method: \f$(t, y)\f$.
 struct ode_step {
     real t = 0.0;
     vec<real> u;
 };
 
-/// @brief Second-order step snapshot: \f$(t, q, v)\f$.
+/// @brief State after one step of a second-order method: \f$(t, q, v)\f$.
 struct symplectic_step {
     real t = 0.0;
     vec<real> q;
@@ -31,7 +31,7 @@ struct symplectic_step {
 
 #include <ostream>
 
-/// @brief First-order result: final state and step counts.
+/// @brief Result of a first-order method: final state and step counts.
 struct ode_result {
     vec<real> u;
     real t = 0.0;
@@ -47,7 +47,7 @@ struct ode_result {
     }
 };
 
-/// @brief Second-order result: final position and velocity.
+/// @brief Result of a second-order method: final position and velocity.
 struct symplectic_result {
     vec<real> q;
     vec<real> v;
@@ -63,7 +63,7 @@ struct symplectic_result {
     }
 };
 
-/// @brief Integration parameters: interval, step, tolerances, step limit.
+/// @brief Settings for integration: interval, step, tolerances, step limit.
 struct ode_params {
     real t0 = 0.0;
     real tf = 1.0;
@@ -73,7 +73,7 @@ struct ode_params {
     idx max_steps = 1000000;
 };
 
-/// @brief End sentinel of a step range.
+/// @brief Marks the end of a sequence of steps.
 struct step_end {};
 
 } // namespace num

@@ -11,7 +11,8 @@
 
 namespace num {
 
-/// @brief Rademacher probes: \f$Z \in \{\pm 1\}^{n \times p}\f$, \f$\mathbb{E}[z_k z_k^T] = I\f$.
+/// @brief Draw random \f$\pm 1\f$ probe vectors (Rademacher):
+/// \f$Z \in \{\pm 1\}^{n \times p}\f$, \f$\mathbb{E}[z_k z_k^T] = I\f$.
 template <typename RNG = rng>
 [[nodiscard]] mat<real> rademacher_probe(idx n, idx probes, RNG &generator) {
     if (probes == 0) {
@@ -27,13 +28,14 @@ template <typename RNG = rng>
     return probe;
 }
 
-/// @brief Rademacher probes from a fixed seed.
+/// @brief Draw random \f$\pm 1\f$ probe vectors from a fixed seed.
 [[nodiscard]] inline mat<real> rademacher_probe(idx n, idx probes, unsigned seed) {
     rng generator(seed);
     return rademacher_probe(n, probes, generator);
 }
 
-/// @brief Gaussian probes: \f$Z \in \mathbb{R}^{n \times p}\f$, entries \f$\mathcal{N}(0, 1)\f$.
+/// @brief Draw Gaussian probe vectors:
+/// \f$Z \in \mathbb{R}^{n \times p}\f$, entries \f$\mathcal{N}(0, 1)\f$.
 template <typename RNG = rng>
 [[nodiscard]] mat<real> gaussian_probe(idx n, idx probes, RNG &generator) {
     if (probes == 0) {
@@ -49,13 +51,14 @@ template <typename RNG = rng>
     return probe;
 }
 
-/// @brief Gaussian probes from a fixed seed.
+/// @brief Draw Gaussian probe vectors from a fixed seed.
 [[nodiscard]] inline mat<real> gaussian_probe(idx n, idx probes, unsigned seed) {
     rng generator(seed);
     return gaussian_probe(n, probes, generator);
 }
 
-/// @brief Hutchinson estimate: \f$\mathrm{diag}(B B^T) \approx \frac{1}{p} \sum_k (B z_k)^2\f$.
+/// @brief Estimate a diagonal from probe vectors (Hutchinson):
+/// \f$\mathrm{diag}(B B^T) \approx \frac{1}{p} \sum_k (B z_k)^2\f$.
 [[nodiscard]] inline vec<real> hutchinson_row_mean_square(const mat<real> &probed) {
     if (probed.cols() == 0) {
         throw std::invalid_argument("hutchinson_row_mean_square: no probed columns");

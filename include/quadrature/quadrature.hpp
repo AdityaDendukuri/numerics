@@ -56,7 +56,8 @@ inline Float adaptive_helper(Func &&f, Float a, Float b, Float fa, Float fm, Flo
 
 } // namespace detail
 
-/// @brief Composite trapezoid rule: \f$\int_a^b f \approx h (f_0 / 2 + f_1 + \cdots + f_n / 2)\f$.
+/// @brief Integrate by the composite trapezoid rule:
+/// \f$\int_a^b f \approx h (f_0 / 2 + f_1 + \cdots + f_n / 2)\f$.
 template <bool Parallel = false, typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float trapz(Func &&f, Float a, Float b, idx n = 100) {
     Float h = (b - a) / static_cast<Float>(n);
@@ -77,7 +78,8 @@ inline Float trapz(Func &&f, Float a, Float b, idx n = 100) {
     return h * ((Float{0.5} * (f(a) + f(b))) + sum);
 }
 
-/// @brief Composite Simpson rule: \f$\int_a^b f \approx \frac{h}{3} (f_0 + 4 f_1 + \cdots)\f$.
+/// @brief Integrate by the composite Simpson rule:
+/// \f$\int_a^b f \approx \frac{h}{3} (f_0 + 4 f_1 + \cdots)\f$.
 /// @throws std::invalid_argument If `n` is odd.
 template <bool Parallel = false, typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float simpson(Func &&f, Float a, Float b, idx n = 100) {
@@ -102,7 +104,7 @@ inline Float simpson(Func &&f, Float a, Float b, idx n = 100) {
     return (h / Float{3.0}) * sum;
 }
 
-/// @brief Gauss–Legendre quadrature: \f$\int_a^b f \approx \sum_{k=1}^p w_k f(x_k)\f$.
+/// @brief Integrate by Gauss–Legendre quadrature: \f$\int_a^b f \approx \sum_{k=1}^p w_k f(x_k)\f$.
 /// Exact to degree \f$2p - 1\f$.
 /// @throws std::invalid_argument If `p` is not in \f$[1, 5]\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
@@ -120,7 +122,7 @@ inline Float gauss_legendre(Func &&f, Float a, Float b, idx p = 5) {
     return half * sum;
 }
 
-/// @brief Adaptive Simpson quadrature: \f$\int_a^b f\f$ to tolerance `tol` by bisection.
+/// @brief Integrate to tolerance `tol` by adaptive Simpson bisection: \f$\int_a^b f\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8}, idx max_depth = 50) {
     Float fa = f(a), fb = f(b), fm = f(Float{0.5} * (a + b));
@@ -128,7 +130,7 @@ inline Float adaptive_simpson(Func &&f, Float a, Float b, Float tol = Float{1e-8
     return detail::adaptive_helper(f, a, b, fa, fm, fb, est, tol, max_depth);
 }
 
-/// @brief Romberg integration: Richardson extrapolation of trapezoid sums, \f$R(j, k)\f$.
+/// @brief Integrate by Romberg's method, extrapolating trapezoid sums: \f$R(j, k)\f$.
 template <typename Float = double, std::invocable<Float> Func = scalar_fn>
 inline Float romberg(Func &&f, Float a, Float b, Float tol = Float{1e-10}, idx max_levels = 12) {
     array<array<Float>> R(max_levels, array<Float>(max_levels, Float{0}));

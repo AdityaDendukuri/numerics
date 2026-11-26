@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief Cluster labels, cluster sizes and the largest cluster.
+/// @brief Labels and sizes of clusters, and the largest cluster.
 struct cluster_result {
     array<int> id;    ///< Per-site label: -2 excluded, >=0 cluster index
     array<int> sizes; ///< sizes[c] = number of sites in cluster c
@@ -23,7 +23,8 @@ struct cluster_result {
     }
 };
 
-/// @brief Connected components by BFS: label sites where `in_cluster(i)`, -2 elsewhere.
+/// @brief Label the connected clusters of sites where `in_cluster(i)` holds, by breadth-first
+/// search; other sites get -2.
 /// `neighbors(i, visit)` calls `visit(j)` for each neighbour of `i`.
 template <typename InCluster, typename Neighbors>
 cluster_result connected_components(int n_sites, InCluster &&in_cluster, Neighbors &&neighbors) {

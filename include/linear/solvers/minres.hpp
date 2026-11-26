@@ -18,7 +18,7 @@
 
 namespace num {
 
-/// @brief MINRES options: tolerance and iteration limit.
+/// @brief Options for MINRES: tolerance and iteration limit.
 struct minres_options {
     real tolerance = 1e-10;
     idx max_iterations = 1000;
@@ -45,7 +45,7 @@ inline vec<real> minres_projected_solve(const array<real> &alpha, const array<re
 
 } // namespace math_krylov_detail
 
-/// @brief MINRES: \f$A x = b\f$, minimizing \f$\|b - A x_k\|_2\f$.
+/// @brief Solve a symmetric system by MINRES, minimizing \f$\|b - A x_k\|_2\f$.
 /// \f$A\f$ must be self-adjoint; it may be indefinite.
 /// @throws std::invalid_argument If dimensions mismatch.
 template <class Op, class V>

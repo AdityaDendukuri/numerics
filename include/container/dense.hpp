@@ -13,12 +13,12 @@
 
 namespace num::seq {
 
-/// @brief Rank-1 update (GER): \f$A \leftarrow A + \alpha x y^T\f$.
+/// @brief Update a matrix by a rank-1 product (GER): \f$A \leftarrow A + \alpha x y^T\f$.
 inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) noexcept {
     kernel::ger(A.data(), x.data(), y.data(), alpha, x.size(), y.size());
 }
 
-/// @brief Lower triangular solve: \f$x \leftarrow L^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve a lower triangular system: \f$x \leftarrow L^{-1} b\f$. `x` may alias `b`.
 inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
     const idx n = L.rows();
     if (L.cols() != n || b.size() != n) {
@@ -30,7 +30,7 @@ inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
     kernel::trsv_lower(kernel::contract::alias_safe, x.data(), L.data(), b.data(), n);
 }
 
-/// @brief Upper triangular solve: \f$x \leftarrow U^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve an upper triangular system: \f$x \leftarrow U^{-1} b\f$. `x` may alias `b`.
 inline void trsv_upper(const mat<real> &U, const vec<real> &b, vec<real> &x) {
     const idx n = U.rows();
     if (U.cols() != n || b.size() != n) {
@@ -47,7 +47,8 @@ inline void trsv_upper(const mat<real> &U, const vec<real> &b, vec<real> &x) {
 #if defined(NUMERICS_HAS_OMP)
 namespace num::omp {
 
-/// @brief Rank-1 update (GER), OpenMP: \f$A \leftarrow A + \alpha x y^T\f$.
+/// @brief Update a matrix by a rank-1 product (GER), with OpenMP:
+/// \f$A \leftarrow A + \alpha x y^T\f$.
 inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) {
     constexpr idx block_size = 64;
     const idx m = x.size();
@@ -67,7 +68,7 @@ inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A
 
 namespace num {
 
-/// @brief Rank-1 update (GER): \f$A \leftarrow A + \alpha x y^T\f$.
+/// @brief Update a matrix by a rank-1 product (GER): \f$A \leftarrow A + \alpha x y^T\f$.
 inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) {
 #if defined(NUMERICS_HAS_BLAS)
     blas::ger(alpha, x, y, A);
@@ -78,7 +79,7 @@ inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A
 #endif
 }
 
-/// @brief Lower triangular solve: \f$x \leftarrow L^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve a lower triangular system: \f$x \leftarrow L^{-1} b\f$. `x` may alias `b`.
 inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
 #if defined(NUMERICS_HAS_BLAS)
     blas::trsv_lower(L, b, x);
@@ -87,7 +88,7 @@ inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
 #endif
 }
 
-/// @brief Upper triangular solve: \f$x \leftarrow U^{-1} b\f$. `x` may alias `b`.
+/// @brief Solve an upper triangular system: \f$x \leftarrow U^{-1} b\f$. `x` may alias `b`.
 inline void trsv_upper(const mat<real> &U, const vec<real> &b, vec<real> &x) {
 #if defined(NUMERICS_HAS_BLAS)
     blas::trsv_upper(U, b, x);

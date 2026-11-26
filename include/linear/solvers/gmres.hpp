@@ -18,14 +18,14 @@
 
 namespace num {
 
-/// @brief GMRES options: tolerance, iteration limit, restart length.
+/// @brief Options for GMRES: tolerance, iteration limit, restart length.
 struct gmres_options {
     real tolerance = 1e-6;
     idx max_iterations = 1000;
     idx restart = 30;
 };
 
-/// @brief Restarted GMRES: \f$A x = b\f$, minimizing \f$\|\beta e_1 - \bar{H}_m y\|_2\f$ per cycle.
+/// @brief Solve a general system by restarted GMRES: \f$A x = b\f$.
 /// @throws std::invalid_argument If dimensions mismatch.
 template <class Op, class V>
 requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&
@@ -141,7 +141,8 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&
     return result;
 }
 
-/// @brief Right-preconditioned GMRES: \f$A M^{-1} u = b\f$, \f$x = M^{-1} u\f$.
+/// @brief Solve a general system by GMRES with a preconditioner on the right:
+/// \f$A M^{-1} u = b\f$, \f$x = M^{-1} u\f$.
 /// @note `result.residual` is the true residual \f$\|b - A x\|_2\f$, whatever the scale of `M`.
 template <class Op, class M, class V>
 requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::linear_operator<M, V, V> &&
@@ -275,7 +276,7 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::
     return result;
 }
 
-/// @brief Restarted GMRES on a sparse matrix: \f$A x = b\f$.
+/// @brief Solve a sparse system by restarted GMRES: \f$A x = b\f$.
 /// @throws std::invalid_argument If `A` is not square or dimensions mismatch.
 inline solver_result gmres(const spmat &A, const vec<real> &b, vec<real> &x, gmres_options options = {}) {
     if (A.n_rows() != A.n_cols()) {
@@ -286,7 +287,7 @@ inline solver_result gmres(const spmat &A, const vec<real> &b, vec<real> &x, gmr
         options);
 }
 
-/// @brief Restarted GMRES on a dense matrix: \f$A x = b\f$.
+/// @brief Solve a dense system by restarted GMRES: \f$A x = b\f$.
 /// @throws std::invalid_argument If `A` is not square or dimensions mismatch.
 inline solver_result gmres(const mat<real> &A, const vec<real> &b, vec<real> &x, gmres_options options = {}) {
     if (A.rows() != A.cols()) {

@@ -19,7 +19,7 @@ concept scalar_field_like = field<T> && requires(F &f, const F &cf, int i, int j
     { f.as_vec() };
 };
 
-/// @brief Vector-space field: a scalar field whose storage is a vector space `V`.
+/// @brief Scalar field whose storage is a vector space `V`.
 template <class F, class T = real, class V = vec<real>>
 concept solvable_field = scalar_field_like<F, T> && vec_field<F, V>;
 

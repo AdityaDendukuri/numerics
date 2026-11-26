@@ -1,5 +1,5 @@
-/// @file 01_direct_factorizations.cpp
-/// @brief LU, Cholesky, QR least squares and the Thomas algorithm, all solved through solve(F, b, x).
+/// @file 01_linear_systems.cpp
+/// @brief Solve a system of linear equations Ax = b by LU, Cholesky, QR and tridiagonal factorization.
 ///
 /// Every factorization is a value, and the same free function solves with all of them. `lu(A)`
 /// pivots, while `lu(A, no_pivot)` skips the pivot search for matrices whose structure keeps the

@@ -86,7 +86,8 @@ inline void thomas(const vec<real> &a, const vec<real> &b, const vec<real> &c, c
 } // namespace cuda
 #endif
 
-/// @brief Tridiagonal solve (Thomas): \f$a_{i-1} x_{i-1} + b_i x_i + c_i x_{i+1} = d_i\f$.
+/// @brief Solve a tridiagonal system by the Thomas algorithm:
+/// \f$a_{i-1} x_{i-1} + b_i x_i + c_i x_{i+1} = d_i\f$.
 /// Uses LAPACK `dgtsv` when available.
 /// @throws std::invalid_argument If the diagonal lengths are inconsistent.
 template <typename Float = double>

@@ -1,5 +1,5 @@
-/// @file 07_spectral_fft_transforms.cpp
-/// @brief FFT and inverse FFT, the real FFT, and the backend that runs them.
+/// @file 07_fourier_transforms.cpp
+/// @brief Compute the Fourier transform of complex and real data, and its inverse.
 ///
 /// `fft` and `ifft` transform complex vectors, and `rfft` and `irfft` transform real ones, keeping
 /// the n/2 + 1 non-negative frequencies. The inverse transforms are unnormalized, so dividing by n

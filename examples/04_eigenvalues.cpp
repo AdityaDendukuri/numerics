@@ -1,5 +1,5 @@
-/// @file 04_eigen_and_svd.cpp
-/// @brief Symmetric eigendecomposition, Lanczos, power iteration and the SVD.
+/// @file 04_eigenvalues.cpp
+/// @brief Compute eigenvalues, eigenvectors and singular values.
 ///
 /// `eig_sym` returns every eigenpair of a matrix that claims the self-adjoint law. `lanczos` finds
 /// the k largest eigenvalues from matrix-vector products alone, and `power_iteration` finds the

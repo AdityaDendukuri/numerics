@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief State with a vector space `V`, as implicit integrators need.
+/// @brief State in a vector space `V`, as implicit methods need.
 template <class T, class V = vec<real>>
 concept vec_field = vector_space<V> && requires(T &field) {
     { field.as_vec() } -> std::same_as<V &>;

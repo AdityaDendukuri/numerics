@@ -1,5 +1,5 @@
-/// @file 15_diffusion_evidence_cg.cpp
-/// @brief End-to-end invariant propagation from a PDE construction into CG.
+/// @file 15_diffusion_equation.cpp
+/// @brief Solve a diffusion equation by the conjugate gradient method.
 
 #include "numerics.hpp"
 

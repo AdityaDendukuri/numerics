@@ -1,5 +1,5 @@
-/// @file 13_talbot_spectral_validation.cpp
-/// @brief Compare Talbot contour inversion with a Krylov solution for a birth-death process.
+/// @file 13_inverse_laplace_transform.cpp
+/// @brief Compute a probability distribution in time two ways, and check that they agree.
 #include <algorithm>
 #include <cmath>
 #include <io/json.hpp>

@@ -1,5 +1,5 @@
-/// @file 21_graphs_and_structures.cpp
-/// @brief Graphs, traversal, spanning trees, disjoint sets, and a Laplacian solve with ApproxChol.
+/// @file 21_graphs.cpp
+/// @brief Build and search graphs, find spanning trees, and solve a graph Laplacian system.
 ///
 /// `graph<W, I>` stores weighted adjacency lists. `structures::dijkstra`, `bfs`,
 /// `connected_components` and `minimum_spanning_tree` run on it directly, and

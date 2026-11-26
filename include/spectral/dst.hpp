@@ -11,7 +11,7 @@
 
 namespace num::spectral {
 
-/// @brief DST length check: \f$N + 1\f$ must be a power of two.
+/// @brief Check the length of a sine transform: \f$N + 1\f$ must be a power of two.
 inline void dst_check_size(int N) {
     if (N <= 0 || (N & (N + 1)) != 0) {
         throw std::invalid_argument(
@@ -19,7 +19,8 @@ inline void dst_check_size(int N) {
     }
 }
 
-/// @brief Discrete sine transform (DST-I): \f$X_k = \sum_{j=1}^N x_j \sin(j k \pi / (N + 1))\f$.
+/// @brief Compute the discrete sine transform (DST-I):
+/// \f$X_k = \sum_{j=1}^N x_j \sin(j k \pi / (N + 1))\f$.
 /// Unnormalized.
 /// @note \f$N + 1\f$ must be a power of two.
 inline vec<real> dst1(const vec<real> &x) {
@@ -41,7 +42,7 @@ inline vec<real> dst1(const vec<real> &x) {
     return out;
 }
 
-/// @brief Row-wise DST-I of an \f$N \times N\f$ array, in place.
+/// @brief Apply the sine transform to each row of an \f$N \times N\f$ array, in place.
 inline void dst_rows(array<double> &A, int N) {
     vec<real> row(static_cast<std::size_t>(N));
     for (int i = 0; i < N; ++i) {
@@ -56,7 +57,7 @@ inline void dst_rows(array<double> &A, int N) {
     }
 }
 
-/// @brief Column-wise DST-I of an \f$N \times N\f$ array, in place.
+/// @brief Apply the sine transform to each column of an \f$N \times N\f$ array, in place.
 inline void dst_cols(array<double> &A, int N) {
     vec<real> col(static_cast<std::size_t>(N));
     for (int j = 0; j < N; ++j) {
@@ -73,7 +74,7 @@ inline void dst_cols(array<double> &A, int N) {
     }
 }
 
-/// @brief 2D DST-I of an \f$N \times N\f$ array, in place.
+/// @brief Apply the 2D sine transform to an \f$N \times N\f$ array, in place.
 inline void dst2d(array<double> &A, int N) {
     dst_check_size(N);
     dst_cols(A, N);

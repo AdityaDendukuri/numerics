@@ -28,7 +28,7 @@ namespace num {
 
 mat<real> expm(mat<real> A);
 
-/// @brief Krylov matrix exponential action: \f$\exp(t A) v\f$.
+/// @brief Compute the action of the matrix exponential from a Krylov subspace: \f$\exp(t A) v\f$.
 template <class Op>
 requires linear_operator<Op, vec<real>, vec<real>> vec<real> expv(real t, const Op &A, const vec<real> &v,
                                                         int m_max = 30, real tol = 1e-8) {
@@ -96,7 +96,8 @@ vec<real> expv(real t, const spmat &A, const vec<real> &v, int m_max = 30, real 
 
 namespace detail {
 
-/// @brief Parlett–Reinsch balancing: \f$A \leftarrow D^{-1} A D\f$; returns \f$D\f$.
+/// @brief Balance a matrix by Parlett–Reinsch scaling:
+/// \f$A \leftarrow D^{-1} A D\f$; returns \f$D\f$.
 inline std::vector<real> balance(mat<real> &A) {
     const idx n = A.rows();
     std::vector<real> d(n, 1.0);
@@ -140,7 +141,8 @@ inline std::vector<real> balance(mat<real> &A) {
 
 } // namespace detail
 
-/// @brief Matrix exponential (balanced scaling and squaring, [13/13] Padé): \f$\exp(A)\f$.
+/// @brief Compute the matrix exponential by scaling and squaring with a [13/13] Padé approximant:
+/// \f$\exp(A)\f$.
 inline mat<real> expm(mat<real> A) {
     const idx n = A.rows();
     const std::vector<real> d = detail::balance(A);
@@ -288,7 +290,7 @@ struct expv_options {
     int maximum_steps = 10000; ///< Accepted plus rejected steps before giving up.
 };
 
-/// @brief Restarted Krylov matrix exponential action, adaptive steps: \f$\exp(t A) v\f$.
+/// @brief Compute \f$\exp(t A) v\f$ by restarted Krylov steps of adaptive length.
 template <class Op>
 requires linear_operator<Op, vec<real>, vec<real>> vec<real>
 restarted_expv(real t, const Op &A, const vec<real> &v, expv_options options = {}) {

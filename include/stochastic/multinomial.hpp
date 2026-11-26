@@ -10,7 +10,7 @@
 
 namespace num {
 
-/// @brief Multinomial sample: counts \f$n_k\f$ with \f$P(k) \propto w_k\f$.
+/// @brief Draw multinomial counts \f$n_k\f$ with \f$P(k) \propto w_k\f$.
 /// The counts sum to `draws`.
 template <std::uniform_random_bit_generator RNG>
 [[nodiscard]] array<idx> sample_multinomial(view<const real> weights, idx draws, RNG &random) {

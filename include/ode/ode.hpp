@@ -11,7 +11,8 @@
 
 namespace num {
 
-/// @brief Forward Euler trajectory, lazy: \f$y_{n+1} = y_n + h f(t_n, y_n)\f$.
+/// @brief Return the steps of the forward Euler method, computed as they are read:
+/// \f$y_{n+1} = y_n + h f(t_n, y_n)\f$.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 requires vector_space<State> &&
     std::invocable<RHS &, real, const State &, State &> inline basic_euler_steps<RHS, State>
@@ -19,7 +20,8 @@ requires vector_space<State> &&
     return basic_euler_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
-/// @brief Classical Runge–Kutta (RK4) trajectory, lazy: \f$\dot{y} = f(t, y)\f$.
+/// @brief Return the steps of the classical Runge–Kutta method (RK4), computed as they are read:
+/// \f$\dot{y} = f(t, y)\f$.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 requires vector_space<State> &&
     std::invocable<RHS &, real, const State &, State &> inline basic_rk4_steps<RHS, State>
@@ -27,7 +29,8 @@ requires vector_space<State> &&
     return basic_rk4_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
-/// @brief Dormand–Prince RK45 trajectory, lazy and adaptive: \f$\dot{y} = f(t, y)\f$.
+/// @brief Return the steps of the adaptive Dormand–Prince method (RK45), computed as they are read:
+/// \f$\dot{y} = f(t, y)\f$.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 requires vector_space<State> &&
     std::invocable<RHS &, real, const State &, State &> inline basic_rk45_steps<RHS, State>
@@ -35,7 +38,8 @@ requires vector_space<State> &&
     return basic_rk45_steps<RHS, State>(std::move(f), std::move(y0), p);
 }
 
-/// @brief Velocity Verlet trajectory, lazy and symplectic: \f$\ddot{q} = a(q)\f$.
+/// @brief Return the steps of the velocity Verlet method, computed as they are read:
+/// \f$\ddot{q} = a(q)\f$.
 /// @note Energy drift stays bounded over long runs.
 template <typename Accel = accel_fn, typename State = vec<real>>
 requires vector_space<State> &&
@@ -44,7 +48,8 @@ requires vector_space<State> &&
     return basic_verlet_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
-/// @brief Yoshida fourth-order trajectory, lazy and symplectic: \f$\ddot{q} = a(q)\f$.
+/// @brief Return the steps of Yoshida's fourth-order method, computed as they are read:
+/// \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
 requires vector_space<State> &&
     std::invocable<Accel &, const State &, State &> inline basic_yoshida4_steps<Accel, State>
@@ -52,7 +57,8 @@ requires vector_space<State> &&
     return basic_yoshida4_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
-/// @brief Runge–Kutta–Nyström fourth-order trajectory, lazy: \f$\ddot{q} = a(q)\f$.
+/// @brief Return the steps of the Runge–Kutta–Nyström method (order 4), computed as they are read:
+/// \f$\ddot{q} = a(q)\f$.
 template <typename Accel = accel_fn, typename State = vec<real>>
 requires vector_space<State> &&
     std::invocable<Accel &, const State &, State &> inline basic_rk4_2nd_steps<Accel, State>
@@ -60,7 +66,7 @@ requires vector_space<State> &&
     return basic_rk4_2nd_steps<Accel, State>(std::move(accel), std::move(q0), std::move(v0), p);
 }
 
-/// @brief Forward Euler integration: \f$y_{n+1} = y_n + h f(t_n, y_n)\f$.
+/// @brief Integrate by the forward Euler method: \f$y_{n+1} = y_n + h f(t_n, y_n)\f$.
 /// `observer(t, u)` runs after each step.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 requires vector_space<State> &&std::invocable<RHS &, real, const State &, State &> inline ode_result
@@ -75,7 +81,7 @@ ode_euler(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) 
     return s.run();
 }
 
-/// @brief Classical Runge–Kutta (RK4) integration: \f$\dot{y} = f(t, y)\f$.
+/// @brief Integrate by the classical Runge–Kutta method (RK4): \f$\dot{y} = f(t, y)\f$.
 /// `observer(t, u)` runs after each step.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 requires vector_space<State> &&std::invocable<RHS &, real, const State &, State &> inline ode_result
@@ -90,7 +96,8 @@ ode_rk4(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
     return s.run();
 }
 
-/// @brief Dormand–Prince RK45 integration, adaptive: \f$\dot{y} = f(t, y)\f$.
+/// @brief Integrate by the Dormand–Prince method (RK45), choosing the step size:
+/// \f$\dot{y} = f(t, y)\f$.
 /// `observer(t, u)` runs after each accepted step.
 template <typename RHS = ode_rhs_fn, typename State = vec<real>>
 requires vector_space<State> &&std::invocable<RHS &, real, const State &, State &> inline ode_result
@@ -105,7 +112,7 @@ ode_rk45(RHS f, State y0, ode_params p = {}, const observer_fn &observer = {}) {
     return s.run();
 }
 
-/// @brief Velocity Verlet integration, symplectic: \f$\ddot{q} = a(q)\f$.
+/// @brief Integrate by the velocity Verlet method, which is symplectic: \f$\ddot{q} = a(q)\f$.
 /// `observer(t, q, v)` runs after each step.
 template <typename Accel = accel_fn, typename State = vec<real>>
 requires vector_space<State> &&
@@ -122,7 +129,7 @@ requires vector_space<State> &&
     return s.run();
 }
 
-/// @brief Yoshida fourth-order integration, symplectic: \f$\ddot{q} = a(q)\f$.
+/// @brief Integrate by Yoshida's fourth-order symplectic method: \f$\ddot{q} = a(q)\f$.
 /// `observer(t, q, v)` runs after each step.
 template <typename Accel = accel_fn, typename State = vec<real>>
 requires vector_space<State> &&
@@ -139,7 +146,7 @@ requires vector_space<State> &&
     return s.run();
 }
 
-/// @brief Runge–Kutta–Nyström fourth-order integration: \f$\ddot{q} = a(q)\f$.
+/// @brief Integrate by the fourth-order Runge–Kutta–Nyström method: \f$\ddot{q} = a(q)\f$.
 /// `observer(t, q, v)` runs after each step.
 template <typename Accel = accel_fn, typename State = vec<real>>
 requires vector_space<State> &&

@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// @brief Matrix 1-norm: \f$\|A\|_1 = \max_j \sum_i |a_{ij}|\f$.
+/// @brief Compute the 1-norm of a matrix: \f$\|A\|_1 = \max_j \sum_i |a_{ij}|\f$.
 template <std::floating_point T>
 [[nodiscard]] T opnorm1(const mat<T> &A) {
     // Accumulate all column sums in one pass over the rows: A is row-major, so this reads it
@@ -28,7 +28,7 @@ template <std::floating_point T>
     return column.empty() ? T(0) : *std::max_element(column.begin(), column.end());
 }
 
-/// @brief Sparse matrix 1-norm: \f$\|A\|_1\f$.
+/// @brief Compute the 1-norm of a sparse matrix: \f$\|A\|_1\f$.
 [[nodiscard]] inline real opnorm1(const spmat &A) {
     array<real> column(A.n_cols(), 0.0);
     for (idx i = 0; i < A.n_rows(); ++i) {
@@ -39,7 +39,9 @@ template <std::floating_point T>
     return column.empty() ? 0.0 : *std::max_element(column.begin(), column.end());
 }
 
-/// @brief Inverse 1-norm estimate (Hager–Higham, as `dlacn2`): \f$\|A^{-1}\|_1\f$, a lower bound.
+/// @brief Estimate the 1-norm of the inverse from a factorization (Hager–Higham, as `dlacn2`):
+/// \f$\|A^{-1}\|_1\f$.
+/// The estimate is a lower bound.
 /// @note Usually exact or within a factor of 3, for \f$O(n^2)\f$ work with a dense factor.
 template <class F, std::floating_point T = real>
 requires requires(const F &factor, const vec<T> &b, vec<T> &x) {
@@ -109,7 +111,8 @@ requires requires(const F &factor, const vec<T> &b, vec<T> &x) {
     return std::max(estimate, alternative);
 }
 
-/// @brief Reciprocal condition estimate: \f$1 / (\|A\|_1 \|A^{-1}\|_1)\f$; 0 for a zero matrix.
+/// @brief Estimate the reciprocal condition number:
+/// \f$1 / (\|A\|_1 \|A^{-1}\|_1)\f$; 0 for a zero matrix.
 /// @note A solve loses about \f$\log_{10}(1 / \mathrm{rcond})\f$ digits.
 template <factorization F>
 [[nodiscard]] real rcond(const F &factor, const mat<real> &A) {
@@ -120,7 +123,8 @@ template <factorization F>
     return 1.0 / (norm * inverse_norm1_estimate(factor, A.rows()));
 }
 
-/// @brief Reciprocal condition estimate of a sparse matrix: \f$1 / (\|A\|_1 \|A^{-1}\|_1)\f$.
+/// @brief Estimate the reciprocal condition number of a sparse matrix:
+/// \f$1 / (\|A\|_1 \|A^{-1}\|_1)\f$.
 template <factorization F>
 [[nodiscard]] real rcond(const F &factor, const spmat &A) {
     const real norm = opnorm1(A);

@@ -26,24 +26,24 @@ class vec {
   public:
     using value_type = T;
 
-    /// @brief Empty vector.
+    /// @brief Construct an empty vector.
     vec() : n_(0), data_(nullptr) {}
 
-    /// @brief Zero vector of length `n`.
+    /// @brief Construct a vector of `n` zeros.
     explicit vec(idx n) : n_(n), data_(make_aligned<T>(n)) {}
 
-    /// @brief Constant vector of length `n`, filled with `val`.
+    /// @brief Construct a vector of `n` entries equal to `val`.
     vec(idx n, T val) : n_(n), data_(make_aligned_for_overwrite<T>(n)) {
         if (n_ > 0) std::fill_n(data_.get(), n_, val);
     }
 
-    /// @brief Vector from an initializer list.
+    /// @brief Construct a vector from an initializer list.
     vec(std::initializer_list<T> init)
         : n_(init.size()), data_(make_aligned_for_overwrite<T>(init.size())) {
         if (n_ > 0) std::copy(init.begin(), init.end(), data_.get());
     }
 
-    /// @brief Vector copied from a view.
+    /// @brief Construct a vector by copying a view.
     explicit vec(view<const T> values)
         : n_(values.size()), data_(make_aligned_for_overwrite<T>(values.size())) {
         if (n_ > 0) std::copy(values.begin(), values.end(), data_.get());
@@ -114,25 +114,25 @@ class vec {
         return *this;
     }
 
-    /// @brief Length \f$n\f$.
+    /// @brief Return the length \f$n\f$.
     [[nodiscard]] constexpr idx size() const noexcept { return n_; }
 
-    /// @brief The vector itself, for field-generic code.
+    /// @brief Return the vector itself, for code written for fields.
     vec &as_vec() { return *this; }
     [[nodiscard]] const vec &as_vec() const { return *this; }
 
-    /// @brief Host storage; aligned to `storage_alignment`.
+    /// @brief Return the storage; it is aligned to `storage_alignment`.
     T *data() noexcept { return assume_storage_aligned(data_.get()); }
     [[nodiscard]] const T *data() const noexcept { return assume_storage_aligned(data_.get()); }
 
-    /// @brief View of the whole vector.
+    /// @brief Return a view of the whole vector.
     [[nodiscard]] view<T> span() noexcept { return {data(), n_}; }
     [[nodiscard]] view<const T> span() const noexcept { return {data(), n_}; }
 
     T &operator[](idx i) { return data_[i]; }
     T operator[](idx i) const { return data_[i]; }
 
-    /// @brief First and last elements; the vector must be non-empty.
+    /// @brief Return the first or last entry; the vector must not be empty.
     T &front() { return data_[0]; }
     [[nodiscard]] const T &front() const { return data_[0]; }
     T &back() { return data_[n_ - 1]; }
@@ -143,7 +143,7 @@ class vec {
     [[nodiscard]] const T *begin() const { return data_.get(); }
     [[nodiscard]] const T *end() const { return data_.get() + n_; }
 
-    /// @brief Copy to a device mirror, allocated on first use.
+    /// @brief Copy the vector to the device, allocating a copy there on first use.
     void to_gpu() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
@@ -155,7 +155,7 @@ class vec {
 #endif
     }
 
-    /// @brief Copy back from the device mirror and release it.
+    /// @brief Copy the vector back from the device and free the device copy.
     void to_cpu() {
 #if defined(NUMERICS_HAS_CUDA)
         if constexpr (std::is_same_v<T, real>) {
@@ -168,7 +168,7 @@ class vec {
 #endif
     }
 
-    /// @brief Device storage, or null without a mirror.
+    /// @brief Return the device copy, or null when there is none.
     real *gpu_data() { return d_data_; }
     [[nodiscard]] const real *gpu_data() const { return d_data_; }
     [[nodiscard]] bool on_gpu() const { return d_data_ != nullptr; }
@@ -180,7 +180,7 @@ class vec {
 };
 
 template <typename T>
-/// @brief Copy into an equally sized view.
+/// @brief Copy a vector into a view of the same length.
 void copy_to(const vec<T> &source, view<T> destination) {
     if (source.size() != destination.size()) {
         throw std::invalid_argument("copy_to: vector sizes must match");
@@ -189,16 +189,16 @@ void copy_to(const vec<T> &source, view<T> destination) {
 }
 
 template <typename T>
-/// @brief Copy into an equally sized `std::vector`.
+/// @brief Copy a vector into a `std::vector` of the same length.
 void copy_to(const vec<T> &source, std::vector<T> &destination) {
     copy_to(source, view<T>(destination));
 }
 
-/// @brief Pair view: a flat vector as \f$(x_i, y_i)\f$ pairs.
+/// @brief View of a flat vector as \f$(x_i, y_i)\f$ pairs.
 struct vec2_view {
     vec<real> &v;
 
-    /// @brief Number of pairs.
+    /// @brief Return the number of pairs.
     [[nodiscard]] idx size() const noexcept { return v.size() / 2; }
 
     real &x(idx i) noexcept { return v[2 * i]; }

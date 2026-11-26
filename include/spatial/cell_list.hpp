@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// @brief Non-owning range of particle indices.
+/// @brief Range of particle indices, held by reference.
 struct integer_range {
     const int *first;
     const int *last;
@@ -24,10 +24,10 @@ struct integer_range {
 };
 
 template <field scalar>
-/// @brief 2D cell list: particles binned by counting sort.
+/// @brief Particles sorted into square cells of a 2D grid.
 class cell_list_2d {
   public:
-    /// @brief Cell list over the bounding box with square cells of side `cell_size`.
+    /// @brief Construct cells of side `cell_size` over the bounding box.
     cell_list_2d(scalar cell_size, scalar xmin, scalar xmax, scalar ymin, scalar ymax)
         : cs_(cell_size), xmin_(xmin), ymin_(ymin) {
         // Padding cells avoid boundary checks in the hot query loops.
@@ -38,7 +38,7 @@ class cell_list_2d {
         count_.assign(total, 0);
     }
 
-    /// @brief Rebuild the bins by counting sort.
+    /// @brief Sort the particles into cells again, by counting sort.
     template <position_accessor_2d<scalar> PosAccessor>
     void build(PosAccessor &&get_pos, int n) {
         sorted_.resize(n);
@@ -62,7 +62,7 @@ class cell_list_2d {
         }
     }
 
-    /// @brief Neighbour query: `f(j)` for each candidate near \f$(p_x, p_y)\f$.
+    /// @brief Call `f(j)` for each particle that may be near \f$(p_x, p_y)\f$.
     template <typename F>
     void query(scalar px, scalar py, F &&f) const {
         const int cx = cell_x(px);
@@ -85,7 +85,7 @@ class cell_list_2d {
         }
     }
 
-    /// @brief Pair visit: `f(i, j)` once per candidate pair.
+    /// @brief Call `f(i, j)` once for each pair of particles that may be near each other.
     template <typename F>
     void iterate_pairs(F &&f) const {
         // Half-shell offsets cover all neighboring cell pairs once.
@@ -129,7 +129,7 @@ class cell_list_2d {
         }
     }
 
-    /// @brief Particles in cell \f$(c_x, c_y)\f$.
+    /// @brief Return the particles in cell \f$(c_x, c_y)\f$.
     [[nodiscard]] integer_range cell_particles(int cx, int cy) const noexcept {
         const int cid = (cy * nx_) + cx;
         return {sorted_.data() + start_[cid], sorted_.data() + start_[cid + 1]};

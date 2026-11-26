@@ -10,7 +10,7 @@
 
 namespace num {
 
-/// @brief Dense matrix as a linear map; claims no law.
+/// @brief Treat a dense matrix as a linear map; it claims no law.
 template <std::floating_point T>
 inline void tag_invoke(math::apply_t, const mat<T> &matrix, const vec<T> &x,
                        vec<T> &y) {
@@ -27,7 +27,7 @@ inline void tag_invoke(math::apply_t, const mat<T> &matrix, const vec<T> &x,
 
 namespace num::math::detail {
 
-/// @brief Dense matrix domain and codomain: `vec<T>`.
+/// @brief Domain and codomain of a dense matrix: `vec<T>`.
 template <std::floating_point T>
 struct domain_of<mat<T>> {
     using type = vec<T>;

@@ -23,11 +23,11 @@ num::operators::laplacian_2d num::operators::backward_euler_2d num::operators::t
 ## Diffusion <pde/diffusion.hpp>
 num::pde::diffusion_step_2d num::pde::diffusion_step_2d_dirichlet num::pde::diffusion_step_2d_4th_dirichlet num::pde::laplacian_sparse_2d num::pde::matrix_free_laplacian_2d num::pde::backward_euler_matrix num::pde::backward_euler_operator num::pde::backward_euler_operator_2d num::pde::matrix_free_backward_euler_2d num::pde::make_cg_solver
 
-## ADI <pde/adi.hpp>
+## Alternating-direction implicit method <pde/adi.hpp>
 num::crank_nicolson_adi
 
-## Poisson <pde/poisson.hpp>
+## Poisson equation <pde/poisson.hpp>
 num::pde::poisson2d num::pde::poisson2d_fd
 
-## Field solvers <pde/field_solver.hpp>
+## Poisson equation and vector calculus in 3D <pde/field_solver.hpp>
 num::field_solver num::magnetic_solver

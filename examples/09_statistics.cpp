@@ -1,5 +1,5 @@
-/// @file 09_mcmc_bayesian_sampling.cpp
-/// @brief Running statistics and histograms over a stream of samples.
+/// @file 09_statistics.cpp
+/// @brief Compute the mean, variance and histogram of a stream of samples.
 ///
 /// `running_stats` accumulates the mean and variance in one pass with Welford's update, which
 /// stays accurate where the textbook sum-of-squares formula cancels. `histogram` bins samples

@@ -75,10 +75,10 @@ struct small_matrix {
 
     constexpr void fill(real v) noexcept { data.fill(v); }
 
-    /// @brief Zero matrix.
+    /// @brief Construct a matrix of zeros.
     static constexpr small_matrix zeros() noexcept { return small_matrix{}; }
 
-    /// @brief Identity matrix \f$I\f$; square shapes only.
+    /// @brief Construct the identity matrix \f$I\f$; square shapes only.
     static constexpr small_matrix identity() noexcept {
         static_assert(M == N, "identity() requires a square matrix");
         small_matrix m{};
@@ -88,7 +88,7 @@ struct small_matrix {
         return m;
     }
 
-    /// @brief Transpose: \f$A^T\f$.
+    /// @brief Transpose the matrix: \f$A^T\f$.
     constexpr small_matrix<N, M> transposed() const noexcept {
         small_matrix<N, M> t{};
         for (idx i = 0; i < M; ++i) {
@@ -142,7 +142,7 @@ struct givens_rotation {
     real c = 1;
     real s = 0;
 
-    /// @brief Givens rotation zeroing \f$b\f$: \f$G (a, b)^T = (r, 0)^T\f$.
+    /// @brief Construct the Givens rotation that zeroes \f$b\f$: \f$G (a, b)^T = (r, 0)^T\f$.
     static constexpr givens_rotation from(real a, real b) noexcept {
         if (b == 0) {
             return {};
@@ -151,21 +151,21 @@ struct givens_rotation {
         return {a / r, b / r};
     }
 
-    /// @brief Rotation: \f$(x, y) \leftarrow G (x, y)\f$.
+    /// @brief Rotate a pair: \f$(x, y) \leftarrow G (x, y)\f$.
     constexpr void apply(real &x, real &y) const noexcept {
         const real tmp = (c * x) + (s * y);
         y = (-s * x) + (c * y);
         x = tmp;
     }
 
-    /// @brief Transposed rotation: \f$(x, y) \leftarrow G^T (x, y)\f$.
+    /// @brief Rotate a pair by the transpose: \f$(x, y) \leftarrow G^T (x, y)\f$.
     constexpr void apply_t(real &x, real &y) const noexcept {
         const real tmp = (c * x) - (s * y);
         y = (s * x) + (c * y);
         x = tmp;
     }
 
-    /// @brief The rotation as a \f$2 \times 2\f$ matrix.
+    /// @brief Return the rotation as a \f$2 \times 2\f$ matrix.
     constexpr small_matrix<2, 2> matrix() const noexcept {
         small_matrix<2, 2> G{};
         G(0, 0) = c;

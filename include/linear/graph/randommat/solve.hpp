@@ -10,7 +10,7 @@
 
 namespace num::randommat {
 
-/// @brief Approximate Cholesky solve: \f$x \leftarrow P^T C^{-T} C^{-1} P b\f$.
+/// @brief Solve with an approximate Cholesky factor: \f$x \leftarrow P^T C^{-T} C^{-1} P b\f$.
 template <typename Float = double, std::integral Index = num::idx>
 inline void solve(const cholesky_factor<Float, Index> &factor, const Float *b, Float *x,
                   std::vector<Float> &scratch) {
@@ -58,7 +58,7 @@ inline void solve(const cholesky_factor<Float, Index> &factor, const Float *b, F
     }
 }
 
-/// @brief Approximate Cholesky solve on arrays.
+/// @brief Solve with an approximate Cholesky factor, on arrays.
 template <typename Float = double, std::integral Index = num::idx>
 inline std::vector<Float> solve(const cholesky_factor<Float, Index> &factor,
                                 const std::vector<Float> &b) {
@@ -69,7 +69,7 @@ inline std::vector<Float> solve(const cholesky_factor<Float, Index> &factor,
     return x;
 }
 
-/// @brief Approximate Cholesky solve on `vec<real>`.
+/// @brief Solve with an approximate Cholesky factor, on `vec<real>`.
 template <typename Float = double, std::integral Index = num::idx>
 inline void solve(const cholesky_factor<Float, Index> &factor,
                   const vec<Float> &b, vec<Float> &x) {

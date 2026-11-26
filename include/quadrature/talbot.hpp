@@ -11,13 +11,15 @@
 
 namespace num {
 
-/// @brief Contour node: \f$f(t) \approx \sum_k w_k F(s_k)\f$, weights including \f$1 / 2\pi i\f$.
+/// @brief Node of a contour rule, with the weight including \f$1 / 2\pi i\f$:
+/// \f$f(t) \approx \sum_k w_k F(s_k)\f$.
 struct contour_node {
     cplx shift;
     cplx weight;
 };
 
-/// @brief Weideman–Talbot quadrature: \f$f(t) = \mathcal{L}^{-1}[F](t)\f$.
+/// @brief Rule for inverting the Laplace transform on a Talbot contour (Weideman):
+/// \f$f(t) = \mathcal{L}^{-1}[F](t)\f$.
 struct talbot_quadrature {
     idx modes = 16;
     real sigma = 0.6407;
@@ -54,12 +56,13 @@ struct talbot_quadrature {
     }
 };
 
-/// @brief Weideman–Talbot contour for \f$f(t) = \mathcal{L}^{-1}[F](t)\f$, \f$t > 0\f$.
+/// @brief Construct the Talbot contour for inverting the Laplace transform at \f$t > 0\f$:
+/// \f$f(t) = \mathcal{L}^{-1}[F](t)\f$.
 inline array<contour_node> talbot_contour(real t, idx modes = 16) {
     return talbot_quadrature{modes}.nodes(t);
 }
 
-/// @brief Half Weideman–Talbot contour for real \f$f\f$: \f$F(\bar{s}) = \overline{F(s)}\f$.
+/// @brief Construct half the Talbot contour, for real \f$f\f$: \f$F(\bar{s}) = \overline{F(s)}\f$.
 /// Each weight is doubled.
 inline array<contour_node> real_talbot_contour(real t, idx modes = 16) {
     if (modes % 2 != 0) {

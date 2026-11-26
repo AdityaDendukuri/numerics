@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// @brief PCG options: tolerance and iteration limit.
+/// @brief Options for preconditioned conjugate gradients: tolerance and iteration limit.
 struct pcg_options {
     num::tolerance tolerance{.rtol = 1e-10}; ///< On \f$\|b - Ax\|_2\f$ against \f$\|b\|_2\f$.
     idx max_iterations = 1000;
@@ -106,7 +106,8 @@ requires math::inner_product_space<V> &&math::linear_operator<Op, V, V> &&math::
 
 } // namespace math_krylov_detail
 
-/// @brief Preconditioned conjugate gradients (PCG): \f$A x = b\f$ with \f$M \approx A^{-1}\f$.
+/// @brief Solve a symmetric positive definite system by preconditioned conjugate gradients:
+/// \f$A x = b\f$, \f$M \approx A^{-1}\f$.
 /// `A` and `M` must both be tagged SPD.
 /// @throws std::invalid_argument If dimensions mismatch.
 template <class Op, class M, class V>
@@ -117,7 +118,8 @@ requires math::inner_product_space<V> &&math::spd_operator<Op, V> && math::spd_o
     return math_krylov_detail::pcg_recurrence(A, preconditioner, b, x, options, no_restriction);
 }
 
-/// @brief PCG on an invariant subspace \f$S\f$: \f$A x = b\f$ with \f$x, b \in S\f$.
+/// @brief Solve by preconditioned conjugate gradients on an invariant subspace \f$S\f$:
+/// \f$A x = b\f$, \f$x, b \in S\f$.
 template <class Subspace, class Op, class M, class V>
 requires math::inner_product_space<V> &&math::linear_subspace_of<Subspace, V> &&
     math::linear_operator<Op, V, V> &&math::linear_operator<M, V, V> &&

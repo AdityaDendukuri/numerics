@@ -23,7 +23,7 @@ enum class diagnostic_level {
     full = 2   ///< Includes sampled symmetry, adjoint, and positive-definiteness testing
 };
 
-/// @brief Diagnostic preset: how much runtime checking runs.
+/// @brief Amount of runtime checking.
 enum class diagnostic_preset : std::uint8_t {
     strict,     ///< Shape checks and property sampling.
     balanced,   ///< Shape checks only.
@@ -32,15 +32,15 @@ enum class diagnostic_preset : std::uint8_t {
 };
 
 namespace preset {
-/// @brief Preset: shape checks and property sampling.
+/// @brief Check shapes and sample properties.
 inline constexpr diagnostic_preset strict = diagnostic_preset::strict;
-/// @brief Preset: shape checks only.
+/// @brief Check shapes only.
 inline constexpr diagnostic_preset balanced = diagnostic_preset::balanced;
-/// @brief Preset: checks silenced.
+/// @brief Check nothing.
 inline constexpr diagnostic_preset unsafe = diagnostic_preset::unsafe;
-/// @brief Preset: alias of `unsafe`.
+/// @brief Check nothing; the same as `unsafe`.
 inline constexpr diagnostic_preset prototype = diagnostic_preset::unsafe;
-/// @brief Preset: diagnostics compiled out.
+/// @brief Compile the checks out.
 inline constexpr diagnostic_preset production = diagnostic_preset::production;
 } // namespace preset
 
@@ -120,7 +120,7 @@ inline void set_level(diagnostic_level lvl) noexcept {
     detail::g_level.store(detail::clamp_to_ceiling(lvl), std::memory_order_relaxed);
 }
 
-/// @brief Current diagnostic level.
+/// @brief Return the current diagnostic level.
 [[nodiscard]] inline diagnostic_level get_level() noexcept {
     return detail::g_level.load(std::memory_order_relaxed);
 }
@@ -134,17 +134,17 @@ inline void set_preset(diagnostic_preset p) noexcept {
                           std::memory_order_relaxed);
 }
 
-/// @brief Last requested diagnostic preset.
+/// @brief Return the most recently requested diagnostic preset.
 [[nodiscard]] inline diagnostic_preset get_preset() noexcept {
     return detail::g_preset.load(std::memory_order_relaxed);
 }
 
-/// @brief Whether the requested preset is fully available in this build.
+/// @brief Test whether the requested preset is fully available in this build.
 [[nodiscard]] inline bool preset_fully_applied() noexcept {
     return detail::level_for(get_preset()) == get_level();
 }
 
-/// @brief Scoped diagnostic preset, restored on exit.
+/// @brief Apply a diagnostic preset for the rest of a scope.
 class scoped_preset {
   public:
     explicit scoped_preset(diagnostic_preset temp_preset) noexcept
@@ -163,7 +163,7 @@ class scoped_preset {
     diagnostic_preset previous_preset_;
 };
 
-/// @brief Raise a diagnostic error with the call site.
+/// @brief Throw a diagnostic error that records the call site.
 [[noreturn]] inline void panic(std::string_view category, std::string_view message,
                                std::source_location loc = std::source_location::current()) {
     std::string err = "[" + std::string(category) + "] Error at " + loc.file_name() + ":" +
@@ -172,7 +172,7 @@ class scoped_preset {
     throw std::invalid_argument(err);
 }
 
-/// @brief Dimension check: `expected == actual`.
+/// @brief Check that two dimensions agree: `expected == actual`.
 inline void check_dim(idx expected, idx actual, std::string_view label,
                       std::source_location loc = std::source_location::current()) {
     if constexpr (checks_compiled_in) {
@@ -185,7 +185,7 @@ inline void check_dim(idx expected, idx actual, std::string_view label,
     }
 }
 
-/// @brief Non-empty check: `size > 0`.
+/// @brief Check that a container is not empty: `size > 0`.
 inline void check_non_empty(idx size, std::string_view label,
                             std::source_location loc = std::source_location::current()) {
     if constexpr (checks_compiled_in) {
@@ -195,7 +195,7 @@ inline void check_non_empty(idx size, std::string_view label,
     }
 }
 
-/// @brief Finiteness check: every value is finite.
+/// @brief Check that every value is finite.
 template <typename T>
 inline void check_finite(const T *data, idx n, std::string_view label,
                          std::source_location loc = std::source_location::current()) {

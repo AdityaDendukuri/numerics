@@ -16,7 +16,7 @@ using num::debug::diagnostic_level;
 using num::debug::get_level;
 using num::debug::panic;
 
-/// @brief Bracket check: \f$f(a) f(b) < 0\f$.
+/// @brief Check that an interval brackets a root: \f$f(a) f(b) < 0\f$.
 template <class F, class T = real>
 requires scalar_function<F, T> inline void verify_bracket(F &&f, T a, T b, call_site site = {}) {
     const std::source_location loc = site.location;
@@ -41,7 +41,8 @@ requires scalar_function<F, T> inline void verify_bracket(F &&f, T a, T b, call_
     }
 }
 
-/// @brief Derivative check: \f$f'(x) \approx (f(x + h) - f(x - h)) / 2h\f$.
+/// @brief Check a derivative by central differences:
+/// \f$f'(x) \approx (f(x + h) - f(x - h)) / 2h\f$.
 template <class F, class D, class T = real>
 requires differentiable_function<F, D, T> inline void
 verify_derivative(F &&f, D &&df, T x, T tol = T(1e-5), call_site site = {}) {

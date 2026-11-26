@@ -8,33 +8,35 @@
 
 namespace num::omp {
 
-/// @brief Elements per thread block.
+/// @brief Number of elements in each block given to a thread.
 inline constexpr idx parallel_block = idx{1} << 14;
 
-/// @brief Default single-thread threshold. Override with `-DNUMERICS_PARALLEL_THRESHOLD=<n>`.
+/// @brief Default size below which work stays on one thread. Set with
+/// `-DNUMERICS_PARALLEL_THRESHOLD=<n>`.
 #ifndef NUMERICS_PARALLEL_THRESHOLD
 #define NUMERICS_PARALLEL_THRESHOLD (1 << 18)
 #endif
-/// @brief Element count below which an operation stays on one thread.
+/// @brief Number of elements below which an operation stays on one thread.
 /// @note Starting a parallel region costs about 34 µs on macOS libomp.
 inline constexpr idx parallel_threshold = idx{NUMERICS_PARALLEL_THRESHOLD};
 
-/// @brief Maximum number of blocks.
+/// @brief Largest number of blocks.
 inline constexpr idx max_parallel_blocks = 256;
 
-/// @brief Block size for `n` elements: at least `parallel_block`, at most `max_parallel_blocks`.
+/// @brief Return the block size for `n` elements: at least `parallel_block`, at most
+/// `max_parallel_blocks` blocks.
 [[nodiscard]] inline constexpr idx block_size_for(idx n) noexcept {
     const idx even_split = (n + max_parallel_blocks - 1) / max_parallel_blocks;
     return even_split > parallel_block ? even_split : parallel_block;
 }
 
-/// @brief Number of blocks covering `n` elements.
+/// @brief Return the number of blocks that cover `n` elements.
 [[nodiscard]] inline constexpr idx block_count_for(idx n) noexcept {
     const idx size = block_size_for(n);
     return (n + size - 1) / size;
 }
 
-/// @brief Blocked reduction: \f$\sum_b \mathrm{block}(o_b, \ell_b)\f$ over \f$[0, n)\f$.
+/// @brief Sum `block(offset, length)` over blocks covering \f$[0, n)\f$, in parallel.
 /// Partials are summed in block order.
 template <class T, class Block>
 [[nodiscard]] inline T parallel_reduce(idx n, Block block) {
@@ -62,7 +64,7 @@ template <class T, class Block>
     return block(idx{0}, n);
 }
 
-/// @brief Blocked loop: `block(offset, length)` over \f$[0, n)\f$.
+/// @brief Call `block(offset, length)` on blocks covering \f$[0, n)\f$, in parallel.
 template <class Block>
 inline void parallel_apply(idx n, Block block) {
     if (n == 0) {

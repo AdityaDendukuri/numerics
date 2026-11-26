@@ -13,7 +13,7 @@
 
 namespace num {
 
-/// @brief Largest eigenvalue estimate by power iteration: \f$\lambda_{\max}\f$, times `safety`.
+/// @brief Estimate the largest eigenvalue by power iteration, times `safety`: \f$\lambda_{\max}\f$.
 template <class Op>
 [[nodiscard]] inline real estimate_largest_eigenvalue(const Op &A, idx iterations = 25,
                                                       real safety = 1.1) {
@@ -47,7 +47,7 @@ template <class Op>
     return std::abs(lambda) * safety;
 }
 
-/// @brief Chebyshev preconditioner: \f$M^{-1} = p_m(A)\f$.
+/// @brief Preconditioner by a Chebyshev polynomial: \f$M^{-1} = p_m(A)\f$.
 /// \f$p_m\f$ minimizes \f$\max_{\lambda \in [\ell, h]} |1 - \lambda p(\lambda)|\f$.
 /// @warning SPD only if \f$[\ell, h]\f$ encloses the spectrum; otherwise PCG may diverge.
 /// @warning References `A`; it must outlive the preconditioner.
@@ -57,10 +57,10 @@ class chebyshev_preconditioner final {
   public:
     using domain_type = vec<real>;
     using codomain_type = vec<real>;
-    /// @brief Declared SPD; valid only when the bounds enclose the spectrum.
+    /// @brief Declared SPD; valid only when the interval contains every eigenvalue.
     using laws = law::list<law::spd>;
 
-    /// @brief Chebyshev preconditioner of degree `degree` on \f$[\ell, h]\f$.
+    /// @brief Construct a Chebyshev preconditioner of degree `degree` on \f$[\ell, h]\f$.
     /// @throws std::invalid_argument If \f$0 < \ell < h\f$ fails.
     chebyshev_preconditioner(const Op &A, real lo, real hi, idx degree)
         : op_(&A), lo_(lo), hi_(hi), degree_(degree), n_(static_cast<idx>(A.rows())),
@@ -81,7 +81,7 @@ class chebyshev_preconditioner final {
     [[nodiscard]] idx cols() const noexcept { return n_; }
     [[nodiscard]] idx degree() const noexcept { return degree_; }
 
-    /// @brief Preconditioner application: \f$z \leftarrow p_m(A) r\f$.
+    /// @brief Apply the preconditioner: \f$z \leftarrow p_m(A) r\f$.
     void apply(const vec<real> &r, vec<real> &z) const {
         if (r.size() != n_) {
             throw std::invalid_argument("chebyshev: dimension mismatch");
@@ -138,7 +138,7 @@ class chebyshev_preconditioner final {
     mutable vec<real> work_;
 };
 
-/// @brief Chebyshev preconditioner on \f$[\ell, h]\f$.
+/// @brief Construct a Chebyshev preconditioner on \f$[\ell, h]\f$.
 template <class Op>
 requires math::spd_operator<Op>
 [[nodiscard]] inline chebyshev_preconditioner<Op> make_chebyshev_preconditioner(const Op &A, real lo,
@@ -147,7 +147,7 @@ requires math::spd_operator<Op>
     return chebyshev_preconditioner<Op>(A, lo, hi, degree);
 }
 
-/// @brief Chebyshev preconditioner on \f$[\lambda_{\min}, \hat{\lambda}_{\max}]\f$.
+/// @brief Construct a Chebyshev preconditioner on \f$[\lambda_{\min}, \hat{\lambda}_{\max}]\f$.
 /// \f$\lambda_{\max}\f$ is estimated by power iteration.
 /// @warning `lambda_min` must be a true lower bound; too large a value makes the
 /// polynomial indefinite.

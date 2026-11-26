@@ -15,11 +15,11 @@ namespace num::kernel {
 
 namespace detail {
 
-/// @brief Row length below which a plain sum beats `reduce`.
+/// @brief Row length below which a plain sum is faster than `reduce`.
 template <std::floating_point T>
 inline constexpr idx short_row_cutoff = 4 * (NUM_K_VECTOR_BYTES / sizeof(T));
 
-/// @brief CSR row dot product: \f$\sum_k a_{ik} x_k\f$.
+/// @brief Compute the dot product of one CSR row and a vector: \f$\sum_k a_{ik} x_k\f$.
 template <std::floating_point T, std::integral Index>
 [[nodiscard]] NUM_K_AINLINE T csr_row_dot(const T *NUM_K_RESTRICT val,
                                           const Index *NUM_K_RESTRICT col_idx,
@@ -41,7 +41,7 @@ template <std::floating_point T, std::integral Index>
 
 } // namespace detail
 
-/// @brief CSR sparse matrix-vector product (SpMV): \f$y \leftarrow A x\f$.
+/// @brief Multiply a CSR sparse matrix and a vector (SpMV): \f$y \leftarrow A x\f$.
 template <std::floating_point T, std::integral Index>
 NUM_K_AINLINE void spmv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT val,
                         const Index *NUM_K_RESTRICT row_ptr, const Index *NUM_K_RESTRICT col_idx,
@@ -53,7 +53,8 @@ NUM_K_AINLINE void spmv(T *NUM_K_RESTRICT y, const T *NUM_K_RESTRICT val,
     }
 }
 
-/// @brief Scaled CSR sparse matrix-vector product: \f$y \leftarrow \alpha A x + \beta y\f$.
+/// @brief Multiply a CSR sparse matrix and a vector, scaled:
+/// \f$y \leftarrow \alpha A x + \beta y\f$.
 template <std::floating_point T, std::integral Index>
 NUM_K_AINLINE void spmv_axpy(T *NUM_K_RESTRICT y, T alpha, const T *NUM_K_RESTRICT val,
                              const Index *NUM_K_RESTRICT row_ptr,
@@ -67,7 +68,7 @@ NUM_K_AINLINE void spmv_axpy(T *NUM_K_RESTRICT y, T alpha, const T *NUM_K_RESTRI
     }
 }
 
-/// @brief CSR sparse times dense matrix product (SpMM): \f$Y \leftarrow A X\f$.
+/// @brief Multiply a CSR sparse matrix and a dense matrix (SpMM): \f$Y \leftarrow A X\f$.
 /// `X` and `Y` are row-major with `nrhs` columns.
 template <std::floating_point T, std::integral Index>
 inline void spmm(T *NUM_K_RESTRICT Y, idx ldy, const T *NUM_K_RESTRICT val,

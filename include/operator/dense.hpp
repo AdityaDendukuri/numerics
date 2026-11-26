@@ -12,16 +12,16 @@
 
 namespace num::operators {
 
-/// @brief Dense operator: \f$y \leftarrow A x\f$ for a `mat`.
+/// @brief Operator that applies a dense matrix: \f$y \leftarrow A x\f$.
 struct dense_op final {
     using domain_type = vec<real>;
     using codomain_type = vec<real>;
 
-    /// @brief Non-owning view of `A`.
+    /// @brief Hold a reference to `A` without copying it.
     /// @warning `A` must outlive the operator.
     explicit dense_op(const mat<real> &A) : A_(A) {}
 
-    /// @brief Operator application: \f$y \leftarrow A x\f$.
+    /// @brief Apply the matrix: \f$y \leftarrow A x\f$.
     void apply(const vec<real> &x, vec<real> &y) const;
 
     [[nodiscard]] idx rows() const noexcept { return A_.rows(); }

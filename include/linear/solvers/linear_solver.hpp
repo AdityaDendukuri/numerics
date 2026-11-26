@@ -8,7 +8,7 @@
 
 namespace num {
 
-/// @brief Linear solver: \f$x \leftarrow A^{-1} b\f$.
+/// @brief Function that solves a linear system: \f$x \leftarrow A^{-1} b\f$.
 using linear_solver = std::function<solver_result(const vec<real> &rhs, vec<real> &x)>;
 
 } // namespace num

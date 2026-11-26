@@ -1,5 +1,5 @@
-/// @file 14_concepts_and_property_invariants.cpp
-/// @brief Show how an SPD property is attached or checked before Cholesky.
+/// @file 14_positive_definite_matrices.cpp
+/// @brief Check that a matrix is symmetric positive definite before a Cholesky factorization.
 #include <io/json.hpp>
 #include <numerics.hpp>
 
