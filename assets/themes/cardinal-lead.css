@@ -1,0 +1,30 @@
+/* Cardinal lead. Arkansas cardinal carries the header over a UCA purple rule. Links are UCSB
+   navy, and the current page and hovered links are purple. Gold is left out, since cardinal and
+   gold together read as USC's colours. In dark mode the header deepens and links and markers use
+   light tints. */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--arkansas-cardinal);
+  --md-primary-fg-color--light: #b8475a;
+  --md-primary-fg-color--dark: #6e1726;
+  --md-accent-fg-color: var(--uca-purple);
+  --md-accent-fg-color--transparent: rgba(88, 44, 131, 0.1);
+  --md-typeset-a-color: var(--ucsb-navy);
+  --num-marker: var(--uca-purple);
+  --num-heading-accent: var(--arkansas-cardinal);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #151112;
+  --md-primary-fg-color: #6e1726;
+  --md-primary-fg-color--light: #9d2235;
+  --md-primary-fg-color--dark: #4f101b;
+  --md-accent-fg-color: var(--purple-tint);
+  --md-accent-fg-color--transparent: rgba(185, 160, 220, 0.12);
+  --md-typeset-a-color: var(--ucsb-mist);
+  --num-marker: var(--purple-tint);
+  --num-heading-accent: var(--cardinal-tint);
+}
+
+.md-header {
+  border-image: linear-gradient(90deg, var(--uca-purple) 0 100%) 1;
+}
