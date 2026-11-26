@@ -56,9 +56,6 @@ static void for_each_backend(std::function<void(fft_backend)> body) {
 #ifdef NUMERICS_HAS_STD_SIMD
     body(fft_backend::stdsimd);
 #endif
-#ifdef NUMERICS_HAS_FFTW
-    body(fft_backend::fftw);
-#endif
 }
 
 static std::string backend_name(fft_backend b) {
@@ -69,8 +66,6 @@ static std::string backend_name(fft_backend b) {
         return "simd";
     case fft_backend::stdsimd:
         return "stdsimd";
-    case fft_backend::fftw:
-        return "fftw";
     }
     return "unknown";
 }
@@ -185,7 +180,7 @@ TEST(FFT, Linearity) {
         }
 
         EXPECT_LT(max_err(Fxy, combined), 1e-10)
-            << "backend=" << (bk == fft_backend::seq ? "seq" : "fftw");
+            << "backend=" << backend_name(bk);
     });
 }
 
@@ -322,9 +317,6 @@ TEST(FFT, AllBackendsAgree) {
 #ifdef NUMERICS_HAS_STD_SIMD
     check(fft_backend::stdsimd);
 #endif
-#ifdef NUMERICS_HAS_FFTW
-    check(fft_backend::fftw);
-#endif
 }
 
 TEST(FFT, AllBackendsIrfftAgree) {
@@ -349,9 +341,6 @@ TEST(FFT, AllBackendsIrfftAgree) {
     check(fft_backend::simd);
 #ifdef NUMERICS_HAS_STD_SIMD
     check(fft_backend::stdsimd);
-#endif
-#ifdef NUMERICS_HAS_FFTW
-    check(fft_backend::fftw);
 #endif
 }
 

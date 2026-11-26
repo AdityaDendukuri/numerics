@@ -21,7 +21,7 @@ endif()
 # previously INTERFACE on numerics_kernel, which every target links PUBLIC, so
 # it reached consumers and silently disabled every deprecation diagnostic in their
 # builds as well.
-foreach(_num_tgt numerics_precompiled numerics_mpi numerics_cuda)
+foreach(_num_tgt numerics_mpi numerics_cuda)
     if(TARGET ${_num_tgt})
         get_target_property(_num_type ${_num_tgt} TYPE)
         if(NOT _num_type STREQUAL "INTERFACE_LIBRARY")

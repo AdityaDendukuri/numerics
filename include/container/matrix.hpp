@@ -163,8 +163,4 @@ class mat {
     T *d_data_ = nullptr;
 };
 
-#if defined(NUMERICS_EXTERN_TEMPLATES)
-extern template class mat<double>;
-#endif
-
 } // namespace num

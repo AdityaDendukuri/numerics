@@ -211,6 +211,9 @@ struct cholesky_result {
     mat<real> L;                    ///< Lower-triangular factor, valid when `positive_definite`.
     bool positive_definite = false; ///< False when a pivot was not positive.
 
+    /// @brief Order \f$n\f$.
+    [[nodiscard]] idx size() const noexcept { return L.rows(); }
+
     friend std::ostream &operator<<(std::ostream &os, const cholesky_result &r) {
         os << "cholesky_result{ dim: " << r.L.rows() << "x" << r.L.cols()
            << ", positive_definite: " << (r.positive_definite ? "true" : "false") << " }";
@@ -287,6 +290,47 @@ inline cholesky_result cholesky(const mat<real> &A) {
     mat<real> L = A;
     const bool ok = num::cholesky_blocked(L.data(), A.rows());
     return {std::move(L), ok};
+#endif
+}
+
+/// @brief Cholesky solve through LAPACK `dpotrs`: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
+inline void solve(const cholesky_result &f, const mat<real> &B, mat<real> &X) {
+#if defined(NUMERICS_HAS_LAPACK)
+    const idx n = f.L.rows();
+    if (!f.positive_definite) {
+        throw std::invalid_argument("cholesky solve: the matrix is not positive definite");
+    }
+    if (B.rows() != n) {
+        throw std::invalid_argument("cholesky solve: dimension mismatch");
+    }
+    if (&X != &B) {
+        X = B;
+    }
+    LAPACKE_dpotrs(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n),
+                   static_cast<lapack_int>(X.cols()), f.L.data(), static_cast<lapack_int>(n),
+                   X.data(), static_cast<lapack_int>(X.cols()));
+#else
+    num::solve(f, B, X);
+#endif
+}
+
+/// @brief Cholesky solve through LAPACK `dpotrs`: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
+inline void solve(const cholesky_result &f, const vec<real> &b, vec<real> &x) {
+#if defined(NUMERICS_HAS_LAPACK)
+    const idx n = f.L.rows();
+    if (!f.positive_definite) {
+        throw std::invalid_argument("cholesky solve: the matrix is not positive definite");
+    }
+    if (b.size() != n) {
+        throw std::invalid_argument("cholesky solve: dimension mismatch");
+    }
+    if (&x != &b) {
+        x = b;
+    }
+    LAPACKE_dpotrs(LAPACK_ROW_MAJOR, 'L', static_cast<lapack_int>(n), 1, f.L.data(),
+                   static_cast<lapack_int>(n), x.data(), 1);
+#else
+    num::solve(f, b, x);
 #endif
 }
 

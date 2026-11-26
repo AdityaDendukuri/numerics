@@ -205,7 +205,7 @@ static std::vector<BenchRun> parse_bench_json(const std::string& path) {
 
 struct BuildInfo {
   std::string date, compiler, build_type;
-  bool has_blas = false, has_fftw = false, has_omp = false;
+  bool has_blas = false, has_omp = false;
   bool has_cuda = false, has_mpi = false, has_lapack = false;
   std::string system_name, cpu, ram_mb, gpu;
 };
@@ -219,7 +219,6 @@ static BuildInfo parse_build_info(const std::string& path) {
   b.compiler = jstr(raw, "compiler");
   b.build_type = jstr(raw, "build_type");
   b.has_blas = jbool(raw, "has_blas");
-  b.has_fftw = jbool(raw, "has_fftw");
   b.has_omp = jbool(raw, "has_omp");
   b.has_cuda = jbool(raw, "has_cuda");
   b.has_mpi = jbool(raw, "has_mpi");
@@ -269,7 +268,6 @@ static std::string backends_table(const BuildInfo& b) {
       b.has_lapack,
       "num::lapack -- dgetrf, dgeqrf, dgesdd, dsyevd, dgtsv");
   row("OpenMP", b.has_omp, "num::omp -- parallel blocked loops");
-  row("FFTW3", b.has_fftw, "FFTBackend::fftw -- AVX2/NEON optimised DFT");
   row("CUDA", b.has_cuda, "num::cuda -- custom kernels / cuBLAS");
   row("MPI", b.has_mpi, "distributed ops (experimental)");
   return s;
@@ -335,8 +333,6 @@ static std::string bench_label(const std::string& name) {
     return "std::simd";
   if (has("FFTBackend::simd"))
     return "simd (AVX2/NEON)";
-  if (has("FFTBackend::fftw"))
-    return "fftw (FFTW3)";
   if (has("FFTBackend::seq"))
     return "seq (Cooley-Tukey)";
   // Linalg backends

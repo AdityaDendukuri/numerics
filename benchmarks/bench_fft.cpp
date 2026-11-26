@@ -11,7 +11,6 @@
 ///   seq     -- scalar Cooley-Tukey radix-2 DIT, precomputed twiddles
 ///   simd    -- handwritten AVX2 / NEON butterfly (2 pairs/cycle)
 ///   stdsimd -- std::experimental::simd butterfly (GCC 11+ only)
-///   fftw    -- FFTW3 mixed-radix with SIMD codelets (when available)
 ///
 /// Counter: bytes_per_second reported as GB/s
 ///   (reads 16n + writes 16n bytes for complex DFT)
@@ -63,9 +62,6 @@ BENCHMARK_TEMPLATE(BM_FFT, fft_backend::stdsimd)
     ->Range(256, 1 << 18)
     ->Complexity();
 #endif
-#ifdef NUMERICS_HAS_FFTW
-BENCHMARK_TEMPLATE(BM_FFT, fft_backend::fftw)->RangeMultiplier(4)->Range(256, 1 << 20)->Complexity();
-#endif
 
 // BM_IFFT: one-shot inverse complex DFT
 
@@ -92,12 +88,6 @@ BENCHMARK_TEMPLATE(BM_IFFT, fft_backend::simd)
 BENCHMARK_TEMPLATE(BM_IFFT, fft_backend::stdsimd)
     ->RangeMultiplier(4)
     ->Range(256, 1 << 18)
-    ->Complexity();
-#endif
-#ifdef NUMERICS_HAS_FFTW
-BENCHMARK_TEMPLATE(BM_IFFT, fft_backend::fftw)
-    ->RangeMultiplier(4)
-    ->Range(256, 1 << 20)
     ->Complexity();
 #endif
 
@@ -128,12 +118,6 @@ BENCHMARK_TEMPLATE(BM_RFFT, fft_backend::simd)
 BENCHMARK_TEMPLATE(BM_RFFT, fft_backend::stdsimd)
     ->RangeMultiplier(4)
     ->Range(256, 1 << 18)
-    ->Complexity();
-#endif
-#ifdef NUMERICS_HAS_FFTW
-BENCHMARK_TEMPLATE(BM_RFFT, fft_backend::fftw)
-    ->RangeMultiplier(4)
-    ->Range(256, 1 << 20)
     ->Complexity();
 #endif
 
@@ -167,11 +151,5 @@ BENCHMARK_TEMPLATE(BM_FFTPlan, fft_backend::simd)
 BENCHMARK_TEMPLATE(BM_FFTPlan, fft_backend::stdsimd)
     ->RangeMultiplier(4)
     ->Range(256, 1 << 18)
-    ->Complexity();
-#endif
-#ifdef NUMERICS_HAS_FFTW
-BENCHMARK_TEMPLATE(BM_FFTPlan, fft_backend::fftw)
-    ->RangeMultiplier(4)
-    ->Range(256, 1 << 20)
     ->Complexity();
 #endif

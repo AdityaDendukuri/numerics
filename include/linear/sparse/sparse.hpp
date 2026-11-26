@@ -444,8 +444,7 @@ inline mat<real> diagonal_similarity(const spmat &A, view<const real> weights) {
     return result;
 }
 
-/// @brief A with every diagonal entry stored explicitly (zeros added where absent), as the
-/// resolvent factorizations (`sparse_resolvent`, `umfpack_shifted_lu`) require.
+/// @brief A with every diagonal entry stored explicitly (zeros added where absent).
 [[nodiscard]] inline spmat with_explicit_diagonal(const spmat &A) {
     array<idx> rows, cols;
     array<real> vals;

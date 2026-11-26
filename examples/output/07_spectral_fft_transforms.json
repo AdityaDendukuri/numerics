@@ -1,6 +1,5 @@
 {
   "complex_round_trip_error": 2.0411201962889075e-15,
-  "fftw_available": true,
   "frequency_bins": 33,
   "peaks": [
     {

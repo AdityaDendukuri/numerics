@@ -2,8 +2,6 @@
 /// @brief Linear solvers.
 #pragma once
 
-#include "linear/solvers/auto_linear.hpp"
-#include "linear/solvers/auto_resolvent.hpp"
 #include "linear/solvers/cg.hpp"
 #include "linear/solvers/chebyshev.hpp"
 #include "linear/solvers/gauss_seidel.hpp"

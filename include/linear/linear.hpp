@@ -22,8 +22,6 @@
 #include "linear/solve.hpp"
 #include "linear/subspace.hpp"
 #include "linear/solvers/solvers.hpp"
-#include "linear/solvers/sparse_resolvent.hpp"
-#include "linear/sparse/klu.hpp"
 #include "linear/sparse/bilinear.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "linear/svd/svd.hpp"

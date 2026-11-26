@@ -35,7 +35,7 @@ spmat ring(idx n) {
 int main() {
     constexpr idx n = 1000;
     const spmat A = ring(n);
-    const auto F = lu(A, sparse);
+    const auto F = lu(dense(A));
 
     vec<real> exact(n), unit(n, 0.0), column;
     for (idx i = 0; i < n; ++i) {

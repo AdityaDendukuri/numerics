@@ -18,6 +18,7 @@ endif()
 
 add_executable(numerics_tests
     test_alignment.cpp
+    test_backend_parity.cpp
     test_biclique_tree.cpp
     test_block_tridiagonal.cpp
     test_chebyshev.cpp
@@ -62,10 +63,6 @@ target_link_libraries(numerics_tests PRIVATE
     numerics
     GTest::gtest_main
 )
-if(TARGET numerics_io)
-    target_link_libraries(numerics_tests PRIVATE numerics_io)
-    target_compile_definitions(numerics_tests PRIVATE NUMERICS_HAS_JSON=1)
-endif()
 
 # NUMERICS_DIAGNOSTICS=2 raises the diagnostic ceiling to include property sampling, which
 # an optimized build otherwise leaves out. The suite exists to exercise the checks, so it

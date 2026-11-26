@@ -1,33 +1,21 @@
 # Maintainer: Aditya Dendukuri <dendukuri.aditya123@outlook.com>
 pkgname=numerics
-pkgver=1.1.0
+pkgver=1.2.0
 pkgrel=1
-pkgdesc="C++20 library for scientific computing"
-arch=('x86_64' 'aarch64')
+pkgdesc="Header-only C++20 library for scientific computing"
+arch=('any')
 url="https://github.com/AdityaDendukuri/numerics"
 license=('MIT')
 makedepends=('cmake')
-# The library installs a static archive, which makepkg strips by default, and an LTO-only
-# archive would not link with other compilers.
-options=('staticlibs' '!lto')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('3b34633c1f51db13fa61b1ff44b1cb404fe617351363f750ec0af700639a7857')
+sha256sums=('SKIP')
 
 build() {
-  cmake -S "$pkgname-$pkgver" -B build \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_INSTALL_PREFIX=/usr \
+  cmake -S "$pkgname-$pkgver" -B build -DCMAKE_INSTALL_PREFIX=/usr \
     -DNUMERICS_BUILD_EXAMPLES=OFF \
-    -DNUMERICS_BUILD_TESTS=OFF \
-    -DNUMERICS_BUILD_IO=OFF \
-    -DNUMERICS_ENABLE_CUDA=OFF \
-    -DNUMERICS_ENABLE_MPI=OFF \
-    -DNUMERICS_USE_BLAS=OFF \
-    -DNUMERICS_USE_LAPACK=OFF \
-    -DNUMERICS_USE_OPENMP=OFF \
-    -DNUMERICS_USE_FFTW=OFF \
-    -DNUMERICS_USE_SUITESPARSE=OFF
-  cmake --build build
+    -DNUMERICS_ENABLE_CUDA=OFF -DNUMERICS_ENABLE_MPI=OFF \
+    -DNUMERICS_USE_BLAS=OFF -DNUMERICS_USE_LAPACK=OFF -DNUMERICS_USE_OPENMP=OFF
+   
 }
 
 package() {

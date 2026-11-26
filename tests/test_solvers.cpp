@@ -5,12 +5,8 @@
 #include "linear/eigen/jacobi_eig.hpp"
 #include "linear/factorization/cholesky.hpp"
 #include "quadrature/talbot.hpp"
-#ifdef NUMERICS_HAS_JSON
-#include "io/json.hpp"
-#endif
 #include "linear/factorization/thomas.hpp"
 #include "linear/solvers/solvers.hpp"
-#include "linear/solvers/sparse_resolvent.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "linear/sparse/sparse_op.hpp"
 #include "operator/concepts.hpp"
@@ -721,18 +717,6 @@ TEST(Sequence, Logspace) {
     EXPECT_NEAR(values[2], 1.0, 1e-15);
 }
 
-#ifdef NUMERICS_HAS_JSON
-TEST(Json, VectorAndMatrixConversion) {
-    const io::json value =
-        io::json::array({io::json::array({1.0, 2.0}), io::json::array({3.0, 4.0})});
-    const auto matrix = io::json_matrix<double>(value);
-    ASSERT_EQ(matrix.size(), 2);
-    EXPECT_DOUBLE_EQ(matrix[1][0], 3.0);
-    EXPECT_THROW(static_cast<void>(io::json_vector<double>(io::json("not an array"))),
-                 std::invalid_argument);
-}
-#endif
-
 TEST(Resolvent, FactorizedShiftReusesFactor) {
     mat<real> A(2, 2);
     A(0, 0) = 1.0;
@@ -784,35 +768,6 @@ TEST(Talbot, RealHalfContourAgreesWithFullContour) {
     }
 }
 
-TEST(AutoResolvent, DenseSelectionAndSolve) {
-    const auto A = spmat::from_triplets(2, 2, {0, 1}, {0, 1}, {2.0, 3.0});
-    const auto_resolvent R(A);
-    vec<cplx> solution;
-    solve(shift(R, cplx(4.0)), vec<cplx>{cplx(2.0), cplx(1.0)}, solution);
-    EXPECT_NEAR(solution[0].real(), 1.0, 1e-12);
-    EXPECT_NEAR(solution[1].real(), 1.0, 1e-12);
-}
-
-TEST(SparseResolvent, OptionalBackend) {
-    spmat A = spmat::from_triplets(2, 2, {0, 1}, {0, 1}, {2.0, 3.0});
-    const sparse_resolvent R(A);
-    if (!sparse_resolvent_available()) {
-        EXPECT_THROW(static_cast<void>(shift(R, cplx(1.0))), std::runtime_error);
-        return;
-    }
-    // Two shifts factored side by side: each is its own value.
-    const sparse_shifted_lu F1 = shift(R, cplx(1.0));
-    const sparse_shifted_lu F4 = shift(R, cplx(4.0));
-    vec<cplx> x1;
-    solve(F1, vec<cplx>{cplx(1.0), cplx(2.0)}, x1);
-    EXPECT_NEAR(x1[0].real(), -1.0, 1e-12);
-    EXPECT_NEAR(x1[1].real(), -1.0, 1e-12);
-    vec<cplx> x2{cplx(2.0), cplx(1.0)};
-    solve(F4, x2, x2);
-    EXPECT_NEAR(x2[0].real(), 1.0, 1e-12);
-    EXPECT_NEAR(x2[1].real(), 1.0, 1e-12);
-}
-
 namespace {
 
 // A 20 x 20 two-species birth-death-conversion generator as A = Q^T: nonsymmetric, n = 400.
@@ -842,56 +797,8 @@ spmat two_species_generator() {
 
 } // namespace
 
-TEST(SparseResolvent, MatchesTheDenseResolventOnAComplexShiftedGenerator) {
-    if (!sparse_resolvent_available()) {
-        GTEST_SKIP() << "no sparse complex backend";
-    }
-    const spmat A = two_species_generator();
-    const sparse_resolvent sparse(A);
-    const hessenberg_resolvent dense(A);
-    vec<cplx> b(A.n_rows());
-    for (idx i = 0; i < b.size(); ++i) {
-        b[i] = cplx(1.0 + (0.1 * std::sin(static_cast<real>(i))), 0.0);
-    }
-    for (const auto &[s, weight] : talbot_contour(1.0, 12)) {
-        vec<cplx> x_sparse, x_dense;
-        solve(shift(sparse, s), b, x_sparse);
-        solve(shift(dense, s), b, x_dense);
-        real error = 0, scale = 0;
-        for (idx i = 0; i < b.size(); ++i) {
-            error = num::max(error, std::abs(x_sparse[i] - x_dense[i]));
-            scale = num::max(scale, std::abs(x_dense[i]));
-        }
-        EXPECT_LE(error, 1e-10 * scale) << "s = " << s;
-    }
-}
-
 // Independent shifts factored concurrently from one analysis must give exactly the sequential
 // result: the backend may keep no state outside its arguments.
-TEST(SparseResolvent, ShiftsFactorConcurrentlyFromOneAnalysis) {
-    if (!sparse_resolvent_available()) {
-        GTEST_SKIP() << "no sparse complex backend";
-    }
-    const spmat A = two_species_generator();
-    const sparse_resolvent R(A);
-    const auto contour = talbot_contour(1.0, 24);
-    const vec<cplx> b(A.n_rows(), cplx(1.0, 0.0));
-    array<vec<cplx>> sequential(contour.size()), concurrent(contour.size());
-    for (idx k = 0; k < contour.size(); ++k) {
-        solve(shift(R, contour[k].shift), b, sequential[k]);
-    }
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic)
-#endif
-    for (idx k = 0; k < contour.size(); ++k) {
-        solve(shift(R, contour[k].shift), b, concurrent[k]);
-    }
-    for (idx k = 0; k < contour.size(); ++k) {
-        for (idx i = 0; i < b.size(); ++i) {
-            ASSERT_EQ(concurrent[k][i], sequential[k][i]) << "node " << k << ", entry " << i;
-        }
-    }
-}
 
 TEST(Resolvent, FactorizedShiftFromSparseMatrix) {
     const spmat matrix =

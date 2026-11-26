@@ -1,8 +1,7 @@
 name: Packaging
 
-# Builds the Linux packages in packaging/ inside each distribution's own container,
-# installs them, and compiles packaging/test against the installed package. The packages
-# build from the release tarball their version names, so bump packaging/ with each tag.
+# Builds each Linux package in its distribution's container, installs it, and compiles
+# packaging/test against it. Packages build from the release tarball their version names.
 on:
   push:
     branches: ['**']
@@ -30,7 +29,7 @@ jobs:
       - name: Check the package contents
         run: |
           pacman -Ql numerics | grep -q '/usr/include/numerics/numerics.hpp'
-          pacman -Ql numerics | grep -q '/usr/lib/libnumerics.a'
+          pacman -Ql numerics | grep -q '/usr/share/cmake/numerics/numerics-config.cmake'
       - name: Consumer test
         run: |
           cmake -S packaging/test -B /tmp/consumer
@@ -64,7 +63,7 @@ jobs:
         run: |
           apt-get install -y /tmp/deb/libnumerics-dev_*.deb
           dpkg -L libnumerics-dev | grep -q '/usr/include/numerics/numerics.hpp'
-          dpkg -L libnumerics-dev | grep -q 'libnumerics.a'
+          dpkg -L libnumerics-dev | grep -q '/usr/share/cmake/numerics/numerics-config.cmake'
       - name: Consumer test
         run: |
           cmake -S packaging/test -B /tmp/consumer
@@ -118,7 +117,7 @@ jobs:
             zypper --non-interactive --no-gpg-checks install --allow-unsigned-rpm "$package"
           fi
           files=$(rpm -ql numerics-devel)
-          for expected in /usr/include/numerics/numerics.hpp libnumerics.a numerics-config.cmake; do
+          for expected in /usr/include/numerics/numerics.hpp /usr/share/cmake/numerics/numerics-config.cmake; do
             if ! grep -q "$expected" <<< "$files"; then
               echo "::error title=missing $expected::$(echo "$files" | grep -v '/include/numerics/' | tr '\n' '|')"
               exit 1

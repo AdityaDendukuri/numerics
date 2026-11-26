@@ -13,6 +13,8 @@
 #include "core/types.hpp"
 #include "container/matrix.hpp"
 #include "container/vector.hpp"
+#include "blas/vector_ops.hpp"
+#include "lapack/lapack_wrapper.hpp"
 #include <memory>
 
 namespace num {
@@ -301,14 +303,83 @@ inline void band_mat::to_cpu() {
 #endif
 }
 
-// LU Factorization with Partial Pivoting
+namespace seq {
 
+/// @brief Banded LU factorization, partial pivoting, in-tree: \f$P A = L U\f$.
 inline banded_lu_result lu(band_mat A) {
     const idx n = A.size();
     banded_lu_result f{std::move(A), array<idx>(n), false};
     f.singular =
         !num::banded_factor(f.LU.data(), f.LU.ldab(), n, f.LU.kl(), f.LU.ku(), f.swaps.data());
     return f;
+}
+
+/// @brief Banded matrix-vector product (GBMV), in-tree: \f$y \leftarrow \alpha A x + \beta y\f$.
+inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y) {
+    if (x.size() != A.size() || y.size() != A.size()) {
+        throw std::invalid_argument("banded_gemv: dimension mismatch");
+    }
+    kernel::gbmv(y.data(), alpha, A.data(), A.ldab(), A.kl(), A.ku(), x.data(), beta, A.size());
+}
+
+} // namespace seq
+
+namespace blas {
+
+/// @brief Banded matrix-vector product through BLAS `dgbmv`: \f$y \leftarrow \alpha A x + \beta y\f$.
+inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y) {
+    if (x.size() != A.size() || y.size() != A.size()) {
+        throw std::invalid_argument("banded_gemv: dimension mismatch");
+    }
+#if defined(NUMERICS_HAS_BLAS)
+    // The top kl rows of the storage hold LU fill; dgbmv's band starts below them.
+    const int n = static_cast<int>(A.size());
+    cblas_dgbmv(CblasColMajor, CblasNoTrans, n, n, static_cast<int>(A.kl()),
+                static_cast<int>(A.ku()), alpha, A.data() + A.kl(), static_cast<int>(A.ldab()),
+                x.data(), 1, beta, y.data(), 1);
+#else
+    warn_unavailable();
+    seq::banded_gemv(alpha, A, x, beta, y);
+#endif
+}
+
+} // namespace blas
+
+namespace lapack {
+
+/// @brief Banded LU factorization through LAPACK `dgbtrf`: \f$P A = L U\f$.
+inline banded_lu_result lu(band_mat A) {
+#if defined(NUMERICS_HAS_LAPACK)
+    const idx n = A.size();
+    banded_lu_result f{std::move(A), array<idx>(n), false};
+    array<lapack_int> ipiv(n);
+    const lapack_int info = LAPACKE_dgbtrf(
+        LAPACK_COL_MAJOR, static_cast<lapack_int>(n), static_cast<lapack_int>(n),
+        static_cast<lapack_int>(f.LU.kl()), static_cast<lapack_int>(f.LU.ku()), f.LU.data(),
+        static_cast<lapack_int>(f.LU.ldab()), ipiv.data());
+    if (info < 0) {
+        throw std::runtime_error("banded lu (lapack): dgbtrf argument error");
+    }
+    f.singular = info > 0;
+    for (idx k = 0; k < n; ++k) {
+        f.swaps[k] = static_cast<idx>(ipiv[k] - 1);
+    }
+    return f;
+#else
+    return seq::lu(std::move(A));
+#endif
+}
+
+} // namespace lapack
+
+/// @brief Banded LU factorization, partial pivoting: \f$P A = L U\f$.
+/// Uses LAPACK when an optimized LAPACK is available.
+inline banded_lu_result lu(band_mat A) {
+#if defined(NUMERICS_LAPACK_DEFAULT)
+    return lapack::lu(std::move(A));
+#else
+    return seq::lu(std::move(A));
+#endif
 }
 
 inline void solve(const banded_lu_result &f, const vec<real> &b, vec<real> &x) {
@@ -369,17 +440,11 @@ inline void banded_matvec(const band_mat &A, const vec<real> &x, vec<real> &y) {
 }
 
 inline void banded_gemv(real alpha, const band_mat &A, const vec<real> &x, real beta, vec<real> &y) {
-    const idx n = A.size(), kl = A.kl(), ku = A.ku();
-    if (x.size() != n || y.size() != n) {
-        throw std::invalid_argument("banded_gemv: dimension mismatch");
-    }
-
-    const idx ldab = A.ldab();
-    const real *ab = A.data();
-    const real *xp = x.data();
-    real *yp = y.data();
-
-    kernel::gbmv(yp, alpha, ab, ldab, kl, ku, xp, beta, n);
+#if defined(NUMERICS_HAS_BLAS)
+    blas::banded_gemv(alpha, A, x, beta, y);
+#else
+    seq::banded_gemv(alpha, A, x, beta, y);
+#endif
 }
 
 // Norm
@@ -400,5 +465,70 @@ inline real banded_norm1(const band_mat &A) {
     }
     return max_sum;
 }
+
+namespace lapack {
+
+#if defined(NUMERICS_HAS_LAPACK)
+namespace detail {
+inline array<lapack_int> banded_pivots(const banded_lu_result &f) {
+    array<lapack_int> ipiv(f.size());
+    for (idx k = 0; k < f.size(); ++k) {
+        ipiv[k] = static_cast<lapack_int>(f.swaps[k] + 1);
+    }
+    return ipiv;
+}
+} // namespace detail
+#endif
+
+/// @brief Banded LU solve through LAPACK `dgbtrs`: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
+inline void solve(const banded_lu_result &f, const vec<real> &b, vec<real> &x) {
+#if defined(NUMERICS_HAS_LAPACK)
+    if (b.size() != f.size()) {
+        throw std::invalid_argument("banded solve: dimension mismatch");
+    }
+    if (&x != &b) {
+        x = b;
+    }
+    const auto ipiv = detail::banded_pivots(f);
+    const auto n = static_cast<lapack_int>(f.size());
+    LAPACKE_dgbtrs(LAPACK_COL_MAJOR, 'N', n, static_cast<lapack_int>(f.LU.kl()),
+                   static_cast<lapack_int>(f.LU.ku()), 1, f.LU.data(),
+                   static_cast<lapack_int>(f.LU.ldab()), ipiv.data(), x.data(), n);
+#else
+    num::solve(f, b, x);
+#endif
+}
+
+/// @brief Banded LU solve through LAPACK `dgbtrs`: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
+inline void solve(const banded_lu_result &f, const mat<real> &B, mat<real> &X) {
+#if defined(NUMERICS_HAS_LAPACK)
+    const idx n = f.size(), nrhs = B.cols();
+    if (B.rows() != n) {
+        throw std::invalid_argument("banded solve: dimension mismatch");
+    }
+    // dgbtrs takes the band and the right-hand sides in one layout: column-major.
+    array<real> columns(n * nrhs);
+    for (idx i = 0; i < n; ++i) {
+        for (idx c = 0; c < nrhs; ++c) {
+            columns[(c * n) + i] = B(i, c);
+        }
+    }
+    const auto ipiv = detail::banded_pivots(f);
+    LAPACKE_dgbtrs(LAPACK_COL_MAJOR, 'N', static_cast<lapack_int>(n),
+                   static_cast<lapack_int>(f.LU.kl()), static_cast<lapack_int>(f.LU.ku()),
+                   static_cast<lapack_int>(nrhs), f.LU.data(), static_cast<lapack_int>(f.LU.ldab()),
+                   ipiv.data(), columns.data(), static_cast<lapack_int>(n));
+    X = mat<real>(n, nrhs);
+    for (idx i = 0; i < n; ++i) {
+        for (idx c = 0; c < nrhs; ++c) {
+            X(i, c) = columns[(c * n) + i];
+        }
+    }
+#else
+    num::solve(f, B, X);
+#endif
+}
+
+} // namespace lapack
 
 } // namespace num

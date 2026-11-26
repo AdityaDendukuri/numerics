@@ -13,16 +13,13 @@ include(CMakePackageConfigHelpers)
 set(NUMERICS_INSTALL_TARGETS
     numerics_kernel numerics_core
     numerics_backend_blas numerics_backend_lapack numerics_backend_openmp
-    numerics_backend_fftw numerics_backend_suitesparse numerics_backend_simd
+    numerics_backend_simd
     numerics_backends numerics
     numerics_mpi
     numerics_solvers numerics_ode numerics_pde numerics_spectral numerics_plot
 )
 if(TARGET numerics_cuda)
     list(APPEND NUMERICS_INSTALL_TARGETS numerics_cuda)
-endif()
-if(TARGET numerics_io AND NUMERICS_IO_INSTALLED)
-    list(APPEND NUMERICS_INSTALL_TARGETS numerics_io)
 endif()
 install(TARGETS ${NUMERICS_INSTALL_TARGETS}
     EXPORT      NumericsTargets
@@ -51,7 +48,7 @@ install(DIRECTORY include/
 configure_package_config_file(
     cmake/NumericsConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/numerics-config.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/numerics
+    INSTALL_DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/numerics
 )
 
 write_basic_package_version_file(
@@ -64,13 +61,12 @@ write_basic_package_version_file(
 install(EXPORT NumericsTargets
     FILE        NumericsTargets.cmake
     NAMESPACE   numerics::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/numerics
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/numerics
 )
 
-# Config, version, and FindFFTW3 module
+# Config and version
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/numerics-config.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/numerics-config-version.cmake
-    cmake/FindFFTW3.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/numerics
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/numerics
 )

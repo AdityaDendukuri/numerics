@@ -32,7 +32,7 @@ See [all examples](reference/examples/index.md) or browse the [reference](refere
 include(FetchContent)
 FetchContent_Declare(numerics
     GIT_REPOSITORY https://github.com/AdityaDendukuri/numerics.git
-    GIT_TAG v1.1.0)
+    GIT_TAG v1.2.0)
 FetchContent_MakeAvailable(numerics)
 target_link_libraries(my_program PRIVATE numerics::numerics)
 ```

@@ -3,7 +3,8 @@ set(_consumer_build "${NUMERICS_BUILD_DIR}/tests/core_package_consumer_build")
 
 file(REMOVE_RECURSE "${_prefix}" "${_consumer_build}")
 
-set(_package_targets numerics)
+# numerics is header-only; only the optional bindings have anything to build.
+set(_package_targets)
 if(NUMERICS_PACKAGE_HAS_MPI)
     list(APPEND _package_targets numerics_mpi)
 endif()
@@ -45,7 +46,6 @@ execute_process(
         -DCMAKE_DISABLE_FIND_PACKAGE_LAPACK=TRUE
         -DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=TRUE
         -DCMAKE_DISABLE_FIND_PACKAGE_MPI=TRUE
-        -DCMAKE_DISABLE_FIND_PACKAGE_FFTW3=TRUE
         -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=TRUE
         -DCMAKE_DISABLE_FIND_PACKAGE_CUDAToolkit=TRUE
     RESULT_VARIABLE _configure_result

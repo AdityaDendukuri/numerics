@@ -17,7 +17,7 @@ jobs:
   #
   #   lapack  -- OpenBLAS installed; the default dispatch picks LAPACK.
   #   kernel  -- same install, NUMERICS_LAPACK_OPTIMIZED=OFF forces the kernel.
-  #   bare    -- no BLAS, no LAPACK, no FFTW: the dependency-free build.
+  #   bare    -- no BLAS, no LAPACK: the dependency-free build.
   tests:
     name: ${{ matrix.compiler }} / ${{ matrix.mode }}
     runs-on: ubuntu-24.04
@@ -35,7 +35,7 @@ jobs:
           sudo apt-get update -q
           if [ "${{ matrix.mode }}" != "bare" ]; then
             sudo apt-get install -y --no-install-recommends \
-              libopenblas-dev liblapacke-dev libfftw3-dev
+              libopenblas-dev liblapacke-dev
           fi
           if [ "${{ matrix.compiler }}" = "clang" ]; then
             sudo apt-get install -y --no-install-recommends clang libomp-dev
@@ -50,7 +50,7 @@ jobs:
           case "${{ matrix.mode }}" in
             lapack) extra="" ;;
             kernel) extra="-DNUMERICS_LAPACK_OPTIMIZED=OFF" ;;
-            bare)   extra="-DNUMERICS_USE_BLAS=OFF -DNUMERICS_USE_LAPACK=OFF -DNUMERICS_USE_FFTW=OFF -DNUMERICS_USE_SUITESPARSE=OFF" ;;
+            bare)   extra="-DNUMERICS_USE_BLAS=OFF -DNUMERICS_USE_LAPACK=OFF" ;;
           esac
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
@@ -128,8 +128,7 @@ jobs:
             -DNUMERICS_BUILD_TESTS=ON \
             -DNUMERICS_BUILD_BENCHMARKS=OFF \
             -DNUMERICS_BUILD_DOCS=OFF \
-            -DNUMERICS_USE_BLAS=OFF -DNUMERICS_USE_LAPACK=OFF \
-            -DNUMERICS_USE_FFTW=OFF -DNUMERICS_USE_SUITESPARSE=OFF
+            -DNUMERICS_USE_BLAS=OFF -DNUMERICS_USE_LAPACK=OFF
 
       - name: Build
         run: cmake --build build --parallel $(nproc)

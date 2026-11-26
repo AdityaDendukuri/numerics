@@ -1,19 +1,8 @@
 #!/usr/bin/make -f
-# The package ships a static archive; an LTO-only archive would not link with other compilers.
-export DEB_BUILD_MAINT_OPTIONS = hardening=+all optimize=-lto
-
 %:
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- \
-		-DNUMERICS_BUILD_EXAMPLES=OFF \
-		-DNUMERICS_BUILD_TESTS=OFF \
-		-DNUMERICS_BUILD_IO=OFF \
-		-DNUMERICS_ENABLE_CUDA=OFF \
-		-DNUMERICS_ENABLE_MPI=OFF \
-		-DNUMERICS_USE_BLAS=OFF \
-		-DNUMERICS_USE_LAPACK=OFF \
-		-DNUMERICS_USE_OPENMP=OFF \
-		-DNUMERICS_USE_FFTW=OFF \
-		-DNUMERICS_USE_SUITESPARSE=OFF
+	dh_auto_configure -- -DNUMERICS_BUILD_EXAMPLES=OFF \
+		-DNUMERICS_ENABLE_CUDA=OFF -DNUMERICS_ENABLE_MPI=OFF \
+		-DNUMERICS_USE_BLAS=OFF -DNUMERICS_USE_LAPACK=OFF -DNUMERICS_USE_OPENMP=OFF

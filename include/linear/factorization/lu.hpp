@@ -559,31 +559,108 @@ inline T det(const lu_result<T> &f) {
     return (exchanges % 2 == 0) ? product : -product;
 }
 
-/// @brief Inverse: \f$A^{-1}\f$.
+namespace detail {
+/// @brief Row swaps of an LU factor, identity when unpivoted.
 template <std::floating_point T>
-inline mat<T> inverse(const lu_result<T> &f) {
-    const idx n = f.size();
+inline array<idx> lu_swaps(const lu_result<T> &f) {
     array<idx> swaps = f.swaps;
     if (swaps.empty()) {
-        swaps.resize(n);
-        for (idx k = 0; k < n; ++k) {
+        swaps.resize(f.size());
+        for (idx k = 0; k < f.size(); ++k) {
             swaps[k] = k;
         }
     }
+    return swaps;
+}
+} // namespace detail
+
+namespace seq {
+/// @brief LU inverse, in-tree: \f$A^{-1}\f$.
+template <std::floating_point T>
+inline mat<T> inverse(const lu_result<T> &f) {
+    const idx n = f.size();
+    const array<idx> swaps = num::detail::lu_swaps(f);
     mat<T> inv = f.LU;
-#if defined(NUMERICS_LAPACK_DEFAULT)
-    if constexpr (std::is_same_v<T, real>) {
-        array<lapack_int> ipiv(n);
-        for (idx i = 0; i < n; ++i)
-            ipiv[i] = static_cast<lapack_int>(swaps[i] + 1);
-        LAPACKE_dgetri(LAPACK_ROW_MAJOR, static_cast<lapack_int>(n), inv.data(),
-                       static_cast<lapack_int>(n), ipiv.data());
-        return inv;
-    }
-#endif
     array<T> work(n);
     num::lu_invert(inv.data(), f.LU.data(), swaps.data(), n, work.data());
     return inv;
+}
+} // namespace seq
+
+namespace lapack {
+/// @brief LU inverse through LAPACK `dgetri`: \f$A^{-1}\f$.
+inline mat<real> inverse(const lu_result<real> &f) {
+#if defined(NUMERICS_HAS_LAPACK)
+    const idx n = f.size();
+    const array<idx> swaps = num::detail::lu_swaps(f);
+    array<lapack_int> ipiv(n);
+    for (idx i = 0; i < n; ++i) {
+        ipiv[i] = static_cast<lapack_int>(swaps[i] + 1);
+    }
+    mat<real> inv = f.LU;
+    LAPACKE_dgetri(LAPACK_ROW_MAJOR, static_cast<lapack_int>(n), inv.data(),
+                   static_cast<lapack_int>(n), ipiv.data());
+    return inv;
+#else
+    return seq::inverse(f);
+#endif
+}
+
+/// @brief LU solve through LAPACK `dgetrs`: \f$X \leftarrow A^{-1} B\f$. `X` may alias `B`.
+inline void solve(const lu_result<real> &f, const mat<real> &B, mat<real> &X) {
+#if defined(NUMERICS_HAS_LAPACK)
+    const idx n = f.size();
+    if (B.rows() != n) {
+        throw std::invalid_argument("lu solve: dimension mismatch");
+    }
+    const array<idx> swaps = num::detail::lu_swaps(f);
+    array<lapack_int> ipiv(n);
+    for (idx i = 0; i < n; ++i) {
+        ipiv[i] = static_cast<lapack_int>(swaps[i] + 1);
+    }
+    if (&X != &B) {
+        X = B;
+    }
+    LAPACKE_dgetrs(LAPACK_ROW_MAJOR, 'N', static_cast<lapack_int>(n),
+                   static_cast<lapack_int>(X.cols()), f.LU.data(), static_cast<lapack_int>(n),
+                   ipiv.data(), X.data(), static_cast<lapack_int>(X.cols()));
+#else
+    num::solve(f, B, X);
+#endif
+}
+
+/// @brief LU solve through LAPACK `dgetrs`: \f$x \leftarrow A^{-1} b\f$. `x` may alias `b`.
+inline void solve(const lu_result<real> &f, const vec<real> &b, vec<real> &x) {
+#if defined(NUMERICS_HAS_LAPACK)
+    const idx n = f.size();
+    if (b.size() != n) {
+        throw std::invalid_argument("lu solve: dimension mismatch");
+    }
+    const array<idx> swaps = num::detail::lu_swaps(f);
+    array<lapack_int> ipiv(n);
+    for (idx i = 0; i < n; ++i) {
+        ipiv[i] = static_cast<lapack_int>(swaps[i] + 1);
+    }
+    if (&x != &b) {
+        x = b;
+    }
+    LAPACKE_dgetrs(LAPACK_ROW_MAJOR, 'N', static_cast<lapack_int>(n), 1, f.LU.data(),
+                   static_cast<lapack_int>(n), ipiv.data(), x.data(), 1);
+#else
+    num::solve(f, b, x);
+#endif
+}
+} // namespace lapack
+
+/// @brief Inverse: \f$A^{-1}\f$. Uses LAPACK when an optimized LAPACK is available.
+template <std::floating_point T>
+inline mat<T> inverse(const lu_result<T> &f) {
+#if defined(NUMERICS_LAPACK_DEFAULT)
+    if constexpr (std::is_same_v<T, real>) {
+        return lapack::inverse(f);
+    }
+#endif
+    return seq::inverse(f);
 }
 
 /// @brief Unit lower factor \f$L\f$.

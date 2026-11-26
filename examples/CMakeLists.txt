@@ -9,13 +9,22 @@ function(add_numerics_example TARGET_NAME SOURCE_FILE)
     add_dependencies(numerics_examples ${TARGET_NAME})
 endfunction()
 
-# The recorded examples save JSON through the optional I/O target.
+# The recorded examples save their results as JSON through examples/io/, built on
+# nlohmann/json. Only the examples use it; the numerics library does not.
+find_package(nlohmann_json 3.11 CONFIG QUIET)
+if(NOT nlohmann_json_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+    FetchContent_MakeAvailable(nlohmann_json)
+endif()
+
 function(add_numerics_io_example TARGET_NAME)
-    if(NUMERICS_BUILD_IO)
-        add_executable(${TARGET_NAME} ${TARGET_NAME}.cpp)
-        target_link_libraries(${TARGET_NAME} PRIVATE numerics::io)
-        add_dependencies(numerics_examples ${TARGET_NAME})
-    endif()
+    add_executable(${TARGET_NAME} ${TARGET_NAME}.cpp)
+    target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(${TARGET_NAME} PRIVATE numerics::numerics nlohmann_json::nlohmann_json)
+    add_dependencies(numerics_examples ${TARGET_NAME})
 endfunction()
 
 add_numerics_io_example(00_core_storage_and_helpers)

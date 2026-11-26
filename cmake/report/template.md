@@ -257,7 +257,7 @@ Root finding (bisection, Newton, secant) and numerical quadrature
 
 ## Spectral — FFT
 
-Backends: `seq` (Cooley-Tukey), `simd` (AVX2/NEON), `fftw` (FFTW3).
+Backends: `seq` (Cooley-Tukey), `simd` (AVX2/NEON), `stdsimd` (`std::simd`).
 
 ### Tests
 

@@ -25,10 +25,6 @@ add_custom_command(
     VERBATIM)
 
 set(_refdoc_environment NUMERICS_BUILD=${CMAKE_BINARY_DIR})
-if(NUMERICS_BUILD_IO)
-    list(APPEND _refdoc_environment
-        NUMERICS_DOC_INCLUDE=${nlohmann_json_SOURCE_DIR}/include)
-endif()
 
 add_custom_target(docs
     COMMAND ${CMAKE_COMMAND} -E env ${_refdoc_environment}

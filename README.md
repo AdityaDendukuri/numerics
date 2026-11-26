@@ -14,15 +14,15 @@ The [`examples/`](examples/) show how to use the library. The
 include(FetchContent)
 FetchContent_Declare(numerics
     GIT_REPOSITORY https://github.com/AdityaDendukuri/numerics.git
-    GIT_TAG v1.1.0)
+    GIT_TAG v1.2.0)
 FetchContent_MakeAvailable(numerics)
 target_link_libraries(my_program PRIVATE numerics::numerics)
 ```
 
 `numerics::core` has no external dependency, and `numerics::kernel` is `num::kernel` alone.
 
-SuiteSparse UMFPACK is optional and uses the GPL. Enable it with
-`-DNUMERICS_USE_UMFPACK=ON` and see `THIRD_PARTY_LICENSES.md`.
+numerics is header-only. Its only optional dependencies are the interfaces to the machine:
+BLAS, LAPACK, OpenMP, MPI and CUDA, each used when found.
 
 ```bash
 cmake --preset dev && cmake --build --preset dev && ctest --preset dev
@@ -38,4 +38,4 @@ cmake --preset dev && cmake --build --preset dev && ctest --preset dev
 
 ## License
 
-MIT. See `LICENSE` and `THIRD_PARTY_LICENSES.md`.
+MIT. See `LICENSE`.

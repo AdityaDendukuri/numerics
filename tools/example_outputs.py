@@ -43,8 +43,6 @@ def main():
 
     build = args.build.resolve()
     binaries = build / "examples"
-    cache = build / "CMakeCache.txt"
-    io_enabled = "NUMERICS_BUILD_IO:BOOL=OFF" not in cache.read_text() if cache.exists() else True
     OUTPUT.mkdir(exist_ok=True)
     failed = []
     with tempfile.TemporaryDirectory() as shim_dir:
@@ -57,8 +55,6 @@ def main():
         for source in sorted(EXAMPLES.glob("*.cpp")):
             binary = binaries / source.stem
             if not binary.exists():
-                if not io_enabled and source.stem != "11_terminal_ascii_plot":
-                    continue
                 failed.append(f"{source.stem}: not built")
                 continue
             with tempfile.TemporaryDirectory() as run_dir:

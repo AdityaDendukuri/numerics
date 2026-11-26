@@ -10,9 +10,7 @@
 #include "linear/graph/levels.hpp"
 #include "linear/matrix_properties.hpp"
 #include "linear/matrix_utils.hpp"
-#include "linear/solvers/auto_linear.hpp"
 #include "linear/solvers/cg.hpp"
-#include "linear/sparse/klu.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "linear/subspace.hpp"
 #include <cmath>
@@ -125,10 +123,8 @@ TEST(Factor, DenseBlockAndSparseSolveTheSameSystem) {
 
     const auto Z_dense = lu(S, no_pivot);
     const auto Z_block = lu(S, blocks(levels));
-    const auto Z_sparse = lu(S, sparse);
     expect_solves(Z_dense, R, b);
     expect_solves(Z_block, R, b);
-    expect_solves(Z_sparse, R, b);
 }
 
 TEST(Factor, DiagonalSimilarityUsesCholeskyWithoutChangingTheAnswer) {
@@ -192,7 +188,7 @@ TEST(Factor, SparseInverseDiagonalIsProbedExplicitly) {
     constexpr idx n = 20;
     const mat<real> R = path_rate_matrix(n, 1.0, 1.0, 0.3);
     const spmat S = sparse_of(R);
-    const auto Z = lu(S, sparse);
+    const auto Z = lu(R);
     const vec<real> diagonal =
         inverse_diagonal(Z, S, {}, inverse_diagonal_options{.probes = 800, .seed = 9});
     const vec<real> expected = exact_inverse_diagonal(R);
@@ -295,8 +291,6 @@ static_assert(factorization<cholesky_result>);
 static_assert(factorization<block_lu_factor>);
 static_assert(factorization<block_cholesky_factor>);
 static_assert(factorization<similar_factor<cholesky_result>>);
-static_assert(factorization<auto_linear_solver>);
-static_assert(factorization<klu_factorization>);
 static_assert(factorization<corrected_lu>);
 static_assert(factorization<suffix_block_lu>);
 static_assert(factorization<suffix_block_cholesky>);

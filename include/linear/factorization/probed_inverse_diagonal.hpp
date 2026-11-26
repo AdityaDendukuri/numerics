@@ -5,7 +5,7 @@
 #include "linear/eigen/lanczos.hpp"
 #include "linear/factorization/woodbury.hpp"
 #include "linear/graph/randommat/preconditioner.hpp"
-#include "linear/solvers/auto_linear.hpp"
+#include "linear/factorization/lu.hpp"
 #include "linear/sparse/sparse.hpp"
 #include "operator/properties.hpp"
 #include "stochastic/probe.hpp"
@@ -186,7 +186,7 @@ template <factorization F>
     const auto preconditioned =
         num::assume_spd(detail::preconditioned_symmetric_operator(laplacian, approximate));
 
-    const auto_linear_solver scaled_factor(scaled);
+    const auto scaled_factor = lu(dense(scaled));
 
     const mat<real> probe = gaussian_probe(n, options.probes, options.seed);
     mat<real> rhs(n, options.probes, 0.0);
@@ -205,8 +205,7 @@ template <factorization F>
             rhs(j, column) = factored[j] / congruence[j];
         }
     }
-    // One block solve, outside the parallel loop: a sparse factor's solve writes into workspace
-    // it owns (KLU's Numeric->Xwork), so concurrent solves against one factor race.
+    // One block solve for all probes.
     mat<real> probed(n, options.probes, 0.0);
     solve(scaled_factor, rhs, probed);
     return hutchinson_row_mean_square(probed);

@@ -1,3 +1,9 @@
+numerics (1.2.0-1) unstable; urgency=medium
+
+  * Header-only.
+
+ -- Aditya Dendukuri <dendukuri.aditya123@outlook.com>  Wed, 25 Nov 2026 12:00:00 +0000
+
 numerics (1.1.0-1) unstable; urgency=medium
 
   * Initial package.

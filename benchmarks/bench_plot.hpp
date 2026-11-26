@@ -312,7 +312,7 @@ static void plot_thomas(gnuplot &gp, const std::vector<Run> &runs, const std::st
     gp.send1d(data);
 }
 
-/// fft.pdf  -- GB/s vs n: seq vs fftw for one-shot and plan FFT
+/// fft.pdf  -- GB/s vs n: seq vs simd for one-shot and plan FFT
 static void plot_fft(gnuplot &gp, const std::vector<Run> &runs, const std::string &outdir,
                      const std::string &ext = ".pdf") {
     struct Variant {
@@ -327,7 +327,6 @@ static void plot_fft(gnuplot &gp, const std::vector<Run> &runs, const std::strin
             {"BM_FFT<fft_backend::seq", "seq (Cooley-Tukey)", 1},
             {"BM_FFT<fft_backend::simd", "simd (AVX2/NEON)", 2},
             {"BM_FFT<fft_backend::stdsimd", "std::simd", 3},
-            {"BM_FFT<fft_backend::fftw", "fftw (FFTW3)", 4},
         };
         std::vector<std::pair<Variant, series>> data;
         for (auto &v : variants) {
@@ -363,13 +362,12 @@ static void plot_fft(gnuplot &gp, const std::vector<Run> &runs, const std::strin
         }
     }
 
-    // reusable plan: seq vs fftw
+    // reusable plan: seq vs simd
     {
         std::vector<Variant> variants = {
             {"BM_FFTPlan<fft_backend::seq", "seq plan (Cooley-Tukey)", 1},
             {"BM_FFTPlan<fft_backend::simd", "simd plan (AVX2/NEON)", 2},
             {"BM_FFTPlan<fft_backend::stdsimd", "std::simd plan", 3},
-            {"BM_FFTPlan<fft_backend::fftw", "fftw plan (FFTW3)", 4},
         };
         std::vector<std::pair<Variant, series>> data;
         for (auto &v : variants) {
@@ -405,13 +403,12 @@ static void plot_fft(gnuplot &gp, const std::vector<Run> &runs, const std::strin
         }
     }
 
-    // rfft: seq vs fftw
+    // rfft: seq vs simd
     {
         std::vector<Variant> variants = {
             {"BM_RFFT<fft_backend::seq", "seq (Cooley-Tukey)", 1},
             {"BM_RFFT<fft_backend::simd", "simd (AVX2/NEON)", 2},
             {"BM_RFFT<fft_backend::stdsimd", "std::simd", 3},
-            {"BM_RFFT<fft_backend::fftw", "fftw (FFTW3)", 4},
         };
         std::vector<std::pair<Variant, series>> data;
         for (auto &v : variants) {
@@ -862,7 +859,6 @@ inline void plot_all_ascii(const std::vector<Run> &runs,
                              {bm + "fft_backend::seq", "seq"},
                              {bm + "fft_backend::simd", "simd"},
                              {bm + "fft_backend::stdsimd", "std::simd"},
-                             {bm + "fft_backend::fftw", "fftw"},
                          });
     }
 }

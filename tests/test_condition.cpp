@@ -7,7 +7,6 @@
 #include "linear/factorization/lu.hpp"
 #include "linear/factorization/woodbury.hpp"
 #include "linear/matrix_properties.hpp"
-#include "linear/solvers/auto_linear.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
 #include <random>
@@ -107,6 +106,5 @@ TEST(Condition, EveryFactorizationGivesTheSameEstimate) {
     }
     const real from_lu = rcond(lu(S), S);
     EXPECT_NEAR(rcond(cholesky(assume_spd(S)), S), from_lu, 1e-10 * from_lu);
-    EXPECT_NEAR(rcond(auto_linear_solver(sparse_of(S)), sparse_of(S)), from_lu, 1e-10 * from_lu);
     EXPECT_NEAR(rcond(lu(A), A), 1.0 / (opnorm1(A) * inverse_norm1_estimate(lu(A), n)), 1e-15);
 }

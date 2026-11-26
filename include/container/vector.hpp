@@ -194,13 +194,6 @@ void copy_to(const vec<T> &source, std::vector<T> &destination) {
     copy_to(source, view<T>(destination));
 }
 
-#if defined(NUMERICS_EXTERN_TEMPLATES)
-// Defined by the numerics build so its own translation units share one
-// instantiation. Left undefined when these headers are copied out on their own,
-// where implicit instantiation is what makes the header usable without linking.
-extern template class vec<double>;
-#endif
-
 /// @brief Pair view: a flat vector as \f$(x_i, y_i)\f$ pairs.
 struct vec2_view {
     vec<real> &v;

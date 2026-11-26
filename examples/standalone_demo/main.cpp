@@ -1,4 +1,4 @@
-#include <io/json.hpp>
+#include <iostream>
 #include <numerics.hpp>
 
 int main() {
@@ -13,9 +13,8 @@ int main() {
 
     num::vec<num::real> x(3, 0.0);
     const auto result = num::cg(num::assume_spd(op), b, x);
-    num::io::write_json({{"converged", result.converged},
-                         {"iterations", result.iterations},
-                         {"residual", result.residual},
-                         {"solution", {x[0], x[1], x[2]}}}, "result.json");
+    std::cout << "converged: " << result.converged << ", iterations: " << result.iterations
+              << ", residual: " << result.residual << ", x: " << x[0] << " " << x[1] << " "
+              << x[2] << "\n";
     return result.converged ? 0 : 1;
 }

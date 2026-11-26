@@ -3,10 +3,10 @@
 Factorizations, solvers, eigenvalues and the SVD. Every factorization is solved by `solve(F, b, x)`, and the raw-pointer overloads work on caller-owned buffers.
 
 ## The solve protocol <linear/solve.hpp>
-num::factorization num::solve_transpose
+num::factorization num::solve_transpose num::transpose
 
 ## LU <linear/factorization/lu.hpp>
-num::lu num::lu_result num::no_pivot num::no_pivot_structure num::lower num::upper num::det num::inverse num::seq::lu num::lapack::lu num::lu_factor num::lu_factor_blocked num::lu_no_pivot_blocked num::lu_solve num::lu_invert num::lu_no_pivot num::lu_no_pivot_solve_multiple num::lu_no_pivot_solve_transpose_multiple num::lu_diagonal_shift_derivative
+num::lu num::lu_result num::no_pivot num::no_pivot_structure num::lower num::upper num::det num::inverse num::seq::inverse num::lapack::inverse num::seq::lu num::lapack::lu num::lu_factor num::lu_factor_blocked num::lu_no_pivot_blocked num::lu_solve num::lu_invert num::lu_no_pivot num::lu_no_pivot_solve_multiple num::lu_no_pivot_solve_transpose_multiple num::lu_diagonal_shift_derivative
 
 ## Mixed precision <linear/factorization/mixed_lu.hpp>
 num::mixed_lu num::mixed_precision num::mixed_precision_structure
@@ -21,7 +21,7 @@ num::qr num::qr_result num::seq::qr num::lapack::qr num::householder_vector num:
 num::hessenberg num::hessenberg_decomposition num::hessenberg_project num::hessenberg_back_project num::seq::hessenberg num::lapack::hessenberg num::hessenberg_shifted_factor num::hessenberg_shifted_substitute num::hessenberg_shifted_solve
 
 ## Banded <linear/banded/banded.hpp>
-num::band_mat num::banded_lu_result num::banded_matvec num::banded_gemv num::banded_norm1 num::banded_factor num::banded_solve num::solve
+num::band_mat num::banded_lu_result num::banded_matvec num::banded_gemv num::banded_norm1 num::banded_factor num::banded_solve num::solve num::lapack::solve num::seq::banded_gemv
 
 ## Tridiagonal <linear/factorization/thomas.hpp>
 num::thomas num::seq::thomas num::lapack::thomas
@@ -33,7 +33,7 @@ num::complex_tri_diag
 num::block_lu_factor num::block_cholesky_factor num::factor_block_lu num::factor_block_cholesky num::refactor_block_lu_suffix num::refactor_block_cholesky_suffix num::solve_in_place num::solve_transpose_in_place
 
 ## Choosing a factorization <linear/factorization/factor.hpp>
-num::sparse num::sparse_structure num::blocks num::block_structure num::similar_factor
+num::blocks num::block_structure num::similar_factor
 
 ## Factor reuse <linear/factorization/reuse.hpp>
 num::corrected_factor num::corrected_lu num::corrected_cholesky num::suffix_block_lu num::suffix_block_cholesky
@@ -42,7 +42,7 @@ num::corrected_factor num::corrected_lu num::corrected_cholesky num::suffix_bloc
 num::woodbury_solver num::low_rank_difference num::orthogonalized_low_rank_difference num::low_rank_update num::update_inverse_rows num::inverse_rows_workspace
 
 ## Inverse diagonal <linear/factorization/inverse_diagonal.hpp>
-num::inverse_diagonal num::inverse_diagonal_workspace num::inverse_principal_block num::selected_inverse num::safe_add
+num::inverse_diagonal num::sized_factorization num::inverse_diagonal_workspace num::inverse_principal_block num::selected_inverse num::safe_add
 
 ## Probed inverse diagonal <linear/factorization/probed_inverse_diagonal.hpp>
 num::inverse_diagonal_options num::ac num::ac2 num::grounded_approxchol_factor
@@ -89,23 +89,11 @@ num::ilu0_preconditioner num::make_ilu0_preconditioner num::ilu0_factor num::csr
 ## Chebyshev <linear/solvers/chebyshev.hpp>
 num::chebyshev_preconditioner num::chebyshev_preconditioner_from_below num::make_chebyshev_preconditioner num::estimate_largest_eigenvalue
 
-## Automatic solver <linear/solvers/auto_linear.hpp>
-num::auto_linear_solver num::auto_linear_options
-
 ## Hessenberg resolvent <linear/solvers/hessenberg_resolvent.hpp>
 num::hessenberg_resolvent num::hessenberg_shifted_lu num::shift num::solve_batch
 
-## Sparse resolvent <linear/solvers/sparse_resolvent.hpp>
-num::sparse_resolvent num::sparse_shifted_lu num::sparse_resolvent_available
-
-## Automatic resolvent <linear/solvers/auto_resolvent.hpp>
-num::auto_resolvent num::auto_shifted_lu num::auto_resolvent_options
-
 ## Matrix exponential <linear/expv/expv.hpp>
 num::expv num::restarted_expv num::expv_options num::expm
-
-## KLU <linear/sparse/klu.hpp>
-num::klu_factorization num::klu_available
 
 ## Sparse operator <linear/sparse/sparse_op.hpp>
 num::operators::sparse_op

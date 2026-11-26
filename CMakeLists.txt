@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(numerics VERSION 1.1.0 LANGUAGES CXX)
+project(numerics VERSION 1.2.0 LANGUAGES CXX)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -56,7 +56,7 @@ target_link_libraries(numerics_core INTERFACE numerics_kernel)
 # 2. Optional capabilities. Detection modules configure only these targets; the
 #    kernel and core above never receive vendor headers, libraries, definitions,
 #    or architecture flags.
-foreach(_backend blas lapack openmp fftw suitesparse simd)
+foreach(_backend blas lapack openmp simd)
     add_library(numerics_backend_${_backend} INTERFACE)
     add_library(numerics::${_backend} ALIAS numerics_backend_${_backend})
     add_library(numerics::backend::${_backend} ALIAS numerics_backend_${_backend})
@@ -71,62 +71,27 @@ target_link_libraries(numerics_backends INTERFACE
     numerics_backend_blas
     numerics_backend_lapack
     numerics_backend_openmp
-    numerics_backend_fftw
-    numerics_backend_suitesparse
     numerics_backend_simd
 )
 
 include(cmake/cuda.cmake)
 include(cmake/mpi.cmake)
-include(cmake/fftw.cmake)
 include(cmake/blas.cmake)
 include(cmake/openmp.cmake)
 include(cmake/simd.cmake)
 include(cmake/stdsimd.cmake)
 include(cmake/apple.cmake)
-include(cmake/suitesparse.cmake)
 
-# nlohmann/json for numerics::io: an installed copy (vcpkg, Homebrew, a distribution package)
-# when there is one, else a download. Only the installed case can be installed with numerics,
-# since a downloaded copy is not installed alongside it.
-set(NUMERICS_IO_INSTALLED FALSE)
-if(NUMERICS_BUILD_IO)
-    find_package(nlohmann_json 3.11 CONFIG QUIET)
-    if(nlohmann_json_FOUND)
-        set(NUMERICS_IO_INSTALLED TRUE)
-        message(STATUS "numerics: nlohmann/json ${nlohmann_json_VERSION} found; numerics::io is installed")
-    else()
-        include(FetchContent)
-        FetchContent_Declare(
-            nlohmann_json
-            URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
-            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-        )
-        FetchContent_MakeAvailable(nlohmann_json)
-        message(STATUS "numerics: nlohmann/json downloaded; numerics::io is not installed")
-    endif()
-endif()
-
-# 3. The compatibility umbrella. Mostly headers; what remains compiled is listed in
-#    cmake/sources.cmake and is either an external binding or a translation unit
-#    whose file-local helpers are not worth inlining.
-add_library(numerics ${NUMERICS_CORE_SOURCES} ${NUMERICS_INSTANTIATION_SOURCES})
+# 3. The umbrella. Header-only: everything else in this file is optional.
+add_library(numerics INTERFACE)
 add_library(numerics::numerics ALIAS numerics)
 set_target_properties(numerics PROPERTIES EXPORT_NAME numerics)
-target_link_libraries(numerics PUBLIC numerics_core numerics_backends)
-target_compile_features(numerics PUBLIC cxx_std_20)
+target_link_libraries(numerics INTERFACE numerics_core numerics_backends)
+target_compile_features(numerics INTERFACE cxx_std_20)
 
-# The numerics build shares one instantiation of the common container types
-# across its translation units. Deliberately not part of the public interface:
-# headers copied out of this tree must instantiate implicitly.
-target_compile_definitions(numerics PUBLIC
-    $<BUILD_INTERFACE:NUMERICS_EXTERN_TEMPLATES>
-)
-
-# Storage alignment, by contrast, must reach consumers: it is an argument to the
-# aligned operator delete, so a consumer compiling with a different value would
-# deallocate with the wrong alignment. Exported on both interfaces.
-target_compile_definitions(numerics PUBLIC
+# Storage alignment must reach consumers: it is an argument to the aligned operator
+# delete, so every translation unit must agree on it.
+target_compile_definitions(numerics INTERFACE
     NUMERICS_STORAGE_ALIGNMENT=${NUMERICS_STORAGE_ALIGNMENT}
 )
 
@@ -158,18 +123,6 @@ foreach(_alias solvers ode pde spectral plot)
     set_target_properties(numerics_${_alias} PROPERTIES EXPORT_NAME ${_alias})
     target_link_libraries(numerics_${_alias} INTERFACE numerics)
 endforeach()
-
-if(NUMERICS_BUILD_IO)
-    add_library(numerics_io INTERFACE)
-    add_library(numerics::io ALIAS numerics_io)
-    set_target_properties(numerics_io PROPERTIES EXPORT_NAME io)
-    if(NUMERICS_IO_INSTALLED)
-        target_link_libraries(numerics_io INTERFACE numerics nlohmann_json::nlohmann_json)
-    else()
-        target_link_libraries(numerics_io INTERFACE numerics
-            $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>)
-    endif()
-endif()
 
 add_custom_target(tags
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen-tags.sh

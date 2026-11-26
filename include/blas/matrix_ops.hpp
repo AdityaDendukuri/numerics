@@ -137,4 +137,55 @@ inline void matadd(real alpha, const mat<real> &A, real beta, const mat<real> &B
 #endif
 }
 
+/// @brief Rank-1 update (GER): \f$A \leftarrow A + \alpha x y^T\f$.
+inline void ger(real alpha, const vec<real> &x, const vec<real> &y, mat<real> &A) {
+    if (A.rows() != x.size() || A.cols() != y.size()) {
+        throw std::invalid_argument("ger: dimensions do not agree");
+    }
+#if defined(NUMERICS_HAS_BLAS)
+    cblas_dger(CblasRowMajor, static_cast<int>(x.size()), static_cast<int>(y.size()), alpha,
+               x.data(), 1, y.data(), 1, A.data(), static_cast<int>(A.cols()));
+#else
+    warn_unavailable();
+    kernel::ger(A.data(), x.data(), y.data(), alpha, x.size(), y.size());
+#endif
+}
+
+namespace detail {
+inline idx trsv_prepare(const mat<real> &T, const vec<real> &b, vec<real> &x) {
+    const idx n = T.rows();
+    if (T.cols() != n || b.size() != n) {
+        throw std::invalid_argument("trsv: dimension mismatch");
+    }
+    if (&x != &b) {
+        x = b;
+    }
+    return n;
+}
+} // namespace detail
+
+/// @brief Lower triangular solve (TRSV): \f$x \leftarrow L^{-1} b\f$. `x` may alias `b`.
+inline void trsv_lower(const mat<real> &L, const vec<real> &b, vec<real> &x) {
+    const idx n = detail::trsv_prepare(L, b, x);
+#if defined(NUMERICS_HAS_BLAS)
+    cblas_dtrsv(CblasRowMajor, CblasLower, CblasNoTrans, CblasNonUnit, static_cast<int>(n),
+                L.data(), static_cast<int>(n), x.data(), 1);
+#else
+    warn_unavailable();
+    kernel::trsv_lower_inplace(x.data(), L.data(), n);
+#endif
+}
+
+/// @brief Upper triangular solve (TRSV): \f$x \leftarrow U^{-1} b\f$. `x` may alias `b`.
+inline void trsv_upper(const mat<real> &U, const vec<real> &b, vec<real> &x) {
+    const idx n = detail::trsv_prepare(U, b, x);
+#if defined(NUMERICS_HAS_BLAS)
+    cblas_dtrsv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, static_cast<int>(n),
+                U.data(), static_cast<int>(n), x.data(), 1);
+#else
+    warn_unavailable();
+    kernel::trsv_upper_inplace(x.data(), U.data(), n);
+#endif
+}
+
 } // namespace num::blas

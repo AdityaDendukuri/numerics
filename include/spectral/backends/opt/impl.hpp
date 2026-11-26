@@ -3,7 +3,7 @@
 ///
 /// Applies \f$(u,v)\leftarrow(u+vw,u-vw)\f$ with AVX2, NEON, or scalar code.
 #pragma once
-#include "../seq/impl.hpp"
+#include "spectral/backends/seq/impl.hpp"
 #include "spectral/fft.hpp"
 #include <cmath>
 #include <stdexcept>

@@ -30,7 +30,7 @@ EXAMPLES = ROOT / "examples"
 OUT = ROOT / "docs" / "reference"
 BACKENDS = ("seq", "omp", "blas", "lapack", "cuda", "mpi")
 INDEXES = ROOT / "docs" / "indexes"
-SKIPPED_DIRECTORIES = ("cuda/", "mpi/")
+SKIPPED_DIRECTORIES = ("cuda/", "mpi/", "spectral/backends/")
 
 
 # ---------------------------------------------------------------------------------------
@@ -96,6 +96,9 @@ def compile_flags():
         if word.startswith(("-I", "-D", "-std=", "-isystem")):
             keep.append(word)
         i += 1
+    # The SIMD FFT backends hold no documentation, and their intrinsics headers belong to the
+    # compiler that built the tree, which need not match libclang's version.
+    keep = [w for w in keep if w not in ("-DNUMERICS_HAS_NEON", "-DNUMERICS_HAS_AVX2")]
     return ["-x", "c++"] + flags[3:] + keep
 
 
@@ -432,6 +435,8 @@ def collect(cindex):
             continue
         path = Path(cursor.location.file.name).resolve()
         if include not in path.parents:
+            continue
+        if str(path.relative_to(include)).startswith(SKIPPED_DIRECTORIES):
             continue
         if cursor.semantic_parent is None or cursor.semantic_parent.kind != kind.NAMESPACE:
             continue

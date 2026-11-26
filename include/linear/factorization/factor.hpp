@@ -8,7 +8,6 @@
 #include "linear/factorization/lu.hpp"
 #include "linear/solve.hpp"
 #include "linear/matrix_utils.hpp"
-#include "linear/solvers/auto_linear.hpp"
 #include "linear/sparse/sparse.hpp"
 #include <algorithm>
 #include <optional>
@@ -27,11 +26,6 @@ struct block_structure {
 [[nodiscard]] inline block_structure blocks(view<const idx> levels) {
     return {levels};
 }
-
-/// @brief Tag type of `num::sparse`.
-struct sparse_structure {};
-/// @brief Select sparse direct factorization.
-inline constexpr sparse_structure sparse{};
 
 /// @brief Factorization of a diagonal similarity: \f$H A H^{-1}\f$, with weights \f$h\f$.
 template <class F>
@@ -93,10 +87,6 @@ inline void scale_rows(RHS &x, view<const real> h, bool inverse) {
     return factor_block_lu(R, structure.levels);
 }
 
-/// @brief Sparse LU through the configured backend: \f$P A Q = L U\f$.
-[[nodiscard]] inline auto_linear_solver lu(const spmat &R, sparse_structure) {
-    return auto_linear_solver(R);
-}
 
 /// @brief Cholesky of a diagonal similarity: \f$H A H^{-1} = L L^T\f$, keeping \f$H\f$.
 [[nodiscard]] inline similar_factor<cholesky_result> cholesky(const spmat &R, view<const real> h) {

@@ -14,8 +14,7 @@ if("numerics" IN_LIST _numerics_components OR "backends" IN_LIST _numerics_compo
     set(_numerics_need_full TRUE)
 endif()
 
-foreach(_component kernel core raw_kernel numerics backends blas lapack openmp fftw suitesparse
-                   mpi cuda io)
+foreach(_component kernel core raw_kernel numerics backends blas lapack openmp mpi cuda)
     set(numerics_${_component}_FOUND TRUE)
 endforeach()
 
@@ -51,32 +50,6 @@ if("mpi" IN_LIST _numerics_components)
     endif()
 endif()
 
-if(_numerics_need_full OR "suitesparse" IN_LIST _numerics_components)
-    if(@NUMERICS_HAS_KLU@)
-        find_dependency(PkgConfig)
-        pkg_check_modules(KLU REQUIRED IMPORTED_TARGET klu)
-    else()
-        set(numerics_suitesparse_FOUND FALSE)
-    endif()
-endif()
-
-if(_numerics_need_full OR "fftw" IN_LIST _numerics_components)
-    if(@FFTW3_FOUND@)
-        list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
-        find_dependency(FFTW3)
-    else()
-        set(numerics_fftw_FOUND FALSE)
-    endif()
-endif()
-
-# numerics::io carries nlohmann/json in its interface, so it must be found whenever the
-# target was installed, before the targets file names it.
-if(@NUMERICS_IO_INSTALLED@)
-    find_dependency(nlohmann_json 3.11)
-else()
-    set(numerics_io_FOUND FALSE)
-endif()
-
 if("cuda" IN_LIST _numerics_components)
     if(@NUMERICS_HAS_CUDA@)
         find_dependency(CUDAToolkit)
@@ -90,7 +63,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/NumericsTargets.cmake")
 
 # Nested backend spellings are convenient build-tree aliases; recreate them for
 # installed packages without changing the exported target names.
-foreach(_backend blas lapack openmp fftw suitesparse simd)
+foreach(_backend blas lapack openmp simd)
     if(TARGET numerics::${_backend} AND NOT TARGET numerics::backend::${_backend})
         add_library(numerics::backend::${_backend} ALIAS numerics::${_backend})
     endif()

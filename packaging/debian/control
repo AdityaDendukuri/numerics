@@ -8,12 +8,8 @@ Homepage: https://github.com/AdityaDendukuri/numerics
 Rules-Requires-Root: no
 
 Package: libnumerics-dev
-Architecture: any
-Multi-Arch: same
+Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends}
-Description: C++20 library for scientific computing
- numerics is a C++20 library for scientific computing: dense and sparse linear
- algebra, iterative solvers, eigenvalues, ODE and PDE integrators, FFTs,
- quadrature, root finding and stochastic methods.
- .
- This package contains the headers, the static library and the CMake package.
+Description: Header-only C++20 library for scientific computing
+ Headers and the CMake package for numerics.

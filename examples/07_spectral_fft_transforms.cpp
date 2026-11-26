@@ -2,10 +2,9 @@
 /// @brief FFT and inverse FFT, the real FFT, and the backend that runs them.
 ///
 /// `fft` and `ifft` transform complex vectors, and `rfft` and `irfft` transform real ones, keeping
-/// the n/2 + 1 non-negative frequencies. The inverse transforms are unnormalized, as in FFTW, so
-/// dividing by n recovers the input. The caller sizes the output vectors. The backend defaults to
-/// FFTW when it is present, then the SIMD path, then the portable one, and each call can name one
-/// explicitly.
+/// the n/2 + 1 non-negative frequencies. The inverse transforms are unnormalized, so dividing by n
+/// recovers the input. The caller sizes the output vectors. The backend defaults to the SIMD path
+/// when the target has one, else the portable one, and each call can name one explicitly.
 #include <cmath>
 #include <io/json.hpp>
 #include <numbers>
@@ -18,7 +17,7 @@ using namespace num::spectral;
 
 int main(int argc, char **argv) {
     const bool plot = argc > 1 && std::string_view(argv[1]) == "--plot";
-    io::json results = {{"fftw_available", has_fftw}, {"simd_available", has_fft_simd}};
+    io::json results = {{"simd_available", has_fft_simd}};
 
     // A signal with components at frequencies 3 and 7.
     constexpr idx n = 64;

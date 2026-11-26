@@ -1,8 +1,7 @@
 #include "container/matrix_ops.hpp"
 #include "linear/factorization/factorization.hpp"
 #include "linear/matrix_utils.hpp"
-#include "linear/sparse/klu.hpp"
-#include "linear/sparse/umfpack.hpp"
+#include "linear/factorization/inverse_diagonal.hpp"
 #include "linear/sparse/sparse.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
@@ -45,34 +44,6 @@ static mat<real> low_rank_update(const mat<real> &matrix, const mat<real> &vecto
 
 // LU factorization
 
-TEST(KLU, SparseFactorAndBlockSolve) {
-    if (!klu_available()) {
-        GTEST_SKIP() << "SuiteSparse KLU is not available";
-    }
-
-    const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
-                                        {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 3.0});
-    klu_factorization factor(A);
-    vec<real> b{15.0, 10.0, 10.0};
-    vec<real> x;
-    solve(factor, b, x);
-    EXPECT_NEAR(x[0], 5.0, 1e-12);
-    EXPECT_NEAR(x[1], 5.0, 1e-12);
-    EXPECT_NEAR(x[2], 5.0, 1e-12);
-
-    mat<real> B(3, 2, 0.0);
-    for (idx row = 0; row < 3; ++row) {
-        B(row, 0) = b[row];
-        B(row, 1) = 2.0 * b[row];
-    }
-    mat<real> X;
-    solve(factor, B, X);
-    for (idx row = 0; row < 3; ++row) {
-        EXPECT_NEAR(X(row, 0), 5.0, 1e-12);
-        EXPECT_NEAR(X(row, 1), 10.0, 1e-12);
-    }
-}
-
 TEST(Cholesky, RankOneUpdateAndDowndate) {
     mat<real> identity_matrix = identity(3);
     auto factor = cholesky(assume_spd(identity_matrix));
@@ -94,104 +65,6 @@ TEST(Cholesky, RankOneUpdateAndDowndate) {
     for (idx row = 0; row < 3; ++row) {
         for (idx column = 0; column <= row; ++column) {
             EXPECT_NEAR(factor.L(row, column), row == column ? 1.0 : 0.0, 1e-12);
-        }
-    }
-}
-
-TEST(AutoLinear, SolveTransposeAndInverseDiagonal) {
-    const auto matrix =
-        spmat::from_triplets(2, 2, {0, 0, 1, 1}, {0, 1, 0, 1}, {4.0, 1.0, 2.0, 3.0});
-    auto_linear_solver factor(matrix, {.dense_limit = 0});
-
-    vec<real> solution(2, 0.0);
-    solve(factor, vec<real>{6.0, 8.0}, solution);
-    EXPECT_NEAR(solution[0], 1.0, 1e-12);
-    EXPECT_NEAR(solution[1], 2.0, 1e-12);
-
-    solve_transpose(factor, vec<real>{8.0, 7.0}, solution);
-    EXPECT_NEAR(solution[0], 1.0, 1e-12);
-    EXPECT_NEAR(solution[1], 2.0, 1e-12);
-
-    vec<real> inverse_diag(2, 0.0);
-    inverse_diagonal_workspace workspace;
-    inverse_diagonal(factor, inverse_diag, workspace, 1);
-    EXPECT_NEAR(inverse_diag[0], 0.3, 1e-12);
-    EXPECT_NEAR(inverse_diag[1], 0.4, 1e-12);
-
-    const std::vector<idx> rows{0, 1};
-    const std::vector<idx> columns{1, 0};
-    vec<real> selected(2, 0.0);
-    selected_inverse(factor, rows, columns, selected, workspace);
-    EXPECT_NEAR(selected[0], -0.1, 1e-12);
-    EXPECT_NEAR(selected[1], -0.2, 1e-12);
-
-    const std::vector<idx> indices{1, 0};
-    mat<real> principal;
-    inverse_principal_block(factor, indices, principal, workspace);
-    EXPECT_NEAR(principal(0, 0), 0.4, 1e-12);
-    EXPECT_NEAR(principal(0, 1), -0.2, 1e-12);
-    EXPECT_NEAR(principal(1, 0), -0.1, 1e-12);
-    EXPECT_NEAR(principal(1, 1), 0.3, 1e-12);
-}
-
-TEST(AutoLinear, ConvenienceOverloadsMatchOutParameterForm) {
-    const auto matrix =
-        spmat::from_triplets(2, 2, {0, 0, 1, 1}, {0, 1, 0, 1}, {4.0, 1.0, 2.0, 3.0});
-    auto_linear_solver factor(matrix, {.dense_limit = 0});
-
-    const vec<real> b{6.0, 8.0};
-    mat<real> B(2, 2, 0.0);
-    B(0, 0) = 6.0;
-    B(0, 1) = 1.0;
-    B(1, 0) = 8.0;
-    B(1, 1) = 5.0;
-
-    vec<real> expected_vector(2, 0.0);
-    solve(factor, b, expected_vector);
-    const vec<real> actual_vector = solve(factor, b);
-    EXPECT_DOUBLE_EQ(actual_vector[0], expected_vector[0]);
-    EXPECT_DOUBLE_EQ(actual_vector[1], expected_vector[1]);
-
-    solve_transpose(factor, b, expected_vector);
-    const vec<real> actual_transpose = solve_transpose(factor, b);
-    EXPECT_DOUBLE_EQ(actual_transpose[0], expected_vector[0]);
-    EXPECT_DOUBLE_EQ(actual_transpose[1], expected_vector[1]);
-
-    mat<real> expected_matrix;
-    solve(factor, B, expected_matrix);
-    const mat<real> actual_matrix = solve(factor, B);
-    ASSERT_EQ(actual_matrix.rows(), expected_matrix.rows());
-    ASSERT_EQ(actual_matrix.cols(), expected_matrix.cols());
-    for (idx i = 0; i < expected_matrix.rows(); ++i) {
-        for (idx j = 0; j < expected_matrix.cols(); ++j) {
-            EXPECT_DOUBLE_EQ(actual_matrix(i, j), expected_matrix(i, j));
-        }
-    }
-
-    solve_transpose(factor, B, expected_matrix);
-    const mat<real> actual_matrix_transpose = solve_transpose(factor, B);
-    for (idx i = 0; i < expected_matrix.rows(); ++i) {
-        for (idx j = 0; j < expected_matrix.cols(); ++j) {
-            EXPECT_DOUBLE_EQ(actual_matrix_transpose(i, j), expected_matrix(i, j));
-        }
-    }
-
-    vec<real> expected_diagonal(2, 0.0);
-    inverse_diagonal_workspace workspace;
-    inverse_diagonal(factor, expected_diagonal, workspace);
-    const vec<real> actual_diagonal = inverse_diagonal(factor);
-    EXPECT_DOUBLE_EQ(actual_diagonal[0], expected_diagonal[0]);
-    EXPECT_DOUBLE_EQ(actual_diagonal[1], expected_diagonal[1]);
-
-    const std::vector<idx> indices{1, 0};
-    mat<real> expected_block;
-    inverse_principal_block(factor, indices, expected_block, workspace);
-    const mat<real> actual_block = inverse_principal_block(factor, indices);
-    ASSERT_EQ(actual_block.rows(), expected_block.rows());
-    ASSERT_EQ(actual_block.cols(), expected_block.cols());
-    for (idx i = 0; i < expected_block.rows(); ++i) {
-        for (idx j = 0; j < expected_block.cols(); ++j) {
-            EXPECT_DOUBLE_EQ(actual_block(i, j), expected_block(i, j));
         }
     }
 }
@@ -744,56 +617,35 @@ TEST(Cholesky, SolveAcceptsAliasedAndUnsizedOutput) {
     }
 }
 
-TEST(UMFPACK, RealSolveAndTransposedSolve) {
-    if (!umfpack_available()) {
-        GTEST_SKIP() << "UMFPACK backend not enabled (-DNUMERICS_USE_UMFPACK=ON)";
-    }
-    // nonsymmetric, so the transposed solve is a different system
-    const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
-                                        {4.0, -2.0, -1.0, 4.0, -1.0, -3.0, 3.0});
-    umfpack_factorization factor(A);
-    const vec<real> x_true{1.0, -2.0, 3.0};
-    vec<real> b(3, 0.0), x;
-    matvec(A, x_true, b);
-    solve(factor, b, x);
-    for (idx i = 0; i < 3; ++i) {
-        EXPECT_NEAR(x[i], x_true[i], 1e-13);
-    }
-    vec<real> bt(3, 0.0);
-    matvec(transpose(A), x_true, bt);
-    solve_transpose(factor, bt, x);
-    for (idx i = 0; i < 3; ++i) {
-        EXPECT_NEAR(x[i], x_true[i], 1e-13);
-    }
-}
+// The inverse extraction routines accept any factorization; a dense LU stands in here.
+TEST(InverseDiagonal, SelectedEntriesAndPrincipalBlockFromAFactor) {
+    const auto matrix =
+        spmat::from_triplets(2, 2, {0, 0, 1, 1}, {0, 1, 0, 1}, {4.0, 1.0, 2.0, 3.0});
+    const auto factor = lu(dense(matrix));
 
-TEST(UMFPACK, ComplexShiftedSolveAndNonConjugateTranspose) {
-    if (!umfpack_available()) {
-        GTEST_SKIP() << "UMFPACK backend not enabled (-DNUMERICS_USE_UMFPACK=ON)";
-    }
-    const auto A = spmat::from_triplets(3, 3, {0, 0, 1, 1, 1, 2, 2}, {0, 1, 0, 1, 2, 1, 2},
-                                        {-2.0, 1.0, 2.0, -3.0, 1.0, 1.0, -1.0});
-    const cplx s(0.5, 2.0);
-    umfpack_shifted_lu factor(A, s);
-    const vec<cplx> x_true{cplx(1, 1), cplx(-2, 0.5), cplx(0, 3)};
-    // b = (sI − A) x and bt = (sI − A)ᵀ x, without conjugation
-    vec<cplx> b(3, cplx(0)), bt(3, cplx(0)), x;
-    for (idx i = 0; i < 3; ++i) {
-        b[i] = s * x_true[i];
-        bt[i] = s * x_true[i];
-    }
-    for (idx r = 0; r < 3; ++r) {
-        for (idx k = A.row_ptr()[r]; k < A.row_ptr()[r + 1]; ++k) {
-            b[r] -= A.values()[k] * x_true[A.col_idx()[k]];
-            bt[A.col_idx()[k]] -= A.values()[k] * x_true[r];
-        }
-    }
-    solve(factor, b, x);
-    for (idx i = 0; i < 3; ++i) {
-        EXPECT_NEAR(std::abs(x[i] - x_true[i]), 0.0, 1e-13);
-    }
-    solve_transpose(factor, bt, x);
-    for (idx i = 0; i < 3; ++i) {
-        EXPECT_NEAR(std::abs(x[i] - x_true[i]), 0.0, 1e-13);
-    }
+    vec<real> inverse_diag(2, 0.0);
+    inverse_diagonal_workspace workspace;
+    inverse_diagonal(factor, inverse_diag, workspace, 1);
+    EXPECT_NEAR(inverse_diag[0], 0.3, 1e-12);
+    EXPECT_NEAR(inverse_diag[1], 0.4, 1e-12);
+    const vec<real> allocated = inverse_diagonal(factor);
+    EXPECT_DOUBLE_EQ(allocated[0], inverse_diag[0]);
+    EXPECT_DOUBLE_EQ(allocated[1], inverse_diag[1]);
+
+    const std::vector<idx> rows{0, 1};
+    const std::vector<idx> columns{1, 0};
+    vec<real> selected(2, 0.0);
+    selected_inverse(factor, rows, columns, selected, workspace);
+    EXPECT_NEAR(selected[0], -0.1, 1e-12);
+    EXPECT_NEAR(selected[1], -0.2, 1e-12);
+
+    const std::vector<idx> indices{1, 0};
+    mat<real> principal;
+    inverse_principal_block(factor, indices, principal, workspace);
+    EXPECT_NEAR(principal(0, 0), 0.4, 1e-12);
+    EXPECT_NEAR(principal(0, 1), -0.2, 1e-12);
+    EXPECT_NEAR(principal(1, 0), -0.1, 1e-12);
+    EXPECT_NEAR(principal(1, 1), 0.3, 1e-12);
+    const mat<real> allocated_block = inverse_principal_block(factor, indices);
+    EXPECT_DOUBLE_EQ(allocated_block(0, 1), principal(0, 1));
 }

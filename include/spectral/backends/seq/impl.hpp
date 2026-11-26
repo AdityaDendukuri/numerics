@@ -1,6 +1,6 @@
 /// @file spectral/backends/seq/impl.hpp
 /// @brief Native Cooley-Tukey radix-2 DIT FFT (sequential, power-of-two sizes).
-/// Only included by src/spectral/fft.cpp.
+/// Included by spectral/fft.hpp.
 #pragma once
 #include "spectral/fft.hpp"
 #include <cmath>
